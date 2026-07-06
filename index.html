@@ -313,6 +313,7 @@ function loadAll(){
   state.regTypeMap=m.regTypeMap||{}; state.newStudents=m.newStudents||[];
   state.histEdits=m.histEdits||{}; state.deletedStudents=m.deletedStudents||{};
   state.reopenLog=m.reopenLog||{};
+  state.quitMap=m.quitMap||{};   /* 퇴관 기록 복원 (누락 버그 수정) */
   state.longRegs=m.longRegs||[]; state.deletedLongIds=m.deletedLongIds||[];
   state.trash=m.trash||[]; state.dupDismissed=m.dupDismissed||{};
   /* 명단은 파일이 아닌 저장 데이터에서 불러옴 */
@@ -386,6 +387,7 @@ function loadAll(){
       s.reg = isAdult ? "횟수" : "월별";
     }
   });
+  syncStFromMaps();   /* 명단 꼬리표를 휴관·퇴관 장부에 맞춰 정리 */
   try{ state.device=localStorage.getItem("najacha-device")||""; }catch(e){}
   persist();
   /* 프로그램 시작 시 자동으로 클라우드 최신 데이터 가져오기 (잠금 해제된 상태만) */
@@ -462,6 +464,7 @@ function cloudSync(){
           for(var rdi=STUDENTS.length-1;rdi>=0;rdi--){ if(state.deletedStudents[STUDENTS[rdi].n]) STUDENTS.splice(rdi,1); }
           state.newStudents.forEach(function(ns){ if(!STUDENTS.some(function(x){return x.n===ns.n;})) STUDENTS.push(ns); });
         }
+        syncStFromMaps();   /* 병합 후 꼬리표를 장부에 맞춰 정리 → 올릴 때도 깨끗한 명단 전송 */
       }
     })
     .catch(function(){ /* 가져오기 실패 → 내 것으로 진행 */ })
@@ -537,6 +540,9 @@ function cloudPull(){
         var merged=mergeData({
           payments:state.payments, expiryMap:state.expiryMap, deletedIds:state.deletedIds,
           holdMap:state.holdMap, closedMap:state.closedMap,
+          quitMap:state.quitMap||{}, reopenLog:state.reopenLog||{},
+          regTypeMap:state.regTypeMap||{}, newStudents:state.newStudents||[],
+          histEdits:state.histEdits||{}, deletedStudents:state.deletedStudents||{},
           longRegs:state.longRegs, deletedLongIds:state.deletedLongIds,
           trash:state.trash, dupDismissed:state.dupDismissed,
           roster:{list:STUDENTS, t:state.rosterT||0}, savedAt:state.savedAt
@@ -544,6 +550,12 @@ function cloudPull(){
         state.payments=merged.payments; state.expiryMap=merged.expiryMap;
         state.deletedIds=merged.deletedIds; state.holdMap=merged.holdMap;
         state.closedMap=merged.closedMap;
+        state.quitMap=merged.quitMap||state.quitMap||{};
+        state.reopenLog=merged.reopenLog||state.reopenLog||{};
+        state.regTypeMap=merged.regTypeMap||state.regTypeMap||{};
+        state.newStudents=merged.newStudents||state.newStudents||[];
+        state.histEdits=merged.histEdits||state.histEdits||{};
+        state.deletedStudents=merged.deletedStudents||state.deletedStudents||{};
         state.longRegs=merged.longRegs||state.longRegs; state.deletedLongIds=merged.deletedLongIds||state.deletedLongIds;
         state.trash=merged.trash||state.trash; state.dupDismissed=merged.dupDismissed||state.dupDismissed;
         if(merged.roster && merged.roster.list && merged.roster.list.length){
@@ -553,11 +565,15 @@ function cloudPull(){
           state.newStudents.forEach(function(ns){ if(!STUDENTS.some(function(x){return x.n===ns.n;})) STUDENTS.push(ns); });
         }
         state.rosterFileV = merged.rosterFileV || state.rosterFileV;
+        syncStFromMaps();   /* 병합 후 꼬리표를 장부에 맞춰 정리 */
         setTimeout(function(){ maybeApplyRosterFile(); }, 300);
         state.savedAt=merged.savedAt;
         try{ localStorage.setItem("najacha-html",JSON.stringify({
           payments:state.payments,expiryMap:state.expiryMap,deletedIds:state.deletedIds,
           holdMap:state.holdMap,closedMap:state.closedMap,
+          quitMap:state.quitMap||{},reopenLog:state.reopenLog||{},
+          regTypeMap:state.regTypeMap||{},newStudents:state.newStudents||[],
+          histEdits:state.histEdits||{},deletedStudents:state.deletedStudents||{},
           longRegs:state.longRegs,deletedLongIds:state.deletedLongIds,
           trash:state.trash,dupDismissed:state.dupDismissed,
           roster:{list:STUDENTS,t:state.rosterT||0},savedAt:state.savedAt })); }catch(e){}
@@ -1378,6 +1394,15 @@ function isQuit(name){
   var q=(state.quitMap||{})[name];
   return !!(q && !q.del);
 }
+/* 명단의 상태 꼬리표(st)를 휴관 장부(closedMap)에 맞춰 자동 정리
+   — 상태의 기준은 장부 한 곳. 옛 기기의 낡은 꼬리표가 복관·복원을 되돌리지 못하게 함 */
+function syncStFromMaps(){
+  if(!state.closedMap || !STUDENTS) return;
+  STUDENTS.forEach(function(s){
+    if(state.closedMap[s.n] && !isQuit(s.n)){ s.st="휴관"; }
+    else if(s.st==="휴관"){ delete s.st; }
+  });
+}
 window.markQuit=function(name){
   if(!confirm(name+" 님을 퇴관 처리할까요?\n(명단의 [퇴관] 필터에서 언제든 다시 볼 수 있습니다)")) return;
   if(!state.quitMap) state.quitMap={};
@@ -1393,6 +1418,9 @@ window.unQuit=function(name){
     state.reopenLog[name].push({ closed:state.closedMap[name], reopenDate:today(), t:Date.now() });
     delete state.closedMap[name];
   }
+  /* 명단 꼬리표(st=휴관)도 지워야 화면에서 재원으로 보임 */
+  for(var ui=0;ui<STUDENTS.length;ui++){ if(STUDENTS[ui].n===name){ delete STUDENTS[ui].st; break; } }
+  state.rosterT=Date.now(); persistAtt();
   persist(); render();
 };
 window.reopenClosed=function(name){
@@ -2574,22 +2602,33 @@ function seedSchedule(){
     for(var hh=13;hh<=20;hh++) cells[d+"-"+hh]={l:wk[hh]||"",c:"수업"};
   });
   for(var sh=10;sh<=14;sh++) cells["sat-"+sh]={l:sat[sh]||"",c:sh===12?"시범단":"수업"};
-  return {v:1, t:Date.now(), cells:cells, coaches:["임미화","안상준","김나영","최가은","김다감"]};
+  return {v:1, t:0, cells:cells, coaches:["임미화","안상준","김나영","최가은","김다감"]};   /* t:0 — 기본값이 저장본을 절대 덮어쓰지 못함 */
+}
+var __schT=null;
+function schedTouch(tf){
+  if(!state.schedule) state.schedule=seedSchedule();
+  state.schedule[tf]=Date.now();
+  state.schedule.t=Date.now();
+  clearTimeout(__schT);
+  __schT=setTimeout(function(){ persistAtt(); }, 800);   /* 연속 입력을 묶어 자동 저장 */
 }
 window.schCell=function(day,hh,f,v){
   if(!state.schedule) state.schedule=seedSchedule();
   var k=day+"-"+hh;
   if(!state.schedule.cells[k]) state.schedule.cells[k]={l:"",c:"수업"};
   state.schedule.cells[k][f]=v;
+  schedTouch("cellsT");
 };
 window.setCoachClr=function(name,v){
   if(!state.schedule.coachClr) state.schedule.coachClr={};
   state.schedule.coachClr[name]=v;
+  schedTouch("clrT");
   render();
 };
 window.setCoachIni=function(name,v){
   if(!state.schedule.coachIni) state.schedule.coachIni={};
   state.schedule.coachIni[name]=(v||"").trim();
+  schedTouch("iniT");
 };
 window.addCoach=function(){
   var el=document.getElementById("coachAdd");
@@ -2598,16 +2637,19 @@ window.addCoach=function(){
   if(!state.schedule.coaches) state.schedule.coaches=[];
   if(state.schedule.coaches.indexOf(nm)>-1){ alert("이미 있는 이름입니다."); return; }
   state.schedule.coaches.push(nm);
+  schedTouch("coachesT");
   render();
 };
 window.delCoach=function(i){
   if(!confirm(state.schedule.coaches[i]+" 님을 지도진 명단에서 뺄까요?")) return;
   state.schedule.coaches.splice(i,1);
+  schedTouch("coachesT");
   render();
 };
 window.saveSchedule=function(){
   if(!state.schedule) state.schedule=seedSchedule();
   state.schedule.t=Date.now();
+  state.schedule.cellsT=Date.now();
   persistAtt();
   state.attStatus="시간표 저장됨";
   alert("✅ 시간표가 저장되었습니다.\n이 컴퓨터에 저장되었고, 잠시 후 구글에도 자동 반영됩니다.");
@@ -2641,7 +2683,7 @@ function renderRosterTab(){
   var x='<div class="card">'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">'+
     '<input class="input" style="max-width:220px" placeholder="이름 검색" value="'+esc(q)+'" oninput="setRosterQ(this.value)">'+
-    ["재원","휴관","퇴관","임시","전체"].map(function(k){
+    ["재원","휴관","퇴관","기간휴식","임시","전체"].map(function(k){
       return '<button class="chip'+(f===k?' on':'')+'" onclick="setRosterF(\''+k+'\')">'+k+'</button>';
     }).join('')+
     '<span style="flex:1"></span>'+
@@ -2704,9 +2746,21 @@ function rosterListHtml(){
     });
     return x;
   }
+  /* 기간 휴식: 오늘 진행 중이거나 앞으로 예정된 건 반환 */
+  function rosterAbs(name){
+    var arr=(state.absences||{})[name]||[];
+    var td=today(), best=null;
+    for(var i=0;i<arr.length;i++){
+      var e=arr[i];
+      if(e.del || e.to<td) continue;
+      if(!best || e.from<best.from) best=e;
+    }
+    return best;
+  }
   var list=STUDENTS.filter(function(s){
     var quit = isQuit(s.n);
     var closed = (s.st==="휴관" || !!state.closedMap[s.n]) && !quit;
+    if(f==="기간휴식") return !quit && !closed && !!rosterAbs(s.n) && (!q || s.n.indexOf(q)>-1);
     if(f==="재원" && (closed||quit)) return false;
     if(f==="휴관" && !closed) return false;
     if(f==="퇴관" && !quit) return false;
@@ -2738,6 +2792,12 @@ function rosterListHtml(){
       '<b style="font-size:15px;min-width:70px">'+esc(s.n)+'</b>'+beltChip(s)+
       '<span style="font-size:12px;color:var(--sub)">'+esc(s.b||"")+(s.by?' · '+esc(s.by):'')+'</span>'+
             (isQuit(s.n)?'<span style="background:#3F3F46;color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">퇴관</span>':((s.st==="휴관"||state.closedMap[s.n])?'<span style="background:#EEE;color:#666;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">휴관</span>':''))+
+      (function(){
+        var ab=rosterAbs(s.n);
+        if(!ab) return '';
+        var going = ab.from<=today();
+        return '<span style="background:#FFF3E0;color:#B45309;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">🤕 '+(going?'기간휴식':'휴식예정')+' '+esc(ab.from)+'~'+esc(ab.to)+(ab.reason?' · '+esc(ab.reason):'')+'</span>';
+      })()+
       '<span style="flex:1"></span>'+
       (isQuit(s.n)
         ? '<button class="chip sm" style="margin-right:6px" onclick="unQuit(\''+esc(s.n).replace(/'/g,"\\'")+'\')">재원 복원</button>'
@@ -2758,6 +2818,7 @@ function renderScheduleTab(){
   if(state.schedule.coaches.indexOf("김동빈")>-1){
     state.schedule.coaches=state.schedule.coaches.filter(function(n){return n!=="김동빈";});
     ["최가은","김다감"].forEach(function(n){ if(state.schedule.coaches.indexOf(n)===-1) state.schedule.coaches.push(n); });
+    schedTouch("coachesT");
   }
   var c=state.schedule.cells;
   var coaches=state.schedule.coaches;
@@ -3600,6 +3661,7 @@ window.toggleHide13=function(){
   if(!state.schedule) state.schedule=seedSchedule();
   state.schedule.hide13=!state.schedule.hide13;
   state.schedule.t=Date.now();
+  state.schedule.h13T=Date.now();
   persistAtt();
   render();
 };
@@ -4035,9 +4097,9 @@ function renderAddModal(){
 }
 
 /* ══════════ 심사대상 (24회 · 2개월 간격 · 국기원 대기 제외) ══════════ */
-function renderExamTab(){
+function examRowsData(){
   var kkwSet={}; (state.kkwPending||[]).forEach(function(n){ kkwSet[n]=1; });
-  var rows=STUDENTS.filter(function(s){ return s.st!=="휴관" && !state.closedMap[s.n]&&!isQuit(s.n); })
+  return STUDENTS.filter(function(s){ return s.st!=="휴관" && !state.closedMap[s.n]&&!isQuit(s.n); })
     .map(function(s){
       var acc=state.accMap[s.n]||0;
       var last=state.lastExamMap[s.n]||"";
@@ -4047,16 +4109,52 @@ function renderExamTab(){
       var ready = acc>=24 && cycleOk && !kkw;
       return { s:s, acc:acc, last:last, nextOk:nextOk, cycleOk:cycleOk, kkw:kkw, ready:ready };
     });
-  /* 이름 검색: 일치 원생의 심사 정보만 표시 */
+}
+function examRowHtml(r){
+  var s=r.s;
+  var tag = r.kkw ? '<span style="background:#EEE;color:#666;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">국기원 대기</span>'
+    : r.ready ? '<span style="background:var(--redSoft);color:var(--red);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">추천</span>'
+    : !r.cycleOk ? '<span style="background:#FFF3E0;color:#B45309;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">'+esc(r.nextOk)+'부터</span>'
+    : '<span style="font-size:11px;color:var(--sub)">'+(24-r.acc)+'회 남음</span>';
+  return '<div style="border-top:1px solid var(--line);padding:8px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+    '<span style="width:4px;height:22px;border-radius:2px;background:'+gradeColor(s.grade||"")+';display:inline-block"></span>'+
+    '<b style="font-size:14px;min-width:64px">'+esc(s.n)+'</b>'+
+    '<span style="font-size:12px;color:var(--sub);min-width:64px">'+esc(s.grade||"급수?")+'</span>'+
+    ((state.examSort==="반별")?'<span style="font-size:11px;color:var(--sub)">'+esc(s.b||"")+'</span>':'')+
+    '<b style="font-size:13px;color:'+(r.acc>=24?'var(--red)':'var(--ink)')+';cursor:pointer;border-bottom:1px dashed var(--sub)" title="클릭하면 수동 수정" onclick="editAcc(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+r.acc+'회</b>'+
+    (r.last?'<span style="font-size:11.5px;color:var(--sub)">마지막 '+esc(r.last)+'</span>':'')+
+    tag+
+    '<span style="flex:1"></span>'+
+    (r.ready||r.acc>=24?'<button class="chip" style="color:var(--blue)" onclick="doExam(\''+esc(s.n).replace(/'/g,"\\'")+'\')">응심 완료</button>':'')+
+    '</div>';
+}
+function examListHtml(){
+  var rows=examRowsData();
   var eq=(state.examQ||"").trim();
-  if(eq){ rows=rows.filter(function(r){ return r.s.n.indexOf(eq)>-1; }); }
-  window.__examQNote = "";
-  if(eq && !rows.length){
-    var closedHit=STUDENTS.filter(function(s){ return s.n.indexOf(eq)>-1 && (state.closedMap[s.n]||isQuit(s.n)); });
-    window.__examQNote = closedHit.length
-      ? '"'+eq+'" 일치: '+closedHit.map(function(s){return s.n;}).join(", ")+' — 휴관·퇴관 상태라 심사 대상 목록에 없습니다.'
-      : '"'+eq+'"와 일치하는 재원생이 없습니다.';
+  var top="";
+  /* 2글자 이상 입력 시: 검색창 바로 아래 추천 박스 (정확 일치 → 없으면 2글자 연속 일치 유사 이름) */
+  if(eq.length>=2){
+    var hit=rows.filter(function(r){ return r.s.n.indexOf(eq)>-1; });
+    var sim=false;
+    if(!hit.length){
+      sim=true;
+      var frags=[]; for(var i=0;i+2<=eq.length;i++) frags.push(eq.substr(i,2));
+      hit=rows.filter(function(r){ return frags.some(function(f){ return r.s.n.indexOf(f)>-1; }); });
+    }
+    if(hit.length){
+      hit=hit.slice().sort(function(a,b){ return (b.ready?1:0)-(a.ready?1:0) || b.acc-a.acc; }).slice(0,5);
+      top='<div style="background:#F4F7FF;border:1px solid #C9D8F2;border-radius:9px;padding:6px 10px 2px;margin-bottom:8px;font-size:12.5px">'+
+        '🔎 '+(sim?'"'+esc(eq)+'" — 비슷한 이름의 심사 정보':'"'+esc(eq)+'" 검색 결과')+
+        hit.map(examRowHtml).join('')+'</div>';
+    } else {
+      var closedHit=STUDENTS.filter(function(s){ return s.n.indexOf(eq)>-1 && (state.closedMap[s.n]||isQuit(s.n)); });
+      top='<div style="background:#FFF7ED;border:1px solid #FDBA74;color:#9A3412;border-radius:8px;padding:7px 10px;font-size:12.5px;margin-bottom:8px">'+
+        esc(closedHit.length
+          ? '"'+eq+'" 일치: '+closedHit.map(function(s){return s.n;}).join(", ")+' — 휴관·퇴관 상태라 심사 대상 목록에 없습니다.'
+          : '"'+eq+'"와 일치하는 재원생이 없습니다.')+'</div>';
+    }
   }
+  if(eq){ rows=rows.filter(function(r){ return r.s.n.indexOf(eq)>-1; }); }
   var so=state.examSort||"추천순";
   if(so==="반별" && state.examBanF){
     rows=rows.filter(function(r){ return (r.s.b||"")===state.examBanF; });
@@ -4078,7 +4176,10 @@ function renderExamTab(){
     if(so==="이름순") return a.s.n.localeCompare(b.s.n);
     return (b.ready?1:0)-(a.ready?1:0) || b.acc-a.acc;
   });
-  var readyN=rows.filter(function(r){return r.ready;}).length;
+  return top + rows.slice(0,250).map(examRowHtml).join('');
+}
+function renderExamTab(){
+  var readyN=examRowsData().filter(function(r){return r.ready;}).length;
   var x='<div class="card">'+
     '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">'+
     '<b style="font-size:16px">심사대상</b>'+
@@ -4086,8 +4187,6 @@ function renderExamTab(){
     '<span style="font-size:12px;color:var(--sub)">기준: 누적 24회 + 마지막 심사 후 2개월 경과 · 국기원 응심 대기자는 제외 · 횟수 숫자를 누르면 수동 수정</span></div>'+
     '<div style="font-size:12px;color:var(--sub);margin-bottom:8px">국기원 대기: '+(state.kkwPending||[]).map(esc).join(", ")+'</div>'+
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">'+'<input class="input" style="max-width:170px;padding:7px 12px;font-size:13px;border-radius:9px" placeholder="🔍 이름 검색" value="'+esc(state.examQ||"")+'" oninput="setExamQ(this.value)">'+
-     (window.__examQNote?'<div style="flex-basis:100%;background:#FFF7ED;border:1px solid #FDBA74;color:#9A3412;border-radius:8px;padding:7px 10px;font-size:12.5px;margin-top:4px">'+esc(window.__examQNote)+'</div>':'')+
-     
     ["추천순","반별","급수별","이름순"].map(function(k){
       return '<button class="chip'+((state.examSort||"추천순")===k?' on':'')+'" onclick="setExamSort(\''+k+'\')">'+k+'</button>';
     }).join('')+'</div>'+
@@ -4121,24 +4220,7 @@ function renderExamTab(){
       }
       return '';
     })();
-  rows.slice(0,250).forEach(function(r){
-    var s=r.s;
-    var tag = r.kkw ? '<span style="background:#EEE;color:#666;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">국기원 대기</span>'
-      : r.ready ? '<span style="background:var(--redSoft);color:var(--red);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">추천</span>'
-      : !r.cycleOk ? '<span style="background:#FFF3E0;color:#B45309;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">'+esc(r.nextOk)+'부터</span>'
-      : '<span style="font-size:11px;color:var(--sub)">'+(24-r.acc)+'회 남음</span>';
-    x+='<div style="border-top:1px solid var(--line);padding:8px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
-      '<span style="width:4px;height:22px;border-radius:2px;background:'+gradeColor(s.grade||"")+';display:inline-block"></span>'+
-      '<b style="font-size:14px;min-width:64px">'+esc(s.n)+'</b>'+
-      '<span style="font-size:12px;color:var(--sub);min-width:64px">'+esc(s.grade||"급수?")+'</span>'+
-      ((state.examSort==="반별")?'<span style="font-size:11px;color:var(--sub)">'+esc(s.b||"")+'</span>':'')+
-      '<b style="font-size:13px;color:'+(r.acc>=24?'var(--red)':'var(--ink)')+';cursor:pointer;border-bottom:1px dashed var(--sub)" title="클릭하면 수동 수정" onclick="editAcc(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+r.acc+'회</b>'+
-      (r.last?'<span style="font-size:11.5px;color:var(--sub)">마지막 '+esc(r.last)+'</span>':'')+
-      tag+
-      '<span style="flex:1"></span>'+
-      (r.ready||r.acc>=24?'<button class="chip" style="color:var(--blue)" onclick="doExam(\''+esc(s.n).replace(/'/g,"\\'")+'\')">응심 완료</button>':'')+
-      '</div>';
-  });
+  x+='<div id="examListArea">'+examListHtml()+'</div>';
   return x+'</div>';
 }
 window.setExamSort=function(v){ state.examSort=v; state.examBanF=""; state.examGT=""; state.examGF=""; render(); };
@@ -4174,7 +4256,11 @@ window.setRosterBanF=function(v){ state.rosterBanF=v; render(); };
 window.setRosterGT=function(v){ state.rosterGT=v; state.rosterGF=""; render(); };
 window.setRosterGF=function(v){ state.rosterGF=v; render(); };
 window.setRosterSort=function(v){ state.rosterSort=v; state.rosterBanF=""; state.rosterGT=""; state.rosterGF=""; render(); };
-window.setExamQ=function(v){ state.examQ=v; render(); };
+window.setExamQ=function(v){
+  state.examQ=v;
+  var el=document.getElementById("examListArea");
+  if(el) el.innerHTML=examListHtml(); else render();
+};
 window.setRosterQ=function(v){
   state.rosterQ=v;
   var el=document.getElementById("rosterListArea");
@@ -4518,7 +4604,24 @@ function mergeAtt(a, b){
   var roster = ((rb.t||0)>(ra.t||0)) ? rb : ra;
   if(!(roster.list&&roster.list.length)) roster = (ra.list&&ra.list.length)?ra:rb;
   var sa=a.schedule, sb=b.schedule;
-  var schedule = (!sa) ? sb : (!sb) ? sa : (((sb.t||0)>(sa.t||0)) ? sb : sa);
+  var schedule;
+  if(!sa) schedule=sb;
+  else if(!sb) schedule=sa;
+  else{
+    /* 부분별 최신 병합: 수업칸·지도진·색상·이니셜·13시접기를 각자 저장 시각으로 비교 */
+    function part(f,tf){
+      var ta=(sa[tf]!==undefined?sa[tf]:sa.t)||0, tb=(sb[tf]!==undefined?sb[tf]:sb.t)||0;
+      return (tb>ta) ? {v:sb[f], t:tb} : {v:sa[f], t:ta};
+    }
+    var pc=part("cells","cellsT"), pco=part("coaches","coachesT"),
+        pcl=part("coachClr","clrT"), pin=part("coachIni","iniT"), ph=part("hide13","h13T");
+    schedule={ v:1, t:Math.max(sa.t||0,sb.t||0),
+      cells:pc.v||{}, cellsT:pc.t,
+      coaches:pco.v||[], coachesT:pco.t,
+      coachClr:pcl.v||{}, clrT:pcl.t,
+      coachIni:pin.v||{}, iniT:pin.t,
+      hide13:!!ph.v, h13T:ph.t };
+  }
   var byId={};
   (a.tempStudents||[]).concat(b.tempStudents||[]).forEach(function(t){ if(t&&t.id!=null) byId[t.id]=byId[t.id]&&(byId[t.id].t||0)>(t.t||0)?byId[t.id]:t; });
   var temps=[]; for(var k in byId) temps.push(byId[k]);
@@ -4609,6 +4712,7 @@ function applyAtt(m){
   state.schedule = m.schedule || state.schedule;
   state.tempStudents = m.tempStudents || state.tempStudents || [];
   state.weeks = m.weeks || state.weeks || {};
+  syncStFromMaps();   /* 출석 창고에서 받은 명단도 장부에 맞춰 정리 */
   if(m.acc){ state.accMap=m.acc.map||{}; state.accT=m.acc.t||0; state.accTMap=m.acc.tmap||state.accTMap||{}; }
   if(m.lastExam){ state.lastExamMap=m.lastExam.map||{}; state.lastExamT=m.lastExam.t||0; }
   if(m.kkw){ state.kkwPending=m.kkw.list||[]; state.kkwT=m.kkw.t||0; }
