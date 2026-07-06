@@ -3413,10 +3413,10 @@ function renderWeekTab(){
    '<b style="font-size:15px">'+esc(wk)+' ~ '+esc(addDays(wk,5))+'</b>'+
    '<button class="chip" onclick="moveWeek(1)">다음주 ▶</button>'+
    '<button class="chip" onclick="goThisWeek()">이번 주</button>'+
-   '<button class="chip" style="color:var(--blue);border-color:var(--blue)" onclick="copyPrevWeek()">📋 지난주 복사</button>'+
-     '<button class="chip" onclick="toggleHide13()">'+((state.schedule&&state.schedule.hide13)?'▸ 13시 펴기':'▾ 13시 접기')+'</button>'+
-   (state.dayView?'':'<button class="chip" '+(state.fitW?'style="color:var(--blue);border-color:var(--blue)"':'')+' onclick="toggleFitW()">'+(state.fitW?'↔ 화면 맞춤':'↔ 넓게 보기')+'</button>')+
-   '<button class="chip" onclick="openAbsM()">🤕 기간 휴식</button>'+
+   '<button style="padding:4px 10px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit" onclick="copyPrevWeek()">📋 지난주 복사</button>'+
+     '<button style="padding:4px 10px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit" onclick="toggleHide13()">'+((state.schedule&&state.schedule.hide13)?'▸ 13시 펴기':'▾ 13시 접기')+'</button>'+
+   (state.dayView?'':'<button style="'+(state.fitW?'padding:4px 10px;font-size:11.5px;font-weight:700;border-radius:8px;border:1px solid #BFDBFE;background:#EAF3FF;color:var(--blue);cursor:pointer;font-family:inherit':'padding:4px 10px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit')+'" onclick="toggleFitW()">'+(state.fitW?'↔ 화면 맞춤':'↔ 넓게 보기')+'</button>')+
+   '<button style="padding:4px 10px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit" onclick="openAbsM()">🤕 기간 휴식</button>'+
    '<span style="flex:1"></span>'+
    '<button class="chip'+(!state.dayView?' on':'')+'" onclick="setDayView(null)">주간</button>'+
    W_DAYS.map(function(d){ return '<button class="chip'+(state.dayView===d[0]?' on':'')+'" onclick="setDayView(\''+d[0]+'\')">'+d[1]+'</button>'; }).join('')+
