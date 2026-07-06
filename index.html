@@ -4566,6 +4566,9 @@ function render(){
     if(__idx>-1) __fi={ i:__idx, s:__ae.selectionStart, e:__ae.selectionEnd };
   }
   window.__restoreFocus=__fi;
+  /* ③ 시간표 스크롤 위치 기억 → 다시 그린 뒤 복원 (드롭다운·이니셜·배치 시 위로 튀는 것 방지) */
+  var __wsEl=document.getElementById("weekScroll");
+  window.__restoreScroll={ y:window.scrollY||0, wt:__wsEl?__wsEl.scrollTop:null, wl:__wsEl?__wsEl.scrollLeft:null };
 
   /* 비밀번호 잠금 확인 */
   var pwHash=localStorage.getItem("naracha_pw_hash");
@@ -6078,6 +6081,14 @@ function render(){
     var __el=__all2[__fi2.i];
     if(__el){ __el.focus(); try{ if(__fi2.s!=null) __el.setSelectionRange(__fi2.s, __fi2.e); }catch(e){} }
     window.__restoreFocus=null;
+  }
+  /* 스크롤 위치 복원 */
+  var __rs=window.__restoreScroll;
+  if(__rs){
+    var __ws2=document.getElementById("weekScroll");
+    if(__ws2 && __rs.wt!=null){ __ws2.scrollTop=__rs.wt; __ws2.scrollLeft=__rs.wl||0; }
+    if(Math.abs((window.scrollY||0)-__rs.y)>2) window.scrollTo(0, __rs.y);
+    window.__restoreScroll=null;
   }
 }
 loadAll();
