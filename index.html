@@ -782,7 +782,16 @@ window.bulkParse=function(){
     var date=yr+"-"+("0"+mm[3]).slice(-2)+"-"+("0"+mm[4]).slice(-2);
     var memoTx=(mm[6]||"").trim();
     var method=/카드/.test(mm[2])?"카드":"계좌이체";
-    var cat=/심사/.test(memoTx)?"승급심사":(/용품|도복/.test(memoTx)?"용품구입":"수련비");
+    /* 항목 자동 분류: 가장 근접한 단어 기준 (구체적인 것부터 검사) */
+    var cat =
+      /해외|국제|세계/.test(memoTx)            ? "해외행사"
+      : /심사|승급|승품|승단/.test(memoTx)      ? "승급심사"
+      : /대회|출전|시합|겨루기|품새/.test(memoTx) ? "대회출전"
+      : /연회비|시범단/.test(memoTx)            ? "시범단연회비"
+      : /용품|도복|띠|보호대|가방|신발/.test(memoTx) ? "용품구입"
+      : /행사|캠프|수련회|발표회|체험학습/.test(memoTx) ? "행사참여"
+      : /기타/.test(memoTx)                     ? "기타"
+      : "수련비";
     names.forEach(function(nm2, ix){
       var mt=bulkMatchName(nm2);
       m.rows.push({ use:true, raw:nm2, name:mt.pick, cand:mt.cand,
@@ -1806,7 +1815,12 @@ window.setBanFilter=function(b){ state.banFilter=b; render(); };
 
 /* 원생 정보 영구 삭제 (결제 기록은 남김) */
 window.deleteStudent=function(name){
-  var msg="["+name+"] 원생 정보를 완전히 삭제하시겠습니까?\n\n· 원생 명단·휴관 정보 → 삭제\n· 과거 결제 기록 → 보존 (수익 분석 유지)\n· 인원 통계·브리핑 → 이 원생 제외\n\n삭제하려면 원생 이름을 정확히 입력하세요:";
+  /* 안전장치: 퇴관생만 삭제 가능 (재원·휴관은 불가) */
+  if(!isQuit(name)){
+    alert(name+" 님은 퇴관 상태가 아닙니다.\n재원·휴관 원생은 삭제할 수 없습니다.\n삭제하려면 먼저 명단에서 [퇴관] 처리를 해주세요.");
+    return;
+  }
+  var msg="[퇴관생 "+name+"] 정보를 완전히 삭제하시겠습니까?\n\n· 원생 명단·휴관·퇴관 정보 → 삭제\n· 과거 결제 기록 → 보존 (수익 분석 유지)\n· 인원 통계·브리핑 → 이 원생 제외\n\n삭제하려면 원생 이름을 정확히 입력하세요:";
   var v=prompt(msg,"");
   if(v===null) return;
   if(v.trim()!==name){ alert("이름이 일치하지 않아 취소되었습니다."); return; }
@@ -2823,7 +2837,8 @@ function rosterListHtml(){
       })()+
       '<span style="flex:1"></span>'+
       (isQuit(s.n)
-        ? '<button class="chip sm" style="margin-right:6px" onclick="unQuit(\''+esc(s.n).replace(/'/g,"\\'")+'\')">재원 복원</button>'
+        ? '<button class="chip sm" style="margin-right:6px" onclick="unQuit(\''+esc(s.n).replace(/'/g,"\\'")+'\')">재원 복원</button>'+
+          '<button class="chip sm" style="margin-right:6px;color:var(--red);border-color:#F3B4B4" title="확인 후 완전 삭제 (퇴관생만 가능)" onclick="deleteStudent(\''+esc(s.n).replace(/'/g,"\\'")+'\')">🗑 삭제</button>'
         : (state.closedMap[s.n]
           ? '<button class="chip" style="color:var(--green);border-color:var(--green);margin-right:6px" onclick="reopenClosed(\''+esc(s.n).replace(/'/g,"\\'")+'\')">복관</button>'
           : '<button class="chip sm" style="margin-right:6px;color:#B45309;border-color:#E7C9A9" title="휴관 처리 (시작일·사유 입력)" onclick="setClosed(\''+esc(s.n).replace(/'/g,"\\'")+'\')">휴관</button>')+
@@ -5347,7 +5362,7 @@ function render(){
        '<div style="font-size:19px;font-weight:900">'+esc(state.detail)+' 님 납부내역</div>'+
        '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
        '<button onclick="editStudent(\''+state.detail.replace(/'/g,"\\'")+'\')" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit">원생 정보</button>'+
-       (state.closedMap[state.detail] ? '<button onclick="deleteStudent(\''+state.detail.replace(/'/g,"\\'")+'\')" style="border:1px solid var(--red);background:#fff;color:var(--red);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit">원생 삭제</button>' : '')+
+       (isQuit(state.detail) ? '<button onclick="deleteStudent(\''+state.detail.replace(/'/g,"\\'")+'\')" style="border:1px solid var(--red);background:#fff;color:var(--red);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit">퇴관생 삭제</button>' : '')+
        '<button onclick="closeDetail()" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit">← 돌아가기</button>'+
        '</div></div>';
     /* 등록일·복관이력 표시 */
