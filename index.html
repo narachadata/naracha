@@ -3396,7 +3396,7 @@ function chipHtml(name, key, wk){
     mk = Object.assign({}, mk, { m:(ab.reason?ab.reason+' · ':'')+'기간 휴식 '+ab.from+'~'+ab.to });
   }
   var tip = mk.m ? ' class="hasTip" data-tip="'+esc(mk.m)+'"' : '';
-  return '<span style="'+style+'"'+tip+' onclick="openMark(\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')">'+
+  return '<span draggable="true" ondragstart="dragChip(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" style="'+style+'"'+tip+' onclick="openMark(\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')">'+
     '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;letter-spacing:-0.3px'+(name.length>=5?';font-size:9px':'')+'">'+esc(name)+'</span>'+(kind==="심사"?"📋":"")+(mk.m?"📝":"")+
     ((s&&isBdayDate(s, addDays(wk, DAY_IDX[key.split("-")[0]]||0)))?"🎂":"")+
 
@@ -3440,7 +3440,7 @@ function renderWeekTab(){
        (function(){ var isToday=(date===today());
          return '<div style="position:sticky;top:0;z-index:6;border-radius:12px 12px 0 0;padding:7px 10px;border-bottom:2px solid var(--red);font-weight:900;font-size:13px;display:flex;justify-content:space-between;align-items:center;background:'+(isOff?'var(--red)':(isToday?'var(--redSoft)':'#fff'))+(isOff?';color:#fff':'')+'"><span>'+dayNm+
            (isOff?' <span style="font-size:10px;background:#fff;color:var(--red);border-radius:6px;padding:1px 6px;vertical-align:1px;font-weight:900">휴관</span>':(isToday?' <span style="font-size:10px;background:var(--red);color:#fff;border-radius:6px;padding:1px 6px;vertical-align:1px">오늘</span>':''))+
-           '</span><span style="display:inline-flex;gap:6px;align-items:center"><span style="'+(isOff?'color:#fff':'color:var(--sub)')+';font-weight:700;font-size:11.5px">'+date.slice(5)+'</span>'+
+           '</span><span style="display:inline-flex;gap:6px;align-items:center"><span style="'+(isOff?'color:#fff':'color:var(--sub)')+';font-weight:900;font-size:13px">'+date.slice(5)+'</span>'+
            '<button onclick="toggleDayOff(\''+day+'\')" style="font-size:10px;border:1px solid '+(isOff?'#fff':'var(--line)')+';border-radius:6px;background:'+(isOff?'transparent':'#fff')+';color:'+(isOff?'#fff':'var(--red)')+';cursor:pointer;padding:2px 7px;font-weight:800;font-family:inherit">'+(isOff?'휴관 해제':'휴관')+'</button></span></div>'; })()+
        '<textarea class="input dayMemo" rows="2" style="border:none;border-bottom:1px dashed var(--line);border-radius:0;font-size:11.5px;padding:5px 10px;background:#FFFDF2;resize:none;overflow:hidden;line-height:1.5;display:block;width:100%;box-sizing:border-box;font-family:inherit" placeholder="📝 특이사항 메모" oninput="memoInput(\''+day+'\',this)" onchange="touchWeek()">'+esc(wmemo)+'</textarea>';
     slotHours(day).forEach(function(hh){
@@ -3472,7 +3472,7 @@ function renderWeekTab(){
         x+='<div style="padding:1px 6px 3px;display:flex;align-items:flex-start;gap:3px">'+
            badge+
            '<span style="font-size:9.5px;color:var(--sub);width:19px;flex:0 0 auto;padding-top:4px">'+lvNm.charAt(0)+'</span>'+
-           '<div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat('+(state.dayView?7:3)+',1fr);gap:2px;align-items:stretch">'+
+           '<div data-dk="'+key+'" data-dl="'+li+'" ondragover="event.preventDefault()" ondrop="dropChip(event,\''+key+'\','+li+')" style="flex:1;min-width:0;display:grid;grid-template-columns:repeat('+(state.dayView?7:3)+',1fr);gap:2px;align-items:stretch">'+
            names.map(function(nm){ return chipHtml(nm, key, wk); }).join('')+
            '<button style="border:1px dashed var(--line);background:none;color:var(--blue);font-size:12px;cursor:pointer;border-radius:5px;padding:1px 0;min-height:20px" onclick="openAdd(\''+key+'\','+li+')">＋</button>'+
            '</div></div>';
@@ -3547,6 +3547,43 @@ window.toggleFitW=function(){
   try{ localStorage.setItem("naracha-fitw", state.fitW?"1":"0"); }catch(e){}
   render();
 };
+/* ── 출석 메모 ↔ 원생 메모장 자동 연동: [날짜 시각] 내용 줄로 누적, 지우면 함께 삭제 ── */
+window.dragChip=function(ev, key, name){
+  window.__drag={ key:key, name:name };
+  if(ev.dataTransfer){ ev.dataTransfer.effectAllowed="move"; ev.dataTransfer.setData("text/plain", name); }
+};
+window.dropChip=function(ev, toKey, toLi){
+  ev.preventDefault(); ev.stopPropagation();
+  var d=window.__drag; window.__drag=null; if(!d) return;
+  if(d.key===toKey){
+    var c0=wcell(toKey);
+    for(var i0=0;i0<3;i0++){ var x0=c0.lv[i0].indexOf(d.name); if(x0>-1) c0.lv[i0].splice(x0,1); }
+    if(c0.lv[toLi].indexOf(d.name)===-1) c0.lv[toLi].push(d.name);
+    touchWeek(); persistAtt(); render(); return;
+  }
+  var from=wcell(d.key), to=wcell(toKey);
+  for(var i=0;i<3;i++){ if(to.lv[i].indexOf(d.name)>-1){ alert(d.name+"은(는) 이미 그 시간에 있습니다."); return; } }
+  for(i=0;i<3;i++){ var ix=from.lv[i].indexOf(d.name); if(ix>-1) from.lv[i].splice(ix,1); }
+  var mk=from.marks[d.name];
+  if(mk){
+    to.marks[d.name]=Object.assign({}, mk, { t:Date.now() });   /* 출석 상태·메모까지 함께 이동 */
+    delete from.marks[d.name];
+    if((mk.m||"").trim()){ noteSync(d.name, d.key, null); noteSync(d.name, toKey, mk.m); }
+  }
+  if(!from.del) from.del={}; from.del[d.name]=Date.now();       /* 기기 간 병합에서 원래 자리 재출현 방지 */
+  if(to.del) delete to.del[d.name];
+  if(to.lv[toLi].indexOf(d.name)===-1) to.lv[toLi].push(d.name);
+  touchWeek(); persistAtt(); render();
+};
+function noteSync(name, key, newM){
+  var s=STUDENTS.find(function(x){return x.n===name;}); if(!s) return;
+  var d=dateOfKey(key, curWeek());
+  var tag='['+d+' '+key.split("-")[1]+'시]';
+  var lines=(s.note||"").split("\n").filter(function(L){ return L.trim() && L.indexOf(tag)!==0; });
+  if((newM||"").trim()) lines.push(tag+' '+newM.trim());
+  s.note=lines.join("\n");
+  state.rosterT=Date.now();
+}
 /* ── 기간 휴식 (예: 부상으로 한 달 쉼) ── */
 function absOf(name, date){
   var arr=(state.absences||{})[name]||[];
@@ -3718,6 +3755,7 @@ window.saveMark=function(){
   var wasP = prev.s==="출석";
   var nowP = m.s==="출석";
   c.marks[m.name]={ s:m.s||"", k:m.k, m:(m.m||"").trim(), t:Date.now() };
+  noteSync(m.name, m.key, (m.m||"").trim());
   /* 누적 수련횟수 연동 (심사 24회 기준) — 휴관일은 기록만 남고 누적 제외 */
   var offDay = dayIsOff(curWeek(), m.key.split("-")[0]);
   if(!offDay){
@@ -3733,6 +3771,7 @@ window.removePlace=function(){
   var c=wcell(m.key);
   var wasP=(c.marks[m.name]||{}).s==="출석";
   if(wasP){ state.accMap[m.name]=Math.max(0,(state.accMap[m.name]||0)-1); state.accT=Date.now(); accTouch(m.name); }
+  if(((c.marks[m.name]||{}).m||"").trim()) noteSync(m.name, m.key, null);
   for(var i=0;i<3;i++){ var ix=c.lv[i].indexOf(m.name); if(ix>-1) c.lv[i].splice(ix,1); }
   delete c.marks[m.name];
   if(!c.del) c.del={};
@@ -4802,9 +4841,9 @@ function render(){
         var icPlus='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+'<path d="M12 5v14M5 12h14"></path></svg>';
         return catBtn('출석', icAtt, '수련생출석', false)+
           '<button onclick="openStuM()" class="regBtn" style="cursor:pointer;font-family:inherit">'+icPlus+'원생 등록</button>'+
+          '<span style="flex:1"></span>'+
           catBtn('회계', icAcct, '회계관리'+(myRole()!=="admin"?' 🔒':''), myRole()!=="admin");
       })()+
-      '<span style="flex:1"></span>'+
       (state.topCat==="출석"&&state.attStatus?
         (state.attStatus.indexOf('⚠')>-1
           ? '<span class="warnPill">'+esc(state.attStatus)+'</span>'
