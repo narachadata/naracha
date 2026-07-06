@@ -422,12 +422,26 @@ function persist(){
   state.storageOk=true;
   try{ localStorage.setItem("najacha-html",data); }
   catch(e){
-    /* 이 기기 임시 저장 공간 부족 → 휴지통·부가 기록을 뺀 가벼운 버전으로 재시도 */
+    /* 공간 부족 → 1) 출석 창고의 4개월 지난 주간 기록을 정리해 공간 확보 (클라우드에는 전체 보존) */
     try{
-      var slim=JSON.parse(data);
-      slim.trash=[]; slim.dupDismissed={}; slim.histEdits={};
-      localStorage.setItem("najacha-html", JSON.stringify(slim));
-    }catch(e2){ state.storageOk=false; }
+      var attRaw=localStorage.getItem("naracha-att");
+      if(attRaw){
+        var attS=JSON.parse(attRaw);
+        var cut=new Date(Date.now()-120*86400000).toISOString().slice(0,10);
+        for(var wk in (attS.weeks||{})){ if(wk<cut) delete attS.weeks[wk]; }
+        localStorage.setItem("naracha-att", JSON.stringify(attS));
+      }
+    }catch(e0){}
+    /* 2) 전체 저장 재시도 */
+    try{ localStorage.setItem("najacha-html",data); }
+    catch(e1){
+      /* 3) 휴지통·부가 기록을 뺀 가벼운 버전으로 저장 */
+      try{
+        var slim=JSON.parse(data);
+        slim.trash=[]; slim.dupDismissed={}; slim.histEdits={};
+        localStorage.setItem("najacha-html", JSON.stringify(slim));
+      }catch(e2){ state.storageOk=false; }
+    }
   }
   /* 로컬 저장 성공 후 클라우드 동기화 시도 (실패해도 로컬은 안전) */
   cloudSync();
@@ -5246,10 +5260,13 @@ function render(){
        '<b style="color:var(--red)">⚠️ 같은 내용의 결제가 겹쳐 있습니다 ('+dupG.length+'묶음)</b>'+
        '<span style="font-size:13px;color:var(--sub)"> — 눌러서 확인·정리하세요 (동시 입력으로 생겼을 수 있습니다)</span></div>';
   }
-  if(!state.storageOk)
-    h+='<div class="warn">'+(accessKey()
-      ? '이 기기의 브라우저 임시 저장 공간이 가득 찼습니다. <b>데이터는 구글 클라우드에 정상 저장·동기화되고 있으니 안심하세요.</b> (다른 기기에도 그대로 반영됩니다)'
-      : '이 기기에 저장되지 않고 있습니다. 인터넷 연결과 접속키를 확인해 주세요. 지금 입력한 내용은 [백업·엑셀] 탭에서 백업해 두세요.')+'</div>';
+  if(!state.storageOk){
+    if(!accessKey())
+      h+='<div class="warn">⚠️ 이 기기에 저장되지 않고 접속키도 없습니다. 화면 위 [기기 선택]에서 접속키를 입력하면 구글 클라우드에 자동 저장됩니다.</div>';
+    else if(/오프라인|실패|오류|필요/.test(state.syncStatus||""))
+      h+='<div class="warn">⚠️ 지금 인터넷이 끊겨 있어 저장이 잠시 보류 중입니다. 연결되면 자동으로 저장됩니다. <b>연결 전에는 이 창을 닫지 마세요.</b></div>';
+    /* 클라우드에 정상 저장 중이면 경고를 띄우지 않음 */
+  }
 
   if(state.detail && state.topCat!=="출석"){
     /* 원생 정보 수정 화면 */
