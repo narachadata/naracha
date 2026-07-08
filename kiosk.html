@@ -77,7 +77,64 @@
   .spin{ width:44px; height:44px; border:4px solid var(--line); border-top-color:var(--blue); border-radius:50%; margin:20px auto; animation:rot 1s linear infinite; }
   @keyframes rot{ to{transform:rotate(360deg);} }
   #fsBtn{ position:fixed; right:14px; bottom:14px; z-index:100; background:var(--ink); color:#fff; border:none; border-radius:13px; padding:11px 16px; font-family:inherit; font-size:13px; font-weight:800; cursor:pointer; }
+
+  /* ══════════ 가로·세로 자동 대응 ══════════ */
+  /* 화면 높이가 낮을 때(주로 폰 가로): 요소를 줄여 키패드가 안 잘리게 */
+  @media (max-height:560px){
+    .topbar{ padding:8px 18px; }
+    .topbar .brand{ font-size:15px; gap:8px; }
+    .topbar .brand img{ width:30px; height:30px; }
+    .topbar .now .time{ font-size:16px; }
+    .topbar .now .date{ font-size:10px; }
+    .classbar{ padding:7px 18px; font-size:12.5px; }
+    .stage{ padding:10px 16px; }
+    .lead{ margin-bottom:12px; }
+    .lead h1{ font-size:21px; }
+    .lead p{ font-size:13px; margin-top:5px; }
+    .pin{ gap:9px; margin-bottom:13px; }
+    .pin .dot{ width:42px; height:48px; border-radius:11px; font-size:22px; }
+    .pad{ gap:8px; }
+    .key{ height:48px; border-radius:13px; font-size:22px; }
+    .key.del{ font-size:19px; } .key.clr{ font-size:15px; }
+    .errmsg{ font-size:13px; margin-top:9px; min-height:16px; }
+    .done .photo-big{ width:84px; height:84px; border-radius:18px; margin-bottom:11px; font-size:38px; }
+    .done .badge{ font-size:14px; padding:5px 13px; margin-bottom:8px; }
+    .done h1{ font-size:24px; } .done p{ font-size:13px; margin-top:6px; }
+    .done .cls2{ margin-top:10px; padding:7px 14px; font-size:13px; }
+    .facecard .photo{ width:58px; height:58px; }
+    .facecard .info .nm{ font-size:19px; }
+    .facegrid{ max-height:52vh; }
+    .backbtn{ margin-top:12px; padding:9px 20px; font-size:13px; }
+  }
+  /* 아주 낮은 화면(작은 폰 가로): 한 번 더 축소 */
+  @media (max-height:420px){
+    .classbar{ padding:5px 16px; font-size:11.5px; }
+    .stage{ padding:6px 14px; }
+    .lead{ margin-bottom:8px; }
+    .lead h1{ font-size:18px; } .lead p{ font-size:11.5px; margin-top:3px; }
+    .pin{ gap:7px; margin-bottom:9px; }
+    .pin .dot{ width:36px; height:40px; font-size:18px; }
+    .pad{ gap:6px; }
+    .key{ height:40px; font-size:19px; border-radius:11px; }
+    .done .photo-big{ width:66px; height:66px; margin-bottom:8px; font-size:30px; }
+    .done h1{ font-size:20px; }
+  }
+  /* 가로 모드에서 확인(사진 선택) 화면은 2칸으로 — 넘침 방지 */
+  @media (orientation:landscape) and (max-height:560px){
+    .facegrid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; max-height:56vh; }
+    .facecard{ padding:9px 12px; }
+  }
 </style>
+
+<script>
+/* 전체화면 시 방향을 잠그지 않음 — 기기를 돌리면 가로·세로 자유롭게 전환.
+   일부 브라우저가 전체화면에서 자동으로 방향을 잠그면, 명시적으로 해제 시도 */
+function unlockOrientation(){
+  try{
+    if(screen.orientation && screen.orientation.unlock){ screen.orientation.unlock(); }
+  }catch(e){}
+}
+</script>
 </head>
 <body>
 <button id="fsBtn" onclick="goFullscreen()">⛶ 전체화면</button>
@@ -500,7 +557,7 @@ window.choose=function(i){
 };
 
 /* ── 전체화면·시계 ── */
-function goFullscreen(){ var el=document.documentElement; var r=el.requestFullscreen||el.webkitRequestFullscreen; if(r)r.call(el).catch(function(){}); }
+function goFullscreen(){ var el=document.documentElement; var r=el.requestFullscreen||el.webkitRequestFullscreen; if(r){ r.call(el).then(function(){ unlockOrientation(); }).catch(function(){ unlockOrientation(); }); } else { unlockOrientation(); } }
 document.addEventListener("click",function o(){ goFullscreen(); document.removeEventListener("click",o); },{once:true});
 function tick(){
   var d=new Date();
@@ -509,6 +566,10 @@ function tick(){
 }
 setInterval(tick,1000); tick();
 setInterval(function(){ if(S.loaded && S.screen==="pad") updateClass(); }, 60000);  // 1분마다 수업 갱신
+
+/* 화면을 가로↔세로로 돌리면 레이아웃 다시 계산 */
+window.addEventListener("orientationchange", function(){ setTimeout(function(){ if(typeof render==="function") render(); }, 200); });
+window.addEventListener("resize", function(){ if(typeof render==="function") render(); });
 
 /* ── 시작 ── */
 if(S.key){ loadAll(); } else { render(); }
