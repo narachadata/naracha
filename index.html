@@ -458,6 +458,8 @@ function loadAll(){
   persist();
   /* 프로그램 시작 시 자동으로 클라우드 최신 데이터 가져오기 (잠금 해제된 상태만) */
   setTimeout(function(){ if(state.unlocked && typeof cloudPull==="function") cloudPull(); }, 800);
+  /* 시작 시 사진도 1회 받아오기 (관리자·사범 공통, 사진은 자주 안 바뀌므로 1회면 충분) */
+  setTimeout(function(){ if(state.unlocked && accessKey() && typeof photoPull==="function") photoPull(); }, 1200);
   /* 30초마다 자동 최신 데이터 동기화 (입력 화면 안 열려있을 때만) */
   setInterval(function(){
     /* 잠금 상태면 스킵 (비밀번호 입력 중 화면 리셋 방지) */
@@ -726,6 +728,7 @@ window.pullNow=function(){
   /* 출석·시간표 창고는 항상, 회계 창고는 관리자만 — 둘 다 클라우드에서 강제로 받아옴 */
   try{ if(typeof attPull==="function") attPull(); }catch(e){}
   try{ if(myRole()==="admin" && accessKey()) cloudPull(); }catch(e){}
+  try{ if(typeof photoPull==="function") photoPull(); }catch(e){}   /* 사진도 함께 */
 };
 
 window.migrateHistory=function(){
@@ -2685,6 +2688,7 @@ function saveRoleKey(k, role){
   render();
   if(role==="admin") cloudPull();
   attPull();
+  photoPull();   /* 로그인 시 서버 사진도 받아오기 (동기화) */
 }
 /* 개발 단계 스위치: true면 모든 사용자에게 전체 자료 공개 (운영 배포 시 false로 변경) */
 var DEV_OPEN_ALL = false;
