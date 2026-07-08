@@ -3333,12 +3333,16 @@ function renderBriefTab(){
     return last && addMonths(last,6)<=today() && (state.accMap[s.n]||0)<24 && (state.kkwPending||[]).indexOf(s.n)===-1;
   }).slice(0,12);
   /* 급수 분포 */
-  var dist={"흰·노(9~8급)":0,"주·초(7~6급)":0,"파·보(5~4급)":0,"밤·빨·국기원(3~1급)":0,"품":0,"단":0}, noGrade=0;
+  var dist={"흰·노(9~8급)":0,"주·초(7~6급)":0,"파·보(5~4급)":0,"밤·빨·국기원(3~1급)":0,
+            "1품":0,"2품":0,"3품":0,"4품":0,
+            "1단":0,"2단":0,"3단":0,"4단":0,"5단":0,"6단":0,"7단":0,"8단":0,"9단":0}, noGrade=0;
   active.forEach(function(s){
     var g=s.grade||"";
     if(!g){ noGrade++; return; }
-    if(/^\d+단/.test(g)) dist["단"]++;
-    else if(/품/.test(g)) dist["품"]++;
+    var dm=g.match(/(\d+)\s*단/);
+    var pm=g.match(/(\d+)\s*품/);
+    if(dm){ var dn=+dm[1]; if(dn>=1&&dn<=9) dist[dn+"단"]++; else dist["9단"]++; }
+    else if(pm){ var pn=+pm[1]; if(pn>=1&&pn<=4) dist[pn+"품"]++; else if(pn>=5) dist["4품"]++; else dist["1품"]++; }
     else { var m9=g.match(/^(\d+)급/);
       if(m9){ var nn=+m9[1];
         if(nn<=3) dist["밤·빨·국기원(3~1급)"]++;
@@ -3354,8 +3358,12 @@ function renderBriefTab(){
       }
     }
   });
+  /* 값이 0인 품·단 단계는 표에서 숨김 (있는 단계만 표시) */
+  Object.keys(dist).forEach(function(k){ if((/품$|단$/.test(k)) && dist[k]===0) delete dist[k]; });
   var dMax=Math.max.apply(null, Object.keys(dist).map(function(k){return dist[k];}).concat([1]));
-  var DIST_COLOR={"흰·노(9~8급)":"#F3C614","주·초(7~6급)":"#FF9500","파·보(5~4급)":"#7A5FD0","밤·빨·국기원(3~1급)":"#C8342A","품":"#5B4B8A","단":"#1A1C20"};
+  var DIST_COLOR={"흰·노(9~8급)":"#F3C614","주·초(7~6급)":"#FF9500","파·보(5~4급)":"#7A5FD0","밤·빨·국기원(3~1급)":"#C8342A",
+    "1품":"#8B7BC0","2품":"#6B5BA0","3품":"#4A3D75","4품":"#332A55",
+    "1단":"#5A5A62","2단":"#4E4E56","3단":"#43434A","4단":"#38383E","5단":"#2E2E33","6단":"#242428","7단":"#1C1C20","8단":"#141417","9단":"#0C0C0E"};
 
   /* ══ 👥 인원 브리핑 ══ */
   var pc={재원:0, 휴관:0};
@@ -3373,12 +3381,18 @@ function renderBriefTab(){
   /* 기간 신규 등록 (등록일 기준) */
   var newbies=STUDENTS.filter(function(s){ return s.joinDate && mset[(s.joinDate||"").slice(0,7)]; });
   var newActive=newbies.filter(function(s){ return !state.closedMap[s.n]&&!isQuit(s.n); }).length;
+  /* 기간 복관생 (복관 기록 reopenLog에서 이번 기간에 복관한 사람) */
+  var reopened=[], rlog=state.reopenLog||{};
+  for(var rn in rlog){ (rlog[rn]||[]).forEach(function(e){ if(e.reopenDate && mset[(e.reopenDate||"").slice(0,7)] && reopened.indexOf(rn)===-1) reopened.push(rn); }); }
+  var reopenActive=reopened.filter(function(n){ return !state.closedMap[n]&&!isQuit(n); });
   x+='<div class="card" style="padding:10px 16px"><b style="font-size:15px">👥 인원 브리핑</b> <span style="font-size:11.5px;color:var(--sub)">자세한 표는 [인원현황] 탭</span></div>';
   x+='<div style="display:flex;gap:10px;flex-wrap:wrap">'+
     card('<div style="font-size:12px;color:var(--sub)">재원생</div><div style="font-size:30px;font-weight:900">'+pc.재원+'<span style="font-size:14px">명</span></div>'+
       '<div style="font-size:12px;color:var(--sub)">휴관 '+pc.휴관+'명 · 임시(체험) '+tempN+'명</div>')+
     card('<div style="font-size:12px;color:var(--sub)">'+esc(P.label)+' 신규 등록</div><div style="font-size:30px;font-weight:900">'+newbies.length+'<span style="font-size:14px">명</span></div>'+
       '<div style="font-size:12px;color:var(--sub)">현재 재원 유지 '+newActive+'명'+(newbies.length?' — '+newbies.slice(0,4).map(function(s){return esc(s.n);}).join(", ")+(newbies.length>4?" 외":""):'')+'</div>')+
+    card('<div style="font-size:12px;color:var(--sub)">'+esc(P.label)+' 복관</div><div style="font-size:30px;font-weight:900">'+reopened.length+'<span style="font-size:14px">명</span></div>'+
+      '<div style="font-size:12px;color:var(--sub)">현재 재원 유지 '+reopenActive.length+'명'+(reopened.length?' — '+reopened.slice(0,4).map(esc).join(", ")+(reopened.length>4?" 외":""):'')+'</div>')+
     card('<b style="font-size:14px">반별 재원 분포</b><div style="margin-top:8px">'+
       BANS6.map(function(b){ return barRow(b.replace(/\(.*\)/,""), banCnt[b]||0, banMax, banBg(b).indexOf("linear")===0?"#999":({"1킨더(7이하)":"#E3B341","2초주니어(8~10)":"#D9C25A","3초시니어(11~13)":"#5B8DDB","4청소년(14-19)":"#4CAF7D","5성인1(20-39)":"#4CAF7D","6성인2(40이상)":"#3E8E63"})[b]); }).join('')+
       ((banCnt["미지정"])?'<div style="font-size:11.5px;color:var(--sub);margin-top:4px">반 미지정 '+banCnt["미지정"]+'명</div>':'')+'</div>')+
@@ -3393,13 +3407,13 @@ function renderBriefTab(){
       barRow("11회 이하", pipe.low, pMax, "#B9C2CF")+'</div>'+
       '<div style="font-size:11.5px;color:var(--sub);margin-top:6px">다음 심사 예상 규모: <b style="color:var(--ink)">'+(pipe.ready.length+pipe.soon.length)+'명</b> (추천+임박) · 국기원 대기 '+(state.kkwPending||[]).length+'명 별도</div>')+
     card('<b style="font-size:14px">'+esc(P.label)+' 응심 완료 <span style="color:var(--red)">'+done.length+'명</span></b>'+
-      '<div style="margin-top:6px;font-size:12.5px;line-height:1.9">'+
-      (done.length?done.slice(0,12).map(function(o){return '<span class="chip sm" style="margin:2px">'+esc(o.n)+' <i style="font-size:9.5px;color:var(--sub)">'+esc(o.d.slice(5))+'</i></span>';}).join('')+(done.length>12?' 외 '+(done.length-12)+'명':''):'<span style="color:var(--sub)">기록 없음</span>')+'</div>')+
+      '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">'+
+      (done.length?done.slice(0,12).map(function(o){return '<span class="chip sm" style="white-space:nowrap">'+esc(o.n)+' <i style="font-size:9.5px;color:var(--sub)">'+esc(o.d.slice(5))+'</i></span>';}).join('')+(done.length>12?'<span style="align-self:center;font-size:11.5px;color:var(--sub)">외 '+(done.length-12)+'명</span>':''):'<span style="color:var(--sub)">기록 없음</span>')+'</div>')+
     card('<b style="font-size:14px">급수 분포 (재원생)</b><div style="margin-top:8px">'+
       Object.keys(dist).map(function(k){ return barRow(k, dist[k], dMax, DIST_COLOR[k]); }).join('')+'</div>'+
       '<div style="font-size:11.5px;color:var(--sub);margin-top:6px">급수 미입력 '+noGrade+'명 — 명단에서 입력하면 분석이 더 정확해집니다</div>'+
       '<div style="font-size:12.5px;margin-top:8px;border-top:1px solid var(--line);padding-top:8px">🐢 정체 인원(마지막 심사 6개월↑·24회 미달): <b>'+stale.length+'명</b>'+
-      (stale.length?'<div style="margin-top:4px;line-height:1.9">'+stale.map(function(s){return '<span class="chip sm" style="margin:2px">'+esc(s.n)+' <i style="font-size:10px;color:var(--sub)">'+(state.accMap[s.n]||0)+'회</i></span>';}).join('')+'</div>':'')+'</div>')+
+      (stale.length?'<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">'+stale.map(function(s){return '<span class="chip sm" style="white-space:nowrap">'+esc(s.n)+' <i style="font-size:10px;color:var(--sub)">'+(state.accMap[s.n]||0)+'회</i></span>';}).join('')+'</div>':'')+'</div>')+
     '</div>';
   return x;
 }
@@ -3428,13 +3442,15 @@ function briefExportData(){
     pc.재원++; var b=s.b||"미지정"; banCnt[b]=(banCnt[b]||0)+1;
   });
   var newbies=STUDENTS.filter(function(s){ return s.joinDate && mset[(s.joinDate||"").slice(0,7)]; });
+  var reopened=[], rlog2=state.reopenLog||{};
+  for(var rrn in rlog2){ (rlog2[rrn]||[]).forEach(function(e){ if(e.reopenDate && mset[(e.reopenDate||"").slice(0,7)] && reopened.indexOf(rrn)===-1) reopened.push(rrn); }); }
   var cutoff=addDays(today(),-14), everPlaced={};
   for(var wk in state.weeks){ var w=state.weeks[wk]; if(!w||!w.cells) continue;
     for(var k in w.cells){ (w.cells[k].lv||[]).forEach(function(arr){ arr.forEach(function(nm){ everPlaced[nm]=1; }); }); } }
   var risk=active.filter(function(s){ return everPlaced[s.n] && !recentAttend(s.n, cutoff); }).map(function(s){return s.n;});
   var GROUPS=["킨더","주니어","시니어","청소년·성인"];
   return { P:P, cur:cur, prev:prev, pipe:pipe, done:done, examRev:examRev,
-    pc:pc, banCnt:banCnt, newbies:newbies.map(function(s){return s.n;}), risk:risk,
+    pc:pc, banCnt:banCnt, newbies:newbies.map(function(s){return s.n;}), reopened:reopened, risk:risk,
     groups:GROUPS.map(function(g){return [g, cur.groups[g]||0];}),
     days:W_DAYS.map(function(D){return [D[1], cur.days[D[0]]||0];}),
     kinds:ATT_KINDS.map(function(k){return [kindLabel(k.k), cur.kinds[k.k]||0];}),
@@ -3461,7 +3477,7 @@ window.briefPdf=function(){
         ["체험(신규 유입)", Object.keys(d.cur.trialNames).length+"명"],
         ["다음 심사 예상", (d.pipe.ready.length+d.pipe.soon.length)+"명 (추천 "+d.pipe.ready.length+" + 임박 "+d.pipe.soon.length+")"]])+
    '<h2 style="font-size:16px">2. 인원 현황</h2>'+
-   tbl([["재원생", d.pc.재원+"명"],["휴관", d.pc.휴관+"명"],[d.P.label+" 신규 등록", d.newbies.length+"명"+(d.newbies.length?" — "+d.newbies.join(", "):"")]]
+   tbl([["재원생", d.pc.재원+"명"],["휴관", d.pc.휴관+"명"],[d.P.label+" 신규 등록", d.newbies.length+"명"+(d.newbies.length?" — "+d.newbies.join(", "):"")],[d.P.label+" 복관", (d.reopened||[]).length+"명"+((d.reopened||[]).length?" — "+d.reopened.join(", "):"")]]
       .concat(Object.keys(d.banCnt).sort().map(function(b){ return ["· "+b, d.banCnt[b]+"명"]; })))+
    '<h2 style="font-size:16px">3. 출석 분석</h2>'+
    tbl([["월별 추이"].concat([d.byMonth.map(function(o){return o[0].slice(5)+"월 "+o[1];}).join(" · ")]),
@@ -3503,7 +3519,7 @@ window.briefPpt=function(){
                ["결석률", d.absRate+"%"],["체험(신규 유입)", Object.keys(d.cur.trialNames).length+"명"],
                ["다음 심사 예상", (d.pipe.ready.length+d.pipe.soon.length)+"명"]]);
       var s3=slide("2. 인원 현황");
-      rows(s3,[["재원생",d.pc.재원+"명"],["휴관",d.pc.휴관+"명"],[d.P.label+" 신규 등록",d.newbies.length+"명"]]
+      rows(s3,[["재원생",d.pc.재원+"명"],["휴관",d.pc.휴관+"명"],[d.P.label+" 신규 등록",d.newbies.length+"명"],[d.P.label+" 복관",(d.reopened||[]).length+"명"]]
         .concat(Object.keys(d.banCnt).sort().map(function(b){return [b, d.banCnt[b]+"명"];})));
       var s4=slide("3. 출석 분석");
       rows(s4,[["월별", d.byMonth.map(function(o){return o[0].slice(5)+"월 "+o[1];}).join("  ·  ")],
@@ -3800,6 +3816,9 @@ window.memoInput=function(day,el){
   if(!w.memo) w.memo={};
   w.memo[day]=el.value;
   syncMemoHeights();
+  /* 입력이 멈추면 자동 저장 (모바일에서 포커스가 안 빠져도 저장되도록) */
+  clearTimeout(window.__memoSaveT);
+  window.__memoSaveT=setTimeout(function(){ touchWeek(); }, 600);
 };
 window.syncMemoHeights=function(){
   var tas=document.querySelectorAll("textarea.dayMemo");
@@ -4882,7 +4901,7 @@ function mergeAtt(a, b){
     if(!x){ weeks[k]=y; return; } if(!y){ weeks[k]=x; return; }
     var yNewer = (y.t||0)>(x.t||0);
     var newerW = yNewer ? y : x;
-    var w={ t:Math.max(x.t||0,y.t||0), cells:{}, off:newerW.off||{}, dm:newerW.dm||{} };
+    var w={ t:Math.max(x.t||0,y.t||0), cells:{}, off:newerW.off||{}, dm:newerW.dm||{}, memo:newerW.memo||{} };
     var cxs=x.cells||{}, cys=y.cells||{};
     Object.keys(cxs).concat(Object.keys(cys)).forEach(function(ck){
       if(w.cells[ck]!==undefined) return;
