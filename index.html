@@ -645,7 +645,11 @@ function renderSyncBadge(){
   el.textContent=msg;
   el.style.color=color;
 }
-window.pullNow=function(){ cloudPull(); };
+window.pullNow=function(){
+  /* 출석·시간표 창고는 항상, 회계 창고는 관리자만 — 둘 다 클라우드에서 강제로 받아옴 */
+  try{ if(typeof attPull==="function") attPull(); }catch(e){}
+  try{ if(myRole()==="admin" && accessKey()) cloudPull(); }catch(e){}
+};
 
 window.migrateHistory=function(){
   if(!confirm("과거 장부 2,814건을 프로그램 데이터로 편입하고 구글 시트에 저장합니다.\n\n· 한 번만 실행하세요\n· 완료까지 30초~1분 걸립니다\n· 진행할까요?")) return;
@@ -781,16 +785,25 @@ window.bulkParse=function(){
     var each=Math.floor(total/names.length/1000)*1000;
     var date=yr+"-"+("0"+mm[3]).slice(-2)+"-"+("0"+mm[4]).slice(-2);
     var memoTx=(mm[6]||"").trim();
-    var method=/카드/.test(mm[2])?"카드":"계좌이체";
-    /* 항목 자동 분류: 가장 근접한 단어 기준 (구체적인 것부터 검사) */
+    var mtag=(mm[2]||"").trim();
+    /* 납부방법 인식: 대괄호 안 표기를 정확히 분류 (구체적인 것부터) */
+    var method =
+      /성\s*\+\s*카|성카/.test(mtag)           ? "성+카"
+      : /성\s*\+\s*계|성계/.test(mtag)          ? "성+계"
+      : /성남|성남사랑|지역화폐/.test(mtag)     ? "성남"
+      : /kis|키스|KIS/i.test(mtag)              ? "kis"
+      : /결선|결제선생/.test(mtag)              ? "결선"
+      : /현금/.test(mtag)                       ? "현금"
+      : /카드/.test(mtag)                       ? "카드"
+      : /계좌|이체|입금/.test(mtag)             ? "계좌"
+      : "계좌";   /* 표기가 없으면 계좌 */
     var cat =
-      /해외|국제|세계/.test(memoTx)            ? "해외행사"
-      : /심사|승급|승품|승단/.test(memoTx)      ? "승급심사"
-      : /대회|출전|시합|겨루기|품새/.test(memoTx) ? "대회출전"
-      : /연회비|시범단/.test(memoTx)            ? "시범단연회비"
+      /해외|국제|세계/.test(memoTx)              ? "해외행사"
+      : /심사|승급|승품|승단/.test(memoTx)        ? "승급심사"
+      : /대회|출전|시합|겨루기|품새/.test(memoTx)  ? "대회출전"
+      : /연회비|시범단/.test(memoTx)              ? "시범단연회비"
       : /용품|도복|띠|보호대|가방|신발/.test(memoTx) ? "용품구입"
       : /행사|캠프|수련회|발표회|체험학습/.test(memoTx) ? "행사참여"
-      : /기타/.test(memoTx)                     ? "기타"
       : "수련비";
     names.forEach(function(nm2, ix){
       var mt=bulkMatchName(nm2);
@@ -809,15 +822,30 @@ window.bulkCommit=function(){
   var skip=m.rows.filter(function(r){ return r.use && (!r.name || !(r.amt>0)); });
   if(!okRows.length){ alert("등록할 수 있는 항목이 없습니다. 이름 매칭과 금액을 확인해 주세요."); return; }
   var base=Date.now();
+  var linkedCnt=0, newCnt=0;
   okRows.forEach(function(r, i){
     var s=STUDENTS.find(function(x){return x.n===r.name;})||{};
+    /* 같은 원생·같은 금액의 '미납' 청구건이 이미 있으면 → 새로 만들지 않고 그 건을 입금 처리 */
+    var pend=state.payments.filter(function(p){
+      return p.name===r.name && !p.paid && Number(p.amount)===Number(r.amt);
+    });
+    if(pend.length){
+      var latest=pend.sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); })[0];
+      if(confirm(r.name+" 님에게 이미 청구된 "+r.amt.toLocaleString()+"원 건이 있습니다.\n("+ (latest.date||"") +" · "+(latest.cat||"수련비")+")\n\n[확인] 그 건을 입금 처리   [취소] 새 결제로 등록")){
+        latest.paid=true; latest.paidDate=r.date; latest.method=r.method;
+        linkedCnt++;
+        return;   /* 새 기록 생성 안 함 */
+      }
+    }
     state.payments.unshift({ id:base+i, date:r.date, name:r.name, ban:s.b||"",
       cat:r.cat, method:r.method, amount:r.amt, w:null,
       memo:(r.memo?r.memo+" ":"")+"(카톡 일괄)", expiry:null,
       device:state.device||"미지정", paid:true, paidDate:r.date });
+    newCnt++;
   });
   persist();
   m.report={ done:okRows.map(function(r){ return r.date.slice(5)+" "+r.name+" "+r.amt.toLocaleString()+"원 ("+r.cat+")"; }),
+             linked:linkedCnt, newCnt:newCnt,
              skip:skip.map(function(r){ return r.raw+" — "+(!r.name?"이름 미확정":"금액 확인 필요"); }),
              fails:m.fails.slice() };
   m.rows=null;
@@ -1050,7 +1078,8 @@ window.removePay=function(id){
     state.deletedLongIds.push(linked.id);
     state.longRegs=state.longRegs.filter(function(r){ return r.id!==linked.id; });
   }
-  persist(); render();
+  render();
+  setTimeout(function(){ persist(); }, 0);
 };
 
 /* 납부 완료 체크 */
@@ -1076,7 +1105,8 @@ window.togglePaid=function(id){
       break;
     }
   }
-  persist(); render();
+  render();                                   /* 화면 먼저 갱신 (즉시 반응) */
+  setTimeout(function(){ persist(); }, 0);    /* 저장·클라우드 전송은 뒤로 미뤄 멈춤 방지 */
 };
 
 /* 결제 수정 화면 열기 */
@@ -1829,6 +1859,7 @@ window.deleteStudent=function(name){
   delete state.holdMap[name];
   delete state.regTypeMap[name];
   delete state.expiryMap[name];
+  if(state.quitMap) delete state.quitMap[name];   /* 퇴관 기록도 정리 */
   /* STUDENTS 배열에서도 제거 */
   for(var i=STUDENTS.length-1;i>=0;i--){ if(STUDENTS[i].n===name){ STUDENTS.splice(i,1); break; } }
   state.rosterT=Date.now();
@@ -2833,7 +2864,8 @@ function rosterListHtml(){
         var ab=rosterAbs(s.n);
         if(!ab) return '';
         var going = ab.from<=today();
-        return '<span style="background:#FFF3E0;color:#B45309;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">🤕 '+(going?'기간휴식':'휴식예정')+' '+esc(ab.from)+'~'+esc(ab.to)+(ab.reason?' · '+esc(ab.reason):'')+'</span>';
+        return '<span style="background:#FFF3E0;color:#B45309;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">🤕 '+(going?'기간휴식':'휴식예정')+' '+esc(ab.from)+'~'+esc(ab.to)+(ab.reason?' · '+esc(ab.reason):'')+'</span>'+
+          '<button class="chip sm" style="color:var(--green);border-color:#9BD9B4;margin-left:6px" title="오늘부터 다시 수련" onclick="endAbsence(\''+esc(s.n).replace(/'/g,"\\'")+'\')">▶ 휴식 종료</button>';
       })()+
       '<span style="flex:1"></span>'+
       (isQuit(s.n)
@@ -3929,6 +3961,26 @@ window.saveAbs=function(){
   state.absences[nm].push({ from:m.from, to:m.to, reason:(m.reason||"").trim(), t:Date.now() });
   state.absM=null; persistAtt(); render();
 };
+window.endAbsence=function(name){
+  var arr=(state.absences||{})[name]||[];
+  var td=today(), best=null;
+  /* 오늘 진행 중이거나 예정된 건 중 가장 이른 것 찾기 */
+  arr.forEach(function(e){ if(!e.del && e.to>=td){ if(!best || e.from<best.from) best=e; } });
+  if(!best){ alert(name+" 님은 현재 기간휴식 상태가 아닙니다."); return; }
+  var going = best.from<=td;
+  if(!confirm(name+" 님을 오늘("+td+")부터 다시 수련 시작으로 처리할까요?")) return;
+  if(going){
+    /* 진행 중: 종료일을 오늘로 당김 (오늘까지 쉬고 내일부터가 아니라, 오늘부터 수련이므로 어제까지 휴식 처리) */
+    var y=addDays(td,-1);
+    if(y<best.from){ best.del=true; }   /* 오늘 시작한 휴식이면 없던 일로 */
+    else { best.to=y; }
+    best.t=Date.now();
+  } else {
+    /* 아직 시작 전 예정 건: 취소 */
+    best.del=true; best.t=Date.now();
+  }
+  persistAtt(); render();
+};
 window.delAbs=function(name, from, to){
   var arr=(state.absences||{})[name]||[];
   arr.forEach(function(e){ if(e.from===from&&e.to===to){ e.del=true; e.t=Date.now(); } });
@@ -3944,8 +3996,8 @@ window.cycleLvT=function(key,li){
   c.lvT[li] = (idx===-1) ? coaches[0] : (idx===coaches.length-1 ? "" : coaches[idx+1]);
   touchWeek(); render();
 };
-window.setCellCat=function(key,v){ wcell(key).cat=v; touchWeek(); render(); };
-window.setCellTch=function(key,v){ wcell(key).tch=v; touchWeek(); render(); };
+window.setCellCat=function(key,v){ wcell(key).cat=v; touchWeek(); };
+window.setCellTch=function(key,v){ wcell(key).tch=v; touchWeek(); };
 window.copyPrevWeek=function(){
   var wk=curWeek(), prevWk=addDays(wk,-7);
   var prev=state.weeks[prevWk];
@@ -5143,7 +5195,7 @@ function render(){
     if(bm.report){
       var rp=bm.report;
       inner='<div style="font-size:15px;font-weight:900;margin-bottom:8px">✅ 등록 완료 보고</div>'+
-        '<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:9px;padding:10px 12px;font-size:12.5px;line-height:1.9"><b>등록 '+rp.done.length+'건</b><br>'+rp.done.map(esc).join('<br>')+'</div>'+
+        '<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:9px;padding:10px 12px;font-size:12.5px;line-height:1.9"><b>등록 '+rp.done.length+'건</b>'+((rp.linked)?' <span style="color:var(--blue)">(기존 청구건 연결 '+rp.linked+'건 · 신규 '+(rp.newCnt||0)+'건)</span>':'')+'<br>'+rp.done.map(esc).join('<br>')+'</div>'+
         (rp.skip.length?'<div style="background:#FFF7ED;border:1px solid #FDBA74;border-radius:9px;padding:10px 12px;font-size:12.5px;margin-top:8px;line-height:1.8"><b>보류 '+rp.skip.length+'건 (직접 입력 필요)</b><br>'+rp.skip.map(esc).join('<br>')+'</div>':'')+
         (rp.fails.length?'<div style="background:#F4F5F7;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:12px;margin-top:8px;line-height:1.8;color:var(--sub)"><b>인식 못 한 줄 '+rp.fails.length+'개</b> (사진·기타 형식)<br>'+rp.fails.map(esc).join('<br>')+'</div>':'')+
         '<button class="big" style="margin-top:14px;width:100%" onclick="closeBulkM()">확인</button>';
