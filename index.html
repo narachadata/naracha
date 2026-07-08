@@ -523,7 +523,7 @@ function cloudSyncPush(){
     })
     .catch(function(){
       state.syncing=false;
-      state.syncStatus="오프라인 (컴퓨터에만 저장됨)";
+      state.syncStatus=/^(file|content|blob):/.test(location.protocol) ? "파일로 열림 — 저장 안 됨" : "오프라인 (컴퓨터에만 저장됨)";
       renderSyncBadge();
     });
 }
@@ -638,7 +638,7 @@ function renderSyncBadge(){
     } else {
       msg=state.syncStatus||("백업 "+ago);
     }
-  } else if(state.syncStatus && state.syncStatus.indexOf("오프라인")===0){
+  } else if(state.syncStatus && (state.syncStatus.indexOf("오프라인")===0 || state.syncStatus.indexOf("파일로 열림")===0)){
     color="#EF4444";
     msg="⚠️ "+state.syncStatus;
   }
@@ -5335,10 +5335,13 @@ function render(){
        '<span style="font-size:13px;color:var(--sub)"> — 눌러서 확인·정리하세요 (동시 입력으로 생겼을 수 있습니다)</span></div>';
   }
   if(!state.storageOk){
-    if(!accessKey())
+    var openedAsFile = /^(file|content|blob):/.test(location.protocol) || location.protocol==="file:";
+    if(openedAsFile)
+      h+='<div class="warn">⚠️ <b>파일을 직접 열어서 저장이 안 되는 상태입니다.</b> 지금 화면은 다운로드한 파일을 연 것이라 클라우드에 저장되지 않습니다. 인터넷 주소 <b>narachadata.github.io/naracha</b> 로 다시 열어주세요. (즐겨찾기/홈 화면 아이콘 이용 권장)</div>';
+    else if(!accessKey())
       h+='<div class="warn">⚠️ 이 기기에 저장되지 않고 접속키도 없습니다. 화면 위 [기기 선택]에서 접속키를 입력하면 구글 클라우드에 자동 저장됩니다.</div>';
     else if(/오프라인|실패|오류|필요/.test(state.syncStatus||""))
-      h+='<div class="warn">⚠️ 지금 인터넷이 끊겨 있어 저장이 잠시 보류 중입니다. 연결되면 자동으로 저장됩니다. <b>연결 전에는 이 창을 닫지 마세요.</b></div>';
+      h+='<div class="warn">⚠️ 지금 저장 연결이 원활하지 않습니다. 인터넷 상태를 확인해 주세요. 연결되면 자동으로 저장되니, 그 전에는 이 창을 닫지 마세요.</div>';
     /* 클라우드에 정상 저장 중이면 경고를 띄우지 않음 */
   }
 
