@@ -458,8 +458,16 @@ function loadAll(){
   persist();
   /* 프로그램 시작 시 자동으로 클라우드 최신 데이터 가져오기 (잠금 해제된 상태만) */
   setTimeout(function(){ if(state.unlocked && typeof cloudPull==="function") cloudPull(); }, 800);
-  /* 시작 시 사진도 1회 받아오기 (관리자·사범 공통, 사진은 자주 안 바뀌므로 1회면 충분) */
-  setTimeout(function(){ if(state.unlocked && accessKey() && typeof photoPull==="function") photoPull(); }, 1200);
+  /* 시작 시 사진도 받아오기 (관리자·사범 공통).
+     잠금 해제 전이면 잠금 풀릴 때까지 최대 30초간 재시도 → 확실히 1회 동기화 */
+  (function photoPullWhenReady(tries){
+    if(tries>60) return;                 /* 30초(0.5s×60) 넘으면 포기 */
+    if(state.unlocked && accessKey() && typeof photoPull==="function"){
+      photoPull();                        /* 준비됨 → 서버 사진 받아오기 */
+      return;
+    }
+    setTimeout(function(){ photoPullWhenReady(tries+1); }, 500);
+  })(0);
   /* 30초마다 자동 최신 데이터 동기화 (입력 화면 안 열려있을 때만) */
   setInterval(function(){
     /* 잠금 상태면 스킵 (비밀번호 입력 중 화면 리셋 방지) */
@@ -3011,9 +3019,16 @@ function rosterListHtml(){
     if(guardTel) line2.push('📞 '+esc(guardTel));
     if(ab && ab.reason) line2.push('🤕 '+esc(ab.reason));
 
+    /* 사진 썸네일 (있으면 사진, 없으면 사람 아이콘) */
+    var rphoto=getPhoto(s.n);
+    var rthumb= rphoto
+      ? '<img src="'+rphoto+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex:0 0 auto;background:#EDEDF0">'
+      : '<div style="width:38px;height:38px;border-radius:50%;background:#EDEDF0;display:flex;align-items:center;justify-content:center;font-size:19px;color:#B0B0B8;flex:0 0 auto">👤</div>';
+
     x+='<div style="border-top:1px solid var(--line);padding:10px 0">'+
-      /* 첫 줄: 이름·급·반·상태배지  +  (오른쪽) 버튼 — 버튼은 nowrap로 고정 */
+      /* 첫 줄: 사진·이름·급·반·상태배지  +  (오른쪽) 버튼 — 버튼은 nowrap로 고정 */
       '<div style="display:flex;align-items:center;gap:8px">'+
+        rthumb+
         '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;flex:1">'+
           '<b style="font-size:15px">'+esc(s.n)+'</b>'+beltChip(s)+
           '<span style="font-size:12px;color:var(--sub)">'+esc(s.b||"")+'</span>'+
@@ -3168,6 +3183,11 @@ function statListHtml(view){
       : r.st==="정상" ? '<span style="background:#E7F7EC;color:#1E7B3C;border-radius:6px;padding:2px 9px;font-size:11.5px;font-weight:800">딱 맞음 ✓</span>'
       : '<span style="font-size:11.5px;color:var(--sub)">기준 없음 (수련방법·횟수 미입력)</span>';
     x+='<div style="border-top:1px solid var(--line);padding:8px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+      (function(){ var ph=getPhoto(s.n);
+        return ph
+          ? '<img src="'+ph+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex:0 0 auto;background:#EDEDF0">'
+          : '<div style="width:34px;height:34px;border-radius:50%;background:#EDEDF0;display:flex;align-items:center;justify-content:center;font-size:17px;color:#B0B0B8;flex:0 0 auto">👤</div>';
+      })()+
       '<span style="width:4px;height:22px;border-radius:2px;background:'+gradeColor(s.grade||"")+';display:inline-block"></span>'+
       '<b style="font-size:14px;min-width:64px">'+esc(s.n)+'</b>'+
       '<span style="font-size:12px;color:var(--sub);min-width:56px">'+esc(s.grade||"")+'</span>'+
@@ -5324,6 +5344,7 @@ function photoPull(cb){
         state.photoMap=merged.map; state.photoT=merged.t;
       }
       state.photoPulledOnce=true; state.photoStatus="사진 동기화됨";
+      try{ render(); }catch(e){}   /* 받아온 사진을 화면에 즉시 반영 */
       if(cb)cb(true);
     })
     .catch(function(){ state.photoStatus="오프라인"; if(cb)cb(false); });
