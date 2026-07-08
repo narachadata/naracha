@@ -3041,7 +3041,7 @@ function attendCnt(name, ym){
 function renderStatusTab(){
   if(!state.statYm) state.statYm=today().slice(0,7);
   var ym=state.statYm, f=state.statF||"전체", q=(state.statQ||"").trim();
-  var rows=STUDENTS.filter(function(s){ return s.st!=="휴관" && !state.closedMap[s.n]&&!isQuit(s.n); })
+  var rows=STUDENTS.filter(function(s){ return !state.closedMap[s.n]&&!isQuit(s.n); })
     .map(function(s){
       var ct=contractCnt(s.n, ym), ac=attendCnt(s.n, ym);
       var st = !ct ? "기준없음" : ac>ct.n ? "초과" : ac<ct.n ? "미달" : "정상";
@@ -3101,7 +3101,7 @@ window.setStatQ=function(v){
   var el=document.getElementById("statListArea");
   if(el){
     var ym=state.statYm, f=state.statF||"전체", q=(v||"").trim();
-    var rows=STUDENTS.filter(function(s){ return s.st!=="휴관" && !state.closedMap[s.n]&&!isQuit(s.n); })
+    var rows=STUDENTS.filter(function(s){ return !state.closedMap[s.n]&&!isQuit(s.n); })
       .map(function(s){ var ct=contractCnt(s.n,ym), ac=attendCnt(s.n,ym);
         var st=!ct?"기준없음":ac>ct.n?"초과":ac<ct.n?"미달":"정상";
         return {s:s,ct:ct,ac:ac,st:st,diff:ct?Math.abs(ac-ct.n):0}; })
@@ -3226,7 +3226,7 @@ function renderBriefTab(){
     .sort(function(a,b){return b.v-a.v;}).slice(0,3);
 
   /* 관리 목록 (현재 기준) */
-  var active=STUDENTS.filter(function(s){ return s.st!=="휴관" && !state.closedMap[s.n]&&!isQuit(s.n); });
+  var active=STUDENTS.filter(function(s){ return !state.closedMap[s.n]&&!isQuit(s.n); });
   var cutoff=addDays(today(),-14);
   var everPlaced={};
   for(var wk2 in state.weeks){ var w2=state.weeks[wk2]; if(!w2||!w2.cells) continue;
@@ -3361,8 +3361,8 @@ function renderBriefTab(){
   var pc={재원:0, 휴관:0};
   var banCnt={};
   STUDENTS.forEach(function(s){
-    var closed = s.st==="휴관" || !!state.closedMap[s.n]&&!isQuit(s.n);
-    if(closed){ pc.휴관++; return; }
+    if(isQuit(s.n)) return;                    /* 퇴관은 재원·휴관 어디에도 안 셈 */
+    if(s.st==="휴관" || state.closedMap[s.n]){ pc.휴관++; return; }
     pc.재원++;
     var b=s.b||"미지정";
     banCnt[b]=(banCnt[b]||0)+1;
@@ -3372,7 +3372,7 @@ function renderBriefTab(){
   var banMax=Math.max.apply(null, BANS6.map(function(b){return banCnt[b]||0;}).concat([1]));
   /* 기간 신규 등록 (등록일 기준) */
   var newbies=STUDENTS.filter(function(s){ return s.joinDate && mset[(s.joinDate||"").slice(0,7)]; });
-  var newActive=newbies.filter(function(s){ return s.st!=="휴관" && !state.closedMap[s.n]&&!isQuit(s.n); }).length;
+  var newActive=newbies.filter(function(s){ return !state.closedMap[s.n]&&!isQuit(s.n); }).length;
   x+='<div class="card" style="padding:10px 16px"><b style="font-size:15px">👥 인원 브리핑</b> <span style="font-size:11.5px;color:var(--sub)">자세한 표는 [인원현황] 탭</span></div>';
   x+='<div style="display:flex;gap:10px;flex-wrap:wrap">'+
     card('<div style="font-size:12px;color:var(--sub)">재원생</div><div style="font-size:30px;font-weight:900">'+pc.재원+'<span style="font-size:14px">명</span></div>'+
@@ -3407,7 +3407,7 @@ function briefExportData(){
   var P=briefMonths();
   var cur=briefScanMulti(P.months), prev=briefScanMulti(P.prevMonths);
   var mset={}; P.months.forEach(function(m){ mset[m]=1; });
-  var active=STUDENTS.filter(function(s){ return s.st!=="휴관" && !state.closedMap[s.n]&&!isQuit(s.n); });
+  var active=STUDENTS.filter(function(s){ return !state.closedMap[s.n]&&!isQuit(s.n); });
   var pipe={ready:[],soon:[],mid:[],low:0};
   active.forEach(function(s){
     var a2=state.accMap[s.n]||0;
@@ -3423,8 +3423,8 @@ function briefExportData(){
   var examRev=0; (state.payments||[]).forEach(function(p){ if(p.cat==="승급심사" && mset[(p.date||"").slice(0,7)]) examRev+=Number(p.amount)||0; });
   var pc={재원:0,휴관:0}, banCnt={};
   STUDENTS.forEach(function(s){
-    var closed=s.st==="휴관"||!!state.closedMap[s.n]&&!isQuit(s.n);
-    if(closed){ pc.휴관++; return; }
+    if(isQuit(s.n)) return;
+    if(s.st==="휴관" || state.closedMap[s.n]){ pc.휴관++; return; }
     pc.재원++; var b=s.b||"미지정"; banCnt[b]=(banCnt[b]||0)+1;
   });
   var newbies=STUDENTS.filter(function(s){ return s.joinDate && mset[(s.joinDate||"").slice(0,7)]; });
@@ -4271,7 +4271,7 @@ function renderMarkModal(){
 }
 function renderAddModal(){
   var b=state.addBox;
-  var opts=STUDENTS.filter(function(s){return s.st!=="휴관" && !state.closedMap[s.n]&&!isQuit(s.n);}).map(function(s){return '<option value="'+esc(s.n)+'">';}).join('');
+  var opts=STUDENTS.filter(function(s){return !state.closedMap[s.n]&&!isQuit(s.n);}).map(function(s){return '<option value="'+esc(s.n)+'">';}).join('');
   return '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px" onclick="closeAdd()">'+
    '<div style="background:#fff;border-radius:14px;padding:22px;max-width:360px;width:100%" onclick="event.stopPropagation()">'+
    '<div style="font-size:16px;font-weight:900;margin-bottom:10px">이름 배치 <span style="font-size:12px;color:var(--sub);font-weight:700">'+["상급","중급","초급"][b.li]+'</span></div>'+
@@ -4292,7 +4292,7 @@ function renderAddModal(){
 /* ══════════ 심사대상 (24회 · 2개월 간격 · 국기원 대기 제외) ══════════ */
 function examRowsData(){
   var kkwSet={}; (state.kkwPending||[]).forEach(function(n){ kkwSet[n]=1; });
-  return STUDENTS.filter(function(s){ return s.st!=="휴관" && !state.closedMap[s.n]&&!isQuit(s.n); })
+  return STUDENTS.filter(function(s){ return !state.closedMap[s.n]&&!isQuit(s.n); })
     .map(function(s){
       var acc=state.accMap[s.n]||0;
       var last=state.lastExamMap[s.n]||"";
