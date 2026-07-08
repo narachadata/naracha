@@ -323,10 +323,6 @@ function mergeData(a,b){
   var dsa=a.deletedStudents||{}, dsb=b.deletedStudents||{};
   for(i in dsa) delStu[i]=dsa[i];
   for(i in dsb) delStu[i]=dsb[i];
-  var reoL={};
-  var rla=a.reopenLog||{}, rlb=b.reopenLog||{};
-  for(i in rla) reoL[i]=rla[i];
-  for(i in rlb) reoL[i]=(reoL[i]||[]).concat(rlb[i]);
   /* 장기등록: 고유번호 기준 합침, 최근 수정본 우선 */
   var ldels={};
   (a.deletedLongIds||[]).concat(b.deletedLongIds||[]).forEach(function(id){ ldels[id]=1; });
@@ -356,7 +352,7 @@ function mergeData(a,b){
   return { roster:rosterM,
            payments:pays, expiryMap:exps, deletedIds:Object.keys(dels).map(Number),
            holdMap:holds, closedMap:closed, quitMap:quits, regTypeMap:regTypes, newStudents:newStuList,
-           histEdits:histEd, deletedStudents:delStu, reopenLog:reoL,
+           histEdits:histEd, deletedStudents:delStu, reopenLog:rl,
            longRegs:longs, deletedLongIds:Object.keys(ldels),
            trash:trList, dupDismissed:dd,
            savedAt:Math.max(a.savedAt||0,b.savedAt||0) };
@@ -846,6 +842,15 @@ window.pickDevice=function(){
 window.openBulkM=function(){ state.bulkM={ raw:"", rows:null, fails:[], report:null }; render(); };
 window.closeBulkM=function(){ state.bulkM=null; render(); };
 window.bulkRaw=function(v){ state.bulkM.raw=v; };
+/* 카톡 일괄 입력: 같은 원생·같은 금액의 미납 청구건을 찾아준다 (미리보기·등록 공용) */
+function bulkFindPending(name, amt){
+  if(!name || !(amt>0)) return null;
+  var pend=(state.payments||[]).filter(function(p){
+    return p.name===name && !p.paid && Number(p.amount)===Number(amt);
+  });
+  if(!pend.length) return null;
+  return pend.sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); })[0];
+}
 function bulkMatchName(nm){
   nm=nm.trim();
   var exact=STUDENTS.filter(function(s){ return s.n===nm && !state.closedMap[s.n]; });
@@ -897,14 +902,30 @@ window.bulkParse=function(){
       : "수련비";
     names.forEach(function(nm2, ix){
       var mt=bulkMatchName(nm2);
+      var rowAmt = ix===0 ? total-each*(names.length-1) : each;
+      var pend = bulkFindPending(mt.pick, rowAmt);
       m.rows.push({ use:true, raw:nm2, name:mt.pick, cand:mt.cand, viaGuard:mt.viaGuard||"",
-        date:date, amt: ix===0 ? total-each*(names.length-1) : each,
-        cat:cat, method:method, memo:memoTx+(names.length>1?" (공동입금 "+mm[1].trim()+")":"") });
+        date:date, amt: rowAmt,
+        cat:cat, method:method, memo:memoTx+(names.length>1?" (공동입금 "+mm[1].trim()+")":""),
+        pendId: pend? pend.id : null,
+        pendInfo: pend? ((pend.date||"")+" · "+(pend.cat||"수련비")) : "" });
     });
   });
   render();
 };
-window.bulkF=function(i,k,v){ var r=state.bulkM.rows[i]; r[k]=(k==="amt")?Number(v):v; if(k!=="use") render(); };
+window.bulkF=function(i,k,v){
+  var r=state.bulkM.rows[i];
+  if(k==="link"){ r.link=!!v; render(); return; }
+  r[k]=(k==="amt")?Number(v):v;
+  /* 이름·금액이 바뀌면 기존 청구건을 다시 찾아 표시를 갱신 */
+  if(k==="amt"||k==="name"){
+    var pend=bulkFindPending(r.name, r.amt);
+    r.pendId = pend? pend.id : null;
+    r.pendInfo = pend? ((pend.date||"")+" · "+(pend.cat||"수련비")) : "";
+    if(!pend) r.link=undefined;
+  }
+  if(k!=="use") render();
+};
 window.bulkUse=function(i,v){ state.bulkM.rows[i].use=!!v; };
 window.bulkCommit=function(){
   var m=state.bulkM;
@@ -915,14 +936,11 @@ window.bulkCommit=function(){
   var linkedCnt=0, newCnt=0;
   okRows.forEach(function(r, i){
     var s=STUDENTS.find(function(x){return x.n===r.name;})||{};
-    /* 같은 원생·같은 금액의 '미납' 청구건이 이미 있으면 → 새로 만들지 않고 그 건을 입금 처리 */
-    var pend=state.payments.filter(function(p){
-      return p.name===r.name && !p.paid && Number(p.amount)===Number(r.amt);
-    });
-    if(pend.length){
-      var latest=pend.sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); })[0];
-      if(confirm(r.name+" 님에게 이미 청구된 "+r.amt.toLocaleString()+"원 건이 있습니다.\n("+ (latest.date||"") +" · "+(latest.cat||"수련비")+")\n\n[확인] 그 건을 입금 처리   [취소] 새 결제로 등록")){
-        latest.paid=true; latest.paidDate=r.date; latest.method=r.method;
+    /* 같은 원생·같은 금액의 '미납' 청구건이 있으면 → 새로 만들지 않고 그 건을 입금 처리 (팝업 없이 자동) */
+    if(r.link!==false){
+      var pend = bulkFindPending(r.name, r.amt);
+      if(pend){
+        pend.paid=true; pend.paidDate=r.date; pend.method=r.method;
         linkedCnt++;
         return;   /* 새 기록 생성 안 함 */
       }
@@ -5667,11 +5685,18 @@ function render(){
             : (r.cand.length
               ? '<select class="input" style="max-width:110px;padding:5px 8px;font-size:12px" onchange="bulkF('+i+',\'name\',this.value)"><option value="">'+esc(r.raw)+(r.viaGuard?' (학부모?)':'?')+'</option>'+r.cand.map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select>'
               : '<span style="color:var(--red);font-size:12px;min-width:74px">'+esc(r.raw)+' (없음)</span>');
+          var linkBadge = (r.pendId && r.link!==false)
+            ? '<span style="font-size:10.5px;color:#fff;background:var(--green);border-radius:5px;padding:2px 6px;margin-left:2px">✅ 기존 청구건 입금처리</span>'
+            : (r.pendId ? '<span style="font-size:10.5px;color:var(--sub);background:#F4F5F7;border-radius:5px;padding:2px 6px;margin-left:2px">신규 등록</span>' : '');
+          var linkToggle = r.pendId
+            ? '<label style="font-size:10.5px;color:var(--sub);display:inline-flex;align-items:center;gap:3px;margin-left:2px"><input type="checkbox" '+(r.link!==false?'checked':'')+' onchange="bulkF('+i+',\'link\',this.checked)">청구건 연결</label>'
+            : '';
           return '<div style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line);font-size:12.5px;flex-wrap:wrap">'+
             '<input type="checkbox" '+(r.use?'checked':'')+' onchange="bulkUse('+i+',this.checked)">'+nameSel+
             '<span style="color:var(--sub)">'+esc(r.date.slice(5))+'</span>'+
             '<input class="input" type="number" value="'+r.amt+'" style="max-width:96px;padding:5px 8px;font-size:12.5px;text-align:right" onchange="bulkF('+i+',\'amt\',this.value)">원'+
             '<span style="background:#F4F5F7;border-radius:6px;padding:2px 7px;font-size:11px">'+esc(r.cat)+'</span>'+
+            linkBadge+linkToggle+
             '<span style="font-size:11px;color:var(--sub)">'+esc(r.method)+(r.memo?' · '+esc(r.memo):'')+'</span>'+
             '</div>';
         }).join('')+
