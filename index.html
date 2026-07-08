@@ -198,6 +198,34 @@ var state = { tab:"회계입력", payments:[], expiryMap:{}, deletedIds:[], hold
               photoMap:{}, photoT:0, photoPulledOnce:false, photoSyncing:false, photoStatus:"" };
 
 function today(){ var d=new Date(); return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate()); }
+/* 복관 기록 추가 (같은 날짜+같은 휴관시작 기록이 이미 있으면 안 넣음 → 중복 폭증 방지) */
+function addReopenLog(name, entry){
+  if(!state.reopenLog) state.reopenLog={};
+  if(!state.reopenLog[name]) state.reopenLog[name]=[];
+  var k=(entry.reopenDate||"")+"|"+((entry.closed&&entry.closed.start)||"");
+  var exists=state.reopenLog[name].some(function(x){
+    return ((x.reopenDate||"")+"|"+((x.closed&&x.closed.start)||""))===k;
+  });
+  if(!exists) state.reopenLog[name].push(entry);
+  if(state.reopenLog[name].length>50) state.reopenLog[name]=state.reopenLog[name].slice(-50);
+}
+/* 복관 기록 전체 정리: 중복 제거 + 사람당 최대 50개 (폭증 데이터 자동 복구) */
+function cleanReopenLog(){
+  if(!state.reopenLog) return false;
+  var changed=false;
+  for(var name in state.reopenLog){
+    var arr=state.reopenLog[name]||[];
+    var seen={}, uniq=[];
+    arr.forEach(function(e){
+      var k=(e.reopenDate||"")+"|"+((e.closed&&e.closed.start)||"");
+      if(!seen[k]){ seen[k]=1; uniq.push(e); }
+    });
+    if(uniq.length>50) uniq=uniq.slice(-50);
+    if(uniq.length!==arr.length){ changed=true; }
+    state.reopenLog[name]=uniq;
+  }
+  return changed;
+}
 function p2(n){ return String(n).padStart(2,"0"); }
 function ym(d){ return d.slice(0,7); }
 function addMonths(ymStr,n){ var a=ymStr.split("-"); var t=a[0]*12+(a[1]-1)+n;
@@ -245,15 +273,23 @@ function mergeData(a,b){
   var qa=a.quitMap||{}, qb=b.quitMap||{};
   for(i in qa) quits[i]=qa[i];
   for(i in qb){ if(!quits[i] || (qb[i].t||0) > (quits[i].t||0)) quits[i]=qb[i]; }
-  /* 복관 기록 병합 (양쪽 합치기) */
+  /* 복관 기록 병합 (양쪽 합치기) — key 기반 중복제거로 폭증 방지 */
   var rl={};
   [a.reopenLog||{}, b.reopenLog||{}].forEach(function(src){
     for(var rn in src){
       if(!rl[rn]) rl[rn]=[];
-      (src[rn]||[]).forEach(function(e){
-        var dup=rl[rn].some(function(x){ return x.reopenDate===e.reopenDate && ((x.closed&&x.closed.start)||"")===((e.closed&&e.closed.start)||""); });
-        if(!dup) rl[rn].push(e);
+      var seen={};
+      /* 이미 rl[rn]에 있는 것들의 key를 먼저 등록 */
+      rl[rn].forEach(function(x){
+        var k=(x.reopenDate||"")+"|"+((x.closed&&x.closed.start)||"");
+        seen[k]=1;
       });
+      (src[rn]||[]).forEach(function(e){
+        var k=(e.reopenDate||"")+"|"+((e.closed&&e.closed.start)||"");
+        if(!seen[k]){ seen[k]=1; rl[rn].push(e); }
+      });
+      /* 안전장치: 한 사람 복관기록이 비정상적으로 많으면(50개 초과) 최근 것만 유지 */
+      if(rl[rn].length>50){ rl[rn]=rl[rn].slice(-50); }
     }
   });
   var closed={};
@@ -514,6 +550,7 @@ function cloudSync(){
         state.closedMap=merged.closedMap;
         state.quitMap=merged.quitMap||state.quitMap||{};
         state.reopenLog=merged.reopenLog||state.reopenLog||{};
+        cleanReopenLog();   /* 폭증한 복관기록 자동 정리 */
         state.regTypeMap=merged.regTypeMap||state.regTypeMap||{};
         state.newStudents=merged.newStudents||state.newStudents||[];
         state.histEdits=merged.histEdits||state.histEdits||{};
@@ -616,6 +653,7 @@ function cloudPull(){
         state.closedMap=merged.closedMap;
         state.quitMap=merged.quitMap||state.quitMap||{};
         state.reopenLog=merged.reopenLog||state.reopenLog||{};
+        cleanReopenLog();   /* 폭증한 복관기록 자동 정리 */
         state.regTypeMap=merged.regTypeMap||state.regTypeMap||{};
         state.newStudents=merged.newStudents||state.newStudents||[];
         state.histEdits=merged.histEdits||state.histEdits||{};
@@ -1537,7 +1575,7 @@ window.unQuit=function(name){
   if(state.closedMap[name]){                      /* 휴관 기록도 함께 정리 (복관과 동일 규칙) */
     if(!state.reopenLog) state.reopenLog={};
     if(!state.reopenLog[name]) state.reopenLog[name]=[];
-    state.reopenLog[name].push({ closed:state.closedMap[name], reopenDate:today(), t:Date.now() });
+    addReopenLog(name, { closed:state.closedMap[name], reopenDate:today(), t:Date.now() });
     delete state.closedMap[name];
   }
   state.rosterT=Date.now();
@@ -1556,7 +1594,7 @@ window.confirmReopen=function(){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(d.date)){ alert("날짜 형식이 올바르지 않습니다."); return; }
   if(!state.reopenLog) state.reopenLog={};
   if(!state.reopenLog[d.name]) state.reopenLog[d.name]=[];
-  state.reopenLog[d.name].push({ closed:state.closedMap[d.name], reopenDate:d.date, t:Date.now() });
+  addReopenLog(d.name, { closed:state.closedMap[d.name], reopenDate:d.date, t:Date.now() });
   delete state.closedMap[d.name];
   for(var ri=0;ri<STUDENTS.length;ri++){ if(STUDENTS[ri].n===d.name){ delete STUDENTS[ri].st; break; } }
   state.rosterT=Date.now(); persistAtt();
