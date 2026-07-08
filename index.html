@@ -98,8 +98,16 @@
 .header button.catOn{background:#EEF2FF!important;color:#4F46E5!important;border:1px solid #C7D2FE!important;border-radius:10px;padding:9px 14px!important;font-size:13.5px!important;font-weight:700;display:inline-flex;align-items:center;gap:6px}
 .header button.catOff{background:#fff!important;color:#334155!important;border:1px solid #E2E8F0!important;border-radius:10px;padding:9px 14px!important;font-size:13.5px!important;font-weight:600;display:inline-flex;align-items:center;gap:6px}
 .header button.regBtn{background:#4F46E5!important;color:#fff!important;border:none!important;border-radius:10px;padding:9px 16px!important;font-size:13.5px!important;font-weight:700;box-shadow:0 1px 2px rgba(79,70,229,.35);display:inline-flex;align-items:center;gap:6px}
-.header .dbar button{background:rgba(255,255,255,.06)!important;color:#E2E8F0!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:9px;padding:8px 12px!important;font-size:13px!important;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.header .dbar button{background:rgba(255,255,255,.06)!important;color:#CBD5E1!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:8px;padding:7px 11px!important;font-size:12.5px!important;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:background .15s}
+.header .dbar button:hover{background:rgba(255,255,255,.13)!important;color:#fff!important}
+.header .dbar button.util-primary{background:rgba(99,102,241,.20)!important;color:#C7D2FE!important;border-color:rgba(129,140,248,.35)!important}
+.header .dbar button.util-primary:hover{background:rgba(99,102,241,.32)!important;color:#fff!important}
 .header .warnPill{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid #FDE68A;border-radius:9px;background:#FFFBEB;color:#B45309;font-size:12.5px;font-weight:600}
+/* 보조 도구 버튼 (지난주 복사·화면맞춤·홀딩 등) — 위계 낮은 회색 톤으로 통일 */
+.tool{padding:5px 11px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;transition:background .12s}
+.tool:hover{background:#E9EBEF}
+.tool.on{border-color:#BFDBFE;background:#EAF3FF;color:var(--blue);font-weight:700}
+.tool.warn{border-color:#F5C77E;background:#FFF3E0;color:#B45309;font-weight:700}
 
 /* 메모 풍선: 즉시 · 크게 */
 .hasTip{position:relative}
@@ -134,7 +142,15 @@ var LOGO_WIDE="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAdgAAAApCAYAAACWYDi
 </script>
 <script>
 "use strict";
-var STUDENTS = [];  /* 명단은 클라우드에서 불러옴 (개인정보 보호) */
+/* ══════════════════════════════════════════════════════════════
+   [명단 단일 소스 원칙 — 변경 금지]
+   STUDENTS 는 이 앱의 유일한 원생 명단이다. 모든 카테고리(수련시간표·
+   회계관리·인원현황·브리핑·심사 및 앞으로 추가될 카테고리)는 이 STUDENTS
+   하나만 읽고 쓴다. 명단을 복제하지 않는다.
+   · 저장 창고: 출석 창고(naracha-att) 단일. 회계 창고는 명단을 읽기만 한다.
+   · 명단 변경 후엔 rosterSave() 로 저장한다.
+   ══════════════════════════════════════════════════════════════ */
+var STUDENTS = [];  /* 명단은 클라우드에서 불러옴 (개인정보 보호) — 단일 소스 */
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
@@ -415,8 +431,7 @@ function persist(){
                            reopenLog:state.reopenLog||{},
                            longRegs:state.longRegs||[], deletedLongIds:state.deletedLongIds||[],
                            trash:state.trash||[], dupDismissed:state.dupDismissed||{},
-                           roster:{list:STUDENTS, t:state.rosterT||0},
-                           savedAt:state.savedAt};
+                           savedAt:state.savedAt};   /* 명단은 출석 창고에만 저장 (단일 소스) */
   var data=JSON.stringify(full);
   document.getElementById("app-data").textContent=data;   /* 파일 안에도 기록 */
   state.storageOk=true;
@@ -469,7 +484,7 @@ function cloudSync(){
           deletedStudents:state.deletedStudents,
           longRegs:state.longRegs, deletedLongIds:state.deletedLongIds,
           trash:state.trash, dupDismissed:state.dupDismissed,
-          roster:{list:STUDENTS, t:state.rosterT||0}, savedAt:state.savedAt
+          savedAt:state.savedAt   /* 명단 제외: 출석 창고 단일 저장 */
         }, remote);
         state.payments=merged.payments; state.expiryMap=merged.expiryMap;
         state.deletedIds=merged.deletedIds; state.holdMap=merged.holdMap;
@@ -504,8 +519,7 @@ function cloudSyncPush(){
     deletedStudents:state.deletedStudents||{},
     longRegs:state.longRegs||[], deletedLongIds:state.deletedLongIds||[],
     trash:state.trash||[], dupDismissed:state.dupDismissed||{},
-    roster:{list:STUDENTS, t:state.rosterT||0},
-    savedAt:state.savedAt
+    savedAt:state.savedAt   /* 명단 제외: 출석 창고 단일 저장 */
   });
   /* 구글 시트는 한 칸에 50,000자까지만 저장 가능 → 45,000자씩 나눠 여러 칸에 저장 */
   var payload=[["JSON"]];
@@ -568,7 +582,7 @@ function cloudPull(){
           histEdits:state.histEdits||{}, deletedStudents:state.deletedStudents||{},
           longRegs:state.longRegs, deletedLongIds:state.deletedLongIds,
           trash:state.trash, dupDismissed:state.dupDismissed,
-          roster:{list:STUDENTS, t:state.rosterT||0}, savedAt:state.savedAt
+          savedAt:state.savedAt   /* 명단 제외: 출석 창고 단일 저장 */
         }, remote);
         state.payments=merged.payments; state.expiryMap=merged.expiryMap;
         state.deletedIds=merged.deletedIds; state.holdMap=merged.holdMap;
@@ -599,7 +613,7 @@ function cloudPull(){
           histEdits:state.histEdits||{},deletedStudents:state.deletedStudents||{},
           longRegs:state.longRegs,deletedLongIds:state.deletedLongIds,
           trash:state.trash,dupDismissed:state.dupDismissed,
-          roster:{list:STUDENTS,t:state.rosterT||0},savedAt:state.savedAt })); }catch(e){}
+          savedAt:state.savedAt })); }catch(e){}   /* 명단 제외: 출석 창고 단일 저장 */
       }
       state.pulledOnce=true;
       state.syncing=false; state.lastSync=Date.now();
@@ -1468,31 +1482,40 @@ function isQuit(name){
 /* 명단의 상태 꼬리표(st)를 휴관 장부(closedMap)에 맞춰 자동 정리
    — 상태의 기준은 장부 한 곳. 옛 기기의 낡은 꼬리표가 복관·복원을 되돌리지 못하게 함 */
 function syncStFromMaps(){
-  if(!state.closedMap || !STUDENTS) return;
+  if(!STUDENTS) return;
   STUDENTS.forEach(function(s){
-    if(state.closedMap[s.n] && !isQuit(s.n)){ s.st="휴관"; }
-    else if(s.st==="휴관"){ delete s.st; }
+    if(isQuit(s.n)){ s.st="퇴관"; }
+    else if(state.closedMap && state.closedMap[s.n]){ s.st="휴관"; }
+    else if(s.st==="휴관"||s.st==="퇴관"){ delete s.st; }
   });
 }
+/* [명단 단일 소스] 명단을 바꾼 뒤엔 이 헬퍼로 저장한다. 출석 창고(att)가 유일한 명단 저장소. */
+function rosterSave(){ state.rosterT=Date.now(); syncStFromMaps(); persistAtt(); }
 window.markQuit=function(name){
   if(!confirm(name+" 님을 퇴관 처리할까요?\n(명단의 [퇴관] 필터에서 언제든 다시 볼 수 있습니다)")) return;
   if(!state.quitMap) state.quitMap={};
   state.quitMap[name]={ start:today(), t:Date.now() };
-  persist(); render();
+  state.quitT=Date.now();                /* 출석 창고 병합용 타임스탬프 */
+  syncStFromMaps();                      /* 명단 꼬리표(st) 즉시 반영 */
+  persistAtt();                          /* 인원관리 = 출석 창고 저장 (사범도 가능) */
+  if(myRole()==="admin") persist();      /* 회계 창고 저장은 관리자만 */
+  render();
 };
 window.unQuit=function(name){
   if(!confirm(name+" 님을 재원으로 복원할까요?")) return;
   if(state.quitMap && state.quitMap[name]){ state.quitMap[name]={ del:true, t:Date.now() }; }
+  state.quitT=Date.now();
   if(state.closedMap[name]){                      /* 휴관 기록도 함께 정리 (복관과 동일 규칙) */
     if(!state.reopenLog) state.reopenLog={};
     if(!state.reopenLog[name]) state.reopenLog[name]=[];
     state.reopenLog[name].push({ closed:state.closedMap[name], reopenDate:today(), t:Date.now() });
     delete state.closedMap[name];
   }
-  /* 명단 꼬리표(st=휴관)도 지워야 화면에서 재원으로 보임 */
-  for(var ui=0;ui<STUDENTS.length;ui++){ if(STUDENTS[ui].n===name){ delete STUDENTS[ui].st; break; } }
-  state.rosterT=Date.now(); persistAtt();
-  persist(); render();
+  state.rosterT=Date.now();
+  syncStFromMaps();                      /* 명단 꼬리표 재원으로 정리 */
+  persistAtt();                          /* 인원관리 = 출석 창고 저장 (사범도 가능) */
+  if(myRole()==="admin") persist();      /* 회계 창고 저장은 관리자만 */
+  render();
 };
 window.reopenClosed=function(name){
   state.reopenDialog={ name:name, date:today() };
@@ -3674,10 +3697,10 @@ function renderWeekTab(){
    '<button class="chip" onclick="moveWeek(1)">다음주 ▶</button>'+
    '<button class="chip" onclick="goThisWeek()">이번 주</button>'+
    '<input id="tsSearchIn" class="input" style="max-width:170px;padding:6px 11px;font-size:12.5px;border-radius:9px" placeholder="🔍 이름 검색 ('+(/Mac|iPhone|iPad/i.test(navigator.platform||navigator.userAgent)?"⌘F":"Ctrl+F")+')" value="'+esc(state.tsQ||"")+'" oninput="tsQF(this.value)">'+
-   '<button style="padding:4px 10px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit" onclick="copyPrevWeek()">📋 지난주 복사</button>'+
-        (state.dayView?'':'<button style="'+(state.fitW?'padding:4px 10px;font-size:11.5px;font-weight:700;border-radius:8px;border:1px solid #BFDBFE;background:#EAF3FF;color:var(--blue);cursor:pointer;font-family:inherit':'padding:4px 10px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit')+'" onclick="toggleFitW()">'+(state.fitW?'↔ 화면 맞춤':'↔ 넓게 보기')+'</button>')+
-   '<button style="padding:4px 10px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit" onclick="openAbsM()">🤕 홀딩</button>'+
-   '<button style="padding:4px 10px;font-size:11.5px;font-weight:700;border-radius:8px;cursor:pointer;font-family:inherit;'+(state.pastEdit?'border:1px solid #F5C77E;background:#FFF3E0;color:#B45309':'border:1px solid var(--line);background:#F4F5F7;color:#555')+'" title="지난 날짜 출결 수정 잠금/해제" onclick="togglePastEdit()">'+(state.pastEdit?'🔓 지난날짜 수정 켜짐':'🔒 지난날짜 수정')+'</button>'+
+   '<button class="tool" onclick="copyPrevWeek()">📋 지난주 복사</button>'+
+        (state.dayView?'':'<button class="tool'+(state.fitW?' on':'')+'" onclick="toggleFitW()">'+(state.fitW?'↔ 화면 맞춤':'↔ 넓게 보기')+'</button>')+
+   '<button class="tool" onclick="openAbsM()">🤕 홀딩</button>'+
+   '<button class="tool'+(state.pastEdit?' warn':'')+'" title="지난 날짜 출결 수정 잠금/해제" onclick="togglePastEdit()">'+(state.pastEdit?'🔓 지난날짜 수정 켜짐':'🔒 지난날짜 수정')+'</button>'+
    '<span style="flex:1"></span>'+
    '<button class="chip'+(!state.dayView?' on':'')+'" onclick="setDayView(null)">주간</button>'+
    W_DAYS.map(function(d){ return '<button class="chip'+(state.dayView===d[0]?' on':'')+'" onclick="setDayView(\''+d[0]+'\')">'+d[1]+'</button>'; }).join('')+
@@ -4528,12 +4551,12 @@ window.maybeApplyRosterFile=function(){
     if(state.closedMap[cn]===true) state.closedMap[cn]={start:"2000-01-01", reason:"휴원(날짜 미상)", t:0};
   }
   if(state.rosterFileV) return;
-  if(myRole()!=="admin") return;
   if(!STUDENTS.length) return;
   var n=applyRosterFile();
   state.rosterFileV=1;
   state.rosterT=Date.now();
-  persist(); persistAtt();
+  persistAtt();                        /* 명단 저장 (사범·관리자 공용 출석 창고) */
+  if(myRole()==="admin") persist();    /* 회계 창고 저장은 관리자만 */
   state.attStatus="회원현황 반영 완료 ("+n+"명)"; render();
 };
 window.stuMBy=function(v){
@@ -4746,6 +4769,9 @@ function attState(){
     roster:{ list:STUDENTS, t:state.rosterT||0 },
     schedule: state.schedule || null,
     tempStudents: state.tempStudents || [],
+    /* 퇴관·휴관 상태를 출석 창고에도 저장 → 새 파일 올려도 리셋 안 됨 (사범 기기에서도 유지) */
+    quitMapAtt:{ map:state.quitMap||{}, t:state.quitT||0 },
+    closedMapAtt:{ map:state.closedMap||{}, t:state.closedT||0 },
     /* 심사 관리: 누적 수련횟수(24회 기준)·마지막 심사일(2개월 규칙)·국기원 대기 */
     weeks: state.weeks||{},
     acc:{ map:state.accMap||{}, t:state.accT||0, tmap:state.accTMap||{} },
@@ -4880,7 +4906,16 @@ function mergeAtt(a, b){
     });
     return out;
   }
+  /* 퇴관·휴관: 이름별 최신 기록(t)이 이김 → 두 기기 동기화 시 리셋 방지 */
+  function mergeStamped(x, y){
+    x=x||{map:{},t:0}; y=y||{map:{},t:0};
+    var xm=x.map||{}, ym=y.map||{}, out={};
+    for(var k in xm) out[k]=xm[k];
+    for(var k2 in ym){ if(!out[k2] || (ym[k2].t||0)>(out[k2].t||0)) out[k2]=ym[k2]; }
+    return { map:out, t:Math.max(x.t||0,y.t||0) };
+  }
   return { absences:abs, attV:1, roster:roster, schedule:schedule, tempStudents:temps, weeks:weeks,
+           quitMapAtt:mergeStamped(a.quitMapAtt,b.quitMapAtt), closedMapAtt:mergeStamped(a.closedMapAtt,b.closedMapAtt),
            acc:mergeAcc(a.acc,b.acc), lastExam:newerBlob(a.lastExam,b.lastExam,{}), kkw:newerBlob(a.kkw,b.kkw,{}),
            savedAt:Math.max(a.savedAt||0,b.savedAt||0) };
 }
@@ -4898,6 +4933,20 @@ function applyAtt(m){
   if(m.acc){ state.accMap=m.acc.map||{}; state.accT=m.acc.t||0; state.accTMap=m.acc.tmap||state.accTMap||{}; }
   if(m.lastExam){ state.lastExamMap=m.lastExam.map||{}; state.lastExamT=m.lastExam.t||0; }
   if(m.kkw){ state.kkwPending=m.kkw.list||[]; state.kkwT=m.kkw.t||0; }
+  /* 출석 창고의 퇴관·휴관 상태를 현재 state와 이름별 최신(t)으로 합침 → 리셋 방지 */
+  if(m.quitMapAtt && m.quitMapAtt.map){
+    var qm=m.quitMapAtt.map;
+    if(!state.quitMap) state.quitMap={};
+    for(var qn in qm){ if(!state.quitMap[qn] || (qm[qn].t||0)>(state.quitMap[qn].t||0)) state.quitMap[qn]=qm[qn]; }
+    state.quitT=Math.max(state.quitT||0, m.quitMapAtt.t||0);
+  }
+  if(m.closedMapAtt && m.closedMapAtt.map){
+    var cm=m.closedMapAtt.map;
+    if(!state.closedMap) state.closedMap={};
+    for(var cn in cm){ if(!state.closedMap[cn] || (cm[cn].t||0)>(state.closedMap[cn].t||0)) state.closedMap[cn]=cm[cn]; }
+    state.closedT=Math.max(state.closedT||0, m.closedMapAtt.t||0);
+  }
+  syncStFromMaps();   /* 병합된 상태를 명단 꼬리표에 반영 */
 }
 function parseCloudRows(rows){
   if(!rows || rows.length<2 || rows.error) return null;
@@ -4911,7 +4960,6 @@ function parseCloudRows(rows){
   try{ return JSON.parse(joined); }catch(e){ return null; }
 }
 function attSync(){
-  if(myRole()==="admin" ? false : false){}
   if(state.attSyncing){ state.attPending=true; return; }
   if(!accessKey()) return;
   if(!state.attPulledOnce){ state.attStatus="확인 중 (전송 보류)"; return; }
@@ -5366,7 +5414,7 @@ function render(){
        (state.syncStatus?'<span id="syncBadge" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#86EFAC;background:rgba(34,197,94,.12);padding:2px 9px;border-radius:20px"><span style="width:6px;height:6px;border-radius:50%;background:#22C55E"></span>'+esc(state.syncStatus)+'</span>':'<span id="syncBadge"></span>')+
        '</div></div></div>'+
        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
-       '<button onclick="pullNow()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v5h-5"></path></svg>새로고침</button>'+
+       '<button class="util-primary" onclick="pullNow()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v5h-5"></path></svg>새로고침</button>'+
        '<button onclick="pickDevice()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>'+(state.device?esc(state.device):'기기 선택')+'</button>'+
        '<span style="width:1px;height:22px;background:rgba(255,255,255,.15);margin:0 2px"></span>'+
        '<button onclick="showChangePw()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"></circle><path d="M10.85 12.15 19 4l2 2-2 2 2 2"></path></svg>비번변경</button>'+
