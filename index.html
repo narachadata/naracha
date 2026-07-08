@@ -3646,7 +3646,7 @@ function renderWeekTab(){
    '<b style="font-size:15px">'+esc(wk)+' ~ '+esc(addDays(wk,5))+'</b>'+
    '<button class="chip" onclick="moveWeek(1)">다음주 ▶</button>'+
    '<button class="chip" onclick="goThisWeek()">이번 주</button>'+
-   '<input class="input" style="max-width:150px;padding:6px 11px;font-size:12.5px;border-radius:9px" placeholder="🔍 이름 검색" value="'+esc(state.tsQ||"")+'" oninput="tsQF(this.value)">'+
+   '<input id="tsSearchIn" class="input" style="max-width:170px;padding:6px 11px;font-size:12.5px;border-radius:9px" placeholder="🔍 이름 검색 ('+(/Mac|iPhone|iPad/i.test(navigator.platform||navigator.userAgent)?"⌘F":"Ctrl+F")+')" value="'+esc(state.tsQ||"")+'" oninput="tsQF(this.value)">'+
    '<button style="padding:4px 10px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit" onclick="copyPrevWeek()">📋 지난주 복사</button>'+
         (state.dayView?'':'<button style="'+(state.fitW?'padding:4px 10px;font-size:11.5px;font-weight:700;border-radius:8px;border:1px solid #BFDBFE;background:#EAF3FF;color:var(--blue);cursor:pointer;font-family:inherit':'padding:4px 10px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit')+'" onclick="toggleFitW()">'+(state.fitW?'↔ 화면 맞춤':'↔ 넓게 보기')+'</button>')+
    '<button style="padding:4px 10px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit" onclick="openAbsM()">🤕 홀딩</button>'+
@@ -4098,6 +4098,15 @@ window.markF=function(k,v){ state.markM[k]=v; if(k==="k"||k==="s") render(); };
 window.closeMark=function(){ state.markM=null; render(); };
 /* 출석 처리 창 단축키: Enter=저장 · Esc=취소 · Ctrl/Cmd+E=배치 삭제 (한영·대소문자 무관: 물리 키 위치 기준) */
 document.addEventListener("keydown", function(e){
+  /* Ctrl+F (PC) / Cmd+F (Mac): 수련시간표 이름검색창으로 커서 이동 */
+  if((e.ctrlKey||e.metaKey) && (e.key==="f"||e.key==="F"||e.code==="KeyF")){
+    var box=document.getElementById("tsSearchIn");
+    if(box){
+      e.preventDefault();
+      box.focus(); box.select();
+      return;
+    }
+  }
   if(!state.markM) return;
   if((e.ctrlKey||e.metaKey) && e.code==="KeyE"){ e.preventDefault(); removePlace(); return; }
   if(e.key==="Escape"){ e.preventDefault(); closeMark(); return; }
