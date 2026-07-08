@@ -2751,7 +2751,7 @@ function renderRosterTab(){
   var x='<div class="card">'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">'+
     '<input class="input" style="max-width:220px" placeholder="이름 검색" value="'+esc(q)+'" oninput="setRosterQ(this.value)">'+
-    ["재원","휴관","퇴관","기간휴식","임시","전체"].map(function(k){
+    ["재원","휴관","퇴관","홀딩","임시","전체"].map(function(k){
       return '<button class="chip'+(f===k?' on':'')+'" onclick="setRosterF(\''+k+'\')">'+k+'</button>';
     }).join('')+
     '<span style="flex:1"></span>'+
@@ -2828,7 +2828,7 @@ function rosterListHtml(){
   var list=STUDENTS.filter(function(s){
     var quit = isQuit(s.n);
     var closed = (s.st==="휴관" || !!state.closedMap[s.n]) && !quit;
-    if(f==="기간휴식") return !quit && !closed && !!rosterAbs(s.n) && (!q || s.n.indexOf(q)>-1);
+    if(f==="홀딩") return !quit && !closed && !!rosterAbs(s.n) && (!q || s.n.indexOf(q)>-1);
     if(f==="재원" && (closed||quit)) return false;
     if(f==="휴관" && !closed) return false;
     if(f==="퇴관" && !quit) return false;
@@ -2864,8 +2864,10 @@ function rosterListHtml(){
         var ab=rosterAbs(s.n);
         if(!ab) return '';
         var going = ab.from<=today();
-        return '<span style="background:#FFF3E0;color:#B45309;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">🤕 '+(going?'기간휴식':'휴식예정')+' '+esc(ab.from)+'~'+esc(ab.to)+(ab.reason?' · '+esc(ab.reason):'')+'</span>'+
-          '<button class="chip sm" style="color:var(--green);border-color:#9BD9B4;margin-left:6px" title="오늘부터 다시 수련" onclick="endAbsence(\''+esc(s.n).replace(/'/g,"\\'")+'\')">▶ 휴식 종료</button>';
+        var label = going?'홀딩':'홀딩예정';
+        var range = ab.open ? esc(ab.from)+'~미정' : esc(ab.from)+'~'+esc(ab.to);
+        return '<span style="background:#FFF3E0;color:#B45309;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">🤕 '+label+' '+range+(ab.reason?' · '+esc(ab.reason):'')+'</span>'+
+          '<button class="chip sm" style="color:var(--green);border-color:#9BD9B4;margin-left:6px" title="오늘부터 다시 수련" onclick="endAbsence(\''+esc(s.n).replace(/'/g,"\\'")+'\')">▶ 홀딩 해제</button>';
       })()+
       '<span style="flex:1"></span>'+
       (isQuit(s.n)
@@ -3624,7 +3626,7 @@ function chipHtml(name, key, wk){
   var ab = absOf(name, dateOfKey(key, wk));
   if(ab && !done && !absent){
     style=base+'background-color:#F3F4F6;background-image:linear-gradient(#9AA1AA,#9AA1AA);background-size:88% 2px;background-position:center;background-repeat:no-repeat;color:#8A8F98;border:1px dashed #C4C9D0;border-left:6px solid #C4C9D0;';
-    mk = Object.assign({}, mk, { m:(ab.reason?ab.reason+' · ':'')+'기간 휴식 '+ab.from+'~'+ab.to });
+    mk = Object.assign({}, mk, { m:(ab.reason?ab.reason+' · ':'')+(ab.open?'홀딩 '+ab.from+'~미정':'홀딩 '+ab.from+'~'+ab.to) });
   }
   var tip = mk.m ? ' class="hasTip" data-tip="'+esc(mk.m)+'"' : '';
   return '<span draggable="true" ondragstart="dragChip(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" style="'+style+'"'+tip+' onpointerdown="chipDown(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" onpointerup="chipUp(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" onpointerleave="chipCancelLP()" oncontextmenu="event.preventDefault()">'+
@@ -3647,7 +3649,7 @@ function renderWeekTab(){
    '<input class="input" style="max-width:150px;padding:6px 11px;font-size:12.5px;border-radius:9px" placeholder="🔍 이름 검색" value="'+esc(state.tsQ||"")+'" oninput="tsQF(this.value)">'+
    '<button style="padding:4px 10px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit" onclick="copyPrevWeek()">📋 지난주 복사</button>'+
         (state.dayView?'':'<button style="'+(state.fitW?'padding:4px 10px;font-size:11.5px;font-weight:700;border-radius:8px;border:1px solid #BFDBFE;background:#EAF3FF;color:var(--blue);cursor:pointer;font-family:inherit':'padding:4px 10px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit')+'" onclick="toggleFitW()">'+(state.fitW?'↔ 화면 맞춤':'↔ 넓게 보기')+'</button>')+
-   '<button style="padding:4px 10px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit" onclick="openAbsM()">🤕 기간 휴식</button>'+
+   '<button style="padding:4px 10px;font-size:11.5px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#F4F5F7;color:#555;cursor:pointer;font-family:inherit" onclick="openAbsM()">🤕 홀딩</button>'+
    '<span style="flex:1"></span>'+
    '<button class="chip'+(!state.dayView?' on':'')+'" onclick="setDayView(null)">주간</button>'+
    W_DAYS.map(function(d){ return '<button class="chip'+(state.dayView===d[0]?' on':'')+'" onclick="setDayView(\''+d[0]+'\')">'+d[1]+'</button>'; }).join('')+
@@ -3915,7 +3917,7 @@ function noteSync(name, key, newM){
   s.note=lines.join("\n");
   state.rosterT=Date.now();
 }
-/* ── 기간 휴식 (예: 부상으로 한 달 쉼) ── */
+/* ── 홀딩 (기간 지정 또는 미정) ── */
 function absOf(name, date){
   var arr=(state.absences||{})[name]||[];
   for(var i=0;i<arr.length;i++){
@@ -3954,31 +3956,33 @@ window.saveAbs=function(){
   var m=state.absM;
   var nm=m.pick||(m.q||"").trim();
   if(!STUDENTS.some(function(s){return s.n===nm;})){ alert("명단에서 원생을 선택해 주세요."); return; }
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(m.from)||!/^\d{4}-\d{2}-\d{2}$/.test(m.to)){ alert("시작일과 종료일을 모두 입력해 주세요."); return; }
-  if(m.to<m.from){ alert("종료일이 시작일보다 빠릅니다."); return; }
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(m.from)){ alert("시작일을 입력해 주세요."); return; }
+  var hasTo=/^\d{4}-\d{2}-\d{2}$/.test(m.to);
+  if(hasTo && m.to<m.from){ alert("종료일이 시작일보다 빠릅니다."); return; }
   if(!state.absences) state.absences={};
   if(!state.absences[nm]) state.absences[nm]=[];
-  state.absences[nm].push({ from:m.from, to:m.to, reason:(m.reason||"").trim(), t:Date.now() });
+  /* 종료일 미입력 = 미정 홀딩 (언제 끝날지 모름) → to를 먼 미래로 두고 open 표시 */
+  state.absences[nm].push({ from:m.from, to:(hasTo?m.to:"9999-12-31"), open:!hasTo,
+                            reason:(m.reason||"").trim(), t:Date.now() });
   state.absM=null; persistAtt(); render();
 };
 window.endAbsence=function(name){
   var arr=(state.absences||{})[name]||[];
   var td=today(), best=null;
-  /* 오늘 진행 중이거나 예정된 건 중 가장 이른 것 찾기 */
+  /* 오늘 이후까지 걸쳐 있는 휴식건 중 가장 이른 것 (진행 중 + 예정 모두) */
   arr.forEach(function(e){ if(!e.del && e.to>=td){ if(!best || e.from<best.from) best=e; } });
-  if(!best){ alert(name+" 님은 현재 기간휴식 상태가 아닙니다."); return; }
-  var going = best.from<=td;
-  if(!confirm(name+" 님을 오늘("+td+")부터 다시 수련 시작으로 처리할까요?")) return;
-  if(going){
-    /* 진행 중: 종료일을 오늘로 당김 (오늘까지 쉬고 내일부터가 아니라, 오늘부터 수련이므로 어제까지 휴식 처리) */
-    var y=addDays(td,-1);
-    if(y<best.from){ best.del=true; }   /* 오늘 시작한 휴식이면 없던 일로 */
-    else { best.to=y; }
-    best.t=Date.now();
+  if(!best){ alert(name+" 님은 현재 홀딩 상태가 아닙니다."); return; }
+  if(!confirm(name+" 님을 오늘("+td+")부터 다시 수련 시작으로 처리할까요?\n\n· 어제까지만 휴식으로 남고, 오늘부터 출석 체크가 가능해집니다.")) return;
+  var y=addDays(td,-1);   /* 어제 */
+  if(best.from>y){
+    /* 오늘 시작했거나 아직 시작 전(미래) → 홀딩 자체를 취소 */
+    best.del=true;
   } else {
-    /* 아직 시작 전 예정 건: 취소 */
-    best.del=true; best.t=Date.now();
+    /* 어제 이전부터 진행 중 → 종료일을 어제로 확정 (미정이었어도 여기서 끝남) */
+    best.to=y;
+    best.open=false;
   }
+  best.t=Date.now();   /* 최신 표시 → 다른 기기의 옛 기록을 병합에서 이김 */
   persistAtt(); render();
 };
 window.delAbs=function(name, from, to){
@@ -4140,7 +4144,7 @@ function renderMarkModal(){
    '<div style="font-size:17px;font-weight:900;margin-bottom:2px">'+esc(m.name)+' <span style="font-size:12px;color:var(--sub);font-weight:700">'+esc(s?(s.grade||""):"임시(체험)")+'</span></div>'+
    '<div style="font-size:12px;color:var(--sub);margin-bottom:12px">누적 수련 '+(state.accMap[m.name]||0)+'회</div>'+
     (function(){ var d2=state.markM&&dateOfKey(state.markM.key, state.weekSel); var ab2=d2&&absOf(state.markM.n||state.markM.name, d2);
-      return ab2 ? '<div style="background:#FFF7ED;border:1px solid #FDBA74;color:#9A3412;border-radius:8px;padding:7px 10px;font-size:12.5px;margin-top:6px">🤕 <b>기간 휴식 중</b> ('+esc(ab2.from)+' ~ '+esc(ab2.to)+(ab2.reason?' · '+esc(ab2.reason):'')+')</div>' : ''; })()+
+      return ab2 ? '<div style="background:#FFF7ED;border:1px solid #FDBA74;color:#9A3412;border-radius:8px;padding:7px 10px;font-size:12.5px;margin-top:6px">🤕 <b>홀딩 중</b> ('+esc(ab2.from)+' ~ '+(ab2.open?'미정':esc(ab2.to))+(ab2.reason?' · '+esc(ab2.reason):'')+')</div>' : ''; })()+
    /* ① 출석 종류 — 수업 전에 미리 지정 */
    '<span class="label" style="font-size:12px">① 출석 종류 <span style="color:var(--sub);font-weight:400">(수업 전에 미리 지정)</span></span>'+
    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+
@@ -4695,7 +4699,8 @@ function mergeAtt(a, b){
     for(var an in src){
       if(!abs[an]) abs[an]=[];
       (src[an]||[]).forEach(function(e){
-        var hit=abs[an].find(function(x){ return x.from===e.from && x.to===e.to; });
+        /* 같은 휴식건 판단은 시작일(from)만으로 — 종료일(to)이 바뀌거나 del 처리돼도 같은 건으로 보고 최신(t) 우선 */
+        var hit=abs[an].find(function(x){ return x.from===e.from; });
         if(!hit) abs[an].push(e);
         else if((e.t||0)>(hit.t||0)){ abs[an][abs[an].indexOf(hit)]=e; }
       });
@@ -5235,28 +5240,30 @@ function render(){
     var am=state.absM;
     var cur=[];
     var A=state.absences||{};
-    Object.keys(A).forEach(function(an){ (A[an]||[]).forEach(function(e){ if(!e.del) cur.push({n:an,from:e.from,to:e.to,reason:e.reason||""}); }); });
+    Object.keys(A).forEach(function(an){ (A[an]||[]).forEach(function(e){ if(!e.del) cur.push({n:an,from:e.from,to:e.to,open:!!e.open,reason:e.reason||""}); }); });
     cur.sort(function(x,y){ return x.from<y.from?1:-1; });
     h+='<div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeAbsM()">'+
       '<div style="background:#fff;border-radius:14px;max-width:460px;width:100%;max-height:86vh;overflow:auto;padding:20px">'+
-      '<div style="font-size:17px;font-weight:900;margin-bottom:4px">🤕 기간 휴식 등록</div>'+
-      '<div style="font-size:12.5px;color:var(--sub);margin-bottom:10px">부상·여행 등으로 일정 기간 쉬는 원생 — 그 기간의 시간표에 자동으로 휴식 표시가 됩니다. 배치는 그대로 두어 복귀가 편합니다.</div>'+
+      '<div style="font-size:17px;font-weight:900;margin-bottom:4px">🤕 홀딩 등록</div>'+
+      '<div style="font-size:12.5px;color:var(--sub);margin-bottom:10px">부상·여행 등으로 쉬는 원생 — 그 기간의 시간표에 자동으로 홀딩 표시가 됩니다. 배치는 그대로 두어 복귀가 편합니다. <b>종료일을 비워두면 기간 미정 홀딩</b>이 됩니다.</div>'+
       '<span class="label" style="font-size:12px">원생 검색</span>'+
       '<input id="absQIn" class="input" value="'+esc(am.q||"")+'" placeholder="이름 입력 (예: 문지성)" oninput="absQ(this.value)" style="margin-bottom:2px">'+
       '<div id="absList">'+absListHtml(am.q)+'</div>'+
       '<div style="display:flex;gap:8px;margin-top:10px">'+
       '<div style="flex:1"><span class="label" style="font-size:12px">시작일</span><input type="date" class="input" value="'+esc(am.from||"")+'" onchange="absF(\'from\',this.value)"></div>'+
-      '<div style="flex:1"><span class="label" style="font-size:12px">종료일</span><input type="date" class="input" value="'+esc(am.to||"")+'" onchange="absF(\'to\',this.value)"></div>'+
+      '<div style="flex:1"><span class="label" style="font-size:12px">종료일 <span style="color:var(--sub);font-weight:400">(선택)</span></span><input type="date" class="input" value="'+esc(am.to||"")+'" onchange="absF(\'to\',this.value)"></div>'+
       '</div>'+
+      '<div style="font-size:11.5px;color:var(--sub);margin-top:4px">종료일을 비워두면 <b>기간 미정 홀딩</b>으로 등록됩니다. (나중에 홀딩 해제 버튼으로 종료)</div>'+
       '<span class="label" style="font-size:12px;margin-top:8px;display:block">사유 (선택)</span>'+
       '<input class="input" value="'+esc(am.reason||"")+'" placeholder="예: 발 깁스" oninput="absF(\'reason\',this.value)">'+
       '<div style="display:flex;gap:8px;margin-top:14px">'+
       '<button class="big" style="flex:1;background:#eee;color:#333" onclick="closeAbsM()">취소</button>'+
       '<button class="big" style="flex:1.4" onclick="saveAbs()">저장</button>'+
       '</div>'+
-      (cur.length?'<div style="border-top:1px solid var(--line);margin-top:16px;padding-top:10px"><div style="font-size:13px;font-weight:900;margin-bottom:4px">현재 기간 휴식 ('+cur.length+'건)</div>'+
+      (cur.length?'<div style="border-top:1px solid var(--line);margin-top:16px;padding-top:10px"><div style="font-size:13px;font-weight:900;margin-bottom:4px">현재 홀딩 ('+cur.length+'건)</div>'+
         cur.slice(0,20).map(function(e){
-          return '<div style="display:flex;align-items:center;gap:6px;font-size:12.5px;padding:5px 0;border-bottom:1px dashed var(--line)"><b>'+esc(e.n)+'</b><span style="color:var(--sub)">'+esc(e.from)+' ~ '+esc(e.to)+(e.reason?' · '+esc(e.reason):'')+'</span><span style="flex:1"></span><button style="border:1px solid var(--line);background:#fff;color:var(--red);border-radius:6px;padding:2px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit" onclick="delAbs(\''+esc(e.n).replace(/'/g,"\\'")+'\',\''+e.from+'\',\''+e.to+'\')">해제</button></div>';
+          var span = e.open ? esc(e.from)+' ~ <b style="color:var(--amber)">미정</b>' : esc(e.from)+' ~ '+esc(e.to);
+          return '<div style="display:flex;align-items:center;gap:6px;font-size:12.5px;padding:5px 0;border-bottom:1px dashed var(--line)"><b>'+esc(e.n)+'</b><span style="color:var(--sub)">'+span+(e.reason?' · '+esc(e.reason):'')+'</span><span style="flex:1"></span><button style="border:1px solid var(--line);background:#fff;color:var(--red);border-radius:6px;padding:2px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit" onclick="delAbs(\''+esc(e.n).replace(/'/g,"\\'")+'\',\''+e.from+'\',\''+e.to+'\')">해제</button></div>';
         }).join("")+'</div>':'')+
       '</div></div>';
   }
