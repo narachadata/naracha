@@ -4332,14 +4332,16 @@ function renderWeekTab(){
    W_DAYS.map(function(d){ return '<button class="chip'+(state.dayView===d[0]?' on':'')+'" onclick="setDayView(\''+d[0]+'\')">'+d[1]+'</button>'; }).join('')+
    '</div>'+
    tsBarHtml()+
-   '<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--sub);margin-bottom:4px">'+
+   '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--sub);margin-bottom:4px">'+
    ATT_KINDS.map(function(kk){ return '<span style="display:inline-flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:'+kk.c+'"></span>'+kindLabel(kk.k)+'</span>'; }).join('')+
-   '<span>· 이름 클릭=출석→결석→미정 순환 · 길게 누르면 설정 창 · 🎂 생일(그 날짜)</span></div>'+
-   /* ── ✨ 이번 주 시그니처 질문 (인성교육) ── */
-   '<div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:11px 14px;background:linear-gradient(135deg,#EEF2FF 0%,#F3F0FF 100%);border:1px solid #D8D6F5;border-radius:13px;flex-wrap:wrap;box-shadow:0 1px 4px rgba(67,56,202,.06)">'+
-     '<span style="font-size:13px;font-weight:900;color:#4338CA;white-space:nowrap;letter-spacing:-.2px">✨ 이번 주 시그니처 질문</span>'+
-     '<input class="input" style="flex:1;min-width:180px;border:1.5px solid #C7D2FE;background:#fff;font-size:14px;font-weight:600;color:#312E81;padding:9px 13px;border-radius:10px" placeholder="예: 이번 주에 가장 뿌듯했던 순간은?" value="'+esc((state.sigQ||{})[curWeek()]||"")+'" oninput="sigQInput(this.value)" onchange="sigQSave()">'+
-     '<button class="chip" style="background:#4338CA;border-color:#4338CA;color:#fff;font-weight:800;white-space:nowrap" onclick="openSigBank()">📚 질문모음</button>'+
+   '<span>· 이름 클릭=출석→결석→미정 순환 · 길게 누르면 설정 창 · 🎂 생일(그 날짜)</span>'+
+   '<span style="flex:1;min-width:8px"></span>'+
+   /* ── ✨ 이번 주 시그니처 질문 (생일 범례 오른쪽 · 컴팩트) ── */
+   '<span style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#EEF2FF 0%,#F3F0FF 100%);border:1px solid #D8D6F5;border-radius:10px;padding:4px 6px 4px 9px;box-shadow:0 1px 3px rgba(67,56,202,.08)">'+
+     '<span style="font-size:11.5px;font-weight:900;color:#4338CA;white-space:nowrap;letter-spacing:-.2px">✨ 이번 주 질문</span>'+
+     '<input style="width:230px;max-width:40vw;border:1.5px solid #C7D2FE;background:#fff;font-size:12.5px;font-weight:600;color:#312E81;padding:5px 9px;border-radius:8px;font-family:inherit" placeholder="예: 이번 주 가장 뿌듯했던 순간은?" value="'+esc((state.sigQ||{})[curWeek()]||"")+'" oninput="sigQInput(this.value)" onchange="sigQSave()">'+
+     '<button style="background:#4338CA;border:none;color:#fff;font-weight:800;white-space:nowrap;font-size:11.5px;padding:5px 9px;border-radius:8px;cursor:pointer;font-family:inherit" onclick="openSigBank()">📚 질문모음</button>'+
+   '</span>'+
    '</div>'+
    '</div>';
   var days = state.dayView ? W_DAYS.filter(function(d){return d[0]===state.dayView;}) : W_DAYS;
