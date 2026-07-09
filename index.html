@@ -439,20 +439,39 @@ function effExpiry(name){
 }
 
 /* ---------- 저장·병합 ---------- */
-/* ── 대회이력 병합 헬퍼 (동시 입력 시 누적 보존) ── */
+/* ── 대회이력 병합 헬퍼 (동시 입력 누적 보존 + 편집 시 폭증 방지) ──
+   ★ 중복제거 키는 반드시 '안정적'이어야 한다. 예전엔 t(수정시각)를 키로 써서
+     편집할 때마다 새 항목처럼 취급→무한 중복되는 폭증 버그가 있었다.
+     이제 고정 id 우선, 없으면 내용(날짜|대회|결과|코멘트) 기준으로 묶는다. */
+function newCompId(){ return "C"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function compKey(c){
   if(!c) return "";
-  if(c.t) return "t:"+c.t;
-  return (c.d||"")+"|"+(c.nm||"")+"|"+(c.r||"")+"|"+(c.c||"");
+  if(c.id) return "id:"+c.id;                                   /* 고정 id (안정) */
+  return "v:"+(c.d||"")+"|"+(c.nm||"")+"|"+(c.r||"")+"|"+(c.c||"");  /* 레거시: 내용 기준 */
 }
 function mergeCompLists(x, y){
-  var out=[], seen={};
+  var byKey={}, order=[];
   (x||[]).concat(y||[]).forEach(function(c){
-    if(!c) return; var k=compKey(c);
-    if(k && seen[k]) return; seen[k]=1; out.push(c);
+    if(!c) return; var k=compKey(c); if(!k) return;
+    var cur=byKey[k];
+    if(!cur){ byKey[k]=c; order.push(k); }
+    else if((c.t||0)>(cur.t||0)){ byKey[k]=c; }                 /* 같은 항목이면 최신(t) 우선 */
   });
+  var out=order.map(function(k){ return byKey[k]; });
   out.sort(function(a,b){ return String(b.d||"").localeCompare(String(a.d||"")); });
   return out;
+}
+/* 이미 폭증한 기존 데이터 정리: 내용(날짜|대회|결과|코멘트)이 완전히 같은 중복을 하나로 합침(최신 t 유지) */
+function dedupComps(list){
+  var byK={}, order=[];
+  (list||[]).forEach(function(c){
+    if(!c) return;
+    var k=(c.d||"")+"|"+(c.nm||"")+"|"+(c.r||"")+"|"+(c.c||"");
+    var cur=byK[k];
+    if(!cur){ byK[k]=c; order.push(k); }
+    else if((c.t||0)>(cur.t||0)) byK[k]=c;
+  });
+  return order.map(function(k){ return byK[k]; });
 }
 /* ── 명단 병합: 원생별 최신(_t) 우선 + 대회이력 합집합 (동시 수정 유실 방지) ──
    삭제는 deletedStudents 로 별도 처리되므로 union 병합해도 삭제본이 되살아나지 않음 */
@@ -5025,7 +5044,7 @@ window.openStuM=function(name){
     state.stuM={ mode:"edit", view:true, orig:name, n:s.n, b:s.b||"", g:s.g||"남", by:s.by||"", t:s.t||"",
       grade:s.grade||"", gT:pg.t, gN:pg.n, gS:pg.s, bd:s.bd||"", note:s.note||"", sp:s.sp||"",
       joinDate:s.joinDate||"", lastPromo:s.lastPromo||"", reg:s.reg||(isAd?"횟수":"월별"),
-      gd:JSON.parse(JSON.stringify(s.gd||[])), comps:JSON.parse(JSON.stringify(s.comps||[])), tempId:null, photo:getPhoto(name) };
+      gd:JSON.parse(JSON.stringify(s.gd||[])), comps:dedupComps(JSON.parse(JSON.stringify(s.comps||[]))), tempId:null, photo:getPhoto(name) };
   } else {
     state.stuM={ mode:"new", orig:null, n:"", b:"", g:"남", by:"", t:"주2",
       grade:"", gT:"", gN:"", gS:"", bd:"", note:"", sp:"", joinDate:today(), reg:"월별", gd:[], comps:[], tempId:null };
@@ -5093,7 +5112,7 @@ window.stuMF=function(k,v){ state.stuM[k]=v; };
 /* ── 대회이력 편집 ── */
 window.stuMAddComp=function(){
   if(!state.stuM.comps) state.stuM.comps=[];
-  state.stuM.comps.unshift({ d:today(), nm:"", r:"", c:"", t:Date.now() });
+  state.stuM.comps.unshift({ id:newCompId(), d:today(), nm:"", r:"", c:"", t:Date.now() });
   render();
 };
 window.stuMComp=function(i,k,v){
@@ -5274,7 +5293,8 @@ window.saveStuM=function(){
     alert("이미 있는 이름입니다. 동명이인은 이름 뒤에 A·B를 붙여주세요."); return;
   }
   var gd=(m.gd||[]).filter(function(g){return (g.p||"").trim();});
-  var comps=(m.comps||[]).filter(function(c){return (c.d||c.nm||c.r||c.c);});
+  var comps=dedupComps((m.comps||[]).filter(function(c){return (c.d||c.nm||c.r||c.c);}));  /* 기존 중복 정리 */
+  comps.forEach(function(c){ if(!c.id) c.id=newCompId(); });   /* 폭증 방지: 모든 대회이력에 고정 id 보장 */
   if(m.mode==="new"){
     var stu={ n:name, b:m.b, g:m.g, t:m.t||"", by:m.by||"", e:null, p:[], sp:(m.sp||"").trim(), grade:(m.grade||"").trim(), bd:m.bd||"", note:m.note||"", joinDate:m.joinDate||"", reg:m.reg||"월별", gd:gd, comps:comps, sid:newSid(), _t:Date.now() };
     STUDENTS.push(stu);
