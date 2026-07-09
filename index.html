@@ -580,12 +580,12 @@ function mergeData(a,b){
   var ra=a.regTypeMap||{}, rb=b.regTypeMap||{};
   for(i in ra) regTypes[i]=ra[i];
   for(i in rb) regTypes[i]=rb[i];
-  /* 참고횟수(브리핑에서 수정) 병합: 키별 최신(t) 우선 */
+  /* 기준수련횟수(브리핑에서 수정) 병합: 키별 최신(t) 우선 */
   var refCnts={};
   var rca=a.refCntMap||{}, rcb=b.refCntMap||{};
   for(i in rca) refCnts[i]=rca[i];
   for(i in rcb){ if(!refCnts[i] || ((rcb[i]&&rcb[i].t)||0) > ((refCnts[i]&&refCnts[i].t)||0)) refCnts[i]=rcb[i]; }
-  /* 기준월 참고횟수(회계입력) 병합: 이름별 최신(t) 우선 */
+  /* 기준월 기준수련횟수(회계입력) 병합: 이름별 최신(t) 우선 */
   var refBase={};
   var rba=a.refBaseMap||{}, rbb=b.refBaseMap||{};
   for(i in rba) refBase[i]=rba[i];
@@ -1269,7 +1269,7 @@ window.setTab=function(t){
   render();
 };
 window.setQuery=function(v){ state.query=v; renderPickList(); };
-/* 원생 선택 시 기준월·참고횟수 입력칸 초기화: 저장된 기준(refBaseMap)이 있으면 그 값, 없으면 현재월·수련방법 기본값 */
+/* 원생 선택 시 기준월·기준수련횟수 입력칸 초기화: 저장된 기준(refBaseMap)이 있으면 그 값, 없으면 현재월·수련방법 기본값 */
 function initRefInputs(s){
   var rb=(state.refBaseMap||{})[s.n];
   if(rb && rb.ym){ state.monBaseYm=rb.ym; state.monCnt=(rb.n!=null?String(rb.n):""); }
@@ -1477,7 +1477,7 @@ window.savePay=function(skipConfirm){
   }
   var baseYm = (months>=6 && state.startYm) ? state.startYm : ym(state.date);
   var exp = months>0 ? addMonths(baseYm,months-1) : null;
-  /* 기준월 참고횟수 저장: 기준월부터 계속 고정 적용 (변경 전까지 유지) */
+  /* 기준월 기준수련횟수 저장: 기준월부터 계속 고정 적용 (변경 전까지 유지) */
   if(state.cat==="수련비" && state.picked && state.monCnt!=="" && state.monCnt!=null){
     if(!state.refBaseMap) state.refBaseMap={};
     state.refBaseMap[state.picked.n]={ ym:(state.monBaseYm||ym(state.date)), n:Number(state.monCnt), t:Date.now() };
@@ -2526,13 +2526,69 @@ window.editRefCnt=function(name, ym, v){
   var key=name+"|"+ym;
   if(clean===""){ delete state.refCntMap[key]; }
   else { state.refCntMap[key]={ v:Number(clean), t:Date.now() }; }
-  /* 같은 달 수련비 결제가 있으면 그 결제의 참고횟수(w)도 맞춰줌 (일관성 유지) */
+  /* 같은 달 수련비 결제가 있으면 그 결제의 기준수련횟수(w)도 맞춰줌 (일관성 유지) */
   (state.payments||[]).forEach(function(p){
     if(p.name===name && p.cat==="수련비" && (p.date||"").slice(0,7)===ym){ p.w = (clean===""?null:Number(clean)); }
   });
   persist();
   render();
 };
+
+/* ══════════ 기준수련횟수 설정 (납부내역 학적부에서 직접 편집) ══════════ */
+window.openBaseCntModal=function(){
+  var name=state.detail; if(!name) return;
+  var rb=(state.refBaseMap||{})[name];
+  var stu=null; for(var i=0;i<STUDENTS.length;i++){ if(STUDENTS[i].n===name){ stu=STUDENTS[i]; break; } }
+  var defN=(typeof defaultMonCnt==="function" && stu)?(defaultMonCnt(stu.t)||""):"";
+  state.baseCntModal={
+    name:name,
+    ym:(rb&&rb.ym)?rb.ym:ym(state.date),
+    n:(rb&&rb.n!=null)?String(rb.n):String(defN||"")
+  };
+  render();
+};
+window.closeBaseCntModal=function(){ state.baseCntModal=null; render(); };
+window.setBaseCntYm=function(v){ if(state.baseCntModal) state.baseCntModal.ym=v; };
+window.setBaseCntN=function(v){ if(state.baseCntModal){ state.baseCntModal.n=String(v).replace(/[^0-9]/g,""); render(); } };
+window.saveBaseCnt=function(){
+  var m=state.baseCntModal; if(!m) return;
+  if(m.n===""||m.n==null){
+    if(state.refBaseMap) delete state.refBaseMap[m.name];
+    state.baseCntSaved="'"+m.name+"' 기준수련횟수를 삭제했습니다.";
+  } else {
+    if(!state.refBaseMap) state.refBaseMap={};
+    state.refBaseMap[m.name]={ ym:(m.ym||ym(state.date)), n:Number(m.n), t:Date.now() };
+    state.baseCntSaved="'"+m.name+"' 기준수련횟수: "+(m.ym||ym(state.date))+"부터 "+Number(m.n)+"회로 저장했습니다.";
+  }
+  persist();
+  state.baseCntModal=null;
+  render();
+};
+function renderBaseCntModal(){
+  var m=state.baseCntModal; if(!m) return "";
+  var rb=(state.refBaseMap||{})[m.name];
+  return '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px" onclick="closeBaseCntModal()">'+
+    '<div style="background:#fff;border-radius:16px;max-width:430px;width:100%" onclick="event.stopPropagation()">'+
+    '<div style="padding:20px 22px 12px;border-bottom:1px solid var(--line)">'+
+      '<div style="font-size:18px;font-weight:900">📌 기준수련횟수 설정</div>'+
+      '<div style="font-size:12.5px;color:var(--sub);margin-top:4px"><b>'+esc(m.name)+'</b> 수련생 · 기준 월부터 이후 모든 달에 이 횟수가 기준으로 적용됩니다. (출석현황·납부내역에 반영)</div>'+
+    '</div>'+
+    '<div style="padding:16px 22px">'+
+      (rb&&rb.ym?'<div style="font-size:12px;color:var(--sub);margin-bottom:10px">현재 저장값: <b style="color:var(--blue)">'+esc(rb.ym)+'부터 '+rb.n+'회</b></div>':'<div style="font-size:12px;color:var(--sub);margin-bottom:10px">아직 저장된 기준수련횟수가 없습니다.</div>')+
+      '<div style="display:flex;gap:10px">'+
+        '<div style="flex:1"><span class="label" style="font-size:12px">기준 월</span>'+
+          '<input type="month" class="input" value="'+esc(m.ym)+'" onchange="setBaseCntYm(this.value)"></div>'+
+        '<div style="flex:1"><span class="label" style="font-size:12px">기준수련횟수</span>'+
+          '<input class="input" inputmode="numeric" placeholder="예: 8" value="'+esc(String(m.n||""))+'" oninput="setBaseCntN(this.value)"></div>'+
+      '</div>'+
+      '<div style="font-size:11.5px;color:var(--sub);margin-top:8px">· 특정 달만 다르게 하려면 아래 표의 <b>기준</b> 칸에 직접 입력하세요.<br>· 비워두고 저장하면 기준값이 삭제됩니다.</div>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;padding:12px 22px 18px;border-top:1px solid var(--line)">'+
+      '<button style="flex:1;background:#fff;border:1.5px solid var(--line);color:var(--sub);border-radius:11px;padding:12px;font-weight:700;cursor:pointer;font-family:inherit" onclick="closeBaseCntModal()">닫기</button>'+
+      '<button style="flex:1.4;background:var(--blue);border:none;color:#fff;border-radius:11px;padding:12px;font-weight:800;cursor:pointer;font-family:inherit" onclick="saveBaseCnt()">저장</button>'+
+    '</div>'+
+    '</div></div>';
+}
 window.setDetailYear=function(y){ state.detailYear=Number(y); render(); };
 
 window.printCert=function(){
@@ -3964,10 +4020,10 @@ function renderScheduleTab(){
 
 /* ══════════ 출석 현황 (계약 대비 미달/초과) ══════════ */
 function contractCnt(name, ym){
-  /* 1순위: 브리핑에서 그 달만 직접 수정한 참고횟수(refCntMap) */
+  /* 1순위: 브리핑에서 그 달만 직접 수정한 기준수련횟수(refCntMap) */
   var rk=name+"|"+ym, rm=(state.refCntMap||{})[rk];
   if(rm && rm.v!=null && rm.v!=="") return {n:Number(rm.v), src:"입력"};
-  /* 2순위: 회계입력의 기준월 참고횟수(refBaseMap) — 기준월부터 그 이후 모든 달에 고정 적용 */
+  /* 2순위: 회계입력의 기준월 기준수련횟수(refBaseMap) — 기준월부터 그 이후 모든 달에 고정 적용 */
   var rb=(state.refBaseMap||{})[name];
   if(rb && rb.n!=null && rb.n!=="" && rb.ym && ym>=rb.ym) return {n:Number(rb.n), src:"기준"};
   /* 3순위: 그 달 수련비 결제에 입력된 횟수(구버전 호환) */
@@ -4130,12 +4186,12 @@ function statListHtml(view){
             return '<span style="display:inline-flex;align-items:center;justify-content:center;background:'+(wend?'#FFF3E6':'#EAF3FF')+';color:'+(wend?'#C2410C':'var(--blue)')+';border:1px solid '+(wend?'#FBD3AE':'#CFE2FA')+';border-radius:6px;padding:2px 6px;font-size:11px;font-weight:800;white-space:nowrap">'+o.d+o.wd+'</span>';
           }).join('')+'</div>'
       : '<span style="font-size:11.5px;color:var(--sub)">출석 없음</span>';
-    /* 고정폭 칸으로 세로 줄맞춤 (참고·실제·미달태그·날짜 모두 같은 x에서 시작) */
+    /* 고정폭 칸으로 세로 줄맞춤 (기준·실제·미달태그·날짜 모두 같은 x에서 시작) */
     x+='<div style="border-top:1px solid var(--line);padding:9px 0;display:flex;align-items:center;gap:8px">'+
       avatarHtml(s.n, s.g, 34)+
       '<span style="flex:0 0 auto;width:4px;height:22px;border-radius:2px;background:'+gradeColor(s.grade||"")+'"></span>'+
       '<b style="flex:0 0 84px;font-size:14px;cursor:pointer;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="클릭하면 학적부가 열립니다 (수정도 가능)" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+esc(s.n)+'</b>'+
-      '<span style="flex:0 0 52px;font-size:12px;color:var(--sub)">참고 <b style="color:var(--ink)">'+(r.ct?r.ct.n:'–')+'</b></span>'+
+      '<span style="flex:0 0 52px;font-size:12px;color:var(--sub)">기준 <b style="color:var(--ink)">'+(r.ct?r.ct.n:'–')+'</b></span>'+
       '<span style="flex:0 0 48px;font-size:12px;color:var(--sub)">실제 <b style="color:var(--blue)">'+r.ac+'</b></span>'+
       '<div style="flex:0 0 74px;display:flex;justify-content:flex-start">'+tag+'</div>'+
       /* 오른쪽: 출석 날짜 버튼 (모든 행 같은 x에서 시작) */
@@ -7276,6 +7332,7 @@ function render(){
   if(state.sigBank){ h+=renderSigBank(); }
   if(state.nameCleanup){ h+=renderNameCleanup(); }
   if(state.dupTool){ h+=renderDupTool(); }
+  if(state.baseCntModal){ h+=renderBaseCntModal(); }
   if(state.addBox){ h+=renderAddModal(); }
   /* 출석: 임시(체험) 등록 창 */
   if(state.tempM){ h+=renderTempModal(); }
@@ -7581,12 +7638,17 @@ function render(){
     var stuInfo=null;
     for(var si=0;si<STUDENTS.length;si++){ if(STUDENTS[si].n===state.detail){ stuInfo=STUDENTS[si]; break; } }
     h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
-       '<div style="font-size:19px;font-weight:900">'+esc(state.detail)+' 님 납부내역</div>'+
+       '<div style="font-size:19px;font-weight:900">'+esc(state.detail)+' 수련생 납부내역</div>'+
        '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+       '<button onclick="openBaseCntModal()" style="border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">기준수련횟수</button>'+
        '<button onclick="editStudent(\''+state.detail.replace(/'/g,"\\'")+'\')" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit">원생 정보</button>'+
        (isQuit(state.detail) ? '<button onclick="deleteStudent(\''+state.detail.replace(/'/g,"\\'")+'\')" style="border:1px solid var(--red);background:#fff;color:var(--red);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit">퇴관생 삭제</button>' : '')+
        '<button onclick="closeDetail()" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit">← 돌아가기</button>'+
        '</div></div>';
+    if(state.baseCntSaved){
+      h+='<div class="card" style="background:#E9F8EE;border:1px solid #B7DFC4;color:#1B7A3D;font-size:13px;font-weight:700;padding:10px 14px">✅ '+esc(state.baseCntSaved)+'</div>';
+      state.baseCntSaved=null;
+    }
     /* 등록일·복관이력 표시 */
     if(stuInfo && (stuInfo.joinDate || (state.reopenLog && state.reopenLog[state.detail]))){
       var infoHtml="";
@@ -7738,7 +7800,7 @@ function render(){
          '<div style="font-size:28px;font-weight:900;letter-spacing:-.5px;margin-top:2px">'+won(ytu+yet)+'</div>'+
          '<div style="font-size:12.5px;opacity:.9;margin-top:5px">수련비 '+won(ytu)+'  +  기타납부 '+won(yet)+'</div>'+
          '</div>';
-      /* ── 수련비 납부 상황 (월별 금액 / 참고 횟수 / 실제 출석) ── */
+      /* ── 수련비 납부 상황 (월별 금액 / 기준수련횟수 / 실제 출석) ── */
       var monAmt={}, etcList=[];
       yr.forEach(function(r){
         if(r.cat==="수련비"){ monAmt[r.m]=(monAmt[r.m]||0)+r.amount; }
@@ -7751,7 +7813,7 @@ function render(){
       var moHead='<div style="display:flex;background:#EEF2F7;font-size:10.5px;font-weight:800;color:var(--sub);letter-spacing:-.2px">'+
           '<div style="flex:0 0 34px;padding:7px 2px 7px 10px">월</div>'+
           '<div style="flex:1;padding:7px 2px;text-align:right">금액</div>'+
-          '<div style="flex:0 0 44px;padding:7px 2px;text-align:center">참고</div>'+
+          '<div style="flex:0 0 44px;padding:7px 2px;text-align:center">기준</div>'+
           '<div style="flex:0 0 40px;padding:7px 8px 7px 2px;text-align:center">실제</div>'+
         '</div>';
       var moRow=function(mo){
@@ -7767,7 +7829,7 @@ function render(){
           '<div style="flex:0 0 34px;padding:7px 2px 7px 10px;font-weight:800;color:var(--ink);font-size:12.5px">'+mo+'</div>'+
           '<div style="flex:1;padding:7px 2px;text-align:right;font-weight:'+(amt>0?'800':'400')+';color:'+(amt>0?'var(--ink)':'var(--sub)')+';font-size:12px;white-space:nowrap;overflow:hidden">'+amtTxt+'</div>'+
           '<div style="flex:0 0 44px;padding:4px 3px;text-align:center">'+
-            '<input inputmode="numeric" value="'+(refN!=null?refN:'')+'" placeholder="–" onchange="editRefCnt(\''+esn+'\',\''+ymStr+'\',this.value)" title="참고횟수 직접 입력" style="width:34px;text-align:center;font-size:12px;font-weight:700;color:var(--blue);border:1px solid var(--line);border-radius:6px;padding:4px 0;background:#fff;font-family:inherit">'+
+            '<input inputmode="numeric" value="'+(refN!=null?refN:'')+'" placeholder="–" onchange="editRefCnt(\''+esn+'\',\''+ymStr+'\',this.value)" title="기준수련횟수 직접 입력" style="width:34px;text-align:center;font-size:12px;font-weight:700;color:var(--blue);border:1px solid var(--line);border-radius:6px;padding:4px 0;background:#fff;font-family:inherit">'+
           '</div>'+
           '<div style="flex:0 0 40px;padding:7px 8px 7px 2px;text-align:center;font-weight:800;font-size:12.5px;color:'+actColor+'">'+(act>0?act:'–')+'</div>'+
           '</div>';
@@ -7778,7 +7840,7 @@ function render(){
         return '<div style="flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;overflow:hidden">'+s+'</div>';
       };
       h+='<div style="display:flex;gap:10px;align-items:flex-start">'+moCol(1,6)+moCol(7,12)+'</div>';
-      h+='<div style="font-size:11px;color:var(--sub);margin:6px 2px 16px;line-height:1.5">· <b>참고</b>=참고횟수(칸에 직접 입력·수정 가능) · <b>실제</b>=수련생출석 체크 횟수 · 금액 단위: 원 · <span style="color:var(--green);font-weight:700">초록</span>=충족, <span style="color:var(--red);font-weight:700">빨강</span>=미달</div>';
+      h+='<div style="font-size:11px;color:var(--sub);margin:6px 2px 16px;line-height:1.5">· <b>기준</b>=기준수련횟수(칸에 직접 입력·수정 가능) · <b>실제</b>=수련생출석 체크 횟수 · 금액 단위: 원 · <span style="color:var(--green);font-weight:700">초록</span>=충족, <span style="color:var(--red);font-weight:700">빨강</span>=미달</div>';
       /* ── 기타 납부 상황 (용품·대회·기타 · 낸 순서 리스트) ── */
       h+='<div style="display:flex;align-items:baseline;justify-content:space-between;margin:2px 2px 8px">'+
          '<span style="font-size:15px;font-weight:900;color:var(--ink)">기타 납부 상황</span>'+
@@ -7950,11 +8012,11 @@ function render(){
          '<span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--sub);font-size:14px;font-weight:700;pointer-events:none">원</span>'+
          '</div></div><div></div></div>'+
          '<div style="background:#F4F7FF;border:1px solid #D6E2F5;border-radius:10px;padding:10px 12px;margin-bottom:8px">'+
-         '<div style="font-size:12px;font-weight:800;color:var(--blue);margin-bottom:6px">📌 참고횟수 <span style="color:var(--sub);font-weight:500">— 기준월부터 계속 이 횟수로 고정 적용 (출석현황 참고횟수에 반영)</span></div>'+
+         '<div style="font-size:12px;font-weight:800;color:var(--blue);margin-bottom:6px">📌 기준수련횟수 <span style="color:var(--sub);font-weight:500">— 기준월부터 계속 이 횟수로 고정 적용 (출석현황 기준수련횟수에 반영)</span></div>'+
          '<div class="grid2" style="margin-bottom:0">'+
            '<div><span class="label">기준 월</span>'+
            '<input type="month" class="input" value="'+esc(state.monBaseYm||ym(state.date))+'" onchange="setMonBaseYm(this.value)"></div>'+
-           '<div><span class="label">참고횟수</span>'+
+           '<div><span class="label">기준수련횟수</span>'+
            '<input class="input" inputmode="numeric" placeholder="예: 8" value="'+esc(String(state.monCnt||""))+'" oninput="setMonCnt(this.value)"></div>'+
          '</div></div>'
        :'')+
