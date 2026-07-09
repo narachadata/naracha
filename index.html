@@ -384,7 +384,10 @@ var state = { tab:"회계입력", payments:[], expiryMap:{}, deletedIds:[], hold
               amount:"", period:0, memo:"", saveMsg:"", storageOk:true,
               photoMap:{}, photoT:0, photoPulledOnce:false, photoSyncing:false, photoStatus:"",
               /* 3단계: 연도별 아카이브 — archivedYears에 든 연도만 라이브에서 제외(옵트인) */
-              archivedYears:{}, archivedT:0, loadedArchives:{} };
+              archivedYears:{}, archivedT:0, loadedArchives:{},
+              /* 수련횟수 수동 수정 기준점 — accBaseMap(기준값) + accBaseRef(수정 당시 출석수).
+                 이후 출석 변화(현재출석수 - 기준출석수)를 기준값에 가감한다. */
+              accBaseMap:{}, accBaseRef:{}, accBaseT:0, accBaseTMap:{} };
 
 function today(){ var d=new Date(); return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate()); }
 /* 복관 기록 추가 (같은 날짜+같은 휴관시작 기록이 이미 있으면 안 넣음 → 중복 폭증 방지) */
@@ -4184,6 +4187,53 @@ function dayIsOff(wk, day){
   var w=state.weeks[wk];
   return !!(w && w.off && w.off[day]);
 }
+/* ── 수련횟수(심사 24회 기준) 정합화 ──
+   accMap을 '실제 출석 표시(진파랑)'에서 직접 계산한다. 마지막 심사일 다음날부터의
+   출석 마크(휴관일 제외)를 센다. 코치가 찍든 단말기(self)로 들어오든, 출석이
+   확정되는 순간(마크가 출석이 되는 순간) 즉시 정확히 반영된다. */
+/* 마지막 심사일 다음날부터의 출석 마크 수(휴관일 제외)를 학생별로 센다 (순수 집계) */
+function derivedAccCounts(){
+  var le=state.lastExamMap||{}, counts={}, W=state.weeks||{};
+  for(var wk in W){
+    var cells=(W[wk]||{}).cells||{};
+    for(var slot in cells){
+      var day=slot.split("-")[0];
+      if(dayIsOff(wk, day)) continue;
+      var mdate=addDays(wk, DAY_IDX[day]||0);
+      var marks=(cells[slot]||{}).marks||{};
+      for(var name in marks){
+        var mk=marks[name];
+        if(!mk || mk.s!=="출석") continue;
+        var l=le[name];
+        if(l && mdate<=l) continue;           /* 마지막 심사일 당일까지는 제외 (다음날부터 카운트) */
+        counts[name]=(counts[name]||0)+1;
+      }
+    }
+  }
+  return counts;
+}
+/* accMap 정합화:
+   - 수동 수정 기준점(accBaseMap)이 있으면 → 기준값 + (현재출석수 - 수정당시출석수)
+   - 없으면 → 실제 출석수 그대로
+   어느 쪽이든 출석이 확정/취소되는 순간 즉시 가감된다. */
+function reconcileAcc(){
+  var counts=derivedAccCounts();
+  var base=state.accBaseMap||{}, ref=state.accBaseRef||{};
+  if(!state.accMap) state.accMap={};
+  var names={}, nm;
+  for(nm in counts) names[nm]=1;
+  for(nm in state.accMap) names[nm]=1;
+  for(nm in base) names[nm]=1;
+  var changed=false;
+  for(nm in names){
+    var d=counts[nm]||0, v;
+    if(base[nm]!==undefined){ v=Math.max(0, (base[nm]||0) + (d - (ref[nm]||0))); }
+    else { v=d; }
+    if((state.accMap[nm]||0)!==v){ state.accMap[nm]=v; accTouch(nm); changed=true; }
+  }
+  if(changed) state.accT=Date.now();
+  return changed;
+}
 function cellAtt(c){
   if(!c) return {p:0,a:0};
   var names=c.lv?c.lv[0].concat(c.lv[1],c.lv[2]):[];
@@ -4486,11 +4536,7 @@ window.cycleAttend=function(key, name){
   /* 출처 표시: 지도진이 화면에서 찍은 출석은 coach. 단, 단말기(self) 출석은 그대로 보존 */
   var byTag = (next==="출석") ? (prev.by==="self" ? "self" : "coach") : (prev.by||"");
   c.marks[name]={ s:next, k:prev.k, m:prev.m||"", t:Date.now(), by:byTag };
-  var offDay=dayIsOff(curWeek(), key.split("-")[0]);
-  if(!offDay){
-    if(!wasP && nowP){ state.accMap[name]=(state.accMap[name]||0)+1; state.accT=Date.now(); accTouch(name); }
-    if(wasP && !nowP){ state.accMap[name]=Math.max(0,(state.accMap[name]||0)-1); state.accT=Date.now(); accTouch(name); }
-  }
+  reconcileAcc();   /* 출석 확정(진파랑) 즉시 수련횟수 정확 반영 */
   touchWeek(); render();
 };
 /* 길게 누르면(0.5초) 설정 창, 짧게 누르면 순환 출석 */
@@ -4788,12 +4834,7 @@ window.saveMark=function(){
   var nowP = m.s==="출석";
   c.marks[m.name]={ s:m.s||"", k:m.k, m:(m.m||"").trim(), t:Date.now() };
   noteSync(m.name, m.key, (m.m||"").trim());
-  /* 누적 수련횟수 연동 (심사 24회 기준) — 휴관일은 기록만 남고 누적 제외 */
-  var offDay = dayIsOff(curWeek(), m.key.split("-")[0]);
-  if(!offDay){
-    if(!wasP && nowP){ state.accMap[m.name]=(state.accMap[m.name]||0)+1; state.accT=Date.now(); accTouch(m.name); }
-    if(wasP && !nowP){ state.accMap[m.name]=Math.max(0,(state.accMap[m.name]||0)-1); state.accT=Date.now(); accTouch(m.name); }
-  }
+  reconcileAcc();   /* 출석 마크 변경 즉시 수련횟수 정확 반영 (단말기·코치 동일 규칙) */
   touchWeek();
   state.markM=null; render();
 };
@@ -4802,12 +4843,12 @@ window.removePlace=function(){
   if(!confirm(m.name+" 배치를 이 시간에서 뺄까요?")) return;
   var c=wcell(m.key);
   var wasP=(c.marks[m.name]||{}).s==="출석";
-  if(wasP){ state.accMap[m.name]=Math.max(0,(state.accMap[m.name]||0)-1); state.accT=Date.now(); accTouch(m.name); }
   if(((c.marks[m.name]||{}).m||"").trim()) noteSync(m.name, m.key, null);
   for(var i=0;i<3;i++){ var ix=c.lv[i].indexOf(m.name); if(ix>-1) c.lv[i].splice(ix,1); }
   delete c.marks[m.name];
   if(!c.del) c.del={};
   c.del[m.name]=Date.now();
+  reconcileAcc();   /* 배치 제거 후 수련횟수 정확 반영 */
   touchWeek();
   state.markM=null; render();
 };
@@ -4999,11 +5040,15 @@ window.setExamGT=function(v){ state.examGT=v; state.examGF=""; render(); };
 window.setExamGF=function(v){ state.examGF=v; render(); };
 window.editAcc=function(name){
   var cur=state.accMap[name]||0;
-  var v=prompt(name+" 님의 누적 수련 횟수를 수정합니다.\n(수정 후 출석하면 이 값에서 이어서 +1 됩니다)", String(cur));
+  var v=prompt(name+" 님의 누적 수련 횟수를 수정합니다.\n(수정한 값을 기준으로, 이후 출석은 자동으로 더하거나 빠집니다)", String(cur));
   if(v===null) return;
   v=Number(String(v).replace(/[^0-9]/g,""));
   if(isNaN(v) || v<0 || v>999){ alert("0~999 사이 숫자로 입력해 주세요."); return; }
-  state.accMap[name]=v; state.accT=Date.now(); accTouch(name);
+  /* 수정값을 기준점으로 저장 + 지금 출석수를 기준출석수로 기록 → 이후 출석 변화만 가감 */
+  if(!state.accBaseMap) state.accBaseMap={}; if(!state.accBaseRef) state.accBaseRef={}; if(!state.accBaseTMap) state.accBaseTMap={};
+  state.accBaseMap[name]=v; state.accBaseRef[name]=(derivedAccCounts()[name]||0);
+  state.accBaseT=Date.now(); state.accBaseTMap[name]=Date.now();
+  reconcileAcc();
   persistAtt();
   render();
 };
@@ -5015,8 +5060,13 @@ window.doExam=function(name){
   if(ng) s.grade=ng;
   s._t=Date.now();
   state.rosterT=Date.now();
-  state.accMap[name]=0; state.accT=Date.now(); accTouch(name);
   state.lastExamMap[name]=today(); state.lastExamT=Date.now();
+  /* 응심 처리 = 0부터 다시. 기준점 0·기준출석수 0으로 재설정 → 심사일 이후 출석 전부가 카운트됨
+     (이전에 남아있던 수동 기준점도 이 값으로 덮어써 초기화) */
+  if(!state.accBaseMap) state.accBaseMap={}; if(!state.accBaseRef) state.accBaseRef={}; if(!state.accBaseTMap) state.accBaseTMap={};
+  state.accBaseMap[name]=0; state.accBaseRef[name]=0;
+  state.accBaseT=Date.now(); state.accBaseTMap[name]=Date.now();
+  reconcileAcc();
   persistAtt();
   if(myRole()==="admin") persist();
   render();
@@ -5683,6 +5733,7 @@ function attState(){
     weeks: liveWeeks(),   /* [3단계] 아카이브된 연도의 주간 기록은 라이브에서 제외 */
     archivedYears:{ map:state.archivedYears||{}, t:state.archivedT||0 },
     acc:{ map:state.accMap||{}, t:state.accT||0, tmap:state.accTMap||{} },
+    accBase:{ base:state.accBaseMap||{}, ref:state.accBaseRef||{}, t:state.accBaseT||0, tmap:state.accBaseTMap||{} },
     lastExam:{ map:state.lastExamMap||{}, t:state.lastExamT||0 },
     kkw:{ list:state.kkwPending||[], t:state.kkwT||0 },
     /* [완전 분리] 심사데이터는 exam 창고로 이전됨 → 출석 창고에는 더 이상 저장하지 않음.
@@ -5814,6 +5865,21 @@ function mergeAtt(a, b){
     });
     return out;
   }
+  /* 수련횟수 수동 기준점: 이름별 최신 수정시각(tmap)이 이김 — base·ref는 함께 이동 */
+  function mergeAccBase(x, y){
+    x=x||{base:{},ref:{},t:0,tmap:{}}; y=y||{base:{},ref:{},t:0,tmap:{}};
+    var tx=x.tmap||{}, ty=y.tmap||{}, xb=x.base||{}, yb=y.base||{}, xr=x.ref||{}, yr=y.ref||{};
+    var out={ base:{}, ref:{}, t:Math.max(x.t||0,y.t||0), tmap:{} }, names={};
+    Object.keys(xb).forEach(function(n){names[n]=1;}); Object.keys(yb).forEach(function(n){names[n]=1;});
+    Object.keys(names).forEach(function(n){
+      var sx=tx[n]||x.t||0, sy=ty[n]||y.t||0;
+      var hx=(xb[n]!==undefined), hy=(yb[n]!==undefined);
+      var useY = hy && (!hx || sy>sx);
+      if(useY){ out.base[n]=yb[n]; out.ref[n]=yr[n]||0; out.tmap[n]=sy; }
+      else { out.base[n]=xb[n]; out.ref[n]=xr[n]||0; out.tmap[n]=sx; }
+    });
+    return out;
+  }
   /* 퇴관·휴관: 이름별 최신 기록(t)이 이김 → 두 기기 동기화 시 리셋 방지 */
   function mergeStamped(x, y){
     x=x||{map:{},t:0}; y=y||{map:{},t:0};
@@ -5838,7 +5904,7 @@ function mergeAtt(a, b){
   }
   return { absences:abs, attV:1, roster:roster, schedule:schedule, tempStudents:temps, weeks:weeks,
            quitMapAtt:mergeStamped(a.quitMapAtt,b.quitMapAtt), closedMapAtt:mergeStamped(a.closedMapAtt,b.closedMapAtt),
-           acc:mergeAcc(a.acc,b.acc), lastExam:newerBlob(a.lastExam,b.lastExam,{}), kkw:newerBlob(a.kkw,b.kkw,{}),
+           acc:mergeAcc(a.acc,b.acc), accBase:mergeAccBase(a.accBase,b.accBase), lastExam:newerBlob(a.lastExam,b.lastExam,{}), kkw:newerBlob(a.kkw,b.kkw,{}),
            examData:mergeExam(a.examData,b.examData),
            archivedYears:_mergeArchivedYears(a.archivedYears,b.archivedYears),
            savedAt:Math.max(a.savedAt||0,b.savedAt||0) };
@@ -5862,7 +5928,9 @@ function applyAtt(m){
   reinjectArchives();
   syncStFromMaps();   /* 출석 창고에서 받은 명단도 장부에 맞춰 정리 */
   if(m.acc){ state.accMap=m.acc.map||{}; state.accT=m.acc.t||0; state.accTMap=m.acc.tmap||state.accTMap||{}; }
+  if(m.accBase){ state.accBaseMap=m.accBase.base||{}; state.accBaseRef=m.accBase.ref||{}; state.accBaseT=m.accBase.t||0; state.accBaseTMap=m.accBase.tmap||{}; }
   if(m.lastExam){ state.lastExamMap=m.lastExam.map||{}; state.lastExamT=m.lastExam.t||0; }
+  reconcileAcc();   /* 동기화된 출석 마크(단말기 포함) + 수동 기준점을 수련횟수에 즉시 반영 */
   if(m.kkw){ state.kkwPending=m.kkw.list||[]; state.kkwT=m.kkw.t||0; }
   if(m.examData){
     /* 클라우드에서 온 심사 데이터를 현재와 레코드별 최신(_t)으로 합침 */
