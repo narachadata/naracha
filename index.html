@@ -3931,15 +3931,19 @@ function rosterListHtml(){
     var rthumb= avatarHtml(s.n, s.g, 38);
 
     x+='<div style="border-top:1px solid var(--line);padding:10px 0">'+
-      /* 첫 줄: 사진·이름·급·반·상태배지  +  (오른쪽) 버튼 — 버튼은 nowrap로 고정 */
+      /* 첫 줄: 사진·이름·급·반·상태배지(고정폭 정렬)  +  (오른쪽) 버튼 / 홀딩기간은 버튼 아래 */
       '<div style="display:flex;align-items:center;gap:8px">'+
         rthumb+
         '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;flex:1">'+
-          '<b style="font-size:15px;cursor:pointer;color:var(--blue)" title="클릭하면 학적부가 열립니다 (수정도 가능)" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+esc(s.n)+'</b>'+beltChip(s)+
-          '<span style="font-size:12px;color:var(--sub)">'+esc(s.b||"")+'</span>'+
-          statusBadge+holdBadge+
+          '<b style="flex:0 0 84px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px;cursor:pointer;color:var(--blue)" title="클릭하면 학적부가 열립니다 (수정도 가능)" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+esc(s.n)+'</b>'+
+          '<span style="flex:0 0 104px;white-space:nowrap;overflow:hidden">'+beltChip(s)+'</span>'+
+          '<span style="flex:0 0 108px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--sub)">'+esc((s.b||"").replace(/\(.*\)/,""))+'</span>'+
+          statusBadge+
         '</div>'+
-        '<div style="display:flex;gap:6px;flex:0 0 auto;white-space:nowrap">'+btns+'</div>'+
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:0 0 auto">'+
+          '<div style="display:flex;gap:6px;white-space:nowrap">'+btns+'</div>'+
+          (holdBadge?'<div style="white-space:nowrap">'+holdBadge+'</div>':'')+
+        '</div>'+
       '</div>'+
       /* 둘째 줄: 부가정보 (있을 때만) */
       (line2.length?'<div style="margin-top:4px;font-size:11.5px;color:var(--sub);display:flex;gap:12px;flex-wrap:wrap">'+line2.join('')+'</div>':'')+
@@ -5571,10 +5575,10 @@ function examRowHtml(r){
   return '<div style="border-top:1px solid var(--line);padding:8px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
     avatarHtml(s.n, s.g, 34)+
     '<span style="width:4px;height:22px;border-radius:2px;background:'+gradeColor(s.grade||"")+';display:inline-block"></span>'+
-    '<b style="font-size:14px;min-width:64px;cursor:pointer;color:var(--blue)" title="클릭하면 학적부가 열립니다" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+esc(s.n)+'</b>'+
-    '<span style="font-size:12px;color:var(--sub);min-width:64px">'+esc(s.grade||"급수?")+'</span>'+
-    ((state.examSort==="반별")?'<span style="font-size:11px;color:var(--sub)">'+esc(s.b||"")+'</span>':'')+
-    '<b style="font-size:13px;color:'+(r.acc>=24?'var(--red)':'var(--ink)')+';cursor:pointer;border-bottom:1px dashed var(--sub)" title="클릭하면 수동 수정" onclick="editAcc(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+r.acc+'회</b>'+
+    '<b style="font-size:14px;flex:0 0 66px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:var(--blue)" title="클릭하면 학적부가 열립니다" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+esc(s.n)+'</b>'+
+    '<span style="font-size:12px;color:var(--sub);flex:0 0 58px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(s.grade||"급수?")+'</span>'+
+    ((state.examSort==="반별")?'<span style="font-size:11px;color:var(--sub);flex:0 0 96px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(s.b||"").replace(/\(.*\)/,"")+'</span>':'')+
+    '<b style="font-size:13px;flex:0 0 46px;color:'+(r.acc>=24?'var(--red)':'var(--ink)')+';cursor:pointer;border-bottom:1px dashed var(--sub)" title="클릭하면 수동 수정" onclick="editAcc(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+r.acc+'회</b>'+
     (r.last?'<span style="font-size:11.5px;color:var(--sub)">마지막 '+esc(r.last)+'</span>':'')+
     tag+
     '<span style="flex:1"></span>'+
@@ -8832,17 +8836,18 @@ function render(){
       var mBadge = r.months>=12 ? '<span style="background:var(--blueSoft);color:var(--blue);border-radius:6px;padding:2px 7px;font-size:12px;font-weight:800">12개월</span>'
                  : r.months>0 ? '<span style="background:var(--greenSoft);color:var(--green);border-radius:6px;padding:2px 7px;font-size:12px;font-weight:800">'+r.months+'개월</span>'
                  : '<span style="background:var(--amberSoft);color:var(--amber);border-radius:6px;padding:2px 7px;font-size:12px;font-weight:800">기타</span>';
+      var isNew=(Date.now()-(r.t||0))<86400000;
       h+='<div style="border-top:1px solid var(--line);padding:10px 0">'+
          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
-         '<b style="font-size:15px;color:var(--blue);cursor:pointer;text-decoration:underline" title="클릭하면 브리핑이 열립니다" onclick="showDetail(\''+esc(r.name).replace(/'/g,"\\'")+'\')">'+esc(r.name)+'</b>'+mBadge+
-         ((Date.now()-(r.t||0))<86400000?'<span style="background:var(--green);color:#fff;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:800">새로 추가</span>':'')+
-         (r.freq? '<span style="font-size:12px;color:var(--sub)">'+esc(r.freq)+'</span>':'')+
-         '<span style="font-size:13px;color:var(--sub)">'+period+'</span>'+
-         '<span style="flex:1"></span>'+
-         ((r.coupon==="티셔츠"||r.coupon==="도복")?'<button class="chip" style="color:var(--blue)" onclick="downloadCoupon(\''+r.id+'\')">🎫 쿠폰 저장</button>':'')+
-         '<button class="chip" style="color:var(--red);border-color:var(--redSoft)" onclick="deleteLong(\''+r.id+'\')">삭제</button>'+
+         '<b style="flex:0 0 84px;font-size:15px;color:var(--blue);cursor:pointer;text-decoration:underline;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="클릭하면 브리핑이 열립니다" onclick="showDetail(\''+esc(r.name).replace(/'/g,"\\'")+'\')">'+esc(r.name)+'</b>'+
+         '<span style="flex:0 0 58px">'+mBadge+'</span>'+
+         '<span style="flex:0 0 40px;font-size:12px;color:var(--sub);text-align:center">'+(r.freq?esc(r.freq):'–')+'</span>'+
+         '<span style="flex:1 1 auto;min-width:190px;font-size:13px;color:var(--sub)">'+period+
+           (isNew?' <span style="background:var(--green);color:#fff;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:800">새로 추가</span>':'')+'</span>'+
+         ((r.coupon==="티셔츠"||r.coupon==="도복")?'<button class="chip" style="color:var(--blue);flex:0 0 auto" onclick="downloadCoupon(\''+r.id+'\')">🎫 쿠폰 저장</button>':'')+
+         '<button class="chip" style="color:var(--red);border-color:var(--redSoft);flex:0 0 auto" onclick="deleteLong(\''+r.id+'\')">삭제</button>'+
          '</div>'+
-         '<div style="display:flex;align-items:center;gap:16px;margin-top:6px;flex-wrap:wrap">'+
+         '<div style="display:flex;align-items:center;gap:16px;margin-top:6px;flex-wrap:wrap;padding-left:84px">'+
          '<span style="font-size:13px;font-weight:700">쿠폰: '+esc(r.coupon||"")+'</span>'+
          '<label style="font-size:13px;cursor:pointer"><input type="checkbox" '+(r.issued?'checked':'')+' onchange="toggleLongIssued(\''+r.id+'\')"> 발행</label>'+
          '<label style="font-size:13px;cursor:pointer"><input type="checkbox" '+(r.used?'checked':'')+' onchange="toggleLongUsed(\''+r.id+'\')"> 사용완료</label>'+
