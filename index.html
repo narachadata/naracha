@@ -2220,6 +2220,204 @@ function renderNameCleanup(){
       (total>0? '<button style="flex:1.4;background:var(--blue);border:none;color:#fff;border-radius:11px;padding:12px;font-weight:800;cursor:pointer;font-family:inherit" onclick="applyNameCleanup()">'+total+'건 적용</button>':'')+
     '</div>');
 }
+
+/* ══════════ 중복 인원 정리 도구 (이름·전화 기준 · CRM 병합 원칙 적용) ══════════ */
+/* 이름 정규화: 끝 '님' 제거 + 모든 공백 제거 (표기 차이 흡수) */
+function normNameKey(n){ return String(n||"").replace(/님$/,"").replace(/\s+/g,"").trim(); }
+function stuActive(n){ return !state.closedMap[n] && !isQuit(n); }
+function fmtPhoneShort(p){ p=String(p||"").replace(/[^0-9]/g,""); if(p.length===11) return p.slice(0,3)+"-"+p.slice(3,7)+"-"+p.slice(7); if(p.length===10) return p.slice(0,3)+"-"+p.slice(3,6)+"-"+p.slice(6); return p; }
+/* 데이터 완전성 점수 — 대표(살릴 원본) 자동추천용: 기록이 풍부한 쪽이 원본일 확률↑ */
+function stuCompScore(s){
+  if(!s) return 0; var n=s.n, sc=0;
+  sc += (state.payments||[]).filter(function(p){return p.name===n;}).length*3;
+  sc += (state.longRegs||[]).filter(function(r){return r.name===n;}).length*2;
+  if(stuPhones(s).length) sc+=2;
+  if(s.by) sc+=1;
+  if(s.gd && s.gd.length) sc+=1;
+  if(state.photoMap && state.photoMap[n]) sc+=1;
+  if(state.lastExamMap && state.lastExamMap[n]) sc+=1;
+  return sc;
+}
+/* 대표 자동추천 우선순위: ①재원 ②데이터 완전성 ③'님' 없는 쪽 ④이름 짧은(정식) 쪽 */
+function pickMaster(members){
+  var arr=members.slice();
+  arr.sort(function(a,b){
+    if(a.active!==b.active) return a.active?-1:1;
+    if(b.comp!==a.comp) return b.comp-a.comp;
+    var ah=/님$/.test(a.n)?1:0, bh=/님$/.test(b.n)?1:0;
+    if(ah!==bh) return ah-bh;
+    return a.n.length-b.n.length;
+  });
+  return arr[0].n;
+}
+/* 전체 스캔 → 이름그룹(확실/확인필요) · '님'단독 · 형제의심(같은번호 다른이름) */
+function scanDuplicates(){
+  var students=STUDENTS.filter(function(s){return s&&s.n;});
+  var mk=function(s){ return { n:s.n, s:s, active:stuActive(s.n), phones:stuPhones(s), comp:stuCompScore(s) }; };
+  /* ── 이름 기반 그룹 ── */
+  var byNorm={}; students.forEach(function(s){ var k=normNameKey(s.n); if(!k) return; (byNorm[k]=byNorm[k]||[]).push(s); });
+  var nameGroups=[], honorificSolo=[];
+  for(var k in byNorm){
+    var g=byNorm[k];
+    if(g.length>=2){
+      var mem=g.map(mk);
+      var withPh=mem.filter(function(m){return m.phones.length;});
+      var conflict=false;
+      if(withPh.length>=2){
+        var share=false;
+        for(var i=0;i<withPh.length&&!share;i++){ for(var j=i+1;j<withPh.length;j++){ if(withPh[i].phones.some(function(p){return withPh[j].phones.indexOf(p)>-1;})){ share=true; break; } } }
+        conflict=!share;
+      }
+      nameGroups.push({ key:"nm:"+k, kind:conflict?"maybe":"sure", label:normNameKey(g[0].n), members:mem });
+    } else if(/님$/.test(g[0].n) && g[0].n.length>=3){
+      honorificSolo.push({ from:g[0].n, to:normNameKey(g[0].n), active:stuActive(g[0].n) });
+    }
+  }
+  /* ── 전화 기반 그룹 (이름 다름 → 형제/가족일 수 있음, 참고용) ── */
+  var byPhone={}; students.forEach(function(s){ stuPhones(s).forEach(function(p){ (byPhone[p]=byPhone[p]||[]).push(s); }); });
+  var siblingGroups=[], seen={};
+  for(var ph in byPhone){
+    var uniq={}; byPhone[ph].forEach(function(s){uniq[s.n]=s;});
+    var us=Object.keys(uniq).map(function(n){return uniq[n];});
+    if(us.length<2) continue;
+    var norms={}; us.forEach(function(s){norms[normNameKey(s.n)]=1;});
+    if(Object.keys(norms).length<2) continue;   /* 이름 정규화 같으면 이름그룹에서 이미 처리됨 */
+    var sig=us.map(function(s){return s.n;}).sort().join("|");
+    if(seen[sig]) continue; seen[sig]=1;
+    siblingGroups.push({ key:"ph:"+ph, kind:"sibling", phone:ph, members:us.map(mk) });
+  }
+  return { nameGroups:nameGroups, honorificSolo:honorificSolo, siblingGroups:siblingGroups };
+}
+/* 명단 버튼 배지용 카운트 (확실 그룹 + '님' 단독만; 무시한 그룹 제외) */
+function dupCount(){
+  if(myRole()!=="admin") return 0;
+  try{ var d=scanDuplicates(); var ig=state.dupIgnore||{}; var n=0;
+    d.nameGroups.forEach(function(g){ if(g.kind==="sure" && !ig[g.key]) n++; });
+    n+=d.honorificSolo.length; return n;
+  }catch(e){ return 0; }
+}
+window.openDupTool=function(){ if(myRole()!=="admin"){ alert("관리자 권한이 필요합니다."); return; } state.dupTool={open:true}; render(); };
+window.closeDupTool=function(){ state.dupTool=null; state.dupToast=null; render(); };
+window.setDupMaster=function(gk,name){ if(!state.dupMasterPick)state.dupMasterPick={}; state.dupMasterPick[gk]=name; render(); };
+window.toggleDupSkip=function(name){ if(!state.dupSkip)state.dupSkip={}; if(state.dupSkip[name])delete state.dupSkip[name]; else state.dupSkip[name]=true; render(); };
+window.toggleDupInclude=function(name){ if(!state.dupInclude)state.dupInclude={}; if(state.dupInclude[name])delete state.dupInclude[name]; else state.dupInclude[name]=true; render(); };
+window.ignoreDupGroup=function(gk){ if(!state.dupIgnore)state.dupIgnore={}; state.dupIgnore[gk]=Date.now(); render(); };
+window.unignoreDupGroup=function(gk){ if(state.dupIgnore) delete state.dupIgnore[gk]; render(); };
+window.applyHonorificRenames=function(){
+  var d=scanDuplicates(), n=0;
+  d.honorificSolo.forEach(function(r){ renameStudentName(r.from, r.to); n++; });
+  if(n){ state.rosterT=Date.now(); syncStFromMaps(); persistAtt(); if(myRole()==="admin")persist(); if(typeof examNotifyRosterChanged==="function")examNotifyRosterChanged(); }
+  state.dupToast="이름 끝 '님' "+n+"건을 정리했습니다.";
+  render();
+};
+window.mergeDupGroup=function(gk){
+  var d=scanDuplicates();
+  var g=null; d.nameGroups.concat(d.siblingGroups).forEach(function(x){ if(x.key===gk)g=x; });
+  if(!g){ render(); return; }
+  var master=(state.dupMasterPick&&state.dupMasterPick[gk])||pickMaster(g.members);
+  var optIn=(g.kind==="maybe"||g.kind==="sibling");
+  var targets=g.members.filter(function(m){
+    if(m.n===master) return false;
+    return optIn ? !!(state.dupInclude&&state.dupInclude[m.n]) : !(state.dupSkip&&state.dupSkip[m.n]);
+  }).map(function(m){return m.n;});
+  if(!targets.length){ alert(optIn?"합칠 대상을 먼저 선택(합치기 체크)해 주세요.":"합칠 대상이 없습니다. (모두 '제외' 상태)"); return; }
+  var msg="[대표로 남길 사람]\n  "+master+"\n\n[대표에게 합치고 명단에서 삭제]\n  "+targets.join("\n  ")+"\n\n· 결제·출석·심사·사진 등 모든 기록이 대표에게 옮겨집니다.\n· 되돌리기 전 회계백업을 권장합니다.\n\n진행할까요?";
+  if(!confirm(msg)) return;
+  targets.forEach(function(t){ mergeDupInto(t, master); });
+  state.rosterT=Date.now(); syncStFromMaps(); persistAtt(); if(myRole()==="admin")persist();
+  if(typeof examNotifyRosterChanged==="function")examNotifyRosterChanged();
+  if(state.dupMasterPick) delete state.dupMasterPick[gk];
+  targets.forEach(function(t){ if(state.dupSkip)delete state.dupSkip[t]; if(state.dupInclude)delete state.dupInclude[t]; });
+  state.dupToast="'"+master+"'에게 "+targets.length+"명을 합쳤습니다.";
+  render();
+};
+function renderDupTool(){
+  if(!state.dupTool) return "";
+  var d=scanDuplicates();
+  var ig=state.dupIgnore||{}, pick=state.dupMasterPick||{}, skip=state.dupSkip||{}, inc=state.dupInclude||{};
+  var box=function(inner){ return '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:14px" onclick="closeDupTool()"><div style="background:#fff;border-radius:16px;max-width:700px;width:100%;max-height:93vh;display:flex;flex-direction:column" onclick="event.stopPropagation()">'+inner+'</div></div>'; };
+  var stBadge=function(n){ return stuActive(n)
+    ? '<span style="background:#E7F0FF;color:var(--blue);border-radius:5px;padding:1px 6px;font-size:10.5px;font-weight:800;margin-left:5px">재원</span>'
+    : (isQuit(n)?'<span style="background:#F0EEE8;color:var(--sub);border-radius:5px;padding:1px 6px;font-size:10.5px;font-weight:700;margin-left:5px">퇴관</span>'
+                :'<span style="background:#FFF3E0;color:#B45309;border-radius:5px;padding:1px 6px;font-size:10.5px;font-weight:700;margin-left:5px">휴관</span>'); };
+  var info=function(m){
+    var s=m.s, bits=[];
+    if(s.b) bits.push(esc(String(s.b).replace(/\(.*\)/,"")));
+    if(s.by) bits.push(esc(String(s.by).slice(0,10))+"생");
+    if(m.phones.length) bits.push('📞 '+m.phones.map(fmtPhoneShort).join(", "));
+    var pc=(state.payments||[]).filter(function(p){return p.name===m.n;}).length;
+    if(pc) bits.push('결제 '+pc+'건');
+    return '<span style="font-size:11.5px;color:var(--sub)">'+(bits.join(' · ')||'정보 없음')+'</span>';
+  };
+  /* 그룹 카드 (이름그룹·형제그룹 공용) */
+  var groupCard=function(g){
+    var kind=g.kind;
+    var master=pick[g.key]||pickMaster(g.members);
+    var optIn=(kind==="maybe"||kind==="sibling");
+    var pal = kind==="sure" ? {bd:"#B7DFC4",bg:"#F2FBF5",tc:"var(--green)",lbl:"확실 — 표기·전화 일치"}
+            : kind==="maybe"? {bd:"#F3D5A6",bg:"#FFFBF3",tc:"#B45309",lbl:"확인 필요 — 이름 같고 전화 다름"}
+                            : {bd:"#F0C4C4",bg:"#FFF6F6",tc:"var(--red)",lbl:"참고 — 같은 번호·다른 이름(형제일 수 있음)"};
+    var head='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+
+      '<span style="background:'+pal.tc+';color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">'+pal.lbl+'</span>'+
+      (g.phone?'<span style="font-size:11.5px;color:var(--sub)">'+fmtPhoneShort(g.phone)+'</span>':'')+
+      '<span style="flex:1"></span>'+
+      '<button class="chip sm" style="color:var(--sub);border-color:var(--line);font-size:11px;padding:4px 9px" onclick="ignoreDupGroup(\''+g.key+'\')">다른 사람 · 무시</button>'+
+      '</div>';
+    var rows=g.members.map(function(m){
+      var isMaster=(m.n===master);
+      var chk = isMaster ? '<span style="font-size:11px;font-weight:800;color:var(--green)">✓ 대표 유지</span>'
+        : optIn
+          ? '<label style="font-size:11.5px;color:'+pal.tc+';cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-weight:700"><input type="checkbox" '+(inc[m.n]?'checked':'')+' onclick="toggleDupInclude(\''+esc(m.n).replace(/'/g,"\\'")+'\')"> 합치기</label>'
+          : '<label style="font-size:11.5px;color:var(--sub);cursor:pointer;display:inline-flex;align-items:center;gap:4px"><input type="checkbox" '+(skip[m.n]?'':'checked')+' onclick="toggleDupSkip(\''+esc(m.n).replace(/'/g,"\\'")+'\')"> 합치기</label>';
+      return '<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid #EFEFEA">'+
+        '<label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;flex:1;min-width:0">'+
+          '<input type="radio" name="mst_'+g.key+'" '+(isMaster?'checked':'')+' onclick="setDupMaster(\''+g.key+'\',\''+esc(m.n).replace(/'/g,"\\'")+'\')">'+
+          '<span style="min-width:0"><b style="font-size:13.5px">'+esc(m.n)+'</b>'+stBadge(m.n)+'<br>'+info(m)+'</span>'+
+        '</label>'+
+        '<div style="flex-shrink:0">'+chk+'</div>'+
+      '</div>';
+    }).join('');
+    var btn = kind==="sure"
+      ? '<button style="background:var(--green);border:none;color:#fff;border-radius:9px;padding:8px 14px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12.5px" onclick="mergeDupGroup(\''+g.key+'\')">이 묶음 합치기</button>'
+      : '<button style="background:#fff;border:1.5px solid '+pal.tc+';color:'+pal.tc+';border-radius:9px;padding:8px 14px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12.5px" onclick="mergeDupGroup(\''+g.key+'\')">선택 항목 합치기</button>';
+    return '<div style="border:1.5px solid '+pal.bd+';background:'+pal.bg+';border-radius:12px;padding:12px 14px;margin-bottom:10px">'+
+      head+rows+'<div style="display:flex;justify-content:flex-end;margin-top:10px">'+btn+'</div></div>';
+  };
+  var toast = state.dupToast ? '<div style="background:#E9F8EE;border:1px solid #B7DFC4;color:#1B7A3D;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;margin-bottom:10px">✅ '+esc(state.dupToast)+'</div>' : '';
+  /* 무시하지 않은 그룹만 */
+  var sureG=d.nameGroups.filter(function(g){return g.kind==="sure"&&!ig[g.key];});
+  var maybeG=d.nameGroups.filter(function(g){return g.kind==="maybe"&&!ig[g.key];});
+  var sibG=d.siblingGroups.filter(function(g){return !ig[g.key];});
+  var ignoredN=Object.keys(ig).length;
+  var body='';
+  /* '님' 단독 표기 정리 */
+  if(d.honorificSolo.length){
+    body+='<div style="border:1.5px solid #C9DEF7;background:#F4F9FF;border-radius:12px;padding:12px 14px;margin-bottom:10px">'+
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:13.5px">✏️ 이름 끝 \'님\' 표기 정리</b>'+
+      '<span style="font-size:12px;color:var(--sub)">'+d.honorificSolo.length+'건 — 예: '+esc(d.honorificSolo[0].from)+' → '+esc(d.honorificSolo[0].to)+'</span>'+
+      '<span style="flex:1"></span>'+
+      '<button style="background:var(--blue);border:none;color:#fff;border-radius:9px;padding:8px 14px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12.5px" onclick="applyHonorificRenames()">'+d.honorificSolo.length+'건 일괄 정리</button></div></div>';
+  }
+  if(sureG.length){ body+='<div style="font-size:12px;font-weight:800;color:var(--green);margin:14px 0 6px">🔴 확실한 중복 ('+sureG.length+'묶음)</div>'+sureG.map(groupCard).join(''); }
+  if(maybeG.length){ body+='<div style="font-size:12px;font-weight:800;color:#B45309;margin:14px 0 6px">🟠 확인 필요 ('+maybeG.length+'묶음)</div>'+maybeG.map(groupCard).join(''); }
+  if(sibG.length){ body+='<div style="font-size:12px;font-weight:800;color:var(--red);margin:14px 0 6px">⚪ 참고 · 같은 번호 ('+sibG.length+'묶음)</div>'+
+    '<div style="font-size:11.5px;color:var(--sub);margin-bottom:6px">가족(형제)은 보호자 번호를 함께 쓰는 경우가 많아 자동으로 합치지 않습니다. 정말 같은 사람일 때만 \'합치기\'를 체크하세요.</div>'+sibG.map(groupCard).join(''); }
+  if(!d.honorificSolo.length && !sureG.length && !maybeG.length && !sibG.length){
+    body+='<div style="padding:26px 0;text-align:center;color:var(--sub);font-size:14px">정리할 중복 인원이 없습니다. ✓</div>';
+  }
+  return box(
+    '<div style="padding:18px 22px 12px;border-bottom:1px solid var(--line)">'+
+      '<div style="font-size:19px;font-weight:900">🧹 중복 인원 정리</div>'+
+      '<div style="font-size:12.5px;color:var(--sub);margin-top:4px">이름·전화번호가 겹치는 인원을 찾아 <b>대표 한 명</b>으로 합칩니다. 대표는 기록이 많은 재원생을 자동 추천하며, 필요하면 직접 바꿀 수 있습니다.</div>'+
+      (ignoredN?'<div style="font-size:11.5px;color:var(--sub);margin-top:6px">무시한 묶음 '+ignoredN+'개 · <span style="color:var(--blue);cursor:pointer;text-decoration:underline" onclick="(function(){state.dupIgnore={};render();})()">다시 보기</span></div>':'')+
+    '</div>'+
+    '<div style="overflow:auto;padding:14px 22px">'+toast+body+
+      '<div style="background:#FFF7ED;border:1px solid #FDBA74;color:#9A3412;border-radius:10px;padding:9px 12px;font-size:12px;margin-top:6px">먼저 <b>회계백업</b>을 한 번 받아두시길 권합니다. 합친 뒤에는 저장·동기화됩니다.</div>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;padding:12px 22px 18px;border-top:1px solid var(--line)">'+
+      '<button style="flex:1;background:#fff;border:1.5px solid var(--line);color:var(--ink);border-radius:11px;padding:12px;font-weight:800;cursor:pointer;font-family:inherit" onclick="closeDupTool()">닫기</button>'+
+    '</div>');
+}
 window.markQuit=function(name){
   if(!confirm(name+" 님을 퇴관 처리할까요?\n(명단의 [퇴관] 필터에서 언제든 다시 볼 수 있습니다)")) return;
   if(!state.quitMap) state.quitMap={};
@@ -3536,6 +3734,7 @@ function renderRosterTab(){
     '<span style="flex:1"></span>'+
     '<button class="chip" style="background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700" onclick="openStuM()">＋ 원생 등록</button>'+
     '<button class="chip" style="color:var(--blue);border-color:var(--blue);font-weight:700" onclick="openTempM()">＋ 임시(체험) 등록</button>'+
+    (myRole()==="admin"?'<button class="chip sm" style="color:var(--sub);border-color:var(--line);font-weight:600;background:#FBFBFA" title="이름·전화번호가 겹치는 중복 인원을 찾아 정리합니다" onclick="openDupTool()">🧹 중복 정리'+(function(){var n=dupCount();return n?' <span style="background:#F0A8A8;color:#7A1F1F;border-radius:6px;padding:0 5px;font-size:10.5px;font-weight:800">'+n+'</span>':'';})()+'</button>':'')+
     '</div>'+
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"><span style="font-size:11.5px;color:var(--sub);align-self:center">정렬:</span>'+
     ["이름순","반별","급수별"].map(function(k){
@@ -7076,6 +7275,7 @@ function render(){
   if(state.markM){ h+=renderMarkModal(); }
   if(state.sigBank){ h+=renderSigBank(); }
   if(state.nameCleanup){ h+=renderNameCleanup(); }
+  if(state.dupTool){ h+=renderDupTool(); }
   if(state.addBox){ h+=renderAddModal(); }
   /* 출석: 임시(체험) 등록 창 */
   if(state.tempM){ h+=renderTempModal(); }
@@ -8154,15 +8354,7 @@ function render(){
        '<div style="flex:'+tm+';background:#5B84C4"></div><div style="flex:'+tw+';background:#D98989"></div></div>'+
        '<div style="display:flex;justify-content:space-between;font-size:12px;color:#B8BCC6;margin-top:4px">'+
        '<span>남 '+(total?Math.round(tm/total*100):0)+'%</span><span>여 '+(total?Math.round(tw/total*100):0)+'%</span></div></div>';
-    /* 이름 정리 도구 (관리자) — 성인부 '님' 제거·전화 같은 중복 삭제 */
-    if(myRole()==="admin"){
-      var honN=STUDENTS.filter(function(s){ return s&&s.n&&/님$/.test(s.n)&&s.n.length>=3; }).length;
-      h+='<div class="card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
-         '<div style="flex:1;min-width:180px"><div style="font-size:14px;font-weight:800">🧹 이름 정리</div>'+
-         '<div style="font-size:12px;color:var(--sub);margin-top:2px">이름 끝 \'님\' 제거 · 전화 같은 중복(\'님\'쪽) 삭제 · 중복 리포트</div></div>'+
-         '<button class="chip" style="background:'+(honN?'var(--blue)':'#fff')+';color:'+(honN?'#fff':'var(--sub)')+';border-color:'+(honN?'var(--blue)':'var(--line)')+';font-weight:800;padding:9px 14px" onclick="openNameCleanup()">\'님\' 이름 '+honN+'개 검토</button>'+
-         '</div>';
-    }
+    /* (이름/중복 정리 도구는 '수련생 명단' 탭으로 이동했습니다) */
     h+='<div class="card"><span class="label">현재 연령대별 인원 (남 · 여)</span>';
     rows.forEach(function(r){
       var pct=total?Math.round(r.t/total*1000)/10:0;
