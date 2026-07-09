@@ -17,7 +17,7 @@
   * { box-sizing:border-box; -webkit-font-smoothing:antialiased; }
   body { margin:0; background:var(--bg); color:var(--ink);
          font-family:'Pretendard',-apple-system,'SF Pro Display','Apple SD Gothic Neo','Malgun Gothic','맑은 고딕',sans-serif;
-         letter-spacing:-0.02em; }
+         letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
   .header { background:#FFFFFF; color:var(--ink); padding:0;
             border-bottom:1px solid var(--line); }
   .header div[style*="color:#B8BCC6"] { color:var(--sub) !important; }
@@ -1816,16 +1816,14 @@ window.saveEditStudent=function(){
   }
   /* 이름 바뀌면 연관된 모든 데이터도 갱신 */
   if(e.n!==orig){
-    state.payments.forEach(function(pm){ if(pm.name===orig) pm.name=e.n; });
-    if(state.expiryMap[orig]){ state.expiryMap[e.n]=state.expiryMap[orig]; delete state.expiryMap[orig]; }
-    if(state.holdMap[orig]){ state.holdMap[e.n]=state.holdMap[orig]; delete state.holdMap[orig]; }
-    if(state.closedMap[orig]){ state.closedMap[e.n]=state.closedMap[orig]; delete state.closedMap[orig]; }
-    if(state.regTypeMap[orig]){ state.regTypeMap[e.n]=state.regTypeMap[orig]; delete state.regTypeMap[orig]; }
+    /* 결제·출석·심사·사진·기준수련횟수·홀딩·주간출석 등 이름을 쓰는 모든 기록을 새 이름으로 이동 (부분 이동 시 데이터 유실 방지) */
+    _moveNameKeys(orig, e.n, false);
     /* 신입 원생 배열에도 반영 */
     state.newStudents.forEach(function(s){
       if(s.n===orig){ s.n=e.n; s.b=e.b; s.g=e.g; if(e.by!==undefined) s.by=e.by; }
     });
     state.detail=e.n;
+    if(typeof examNotifyRosterChanged==="function") examNotifyRosterChanged();
   } else {
     state.newStudents.forEach(function(s){
       if(s.n===orig){ s.b=e.b; s.g=e.g; if(e.by!==undefined) s.by=e.by; }
@@ -2116,7 +2114,7 @@ function analyzeHonorific(){
 }
 /* 이름을 쓰는 모든 데이터의 키/필드를 새 이름으로 이동 */
 function _moveNameKeys(oldN, newN, overwrite){
-  ['closedMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences'].forEach(function(mk){
+  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences'].forEach(function(mk){
     var m=state[mk]; if(m && m[oldN]!==undefined){ if(overwrite || m[newN]===undefined) m[newN]=m[oldN]; delete m[oldN]; }
   });
   if(state.refCntMap){ for(var k in state.refCntMap){ if(k.indexOf(oldN+"|")===0){ var nk=newN+k.slice(oldN.length); if(overwrite||state.refCntMap[nk]===undefined) state.refCntMap[nk]=state.refCntMap[k]; delete state.refCntMap[k]; } } }
@@ -2145,7 +2143,15 @@ function mergeDupInto(dupN, baseN){
     if(state.quitMap && state.quitMap[baseN] && !state.quitMap[baseN].del) state.quitMap[baseN]={del:true,t:Date.now()};
   }
   /* dup의 잔여 키 제거 */
-  ['closedMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences'].forEach(function(mk){ if(state[mk]) delete state[mk][dupN]; });
+  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences'].forEach(function(mk){ if(state[mk]) delete state[mk][dupN]; });
+  /* 대표(base) 학적 정보 보강: 대표에 비어있는 값은 dup에서 채우고, 보호자·대회이력은 합쳐 보존 */
+  var _b=null,_d=null;
+  for(var bi=0;bi<STUDENTS.length;bi++){ if(STUDENTS[bi].n===baseN)_b=STUDENTS[bi]; if(STUDENTS[bi].n===dupN)_d=STUDENTS[bi]; }
+  if(_b && _d){
+    ['b','g','by','grade','sp','t','reg','joinDate','bd','note'].forEach(function(k){ if((_b[k]==null||_b[k]==="") && _d[k]!=null && _d[k]!=="") _b[k]=_d[k]; });
+    if(_d.gd && _d.gd.length){ _b.gd=_b.gd||[]; var seen={}; _b.gd.forEach(function(g){ if(g&&g.p) seen[String(g.p).replace(/[^0-9]/g,"")]=1; }); _d.gd.forEach(function(g){ if(g && (!g.p || !seen[String(g.p).replace(/[^0-9]/g,"")])) _b.gd.push(g); }); }
+    if(_d.comps && _d.comps.length){ _b.comps=(typeof dedupComps==="function")?dedupComps((_b.comps||[]).concat(_d.comps)):(_b.comps||[]).concat(_d.comps); }
+  }
   /* 명단에서 dup 제거 + 삭제표식(동기화로 되살아나지 않게) */
   for(var i=STUDENTS.length-1;i>=0;i--){ if(STUDENTS[i].n===dupN) STUDENTS.splice(i,1); }
   if(!state.deletedStudents) state.deletedStudents={};
@@ -2398,9 +2404,9 @@ function renderDupTool(){
       '<span style="flex:1"></span>'+
       '<button style="background:var(--blue);border:none;color:#fff;border-radius:9px;padding:8px 14px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12.5px" onclick="applyHonorificRenames()">'+d.honorificSolo.length+'건 일괄 정리</button></div></div>';
   }
-  if(sureG.length){ body+='<div style="font-size:12px;font-weight:800;color:var(--green);margin:14px 0 6px">🔴 확실한 중복 ('+sureG.length+'묶음)</div>'+sureG.map(groupCard).join(''); }
+  if(sureG.length){ body+='<div style="font-size:12px;font-weight:800;color:var(--green);margin:14px 0 6px">🟢 확실한 중복 ('+sureG.length+'묶음)</div>'+sureG.map(groupCard).join(''); }
   if(maybeG.length){ body+='<div style="font-size:12px;font-weight:800;color:#B45309;margin:14px 0 6px">🟠 확인 필요 ('+maybeG.length+'묶음)</div>'+maybeG.map(groupCard).join(''); }
-  if(sibG.length){ body+='<div style="font-size:12px;font-weight:800;color:var(--red);margin:14px 0 6px">⚪ 참고 · 같은 번호 ('+sibG.length+'묶음)</div>'+
+  if(sibG.length){ body+='<div style="font-size:12px;font-weight:800;color:var(--red);margin:14px 0 6px">🔴 참고 · 같은 번호 ('+sibG.length+'묶음)</div>'+
     '<div style="font-size:11.5px;color:var(--sub);margin-bottom:6px">가족(형제)은 보호자 번호를 함께 쓰는 경우가 많아 자동으로 합치지 않습니다. 정말 같은 사람일 때만 \'합치기\'를 체크하세요.</div>'+sibG.map(groupCard).join(''); }
   if(!d.honorificSolo.length && !sureG.length && !maybeG.length && !sibG.length){
     body+='<div style="padding:26px 0;text-align:center;color:var(--sub);font-size:14px">정리할 중복 인원이 없습니다. ✓</div>';
@@ -2584,7 +2590,7 @@ function renderBaseCntModal(){
       '<div style="font-size:11.5px;color:var(--sub);margin-top:8px">· 특정 달만 다르게 하려면 아래 표의 <b>기준</b> 칸에 직접 입력하세요.<br>· 비워두고 저장하면 기준값이 삭제됩니다.</div>'+
     '</div>'+
     '<div style="display:flex;gap:8px;padding:12px 22px 18px;border-top:1px solid var(--line)">'+
-      '<button style="flex:1;background:#fff;border:1.5px solid var(--line);color:var(--sub);border-radius:11px;padding:12px;font-weight:700;cursor:pointer;font-family:inherit" onclick="closeBaseCntModal()">닫기</button>'+
+      '<button style="flex:1;background:#fff;border:1.5px solid var(--line);color:var(--ink);border-radius:11px;padding:12px;font-weight:700;cursor:pointer;font-family:inherit" onclick="closeBaseCntModal()">닫기</button>'+
       '<button style="flex:1.4;background:var(--blue);border:none;color:#fff;border-radius:11px;padding:12px;font-weight:800;cursor:pointer;font-family:inherit" onclick="saveBaseCnt()">저장</button>'+
     '</div>'+
     '</div></div>';
@@ -5575,7 +5581,7 @@ function examRowHtml(r){
   return '<div style="border-top:1px solid var(--line);padding:8px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
     avatarHtml(s.n, s.g, 34)+
     '<span style="width:4px;height:22px;border-radius:2px;background:'+gradeColor(s.grade||"")+';display:inline-block"></span>'+
-    '<b style="font-size:14px;flex:0 0 66px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:var(--blue)" title="클릭하면 학적부가 열립니다" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+esc(s.n)+'</b>'+
+    '<b style="font-size:14px;flex:0 0 84px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:var(--blue)" title="클릭하면 학적부가 열립니다" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+esc(s.n)+'</b>'+
     '<span style="font-size:12px;color:var(--sub);flex:0 0 58px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(s.grade||"급수?")+'</span>'+
     ((state.examSort==="반별")?'<span style="font-size:11px;color:var(--sub);flex:0 0 96px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(s.b||"").replace(/\(.*\)/,"")+'</span>':'')+
     '<b style="font-size:13px;flex:0 0 46px;color:'+(r.acc>=24?'var(--red)':'var(--ink)')+';cursor:pointer;border-bottom:1px dashed var(--sub)" title="클릭하면 수동 수정" onclick="editAcc(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+r.acc+'회</b>'+
@@ -5715,6 +5721,7 @@ window.doExam=function(name){
   reconcileAcc();
   persistAtt();
   if(myRole()==="admin") persist();
+  if(typeof examNotifyRosterChanged==="function") examNotifyRosterChanged();
   render();
 };
 
@@ -7644,7 +7651,7 @@ function render(){
     h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
        '<div style="font-size:19px;font-weight:900">'+esc(state.detail)+' 수련생 납부내역</div>'+
        '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
-       '<button onclick="openBaseCntModal()" style="border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">기준수련횟수</button>'+
+       '<button onclick="openBaseCntModal()" style="border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📌 기준수련횟수</button>'+
        '<button onclick="editStudent(\''+state.detail.replace(/'/g,"\\'")+'\')" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit">원생 정보</button>'+
        (isQuit(state.detail) ? '<button onclick="deleteStudent(\''+state.detail.replace(/'/g,"\\'")+'\')" style="border:1px solid var(--red);background:#fff;color:var(--red);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit">퇴관생 삭제</button>' : '')+
        '<button onclick="closeDetail()" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit">← 돌아가기</button>'+
@@ -7823,17 +7830,19 @@ function render(){
       var moRow=function(mo){
         var ymStr=Y+"-"+p2(mo);
         var amt=monAmt[mo]||0;
-        var cc=contractCnt(nm, ymStr); var refN=(cc&&cc.src==="입력")?cc.n:null;
+        var cc=contractCnt(nm, ymStr);
+        var refEff=(cc&&cc.n!=null)?cc.n:null;            /* 표시용: 기준월·자동 포함한 실효 기준수련횟수 */
+        var refOverride=(cc&&cc.src==="입력")?cc.n:null;  /* 이 달만 직접 입력한 값 (있으면 파랑·진하게) */
         var act=attendCnt(nm, ymStr);
-        var hasData=(amt>0)||(act>0)||(refN!=null);
+        var hasData=(amt>0)||(act>0)||(refOverride!=null);   /* 기준(기본/자동)만 있는 빈 달은 흐리게 유지 */
         var actColor="var(--sub)";
-        if(refN!=null && (amt>0||act>0)){ actColor = (act>=refN)?"var(--green)":"var(--red)"; }
+        if(refEff!=null && (amt>0||act>0)){ actColor = (act>=refEff)?"var(--green)":"var(--red)"; }
         var amtTxt = amt>0 ? Number(amt).toLocaleString("ko-KR") : '–';
         return '<div style="display:flex;align-items:center;border-top:1px solid var(--line);'+(hasData?'':'opacity:.5')+'">'+
           '<div style="flex:0 0 34px;padding:7px 2px 7px 10px;font-weight:800;color:var(--ink);font-size:12.5px">'+mo+'</div>'+
           '<div style="flex:1;padding:7px 2px;text-align:right;font-weight:'+(amt>0?'800':'400')+';color:'+(amt>0?'var(--ink)':'var(--sub)')+';font-size:12px;white-space:nowrap;overflow:hidden">'+amtTxt+'</div>'+
           '<div style="flex:0 0 44px;padding:4px 3px;text-align:center">'+
-            '<input inputmode="numeric" value="'+(refN!=null?refN:'')+'" placeholder="–" onchange="editRefCnt(\''+esn+'\',\''+ymStr+'\',this.value)" title="기준수련횟수 직접 입력" style="width:34px;text-align:center;font-size:12px;font-weight:700;color:var(--blue);border:1px solid var(--line);border-radius:6px;padding:4px 0;background:#fff;font-family:inherit">'+
+            '<input inputmode="numeric" value="'+(refEff!=null?refEff:'')+'" placeholder="–" onchange="editRefCnt(\''+esn+'\',\''+ymStr+'\',this.value)" title="'+(refOverride!=null?'이 달 직접 입력값':'기준수련횟수 자동 적용값 — 고치면 이 달만 별도 적용')+'" style="width:34px;text-align:center;font-size:12px;font-weight:'+(refOverride!=null?'800':'600')+';color:'+(refOverride!=null?'var(--blue)':'var(--sub)')+';border:1px solid var(--line);border-radius:6px;padding:4px 0;background:#fff;font-family:inherit;font-variant-numeric:tabular-nums">'+
           '</div>'+
           '<div style="flex:0 0 40px;padding:7px 8px 7px 2px;text-align:center;font-weight:800;font-size:12.5px;color:'+actColor+'">'+(act>0?act:'–')+'</div>'+
           '</div>';
@@ -7844,7 +7853,7 @@ function render(){
         return '<div style="flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;overflow:hidden">'+s+'</div>';
       };
       h+='<div style="display:flex;gap:10px;align-items:flex-start">'+moCol(1,6)+moCol(7,12)+'</div>';
-      h+='<div style="font-size:11px;color:var(--sub);margin:6px 2px 16px;line-height:1.5">· <b>기준</b>=기준수련횟수(칸에 직접 입력·수정 가능) · <b>실제</b>=수련생출석 체크 횟수 · 금액 단위: 원 · <span style="color:var(--green);font-weight:700">초록</span>=충족, <span style="color:var(--red);font-weight:700">빨강</span>=미달</div>';
+      h+='<div style="font-size:11px;color:var(--sub);margin:6px 2px 16px;line-height:1.5">· <b>기준</b>=기준수련횟수 (<span style="color:var(--sub);font-weight:700">회색</span>=자동 적용값 · <span style="color:var(--blue);font-weight:700">파랑</span>=이 달 직접 입력 · 칸을 고치면 그 달만 별도 적용) · <b>실제</b>=수련생출석 체크 횟수 · 금액 단위: 원 · <span style="color:var(--green);font-weight:700">초록</span>=충족, <span style="color:var(--red);font-weight:700">빨강</span>=미달</div>';
       /* ── 기타 납부 상황 (용품·대회·기타 · 낸 순서 리스트) ── */
       h+='<div style="display:flex;align-items:baseline;justify-content:space-between;margin:2px 2px 8px">'+
          '<span style="font-size:15px;font-weight:900;color:var(--ink)">기타 납부 상황</span>'+
@@ -8833,9 +8842,9 @@ function render(){
       var period = r.endYm
         ? fmtYm(r.startYm)+" ~ "+fmtYm(r.endYm)+(ext? ' <b style="color:var(--amber)">(+'+ext+'일 홀딩연장)</b>':'')
         : fmtYm(r.startYm)+" ~ <b style='color:var(--amber)'>미정(홀딩 등)</b>";
-      var mBadge = r.months>=12 ? '<span style="background:var(--blueSoft);color:var(--blue);border-radius:6px;padding:2px 7px;font-size:12px;font-weight:800">12개월</span>'
-                 : r.months>0 ? '<span style="background:var(--greenSoft);color:var(--green);border-radius:6px;padding:2px 7px;font-size:12px;font-weight:800">'+r.months+'개월</span>'
-                 : '<span style="background:var(--amberSoft);color:var(--amber);border-radius:6px;padding:2px 7px;font-size:12px;font-weight:800">기타</span>';
+      var mBadge = r.months>=12 ? '<span style="background:var(--blueSoft);color:var(--blue);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">12개월</span>'
+                 : r.months>0 ? '<span style="background:var(--greenSoft);color:var(--green);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">'+r.months+'개월</span>'
+                 : '<span style="background:var(--amberSoft);color:var(--amber);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">기타</span>';
       var isNew=(Date.now()-(r.t||0))<86400000;
       h+='<div style="border-top:1px solid var(--line);padding:10px 0">'+
          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
