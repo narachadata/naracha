@@ -436,6 +436,48 @@ function effExpiry(name){
 }
 
 /* ---------- 저장·병합 ---------- */
+/* ── 대회이력 병합 헬퍼 (동시 입력 시 누적 보존) ── */
+function compKey(c){
+  if(!c) return "";
+  if(c.t) return "t:"+c.t;
+  return (c.d||"")+"|"+(c.nm||"")+"|"+(c.r||"")+"|"+(c.c||"");
+}
+function mergeCompLists(x, y){
+  var out=[], seen={};
+  (x||[]).concat(y||[]).forEach(function(c){
+    if(!c) return; var k=compKey(c);
+    if(k && seen[k]) return; seen[k]=1; out.push(c);
+  });
+  out.sort(function(a,b){ return String(b.d||"").localeCompare(String(a.d||"")); });
+  return out;
+}
+/* ── 명단 병합: 원생별 최신(_t) 우선 + 대회이력 합집합 (동시 수정 유실 방지) ──
+   삭제는 deletedStudents 로 별도 처리되므로 union 병합해도 삭제본이 되살아나지 않음 */
+function mergeRoster(ra, rb){
+  ra=ra||{list:[],t:0}; rb=rb||{list:[],t:0};
+  var la=ra.list||[], lb=rb.list||[];
+  if(!la.length) return rb;
+  if(!lb.length) return ra;
+  var byName={}, order=[];
+  function add(list, sideT){
+    (list||[]).forEach(function(s){
+      if(!s || !s.n) return;
+      var st=s._t||sideT||0, cur=byName[s.n];
+      if(!cur){ byName[s.n]={s:s, t:st}; order.push(s.n); }
+      else {
+        var mc=mergeCompLists(cur.s.comps, s.comps);
+        var winner=(st>cur.t)? s : cur.s;
+        if(mc.length){ winner=JSON.parse(JSON.stringify(winner)); winner.comps=mc; }
+        byName[s.n]={s:winner, t:Math.max(st, cur.t)};
+      }
+    });
+  }
+  var aNewer=(ra.t||0)>=(rb.t||0);
+  if(aNewer){ add(la, ra.t); add(lb, rb.t); }
+  else { add(lb, rb.t); add(la, ra.t); }
+  var out=order.map(function(n){ return byName[n].s; });
+  return { list:out, t:Math.max(ra.t||0, rb.t||0) };
+}
 function mergeData(a,b){
   var dels={}, i;
   (a.deletedIds||[]).concat(b.deletedIds||[]).forEach(function(id){ dels[id]=1; });
@@ -530,11 +572,8 @@ function mergeData(a,b){
   var dd={}; var da=a.dupDismissed||{}, db=b.dupDismissed||{};
   for(var dk in da) dd[dk]=1; for(var dk2 in db) dd[dk2]=1;
   /* 명단: 더 최근에 수정된 쪽 우선. 단, 빈 명단이 채워진 명단을 덮어쓰지 못함 */
-  var ra=a.roster||{list:[],t:0}, rb=b.roster||{list:[],t:0};
-  var rosterM = ((rb.t||0)>(ra.t||0)) ? rb : ra;
-  if(!(rosterM.list&&rosterM.list.length)){
-    rosterM = (ra.list&&ra.list.length) ? ra : rb;
-  }
+  /* 명단: 원생별 최신(_t) 우선 병합 (동시 수정 유실 방지 · 대회이력 누적 보존) */
+  var rosterM = mergeRoster(a.roster, b.roster);
   return { roster:rosterM,
            payments:pays, expiryMap:exps, deletedIds:Object.keys(dels).map(Number),
            holdMap:holds, closedMap:closed, quitMap:quits, regTypeMap:regTypes, newStudents:newStuList,
@@ -3456,12 +3495,12 @@ function recentAttend(nm, fromDate){
   }
   return false;
 }
-function barRow(label, val, max, color){
+function barRow(label, val, max, color, border){
   var pct=max?Math.round(val/max*100):0;
   return '<div style="display:flex;align-items:center;gap:8px;margin:3px 0">'+
     '<span style="font-size:11.5px;color:var(--sub);width:74px;flex:0 0 auto;text-align:right">'+esc(label)+'</span>'+
     '<div style="flex:1;background:#F0F0F3;border-radius:5px;height:16px;overflow:hidden">'+
-    '<div style="width:'+pct+'%;height:100%;background:'+(color||"var(--blue)")+';border-radius:5px;min-width:'+(val?'2px':'0')+'"></div></div>'+
+    '<div style="width:'+pct+'%;height:100%;background:'+(color||"var(--blue)")+';border-radius:5px;min-width:'+(val?'2px':'0')+(border?';border:'+border+';box-sizing:border-box':'')+'"></div></div>'+
     '<b style="font-size:12px;width:36px;flex:0 0 auto">'+val+'</b></div>';
 }
 function briefMonths(){
@@ -3661,9 +3700,14 @@ function renderBriefTab(){
   /* 값이 0인 품·단 단계는 표에서 숨김 (있는 단계만 표시) */
   Object.keys(dist).forEach(function(k){ if((/품$|단$/.test(k)) && dist[k]===0) delete dist[k]; });
   var dMax=Math.max.apply(null, Object.keys(dist).map(function(k){return dist[k];}).concat([1]));
-  var DIST_COLOR={"흰·노(9~8급)":"#F3C614","주·초(7~6급)":"#FF9500","파·보(5~4급)":"#7A5FD0","밤·빨·국기원(3~1급)":"#C8342A",
-    "1품":"#8B7BC0","2품":"#6B5BA0","3품":"#4A3D75","4품":"#332A55",
-    "1단":"#5A5A62","2단":"#4E4E56","3단":"#43434A","4단":"#38383E","5단":"#2E2E33","6단":"#242428","7단":"#1C1C20","8단":"#141417","9단":"#0C0C0E"};
+  /* 실제 띠 색상: 흰·노→흰, 주·초→주황, 파·보→파랑, 밤·빨·국기원→빨강
+     1품→검정(위)/빨강(아래), 2품→검정 바탕 가운데 빨강, 3품 90%검정 → 1~9단 완전 검정 */
+  var BLACK="#000000";
+  var DIST_COLOR={"흰·노(9~8급)":"#FFFFFF","주·초(7~6급)":"#FF9500","파·보(5~4급)":"#2F6FE0","밤·빨·국기원(3~1급)":"#D0332A",
+    "1품":"linear-gradient(to bottom,#111111 0%,#111111 50%,#D0332A 50%,#D0332A 100%)",
+    "2품":"linear-gradient(to bottom,#111111 0%,#111111 34%,#D0332A 34%,#D0332A 66%,#111111 66%,#111111 100%)",
+    "3품":"#1A1A1A","4품":"#0D0D0D",
+    "1단":BLACK,"2단":BLACK,"3단":BLACK,"4단":BLACK,"5단":BLACK,"6단":BLACK,"7단":BLACK,"8단":BLACK,"9단":BLACK};
 
   /* ══ 👥 인원 브리핑 ══ */
   var pc={재원:0, 휴관:0};
@@ -3710,7 +3754,7 @@ function renderBriefTab(){
       '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">'+
       (done.length?done.slice(0,12).map(function(o){return '<span class="chip sm" style="white-space:nowrap">'+esc(o.n)+' <i style="font-size:9.5px;color:var(--sub)">'+esc(o.d.slice(5))+'</i></span>';}).join('')+(done.length>12?'<span style="align-self:center;font-size:11.5px;color:var(--sub)">외 '+(done.length-12)+'명</span>':''):'<span style="color:var(--sub)">기록 없음</span>')+'</div>')+
     card('<b style="font-size:14px">급수 분포 (재원생)</b><div style="margin-top:8px">'+
-      Object.keys(dist).map(function(k){ return barRow(k, dist[k], dMax, DIST_COLOR[k]); }).join('')+'</div>'+
+      Object.keys(dist).map(function(k){ return barRow(k, dist[k], dMax, DIST_COLOR[k], (k.indexOf("흰")===0)?"1px solid #CFCBBB":""); }).join('')+'</div>'+
       '<div style="font-size:11.5px;color:var(--sub);margin-top:6px">급수 미입력 '+noGrade+'명 — 명단에서 입력하면 분석이 더 정확해집니다</div>'+
       '<div style="font-size:12.5px;margin-top:8px;border-top:1px solid var(--line);padding-top:8px">🐢 정체 인원(마지막 심사 6개월↑·24회 미달): <b>'+stale.length+'명</b>'+
       (stale.length?'<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">'+stale.map(function(s){return '<span class="chip sm" style="white-space:nowrap">'+esc(s.n)+' <i style="font-size:10px;color:var(--sub)">'+(state.accMap[s.n]||0)+'회</i></span>';}).join('')+'</div>':'')+'</div>')+
@@ -4757,6 +4801,7 @@ window.doExam=function(name){
   var ng=nextGrade(s.grade||"");
   if(!confirm(name+" 응심 처리\n\n· 급수: "+(s.grade||"미입력")+" → "+(ng||"변동 없음")+"\n· 누적 횟수: 1부터 다시 시작\n· 심사일: 오늘("+today()+")\n\n진행할까요?")) return;
   if(ng) s.grade=ng;
+  s._t=Date.now();
   state.rosterT=Date.now();
   state.accMap[name]=0; state.accT=Date.now(); accTouch(name);
   state.lastExamMap[name]=today(); state.lastExamT=Date.now();
@@ -4790,10 +4835,10 @@ window.openStuM=function(name){
     state.stuM={ mode:"edit", view:true, orig:name, n:s.n, b:s.b||"", g:s.g||"남", by:s.by||"", t:s.t||"",
       grade:s.grade||"", gT:pg.t, gN:pg.n, gS:pg.s, bd:s.bd||"", note:s.note||"", sp:s.sp||"",
       joinDate:s.joinDate||"", lastPromo:s.lastPromo||"", reg:s.reg||(isAd?"횟수":"월별"),
-      gd:JSON.parse(JSON.stringify(s.gd||[])), tempId:null, photo:getPhoto(name) };
+      gd:JSON.parse(JSON.stringify(s.gd||[])), comps:JSON.parse(JSON.stringify(s.comps||[])), tempId:null, photo:getPhoto(name) };
   } else {
     state.stuM={ mode:"new", orig:null, n:"", b:"", g:"남", by:"", t:"주2",
-      grade:"", gT:"", gN:"", gS:"", bd:"", note:"", sp:"", joinDate:today(), reg:"월별", gd:[], tempId:null };
+      grade:"", gT:"", gN:"", gS:"", bd:"", note:"", sp:"", joinDate:today(), reg:"월별", gd:[], comps:[], tempId:null };
   }
   render();
 
@@ -4855,6 +4900,18 @@ window.dupAction=function(name, act){
   else setClosed(name);
 };
 window.stuMF=function(k,v){ state.stuM[k]=v; };
+/* ── 대회이력 편집 ── */
+window.stuMAddComp=function(){
+  if(!state.stuM.comps) state.stuM.comps=[];
+  state.stuM.comps.unshift({ d:today(), nm:"", r:"", c:"", t:Date.now() });
+  render();
+};
+window.stuMComp=function(i,k,v){
+  if(state.stuM.comps && state.stuM.comps[i]){ state.stuM.comps[i][k]=v; state.stuM.comps[i].t=Date.now(); }
+};
+window.stuMDelComp=function(i){
+  if(state.stuM.comps){ state.stuM.comps.splice(i,1); render(); }
+};
 
 /* ── 사진: 선택 → 크롭 창 열기 ── */
 window.stuMPhotoPick=function(input){
@@ -5027,14 +5084,15 @@ window.saveStuM=function(){
     alert("이미 있는 이름입니다. 동명이인은 이름 뒤에 A·B를 붙여주세요."); return;
   }
   var gd=(m.gd||[]).filter(function(g){return (g.p||"").trim();});
+  var comps=(m.comps||[]).filter(function(c){return (c.d||c.nm||c.r||c.c);});
   if(m.mode==="new"){
-    var stu={ n:name, b:m.b, g:m.g, t:m.t||"", by:m.by||"", e:null, p:[], sp:(m.sp||"").trim(), grade:(m.grade||"").trim(), bd:m.bd||"", note:m.note||"", joinDate:m.joinDate||"", reg:m.reg||"월별", gd:gd };
+    var stu={ n:name, b:m.b, g:m.g, t:m.t||"", by:m.by||"", e:null, p:[], sp:(m.sp||"").trim(), grade:(m.grade||"").trim(), bd:m.bd||"", note:m.note||"", joinDate:m.joinDate||"", reg:m.reg||"월별", gd:gd, comps:comps, _t:Date.now() };
     STUDENTS.push(stu);
   } else {
     var s=STUDENTS.find(function(x){return x.n===m.orig;});
     if(!s) return;
     s.n=name; s.b=m.b; s.g=m.g; s.by=m.by; s.t=m.t; s.grade=(m.grade||"").trim(); s.bd=m.bd||""; s.note=m.note||"";
-    s.sp=(m.sp||"").trim(); s.joinDate=m.joinDate||""; s.reg=m.reg||s.reg; s.gd=gd;
+    s.sp=(m.sp||"").trim(); s.joinDate=m.joinDate||""; s.reg=m.reg||s.reg; s.gd=gd; s.comps=comps; s._t=Date.now();
   }
   state.rosterT=Date.now();
   persistAtt();
@@ -5144,12 +5202,31 @@ function renderStuChart(m){
       '</div>'+
     '</div>'+
 
-    /* ── 메모 ── */
-    (m.note?
+    /* ── 메모 (고정 높이 · 넘치면 스크롤) ── */
     '<div style="padding:12px 20px 0">'+
       '<div style="font-size:11.5px;font-weight:800;color:'+SUB+';letter-spacing:.5px;margin-bottom:5px">메모</div>'+
-      '<div style="font-size:13px;color:'+INK+';line-height:1.6;white-space:pre-wrap;background:#fff;border:1px solid '+LINE+';border-radius:10px;padding:10px 12px;max-height:140px;overflow:auto">'+esc(m.note)+'</div>'+
-    '</div>':'')+
+      '<div style="font-size:13px;color:'+INK+';line-height:1.6;white-space:pre-wrap;background:#fff;border:1px solid '+LINE+';border-radius:10px;padding:10px 12px;height:96px;overflow:auto">'+
+        (m.note? esc(m.note) : '<span style="color:'+SUB+'">메모 없음</span>')+
+      '</div>'+
+    '</div>'+
+    /* ── 🏆 대회이력 (고정 높이 · 누적되면 스크롤) ── */
+    (function(){
+      var cs=(m.comps||[]).slice().sort(function(a,b){ return String(b.d||"").localeCompare(String(a.d||"")); });
+      var inner = cs.length ? cs.map(function(c){
+        var line=[esc(c.d||""), esc(c.nm||""), esc(c.r||"")].filter(Boolean).join(' · ');
+        return '<div style="padding:7px 2px;border-bottom:1px solid '+LINE+'">'+
+          '<div style="font-size:13px;color:'+INK+';font-weight:700">'+(line||'<span style="color:'+SUB+'">(내용 없음)</span>')+'</div>'+
+          (c.c?'<div style="font-size:12px;color:'+SUB+';margin-top:2px;white-space:pre-wrap;line-height:1.5">'+esc(c.c)+'</div>':'')+
+          '</div>';
+      }).join('') : '<div style="font-size:12.5px;color:'+SUB+';padding:6px 2px">기록된 대회이력이 없습니다.</div>';
+      return '<div style="padding:12px 20px 0">'+
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">'+
+          '<span style="font-size:11.5px;font-weight:800;color:'+SUB+';letter-spacing:.5px">🏆 대회이력</span>'+
+          (cs.length?'<span style="font-size:11px;color:'+SUB+';font-weight:700">'+cs.length+'건</span>':'')+
+        '</div>'+
+        '<div style="background:#fff;border:1px solid '+LINE+';border-radius:10px;padding:4px 12px;height:150px;overflow:auto">'+inner+'</div>'+
+      '</div>';
+    })()+
 
     /* ── 하단 액션: 닫기 / 수정 ── */
     '<div style="display:flex;gap:8px;padding:16px 20px 18px">'+
@@ -5202,10 +5279,6 @@ function renderStuModal(){
    ['','1킨더(7이하)','2초주니어(8~10)','3초시니어(11~13)','4청소년(14-19)','5성인1(20-39)','6성인2(40이상)'].map(function(b){return '<option'+(m.b===b?' selected':'')+' value="'+b+'">'+(b||"선택")+'</option>';}).join('')+'</select></div>'+
    '<div style="flex:1"><span class="label" style="font-size:12px">등록일</span><input class="input" type="date" value="'+esc(m.joinDate||"")+'" oninput="stuMF(\'joinDate\',this.value)"></div>'+
    '</div>'+
-   '<div style="display:flex;gap:8px;margin-top:8px">'+
-   '<div style="flex:1"><span class="label" style="font-size:12px">마지막 승급일 <span style="color:var(--sub);font-weight:400">(심사 추천 기준)</span></span><input class="input" type="date" value="'+esc(m.lastPromo||"")+'" oninput="stuMF(\'lastPromo\',this.value)"></div>'+
-   '<div style="flex:1;display:flex;align-items:flex-end"><span style="font-size:11px;color:var(--sub);padding-bottom:9px;line-height:1.35">이 날짜 <b>다음날부터</b> 출석 24회를 채우면 심사 추천 대상이 됩니다</span></div>'+
-   '</div>'+
    '<div style="border-top:1px solid var(--line);margin:8px 0 6px;padding-top:7px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
      '<b style="font-size:13px">🥋 급수</b> <span style="font-size:11px;color:var(--sub)">유급자는 급 선택 시 띠 자동 · 유품자는 품/단 선택</span>'+
      '<span style="flex:1"></span>'+
@@ -5239,6 +5312,26 @@ function renderStuModal(){
      '<input class="input" type="tel" placeholder="010-0000-0000" value="'+esc(m.sp||"")+'" oninput="stuMF(\'sp\',this.value)" style="margin-bottom:5px">'+
    '<div style="border-top:1px solid var(--line);margin:8px 0 6px;padding-top:7px"><b style="font-size:13px">📝 메모</b> <span style="font-size:11px;color:var(--sub)">출석 창의 관리 메모가 [날짜 시각]으로 자동 누적됩니다</span></div>'+
    '<textarea class="input" placeholder="메모 (예: 시범단 2025.1 입단)" oninput="stuMF(\'note\',this.value)" style="min-height:64px;resize:vertical;font-family:inherit">'+esc(m.note||"")+'</textarea>';
+  /* ── 🏆 대회이력 (날짜·대회명·결과·코멘트 한 건씩 누적) ── */
+  x+='<div style="border-top:1px solid var(--line);margin:8px 0 6px;padding-top:7px;display:flex;align-items:center">'+
+       '<b style="font-size:13px">🏆 대회이력</b> <span style="font-size:11px;color:var(--sub);margin-left:6px">한 줄에 날짜·대회명·결과·코멘트</span>'+
+       '<span style="flex:1"></span><button class="chip" onclick="stuMAddComp()">＋ 추가</button></div>'+
+     '<div style="max-height:190px;overflow:auto;'+((m.comps&&m.comps.length)?'border:1px solid var(--line);border-radius:10px;padding:6px;background:#FAFAF7':'')+'">';
+  (m.comps||[]).forEach(function(c,i){
+    x+='<div style="border:1px solid var(--line);border-radius:9px;padding:7px 8px;margin-bottom:6px;background:#fff">'+
+       '<div style="display:flex;gap:5px;margin-bottom:4px;align-items:center">'+
+         '<input class="input" type="date" style="flex:0 0 132px;padding:6px 7px;font-size:12px" value="'+esc(c.d||"")+'" onchange="stuMComp('+i+',\'d\',this.value)">'+
+         '<input class="input" style="flex:1;min-width:0;padding:6px 7px;font-size:12.5px" placeholder="대회명" value="'+esc(c.nm||"")+'" oninput="stuMComp('+i+',\'nm\',this.value)">'+
+         '<b style="flex:0 0 auto;color:var(--red);cursor:pointer;font-size:16px;padding:0 3px" onclick="stuMDelComp('+i+')">×</b>'+
+       '</div>'+
+       '<div style="display:flex;gap:5px">'+
+         '<input class="input" style="flex:0 0 96px;padding:6px 7px;font-size:12.5px" placeholder="결과" value="'+esc(c.r||"")+'" oninput="stuMComp('+i+',\'r\',this.value)">'+
+         '<input class="input" style="flex:1;min-width:0;padding:6px 7px;font-size:12.5px" placeholder="코멘트" value="'+esc(c.c||"")+'" oninput="stuMComp('+i+',\'c\',this.value)">'+
+       '</div>'+
+       '</div>';
+  });
+  if(!(m.comps&&m.comps.length)) x+='<div style="font-size:12px;color:var(--sub);padding:4px 2px">아직 대회이력이 없습니다. ＋추가를 눌러 기록하세요.</div>';
+  x+='</div>';
   x+='<div style="display:flex;gap:8px;margin-top:16px">'+
    '<button class="big" style="flex:1;background:#eee;color:var(--ink)" onclick="closeStuM()">취소</button>'+
    '<button class="big" style="flex:2" onclick="saveStuM()">'+(m.mode==="new"?"등록":"저장")+'</button></div>'+
@@ -5408,9 +5501,7 @@ function mergeAtt(a, b){
       });
     }
   });
-  var ra=a.roster||{list:[],t:0}, rb=b.roster||{list:[],t:0};
-  var roster = ((rb.t||0)>(ra.t||0)) ? rb : ra;
-  if(!(roster.list&&roster.list.length)) roster = (ra.list&&ra.list.length)?ra:rb;
+  var roster = mergeRoster(a.roster, b.roster);
   var sa=a.schedule, sb=b.schedule;
   var schedule;
   if(!sa) schedule=sb;
