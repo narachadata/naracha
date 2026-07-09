@@ -5519,7 +5519,8 @@ function attState(){
     acc:{ map:state.accMap||{}, t:state.accT||0, tmap:state.accTMap||{} },
     lastExam:{ map:state.lastExamMap||{}, t:state.lastExamT||0 },
     kkw:{ list:state.kkwPending||[], t:state.kkwT||0 },
-    examData: state.examData || { meta:{}, students:{}, t:0 },
+    /* [완전 분리] 심사데이터는 exam 창고로 이전됨 → 출석 창고에는 더 이상 저장하지 않음.
+       (기존 출석 창고에 남아 있던 심사데이터는 applyAtt에서 계속 읽어 exam으로 합쳐짐 = 유실 없음) */
     rosterFileV: state.rosterFileV||0, savedAt: Date.now() };
 }
 function persistAtt(){
