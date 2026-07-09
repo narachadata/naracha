@@ -385,7 +385,7 @@ var PERIODS = [["월 단위",0],["2개월",2],["6개월",6],["12개월",12]];
 var LONGREG_SEED = [];  /* 씨앗은 클라우드로 이관 완료 */
 
 
-var state = { tab:"회계입력", payments:[], expiryMap:{}, deletedIds:[], holdMap:{}, closedMap:{}, longRegs:[], deletedLongIds:[], trash:[], dupDismissed:{}, regTypeMap:{},
+var state = { tab:"회계입력", payments:[], expiryMap:{}, deletedIds:[], holdMap:{}, closedMap:{}, longRegs:[], deletedLongIds:[], trash:[], dupDismissed:{}, regTypeMap:{}, refCntMap:{},
               topCat:"출석", attTab:"수련시간표", role:null,
               schedule:null, scheduleT:0, tempStudents:[],
               attPulledOnce:false, attSyncing:false, attStatus:"", stuM:null, tempM:null,
@@ -579,6 +579,11 @@ function mergeData(a,b){
   var ra=a.regTypeMap||{}, rb=b.regTypeMap||{};
   for(i in ra) regTypes[i]=ra[i];
   for(i in rb) regTypes[i]=rb[i];
+  /* 참고횟수(브리핑에서 수정) 병합: 키별 최신(t) 우선 */
+  var refCnts={};
+  var rca=a.refCntMap||{}, rcb=b.refCntMap||{};
+  for(i in rca) refCnts[i]=rca[i];
+  for(i in rcb){ if(!refCnts[i] || ((rcb[i]&&rcb[i].t)||0) > ((refCnts[i]&&refCnts[i].t)||0)) refCnts[i]=rcb[i]; }
   /* 신입 원생 병합 (이름 기준 중복 제거) */
   var newStu={};
   (a.newStudents||[]).concat(b.newStudents||[]).forEach(function(s){ newStu[s.n]=s; });
@@ -616,7 +621,7 @@ function mergeData(a,b){
   var rosterM = mergeRoster(a.roster, b.roster);
   return { roster:rosterM,
            payments:pays, expiryMap:exps, deletedIds:Object.keys(dels).map(Number),
-           holdMap:holds, closedMap:closed, quitMap:quits, regTypeMap:regTypes, newStudents:newStuList,
+           holdMap:holds, closedMap:closed, quitMap:quits, regTypeMap:regTypes, refCntMap:refCnts, newStudents:newStuList,
            histEdits:histEd, deletedStudents:delStu, reopenLog:rl,
            longRegs:longs, deletedLongIds:Object.keys(ldels),
            trash:trList, dupDismissed:dd,
@@ -641,7 +646,7 @@ function loadAll(){
   var m=mergeData(embedded,local);
   state.payments=m.payments; state.expiryMap=m.expiryMap;
   state.deletedIds=m.deletedIds; state.holdMap=m.holdMap||{}; state.closedMap=m.closedMap||{};
-  state.regTypeMap=m.regTypeMap||{}; state.newStudents=m.newStudents||[];
+  state.regTypeMap=m.regTypeMap||{}; state.refCntMap=m.refCntMap||{}; state.newStudents=m.newStudents||[];
   state.histEdits=m.histEdits||{}; state.deletedStudents=m.deletedStudents||{};
   state.reopenLog=m.reopenLog||{};
   state.quitMap=m.quitMap||{};   /* 퇴관 기록 복원 (누락 버그 수정) */
@@ -935,6 +940,7 @@ function persist(){
   var full={payments:livePayments(),expiryMap:state.expiryMap,   /* [3단계] 아카이브 연도 결제는 라이브에서 제외 */
                            deletedIds:state.deletedIds, holdMap:state.holdMap,
                            closedMap:state.closedMap, quitMap:state.quitMap||{}, regTypeMap:state.regTypeMap,
+                           refCntMap:state.refCntMap||{},
                            newStudents:state.newStudents,
                            histEdits:state.histEdits,
                            deletedStudents:state.deletedStudents,
@@ -994,7 +1000,7 @@ function cloudSync(){
           payments:state.payments, expiryMap:state.expiryMap, deletedIds:state.deletedIds,
           holdMap:state.holdMap, closedMap:state.closedMap,
           quitMap:state.quitMap||{},
-          reopenLog:state.reopenLog||{}, regTypeMap:state.regTypeMap,
+          reopenLog:state.reopenLog||{}, regTypeMap:state.regTypeMap, refCntMap:state.refCntMap||{},
           newStudents:state.newStudents, histEdits:state.histEdits,
           deletedStudents:state.deletedStudents,
           longRegs:state.longRegs, deletedLongIds:state.deletedLongIds,
@@ -1008,6 +1014,7 @@ function cloudSync(){
         state.reopenLog=merged.reopenLog||state.reopenLog||{};
         cleanReopenLog();   /* 폭증한 복관기록 자동 정리 */
         state.regTypeMap=merged.regTypeMap||state.regTypeMap||{};
+        state.refCntMap=merged.refCntMap||state.refCntMap||{};
         state.newStudents=merged.newStudents||state.newStudents||[];
         state.histEdits=merged.histEdits||state.histEdits||{};
         state.deletedStudents=merged.deletedStudents||state.deletedStudents||{};
@@ -1031,7 +1038,7 @@ function cloudSyncPush(){
     deletedIds:state.deletedIds, holdMap:state.holdMap,
     closedMap:state.closedMap,
     quitMap:state.quitMap||{},
-    reopenLog:state.reopenLog||{}, regTypeMap:state.regTypeMap||{},
+    reopenLog:state.reopenLog||{}, regTypeMap:state.regTypeMap||{}, refCntMap:state.refCntMap||{},
     newStudents:state.newStudents||[], histEdits:state.histEdits||{},
     deletedStudents:state.deletedStudents||{},
     longRegs:state.longRegs||[], deletedLongIds:state.deletedLongIds||[],
@@ -1060,6 +1067,7 @@ function cloudSyncPush(){
 }
 
 function cloudPull(){
+  if(!state.unlocked) return;      /* 잠금(비밀번호) 화면에서는 백그라운드 동기화 금지 → 입력 튕김 방지 */
   if(myRole()!=="admin") return;  /* 회계 창고는 관리자 전용 */
   if(!accessKey()){ state.syncStatus="접속키 필요"; renderSyncBadge(); return; }
   state.syncStatus="가져오는 중…"; state.syncing=true; renderSyncBadge();
@@ -1099,7 +1107,7 @@ function cloudPull(){
           payments:state.payments, expiryMap:state.expiryMap, deletedIds:state.deletedIds,
           holdMap:state.holdMap, closedMap:state.closedMap,
           quitMap:state.quitMap||{}, reopenLog:state.reopenLog||{},
-          regTypeMap:state.regTypeMap||{}, newStudents:state.newStudents||[],
+          regTypeMap:state.regTypeMap||{}, refCntMap:state.refCntMap||{}, newStudents:state.newStudents||[],
           histEdits:state.histEdits||{}, deletedStudents:state.deletedStudents||{},
           longRegs:state.longRegs, deletedLongIds:state.deletedLongIds,
           trash:state.trash, dupDismissed:state.dupDismissed,
@@ -1112,6 +1120,7 @@ function cloudPull(){
         state.reopenLog=merged.reopenLog||state.reopenLog||{};
         cleanReopenLog();   /* 폭증한 복관기록 자동 정리 */
         state.regTypeMap=merged.regTypeMap||state.regTypeMap||{};
+        state.refCntMap=merged.refCntMap||state.refCntMap||{};
         state.newStudents=merged.newStudents||state.newStudents||[];
         state.histEdits=merged.histEdits||state.histEdits||{};
         state.deletedStudents=merged.deletedStudents||state.deletedStudents||{};
@@ -1132,7 +1141,7 @@ function cloudPull(){
           payments:state.payments,expiryMap:state.expiryMap,deletedIds:state.deletedIds,
           holdMap:state.holdMap,closedMap:state.closedMap,
           quitMap:state.quitMap||{},reopenLog:state.reopenLog||{},
-          regTypeMap:state.regTypeMap||{},newStudents:state.newStudents||[],
+          regTypeMap:state.regTypeMap||{},refCntMap:state.refCntMap||{},newStudents:state.newStudents||[],
           histEdits:state.histEdits||{},deletedStudents:state.deletedStudents||{},
           longRegs:state.longRegs,deletedLongIds:state.deletedLongIds,
           trash:state.trash,dupDismissed:state.dupDismissed,
@@ -2143,6 +2152,19 @@ window.showDetail=function(name){
 };
 window.closeDetail=function(){ state.detail=null; state.payDetailOpen=false; render(); };
 window.togglePayDetail=function(){ state.payDetailOpen=!state.payDetailOpen; render(); };
+window.editRefCnt=function(name, ym, v){
+  var clean=String(v).replace(/[^0-9]/g,"");
+  if(!state.refCntMap) state.refCntMap={};
+  var key=name+"|"+ym;
+  if(clean===""){ delete state.refCntMap[key]; }
+  else { state.refCntMap[key]={ v:Number(clean), t:Date.now() }; }
+  /* 같은 달 수련비 결제가 있으면 그 결제의 참고횟수(w)도 맞춰줌 (일관성 유지) */
+  (state.payments||[]).forEach(function(p){
+    if(p.name===name && p.cat==="수련비" && (p.date||"").slice(0,7)===ym){ p.w = (clean===""?null:Number(clean)); }
+  });
+  persist();
+  render();
+};
 window.setDetailYear=function(y){ state.detailYear=Number(y); render(); };
 
 window.printCert=function(){
@@ -3576,6 +3598,9 @@ function renderScheduleTab(){
 
 /* ══════════ 출석 현황 (계약 대비 미달/초과) ══════════ */
 function contractCnt(name, ym){
+  /* 브리핑에서 직접 수정한 참고횟수(refCntMap)가 최우선 */
+  var rk=name+"|"+ym, rm=(state.refCntMap||{})[rk];
+  if(rm && rm.v!=null && rm.v!=="") return {n:Number(rm.v), src:"입력"};
   /* 그 달 수련비 결제에 입력된 횟수 우선, 없으면 수련방법으로 자동 */
   var w=null;
   for(var i=0;i<state.payments.length;i++){
@@ -6290,6 +6315,7 @@ function attSync(){
     .catch(function(){ state.attSyncing=false; state.attStatus="오프라인 (컴퓨터에만 저장됨)"; if(state.attPending){ state.attPending=false; setTimeout(attSync, 3000); } });
 }
 function attPull(){
+  if(!state.unlocked) return;      /* 잠금 화면에서는 백그라운드 동기화 금지 → 입력 튕김 방지 */
   if(!accessKey()) return;
   fetch(GSHEET_URL+"?key="+encodeURIComponent(accessKey())+"&store=att")
     .then(function(r){ return r.json(); })
@@ -6342,6 +6368,7 @@ function mergePhoto(a, b){
   return { photoV:1, map:out, t:Math.max(a.t||0,b.t||0), savedAt:Math.max(a.savedAt||0,b.savedAt||0) };
 }
 function photoPull(cb){
+  if(!state.unlocked){ if(cb)cb(false); return; }   /* 잠금 화면에서는 백그라운드 동기화 금지 */
   if(!accessKey()){ if(cb)cb(false); return; }
   state.photoStatus="사진 불러오는 중…";
   fetch(GSHEET_URL+"?key="+encodeURIComponent(accessKey())+"&store=photo")
@@ -7228,31 +7255,38 @@ function render(){
       h+='<div style="display:flex;align-items:baseline;justify-content:space-between;margin:2px 2px 8px">'+
          '<span style="font-size:15px;font-weight:900;color:var(--ink)">수련비 납부 상황</span>'+
          '<span style="font-size:14px;font-weight:800;color:var(--blue)">연간 '+won(ytu)+'</span></div>';
-      var tbl='<div style="border:1px solid var(--line);border-radius:12px;overflow:hidden">'+
-        '<div style="display:flex;background:#F1F0EA;font-size:11.5px;font-weight:800;color:var(--sub)">'+
-          '<div style="flex:0 0 52px;padding:8px 10px">월</div>'+
-          '<div style="flex:1;padding:8px 10px;text-align:right">납부금액</div>'+
-          '<div style="flex:0 0 66px;padding:8px 6px;text-align:center">참고횟수</div>'+
-          '<div style="flex:0 0 66px;padding:8px 6px;text-align:center">실제출석</div>'+
+      var esn=esc(nm).replace(/'/g,"\\'");
+      var moHead='<div style="display:flex;background:#EEF2F7;font-size:10.5px;font-weight:800;color:var(--sub);letter-spacing:-.2px">'+
+          '<div style="flex:0 0 34px;padding:7px 2px 7px 10px">월</div>'+
+          '<div style="flex:1;padding:7px 2px;text-align:right">금액</div>'+
+          '<div style="flex:0 0 44px;padding:7px 2px;text-align:center">참고</div>'+
+          '<div style="flex:0 0 40px;padding:7px 8px 7px 2px;text-align:center">실제</div>'+
         '</div>';
-      for(var mo=1;mo<=12;mo++){
+      var moRow=function(mo){
         var ymStr=Y+"-"+p2(mo);
         var amt=monAmt[mo]||0;
-        var cc=contractCnt(nm, ymStr); var refN=(cc&&cc.src==="입력")?cc.n:null;  /* 청구 입력에 적은 참고 숫자만 표시 */
+        var cc=contractCnt(nm, ymStr); var refN=(cc&&cc.src==="입력")?cc.n:null;
         var act=attendCnt(nm, ymStr);
-        var hasData=(amt>0)||(act>0);
+        var hasData=(amt>0)||(act>0)||(refN!=null);
         var actColor="var(--sub)";
         if(refN!=null && (amt>0||act>0)){ actColor = (act>=refN)?"var(--green)":"var(--red)"; }
-        tbl+='<div style="display:flex;align-items:center;border-top:1px solid var(--line);font-size:13.5px;'+(hasData?'':'opacity:.45')+'">'+
-          '<div style="flex:0 0 52px;padding:9px 10px;font-weight:700;color:var(--ink)">'+mo+'월</div>'+
-          '<div style="flex:1;padding:9px 10px;text-align:right;font-weight:'+(amt>0?'800':'400')+';color:'+(amt>0?'var(--ink)':'var(--sub)')+'">'+(amt>0?won(amt):'–')+'</div>'+
-          '<div style="flex:0 0 66px;padding:9px 6px;text-align:center;color:var(--sub);font-weight:600">'+(refN!=null?refN+'회':'–')+'</div>'+
-          '<div style="flex:0 0 66px;padding:9px 6px;text-align:center;font-weight:800;color:'+actColor+'">'+(act>0?act+'회':'–')+'</div>'+
+        var amtTxt = amt>0 ? Number(amt).toLocaleString("ko-KR") : '–';
+        return '<div style="display:flex;align-items:center;border-top:1px solid var(--line);'+(hasData?'':'opacity:.5')+'">'+
+          '<div style="flex:0 0 34px;padding:7px 2px 7px 10px;font-weight:800;color:var(--ink);font-size:12.5px">'+mo+'</div>'+
+          '<div style="flex:1;padding:7px 2px;text-align:right;font-weight:'+(amt>0?'800':'400')+';color:'+(amt>0?'var(--ink)':'var(--sub)')+';font-size:12px;white-space:nowrap;overflow:hidden">'+amtTxt+'</div>'+
+          '<div style="flex:0 0 44px;padding:4px 3px;text-align:center">'+
+            '<input inputmode="numeric" value="'+(refN!=null?refN:'')+'" placeholder="–" onchange="editRefCnt(\''+esn+'\',\''+ymStr+'\',this.value)" title="참고횟수 직접 입력" style="width:34px;text-align:center;font-size:12px;font-weight:700;color:var(--blue);border:1px solid var(--line);border-radius:6px;padding:4px 0;background:#fff;font-family:inherit">'+
+          '</div>'+
+          '<div style="flex:0 0 40px;padding:7px 8px 7px 2px;text-align:center;font-weight:800;font-size:12.5px;color:'+actColor+'">'+(act>0?act:'–')+'</div>'+
           '</div>';
-      }
-      tbl+='</div>';
-      h+=tbl;
-      h+='<div style="font-size:11px;color:var(--sub);margin:5px 2px 16px">· 참고횟수 = 청구 입력 시 적은 횟수(참고용) · 실제출석 = 수련생출석에서 체크한 횟수 · <span style="color:var(--green);font-weight:700">초록</span>=충족, <span style="color:var(--red);font-weight:700">빨강</span>=미달</div>';
+      };
+      var moCol=function(a,b){
+        var s=moHead;
+        for(var mo=a;mo<=b;mo++) s+=moRow(mo);
+        return '<div style="flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;overflow:hidden">'+s+'</div>';
+      };
+      h+='<div style="display:flex;gap:10px;align-items:flex-start">'+moCol(1,6)+moCol(7,12)+'</div>';
+      h+='<div style="font-size:11px;color:var(--sub);margin:6px 2px 16px;line-height:1.5">· <b>참고</b>=참고횟수(칸에 직접 입력·수정 가능) · <b>실제</b>=수련생출석 체크 횟수 · 금액 단위: 원 · <span style="color:var(--green);font-weight:700">초록</span>=충족, <span style="color:var(--red);font-weight:700">빨강</span>=미달</div>';
       /* ── 기타 납부 상황 (용품·대회·기타 · 낸 순서 리스트) ── */
       h+='<div style="display:flex;align-items:baseline;justify-content:space-between;margin:2px 2px 8px">'+
          '<span style="font-size:15px;font-weight:900;color:var(--ink)">기타 납부 상황</span>'+
@@ -8359,7 +8393,7 @@ function render(){
 }
 loadAll();
 render();
-setTimeout(cloudPull, 500);
+setTimeout(function(){ if(state.unlocked) cloudPull(); }, 500);  /* 잠금 해제 후에만 자동 동기화 (로그인 화면 튕김 방지) */
 </script>
 </body>
 </html>
