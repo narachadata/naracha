@@ -3377,7 +3377,7 @@ function rosterListHtml(){
         '<span style="background:#FFF3C4;color:#7A5C00;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">체험</span>'+
         '<span style="font-size:13px;color:var(--sub)">'+esc(s.date||"")+(s.phone?' · '+esc(s.phone):'')+(s.memo?' · '+esc(s.memo):'')+'</span>'+
         '<span style="flex:1"></span>'+
-        '<button class="chip" style="color:var(--blue)" onclick="convertTemp('+s.id+')">정식 등록 전환</button>'+
+        '<button class="chip" style="background:var(--blue);border-color:var(--blue);color:#fff;font-weight:800" title="입력된 정보로 바로 원생 등록창을 엽니다" onclick="convertTemp('+s.id+')">＋ 원생 등록</button>'+
         '<button class="chip" style="color:var(--red)" onclick="delTemp('+s.id+')">삭제</button></div>';
     });
     return x;
@@ -3446,6 +3446,9 @@ function rosterListHtml(){
       btns+='<button class="chip sm" onclick="unQuit(\''+esc(s.n).replace(/'/g,"\\'")+'\')">재원 복원</button>'+
             '<button class="chip sm" style="color:var(--red);border-color:#F3B4B4" title="확인 후 완전 삭제 (퇴관생만 가능)" onclick="deleteStudent(\''+esc(s.n).replace(/'/g,"\\'")+'\')">🗑 삭제</button>';
     } else {
+      /* 홀딩 버튼: 휴관 왼쪽에 (진행 중인 홀딩·휴관·퇴관이 아닐 때만) */
+      if(!ab && !state.closedMap[s.n])
+        btns+='<button class="chip sm" style="color:#B45309;border-color:#F0D6A8;background:#FFFBF2" title="홀딩(기간 휴식) 시작 — 부상·여행 등" onclick="openHold(\''+esc(s.n).replace(/'/g,"\\'")+'\')">홀딩</button>';
       btns+= state.closedMap[s.n]
         ? '<button class="chip" style="color:var(--green);border-color:var(--green)" onclick="reopenClosed(\''+esc(s.n).replace(/'/g,"\\'")+'\')">복관</button>'
         : '<button class="chip sm" style="color:#B45309;border-color:#E7C9A9" title="휴관 처리 (시작일·사유 입력)" onclick="setClosed(\''+esc(s.n).replace(/'/g,"\\'")+'\')">휴관</button>';
@@ -3469,7 +3472,7 @@ function rosterListHtml(){
       '<div style="display:flex;align-items:center;gap:8px">'+
         rthumb+
         '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;flex:1">'+
-          '<b style="font-size:15px">'+esc(s.n)+'</b>'+beltChip(s)+
+          '<b style="font-size:15px;cursor:pointer;color:var(--blue)" title="클릭하면 학적부가 열립니다 (수정도 가능)" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+esc(s.n)+'</b>'+beltChip(s)+
           '<span style="font-size:12px;color:var(--sub)">'+esc(s.b||"")+'</span>'+
           statusBadge+holdBadge+
         '</div>'+
@@ -3628,7 +3631,7 @@ function statListHtml(view){
           : '<div style="width:34px;height:34px;border-radius:50%;background:#EDEDF0;display:flex;align-items:center;justify-content:center;font-size:17px;color:#B0B0B8;flex:0 0 auto">👤</div>';
       })()+
       '<span style="width:4px;height:22px;border-radius:2px;background:'+gradeColor(s.grade||"")+';display:inline-block"></span>'+
-      '<b style="font-size:14px;min-width:64px">'+esc(s.n)+'</b>'+
+      '<b style="font-size:14px;min-width:64px;cursor:pointer;color:var(--blue)" title="클릭하면 학적부가 열립니다 (수정도 가능)" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+esc(s.n)+'</b>'+
       '<span style="font-size:12px;color:var(--sub);min-width:56px">'+esc(s.grade||"")+'</span>'+
       (r.ct?'<span style="font-size:12.5px">횟수 <b>'+r.ct.n+'회</b><i style="font-size:10px;color:var(--sub)"> '+r.ct.src+'</i></span>':'')+
       '<span style="font-size:12.5px">실제 <b style="color:var(--blue)">'+r.ac+'회</b></span>'+
@@ -5622,8 +5625,10 @@ window.delTemp=function(id){
 window.convertTemp=function(id){
   var s=(state.tempStudents||[]).find(function(t){return t.id===id;});
   if(!s) return;
-  state.stuM={ mode:"new", orig:null, n:s.name, b:"", g:"남", by:"", t:"주2",
-    rkc:"급", rkb:"흰", rkp:"", rkg:"", gd:s.phone?[{r:"모",p:s.phone}]:[], tempId:id };
+  /* 임시(체험) 정보를 그대로 원생 등록창에 채워서 연다 (저장 시 tempId로 임시 항목 자동 제거) */
+  state.stuM={ mode:"new", orig:null, n:s.name||"", b:"", g:"남", by:"", t:"주2",
+    grade:"", gT:"", gN:"", gS:"", bd:"", note:(s.memo?("체험 메모: "+s.memo):""), sp:"",
+    joinDate:today(), reg:"월별", gd:(s.phone?[{r:"모",p:s.phone}]:[]), comps:[], tempId:id };
   render();
 };
 function renderTempModal(){
