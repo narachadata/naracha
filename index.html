@@ -2329,7 +2329,7 @@ function analyzeHonorific(){
 }
 /* 이름을 쓰는 모든 데이터의 키/필드를 새 이름으로 이동 */
 function _moveNameKeys(oldN, newN, overwrite){
-  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences'].forEach(function(mk){
+  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences','laManual','contactLog'].forEach(function(mk){
     var m=state[mk]; if(m && m[oldN]!==undefined){ if(overwrite || m[newN]===undefined) m[newN]=m[oldN]; delete m[oldN]; }
   });
   if(state.refCntMap){ for(var k in state.refCntMap){ if(k.indexOf(oldN+"|")===0){ var nk=newN+k.slice(oldN.length); if(overwrite||state.refCntMap[nk]===undefined) state.refCntMap[nk]=state.refCntMap[k]; delete state.refCntMap[k]; } } }
@@ -2364,12 +2364,12 @@ function mergeDupInto(dupN, baseN){
     if(state.quitMap && state.quitMap[baseN] && !state.quitMap[baseN].del) state.quitMap[baseN]={del:true,t:Date.now()};
   }
   /* dup의 잔여 키 제거 */
-  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences'].forEach(function(mk){ if(state[mk]) delete state[mk][dupN]; });
+  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences','laManual','contactLog'].forEach(function(mk){ if(state[mk]) delete state[mk][dupN]; });
   /* 대표(base) 학적 정보 보강: 대표에 비어있는 값은 dup에서 채우고, 보호자·대회이력은 합쳐 보존 */
   var _b=null,_d=null;
   for(var bi=0;bi<STUDENTS.length;bi++){ if(STUDENTS[bi].n===baseN)_b=STUDENTS[bi]; if(STUDENTS[bi].n===dupN)_d=STUDENTS[bi]; }
   if(_b && _d){
-    ['b','g','by','grade','sp','t','reg','joinDate','bd','note'].forEach(function(k){ if((_b[k]==null||_b[k]==="") && _d[k]!=null && _d[k]!=="") _b[k]=_d[k]; });
+    ['b','g','by','grade','sp','t','reg','joinDate','bd','note','demo'].forEach(function(k){ if((_b[k]==null||_b[k]==="") && _d[k]!=null && _d[k]!=="") _b[k]=_d[k]; });
     if(_d.gd && _d.gd.length){ _b.gd=_b.gd||[]; var seen={}; _b.gd.forEach(function(g){ if(g&&g.p) seen[String(g.p).replace(/[^0-9]/g,"")]=1; }); _d.gd.forEach(function(g){ if(g && (!g.p || !seen[String(g.p).replace(/[^0-9]/g,"")])) _b.gd.push(g); }); }
     if(_d.comps && _d.comps.length){ _b.comps=(typeof dedupComps==="function")?dedupComps((_b.comps||[]).concat(_d.comps)):(_b.comps||[]).concat(_d.comps); }
   }
@@ -4169,7 +4169,7 @@ function rosterListHtml(){
           '<b style="flex:0 0 84px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px;cursor:pointer;color:var(--blue)" title="클릭하면 학적부가 열립니다 (수정도 가능)" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+esc(s.n)+'</b>'+
           '<span style="flex:0 0 104px;white-space:nowrap;overflow:hidden">'+beltChip(s)+'</span>'+
           '<span style="flex:0 0 108px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--sub)">'+esc((s.b||"").replace(/\(.*\)/,""))+'</span>'+
-          statusBadge+longAbsBadge(s.n)+
+          statusBadge+longAbsBadge(s.n, true)+
         '</div>'+
         (function(){ var pb=pendAbsBadge(s.n);
           return '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:0 0 auto">'+
@@ -4494,7 +4494,7 @@ function statListHtml(view){
       avatarHtml(s.n, s.g, 34)+
       '<span style="flex:0 0 auto;width:4px;height:22px;border-radius:2px;background:'+gradeColor(s.grade||"")+'"></span>'+
       '<b style="flex:0 0 84px;font-size:14px;cursor:pointer;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="클릭하면 학적부가 열립니다 (수정도 가능)" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+esc(s.n)+'</b>'+
-      (isLongAbsent(s.n)?'<span style="flex:0 0 auto">'+longAbsBadge(s.n)+'</span>':'')+
+      (isLongAbsent(s.n)?'<span style="flex:0 0 auto">'+longAbsBadge(s.n, true)+'</span>':'')+
       '<span style="flex:0 0 56px;font-size:11.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="급수">'+esc(s.grade||"급수?")+'</span>'+
       '<span style="flex:0 0 52px;font-size:12px;color:var(--sub)">기준 <b style="color:var(--ink)">'+(r.ct?r.ct.n:'–')+'</b></span>'+
       '<span style="flex:0 0 48px;font-size:12px;color:var(--sub)">실제 <b style="color:var(--blue)">'+r.ac+'</b></span>'+
@@ -4991,7 +4991,8 @@ function kindColor(k){ var f=ATT_KINDS.find(function(x){return x.k===k;}); retur
    (체험은 등록 전 원생이므로 카운팅과 무관) */
 var NO_COUNT_KINDS={ "체험":1, "심사":1, "국기원":1, "대회연습":1 };
 function kindCounts(k){ return !NO_COUNT_KINDS[k||"정규"]; }
-/* ── 장기 결석 판정: 실제 출석 기준 — 4주(28일) 동안 연속으로 출석이 없을 때 ── */
+var DEMO_BADGE="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20112%22%3E%3Cpolygon%20points%3D%2250%2C3%2092%2C27.5%2092%2C84.5%2050%2C109%208%2C84.5%208%2C27.5%22%20fill%3D%22%23FFFFFF%22%20stroke%3D%22%231A1A1A%22%20stroke-width%3D%226.5%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2244%22%20cy%3D%2219.5%22%20r%3D%224.6%22%20fill%3D%22%23C8342A%22%2F%3E%3Cpath%20d%3D%22M35%2030%20q11-7%2026-3%20q-4%208-16%208%20q-8%200-10-5z%22%20fill%3D%22%231F2E5C%22%2F%3E%3Cpath%20d%3D%22M53%2017%20q9-5%2016%201%20q-3%206-11%205%20q-5-1-5-6z%22%20fill%3D%22%23C8342A%22%2F%3E%3Crect%20x%3D%2217%22%20y%3D%2240%22%20width%3D%2266%22%20height%3D%222.6%22%20fill%3D%22%231A1A1A%22%2F%3E%3Crect%20x%3D%2217%22%20y%3D%2258.5%22%20width%3D%2266%22%20height%3D%222.6%22%20fill%3D%22%231A1A1A%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2254.5%22%20font-family%3D%22Georgia%2Cserif%22%20font-size%3D%2213.5%22%20font-weight%3D%22bold%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%220.5%22%20fill%3D%22%231A1A1A%22%3ENARACHA%3C%2Ftext%3E%3Ctext%20x%3D%2250%22%20y%3D%2268.5%22%20font-family%3D%22Georgia%2Cserif%22%20font-size%3D%227%22%20text-anchor%3D%22middle%22%20fill%3D%22%231A1A1A%22%3ETaekwondo%3C%2Ftext%3E%3Ctext%20x%3D%2250%22%20y%3D%2292%22%20font-family%3D%22sans-serif%22%20font-size%3D%2216%22%20font-weight%3D%22800%22%20text-anchor%3D%22middle%22%20fill%3D%22%231A1A1A%22%3E%EC%8B%9C%EB%B2%94%EB%8B%A8%3C%2Ftext%3E%3C%2Fsvg%3E";   /* 시범단 육각 배지 (투명 배경 SVG) */
+/* ── 장기 결석 판정: 실제 출석 기준 — 4주(28일) 동안 연속으로 출석이 없을 때 · 수동 설정/해제(laManual) 오버라이드 ── */
 var __laCache=null, __laCacheT=0;
 function _laData(){
   if(__laCache && Date.now()-__laCacheT<800) return __laCache;   /* 같은 렌더 내 재계산 방지 */
@@ -5010,16 +5011,35 @@ function isLongAbsent(name){
   var D=_laData();
   var cut=addDays(today(),-28);                       /* 4주 */
   var last=D.lastAtt[name];
+  var m=(state.laManual||{})[name];
+  if(m && (!last || last<m.d)){                       /* 수동 설정이 마지막 출석보다 최신이면 우선 (설정일 당일 이후 출석 시 자동 해제) */
+    if(m.on) return true;                              /* 수동 지정 (프로그램 도입 전 출결 반영) */
+    return m.d<cut;                                    /* 수동 해제: 해제일 기준으로 다시 4주 무출석이면 재판정 */
+  }
   if(last) return last<cut;                            /* 마지막 출석이 4주 이전 */
   return !!(D.placedFirst[name] && D.placedFirst[name]<cut);   /* 출석 기록이 없으면: 4주 이전부터 배치돼 있던 경우만 */
 }
-function longAbsBadge(name){
+/* 장기결석 수동 설정/해제 */
+window.toggleManualLA=function(name, on){
+  if(!state.laManual) state.laManual={};
+  state.laManual[name]={ on:!!on, d:today(), t:Date.now() };
+  __laCache=null;
+  persistAtt(); render();
+};
+window.clearLA=function(name){
+  if(!confirm(name+" 님의 🚫 장기결석 표시를 해제할까요?\n(이후 다시 4주 이상 출석이 없으면 자동으로 재표시됩니다)")) return;
+  toggleManualLA(name, false);
+};
+function longAbsBadge(name, withClear){
   if(!isLongAbsent(name)) return "";
   var D=_laData(); var last=D.lastAtt[name];
-  var tip = last ? ('마지막 출석 '+last+' ('+_holdDays(last, today())+'일 전)') : '출석 기록 없음';
+  var m=(state.laManual||{})[name];
+  var tip = (m&&m.on&&(!last||last<=m.d)) ? ('수동 설정 '+m.d) : (last ? ('마지막 출석 '+last+' ('+_holdDays(last, today())+'일 전)') : '출석 기록 없음');
   var e=(typeof liveHolds==="function"?liveHolds(name):[]).filter(function(x){ return x.open || x.to>=today(); })[0];
   if(e) tip+=' · 결석예정 '+e.from+'~'+(e.open?'미정':e.to)+(e.reason?' ('+e.reason+')':'');
-  return '<span title="'+esc(tip)+'" style="background:#7C2D12;color:#fff;border-radius:6px;padding:2px 8px;font-size:10.5px;font-weight:800;white-space:nowrap">🚫 장기결석</span>';
+  return '<span title="'+esc(tip)+'" style="display:inline-flex;align-items:center;gap:0;background:#7C2D12;color:#fff;border-radius:6px;padding:2px '+(withClear?'4px':'8px')+' 2px 8px;font-size:10.5px;font-weight:800;white-space:nowrap">🚫 장기결석'+
+    (withClear?'<button title="장기결석 해제" onclick="event.stopPropagation();clearLA(\''+esc(name).replace(/'/g,"\\'")+'\')" style="background:rgba(255,255,255,.22);border:none;color:#fff;border-radius:4px;margin-left:6px;padding:0 5px;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1.5">해제</button>':'')+
+    '</span>';
 }
 /* ── 장기결석 예정 배지: 일주일 이상 결석 예정이 세팅된 경우 (아직 장기결석 아님) ── */
 function pendAbsBadge(name){
@@ -5833,6 +5853,11 @@ window.addName=function(){
     cell.marks[nm]={k:"체험", t:Date.now()};
   } else if(s.st==="휴관" || state.closedMap[nm]){
     alert(nm+" 원생은 휴관 중입니다. 복관 처리 후 배치할 수 있습니다."); return;
+  } else if(typeof isLongAbsent==="function" && isLongAbsent(nm)){
+    if(!confirm(nm+" 님은 🚫 장기결석 상태입니다.\n장기결석을 해제하고 배치할까요?")) return;
+    if(!state.laManual) state.laManual={};
+    state.laManual[nm]={ on:false, d:today(), t:Date.now() }; __laCache=null; persistAtt();
+    cell.marks[nm]={ k:(b.k||"정규"), t:Date.now() };
   } else {
     cell.marks[nm]={ k:(b.k||"정규"), t:Date.now() };   /* 배치 시 종류 지정 (예정 상태) */
   }
@@ -6217,7 +6242,7 @@ window.openStuM=function(name){
     state.stuM={ mode:"edit", view:true, orig:name, n:s.n, b:s.b||"", g:s.g||"남", by:s.by||"", t:s.t||"",
       grade:s.grade||"", gT:pg.t, gN:pg.n, gS:pg.s, bd:s.bd||"", note:s.note||"", sp:s.sp||"",
       joinDate:s.joinDate||"", lastPromo:s.lastPromo||"", reg:s.reg||(isAd?"횟수":"월별"),
-      gd:JSON.parse(JSON.stringify(s.gd||[])), comps:dedupComps(JSON.parse(JSON.stringify(s.comps||[]))), tempId:null, photo:getPhoto(name) };
+      gd:JSON.parse(JSON.stringify(s.gd||[])), comps:dedupComps(JSON.parse(JSON.stringify(s.comps||[]))), demo:!!s.demo, tempId:null, photo:getPhoto(name) };
   } else {
     state.stuM={ mode:"new", orig:null, n:"", b:"", g:"남", by:"", t:"주2",
       grade:"", gT:"", gN:"", gS:"", bd:"", note:"", sp:"", joinDate:today(), reg:"월별", gd:[], comps:[], tempId:null };
@@ -6469,14 +6494,14 @@ window.saveStuM=function(){
   var comps=dedupComps((m.comps||[]).filter(function(c){return (c.d||c.nm||c.r||c.c);}));  /* 기존 중복 정리 */
   comps.forEach(function(c){ if(!c.id) c.id=newCompId(); });   /* 폭증 방지: 모든 대회이력에 고정 id 보장 */
   if(m.mode==="new"){
-    var stu={ n:name, b:m.b, g:m.g, t:m.t||"", by:m.by||"", e:null, p:[], sp:(m.sp||"").trim(), grade:(m.grade||"").trim(), bd:m.bd||"", note:m.note||"", joinDate:m.joinDate||"", reg:m.reg||"월별", gd:gd, comps:comps, sid:newSid(), _t:Date.now() };
+    var stu={ n:name, b:m.b, g:m.g, t:m.t||"", by:m.by||"", e:null, p:[], sp:(m.sp||"").trim(), grade:(m.grade||"").trim(), bd:m.bd||"", note:m.note||"", joinDate:m.joinDate||"", reg:m.reg||"월별", gd:gd, comps:comps, demo:!!m.demo, sid:newSid(), _t:Date.now() };
     if(state.deletedStudents) delete state.deletedStudents[name];   /* 같은 이름의 옛 묘비 해제 (신규 등록 보호) */
     STUDENTS.push(stu);
   } else {
     var s=STUDENTS.find(function(x){return x.n===m.orig;});
     if(!s) return;
     s.n=name; s.b=m.b; s.g=m.g; s.by=m.by; s.t=m.t; s.grade=(m.grade||"").trim(); s.bd=m.bd||""; s.note=m.note||"";
-    s.sp=(m.sp||"").trim(); s.joinDate=m.joinDate||""; s.reg=m.reg||s.reg; s.gd=gd; s.comps=comps; s._t=Date.now();
+    s.sp=(m.sp||"").trim(); s.joinDate=m.joinDate||""; s.reg=m.reg||s.reg; s.gd=gd; s.comps=comps; s.demo=!!m.demo; s._t=Date.now();
     /* 학적부에서 이름 변경 시: 결제·출석·심사·기준수련횟수·홀딩 등 모든 기록을 새 이름으로 이동 + 옛 이름 묘비 */
     if(name!==m.orig){
       _moveNameKeys(m.orig, name, false);
@@ -6560,8 +6585,10 @@ function renderStuChart(m){
           '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>닫기</button>'+
       '</div>'+
       '<div style="display:flex;gap:14px;align-items:center">'+
-        '<div style="width:72px;height:72px;border-radius:14px;overflow:hidden;background:'+(m.photo?'rgba(255,255,255,.15)':genderBg(m.g))+';flex-shrink:0;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.25)">'+
+        '<div style="position:relative;flex-shrink:0"><div style="width:72px;height:72px;border-radius:14px;overflow:hidden;background:'+(m.photo?'rgba(255,255,255,.15)':genderBg(m.g))+';display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.25)">'+
           (m.photo ? '<img src="'+m.photo+'" style="width:100%;height:100%;object-fit:cover">' : genderIcon(m.g, 40))+
+        '</div>'+
+        (m.demo && typeof DEMO_BADGE!=="undefined" ? '<img src="'+DEMO_BADGE+'" alt="시범단" style="position:absolute;right:-7px;bottom:-6px;width:42px;height:auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));pointer-events:none">' : '')+
         '</div>'+
         '<div style="flex:1;min-width:0">'+
           '<div style="font-size:23px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1.1;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(m.n||"")+(typeof longAbsBadge==="function"?longAbsBadge(m.n):'')+'</div>'+
@@ -6837,6 +6864,7 @@ function renderStuModal(){
    '<div style="display:flex;gap:8px;margin-top:8px">'+
    '<div style="flex:1.6"><span class="label" style="font-size:12px">반 <span style="color:var(--sub);font-weight:400">(생년월일로 자동)</span></span><select class="input" onchange="stuMBan(this.value)">'+
    ['','1킨더(7이하)','2초주니어(8~10)','3초시니어(11~13)','4청소년(14-19)','5성인1(20-39)','6성인2(40이상)'].map(function(b){return '<option'+(m.b===b?' selected':'')+' value="'+b+'">'+(b||"선택")+'</option>';}).join('')+'</select></div>'+
+   '<div style="flex:0 0 auto;display:flex;align-items:flex-end;padding-bottom:1px"><label style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:800;cursor:pointer;border:1.5px solid '+(m.demo?'#1F2E5C':'var(--line)')+';border-radius:9px;padding:8px 10px;background:'+(m.demo?'#EEF2FF':'#fff')+';color:'+(m.demo?'#1F2E5C':'var(--sub)')+'"><input type="checkbox" '+(m.demo?'checked':'')+' onchange="stuMF(\'demo\',this.checked);render()" style="accent-color:#1F2E5C">🛡 시범단</label></div>'+
    '<div style="flex:1"><span class="label" style="font-size:12px">등록일</span><input class="input" type="date" value="'+esc(m.joinDate||"")+'" oninput="stuMF(\'joinDate\',this.value)"></div>'+
    '</div>'+
    '<div style="border-top:1px solid var(--line);margin:8px 0 6px;padding-top:7px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
@@ -6844,6 +6872,11 @@ function renderStuModal(){
      '<span style="flex:1"></span>'+
      (m.mode!=="new" && m.n ? '<button type="button" class="chip" style="background:#EEF2FF;border-color:#C7D2FE;color:#4338CA;font-weight:800;font-size:12px" onclick="openExamHistory(\''+esc(m.n).replace(/\\/g,"\\\\").replace(/'/g,"\\'")+'\')">📊 승급심사결과</button>' : '')+
    '</div>'+
+   (m.mode!=="new" && m.orig ?
+     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;background:#FFF6F4;border:1px solid #F0D6CE;border-radius:9px;padding:7px 10px;flex-wrap:wrap">'+
+     '<label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:#7C2D12;cursor:pointer"><input type="checkbox" '+(isLongAbsent(m.orig)?'checked':'')+' onchange="toggleManualLA(\''+esc(m.orig).replace(/'/g,"\\'")+'\',this.checked)" style="accent-color:#7C2D12">🚫 장기결석 표시</label>'+
+     '<span style="font-size:11px;color:var(--sub)">프로그램 도입 전 출결 반영용 · 4주 연속 무출석 시 자동 표시 · 즉시 저장됨</span></div>'
+   :'')+
    '<div style="display:flex;gap:8px;margin-bottom:5px;align-items:center;flex-wrap:wrap">'+
    '<select class="input" style="flex:1;min-width:100px" onchange="stuMG(\'gT\',this.value)">'+
    [["","미입력"],["급","유급자"],["품단","유품자"]].map(function(o){return '<option value="'+o[0]+'"'+(m.gT===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>'+
@@ -7021,6 +7054,7 @@ function attState(){
   return { attV:1, schemaVer:SCHEMA_VER,
     absences: state.absences || {},
     contactLog: state.contactLog || {},
+    laManual: state.laManual || {},
     roster:{ list:STUDENTS, t:state.rosterT||0 },
     schedule: state.schedule || null,
     tempStudents: state.tempStudents || [],
@@ -7230,7 +7264,8 @@ function mergeAtt(a, b){
     return { meta:meta, students:out, t:Math.max(x.t||0, y.t||0) };
   }
   var _cl={}; [a.contactLog||{}, b.contactLog||{}].forEach(function(src){ for(var _k in src){ if(!_cl[_k]||(src[_k].t||0)>(_cl[_k].t||0)) _cl[_k]=src[_k]; } });
-  return { absences:abs, contactLog:_cl, attV:1, roster:roster, schedule:schedule, tempStudents:temps, weeks:weeks,
+  var _lm={}; [a.laManual||{}, b.laManual||{}].forEach(function(src){ for(var _k2 in src){ if(!_lm[_k2]||(src[_k2].t||0)>(_lm[_k2].t||0)) _lm[_k2]=src[_k2]; } });
+  return { absences:abs, contactLog:_cl, laManual:_lm, attV:1, roster:roster, schedule:schedule, tempStudents:temps, weeks:weeks,
            quitMapAtt:mergeStamped(a.quitMapAtt,b.quitMapAtt), closedMapAtt:mergeStamped(a.closedMapAtt,b.closedMapAtt),
            acc:mergeAcc(a.acc,b.acc), accBase:mergeAccBase(a.accBase,b.accBase), sig:mergeSig(a.sig,b.sig), lastExam:newerBlob(a.lastExam,b.lastExam,{}), kkw:newerBlob(a.kkw,b.kkw,{}),
            examData:mergeExam(a.examData,b.examData),
@@ -7240,6 +7275,7 @@ function mergeAtt(a, b){
 function applyAtt(m){
   if(m.absences) state.absences = m.absences;
   if(m.contactLog) state.contactLog = m.contactLog;
+  if(m.laManual) state.laManual = m.laManual;
   if(m.roster && m.roster.list && m.roster.list.length && (m.roster.t||0)>=(state.rosterT||0)){
     STUDENTS = m.roster.list;
     state.rosterT = m.roster.t||0;
@@ -7472,12 +7508,16 @@ function genderIcon(g, px){
 }
 /* 사진(있으면 이미지, 없으면 성별 아이콘+배경) 원/사각. size=px, radius 기본 원형 */
 function avatarHtml(name, gender, size, radius, photo){
-  radius = radius || '50%';
+  radius = radius || '28%';   /* 원형 → 둥근 네모 통일 (학적부와 동일 계열 · 시범단 배지 부착 호환) */
   var ph = (photo!==undefined) ? photo : getPhoto(name);
-  if(ph){
-    return '<div style="width:'+size+'px;height:'+size+'px;border-radius:'+radius+';overflow:hidden;flex:0 0 auto;background:#EDEDF0"><img src="'+ph+'" style="width:100%;height:100%;object-fit:cover"></div>';
-  }
-  return '<div style="width:'+size+'px;height:'+size+'px;border-radius:'+radius+';background:'+genderBg(gender)+';display:flex;align-items:center;justify-content:center;flex:0 0 auto">'+genderIcon(gender, Math.round(size*0.62))+'</div>';
+  var stu = STUDENTS.find(function(x){return x.n===name;});
+  var badge = (stu && stu.demo && typeof DEMO_BADGE!=="undefined")
+    ? '<img src="'+DEMO_BADGE+'" alt="시범단" style="position:absolute;right:-'+Math.round(size*0.10)+'px;bottom:-'+Math.round(size*0.08)+'px;width:'+Math.round(size*0.58)+'px;height:auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));pointer-events:none">'
+    : '';
+  var inner = ph
+    ? '<div style="width:100%;height:100%;border-radius:'+radius+';overflow:hidden;background:#EDEDF0"><img src="'+ph+'" style="width:100%;height:100%;object-fit:cover"></div>'
+    : '<div style="width:100%;height:100%;border-radius:'+radius+';background:'+genderBg(gender)+';display:flex;align-items:center;justify-content:center">'+genderIcon(gender, Math.round(size*0.62))+'</div>';
+  return '<div style="position:relative;width:'+size+'px;height:'+size+'px;flex:0 0 auto">'+inner+badge+'</div>';
 }
 /* 로컬에 저장된 사진 먼저 로드 (오프라인 대비) */
 (function loadLocalPhoto(){
