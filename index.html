@@ -13,7 +13,8 @@
 <style>
   :root { --bg:#F5F5F7; --ink:#1D1D1F; --sub:#86868B; --line:#E5E5EA; --card:#FFFFFF;
           --blue:#0071E3; --blueSoft:#E5F0FC; --red:#FF3B30; --redSoft:#FFE5E3;
-          --amber:#FF9500; --amberSoft:#FFF3E0; --green:#34C759; --greenSoft:#E5F7EA; }
+          --amber:#FF9500; --amberSoft:#FFF3E0; --green:#34C759; --greenSoft:#E5F7EA;
+          --brand:#1F3A5F; --brandRed:#C8342A; }   /* 나라차 브랜드 (네이비·레드) */
   * { box-sizing:border-box; -webkit-font-smoothing:antialiased; }
   body { margin:0; background:var(--bg); color:var(--ink);
          font-family:'Pretendard',-apple-system,'SF Pro Display','Apple SD Gothic Neo','Malgun Gothic','맑은 고딕',sans-serif;
@@ -72,6 +73,28 @@
              transition:border-color 0.15s; }
   .pickbtn:hover { border-color:#C7C7CC; }
   .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+
+  /* ══ 데스크톱 레이아웃 (일반 모니터 최적화) ══ */
+  .wrap--md   { max-width:1000px; }
+  .wrap--wide { max-width:min(96vw,1440px); }
+
+  /* 브리핑 카드 행: 넓은 화면에서 옆으로 나란히, 좁으면 자동 줄바꿈 */
+  .briefRow { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:14px; }
+  .briefRow > .card { flex:1; min-width:270px; margin-bottom:0; }
+
+  /* 인원현황 2단 그리드: 좁은 창에선 1열로 자동 복귀 */
+  .statGrid { display:grid; grid-template-columns:1fr; gap:14px; align-items:start; }
+  .statGrid > .card { margin-bottom:0; }
+  .statGrid > .card.span2 { grid-column:1 / -1; }
+  @media (min-width:1200px) {
+    .statGrid { grid-template-columns:1fr 1fr; }
+    .wrap--wide .warn, .wrap--md .warn { max-width:68ch; }
+  }
+
+  /* 나라차 브랜드 터치: 활성 탭 밑줄 = 도장 레드, 섹션 제목 액센트 바 */
+  .tab.on { border-bottom-color:var(--brandRed) !important; }
+  .sectionMark { border-left:3px solid var(--brandRed); padding-left:10px; }
+
   @media (max-width:480px) {
     .wrap { padding:16px 14px 40px; }
     .card { padding:18px; border-radius:16px; }
@@ -601,7 +624,9 @@ function mergeData(a,b){
   var delStu={};
   var dsa=a.deletedStudents||{}, dsb=b.deletedStudents||{};
   for(i in dsa) delStu[i]=dsa[i];
-  for(i in dsb) delStu[i]=dsb[i];
+  for(i in dsb){ if(!delStu[i] || dsb[i]>delStu[i]) delStu[i]=dsb[i]; }
+  /* 삭제·병합된 학생은 신입 명단 합집합에서도 제외 (클라우드 부활 방지) */
+  newStuList=newStuList.filter(function(s){ return !((delStu[s.n]||0) > (s._t||0)); });
   /* 장기등록: 고유번호 기준 합침, 최근 수정본 우선 */
   var ldels={};
   (a.deletedLongIds||[]).concat(b.deletedLongIds||[]).forEach(function(id){ ldels[id]=1; });
@@ -678,10 +703,12 @@ function loadAll(){
   state.savedAt=m.savedAt;
   /* 삭제된 원생은 STUDENTS에서도 제거 */
   for(var _di=STUDENTS.length-1;_di>=0;_di--){
-    if(state.deletedStudents[STUDENTS[_di].n]) STUDENTS.splice(_di,1);
+    /* 묘비가 학생의 최근 수정시각보다 최신일 때만 삭제 적용 (동명 신입 보호) */
+    if((state.deletedStudents[STUDENTS[_di].n]||0) > (STUDENTS[_di]._t||0)) STUDENTS.splice(_di,1);
   }
   /* 신입 원생을 STUDENTS 배열에 병합 (중복 없이) */
   state.newStudents.forEach(function(s){
+    if(((state.deletedStudents||{})[s.n]||0) > (s._t||0)) return;   /* 삭제·병합된 신입은 재주입 안 함 */
     var exists=false;
     for(var i=0;i<STUDENTS.length;i++){ if(STUDENTS[i].n===s.n){ exists=true; break; } }
     if(!exists) STUDENTS.push(s);
@@ -1029,8 +1056,8 @@ function cloudSync(){
         state.trash=merged.trash||state.trash; state.dupDismissed=merged.dupDismissed||state.dupDismissed;
         if(merged.roster && merged.roster.list && merged.roster.list.length && (merged.roster.t||0)>=(state.rosterT||0)){
           STUDENTS=merged.roster.list; state.rosterT=merged.roster.t||0;
-          for(var rdi=STUDENTS.length-1;rdi>=0;rdi--){ if(state.deletedStudents[STUDENTS[rdi].n]) STUDENTS.splice(rdi,1); }
-          state.newStudents.forEach(function(ns){ if(!STUDENTS.some(function(x){return x.n===ns.n;})) STUDENTS.push(ns); });
+          for(var rdi=STUDENTS.length-1;rdi>=0;rdi--){ if((state.deletedStudents[STUDENTS[rdi].n]||0) > (STUDENTS[rdi]._t||0)) STUDENTS.splice(rdi,1); }
+          state.newStudents.forEach(function(ns){ if(((state.deletedStudents||{})[ns.n]||0) > (ns._t||0)) return; if(!STUDENTS.some(function(x){return x.n===ns.n;})) STUDENTS.push(ns); });
         }
         reinjectArchives();   /* [3단계] 불러온 아카이브가 병합으로 사라지지 않게 재주입 */
         syncStFromMaps();   /* 병합 후 꼬리표를 장부에 맞춰 정리 → 올릴 때도 깨끗한 명단 전송 */
@@ -1137,8 +1164,8 @@ function cloudPull(){
         if(merged.roster && merged.roster.list && merged.roster.list.length){
           STUDENTS=merged.roster.list;
           state.rosterT=merged.roster.t||0;
-          for(var rdi=STUDENTS.length-1;rdi>=0;rdi--){ if(state.deletedStudents[STUDENTS[rdi].n]) STUDENTS.splice(rdi,1); }
-          state.newStudents.forEach(function(ns){ if(!STUDENTS.some(function(x){return x.n===ns.n;})) STUDENTS.push(ns); });
+          for(var rdi=STUDENTS.length-1;rdi>=0;rdi--){ if((state.deletedStudents[STUDENTS[rdi].n]||0) > (STUDENTS[rdi]._t||0)) STUDENTS.splice(rdi,1); }
+          state.newStudents.forEach(function(ns){ if(((state.deletedStudents||{})[ns.n]||0) > (ns._t||0)) return; if(!STUDENTS.some(function(x){return x.n===ns.n;})) STUDENTS.push(ns); });
         }
         state.rosterFileV = merged.rosterFileV || state.rosterFileV;
         reinjectArchives();   /* [3단계] 불러온 아카이브 재주입 */
@@ -1811,6 +1838,7 @@ window.saveEditStudent=function(){
       if(e.by!==undefined) STUDENTS[j].by=e.by;
       if(e.reg!==undefined) STUDENTS[j].reg=e.reg;
       if(e.joinDate!==undefined) STUDENTS[j].joinDate=e.joinDate;
+      STUDENTS[j]._t=Date.now();   /* 수정시각 갱신 (다기기 병합에서 최신본 우선) */
       break;
     }
   }
@@ -1822,6 +1850,9 @@ window.saveEditStudent=function(){
     state.newStudents.forEach(function(s){
       if(s.n===orig){ s.n=e.n; s.b=e.b; s.g=e.g; if(e.by!==undefined) s.by=e.by; }
     });
+    /* 옛 이름 묘비 (다른 기기의 옛 명단과 병합 시 유령 부활 방지) */
+    if(!state.deletedStudents) state.deletedStudents={};
+    state.deletedStudents[orig]=Date.now();
     state.detail=e.n;
     if(typeof examNotifyRosterChanged==="function") examNotifyRosterChanged();
   } else {
@@ -2130,11 +2161,17 @@ function _moveNameKeys(oldN, newN, overwrite){
 }
 /* 단독 '님' 이름 → '님' 제거 (참조 전부 이동) */
 function renameStudentName(oldN, newN){
-  STUDENTS.forEach(function(s){ if(s.n===oldN) s.n=newN; });
+  STUDENTS.forEach(function(s){ if(s.n===oldN){ s.n=newN; s._t=Date.now(); } });
   _moveNameKeys(oldN, newN, false);
+  (state.newStudents||[]).forEach(function(s){ if(s.n===oldN) s.n=newN; });
+  /* 옛 이름 묘비: 아직 옛 명단을 가진 다른 기기와 병합될 때 옛 이름 유령이 부활하지 않게 */
+  if(!state.deletedStudents) state.deletedStudents={};
+  state.deletedStudents[oldN]=Date.now();
 }
 /* 전화 같은 중복: '님' 쪽(dupN)을 base로 합치고 명단에서 제거 */
 function mergeDupInto(dupN, baseN){
+  /* 안전장치: 대표가 명단에 실존하지 않으면 병합 중단 (기록이 유령 이름으로 이동하는 사고 방지) */
+  if(!STUDENTS.some(function(s){return s.n===baseN;})){ alert("대표 '"+baseN+"'이(가) 명단에 없어 병합을 중단했습니다.\n창을 닫았다가 다시 열어 대표를 다시 선택해 주세요."); return false; }
   var dupActive = !state.closedMap[dupN] && !isQuit(dupN);
   _moveNameKeys(dupN, baseN, false);       /* dup의 결제·출석·기타 데이터를 base로 이동 (base 값 우선) */
   /* dup가 재원(활성)이었다면 base도 활성으로 맞춤 */
@@ -2152,10 +2189,13 @@ function mergeDupInto(dupN, baseN){
     if(_d.gd && _d.gd.length){ _b.gd=_b.gd||[]; var seen={}; _b.gd.forEach(function(g){ if(g&&g.p) seen[String(g.p).replace(/[^0-9]/g,"")]=1; }); _d.gd.forEach(function(g){ if(g && (!g.p || !seen[String(g.p).replace(/[^0-9]/g,"")])) _b.gd.push(g); }); }
     if(_d.comps && _d.comps.length){ _b.comps=(typeof dedupComps==="function")?dedupComps((_b.comps||[]).concat(_d.comps)):(_b.comps||[]).concat(_d.comps); }
   }
+  if(_b) _b._t=Date.now();   /* 보강된 대표가 다기기 병합에서 지지 않도록 수정시각 갱신 */
   /* 명단에서 dup 제거 + 삭제표식(동기화로 되살아나지 않게) */
   for(var i=STUDENTS.length-1;i>=0;i--){ if(STUDENTS[i].n===dupN) STUDENTS.splice(i,1); }
+  state.newStudents=(state.newStudents||[]).filter(function(s){ return s.n!==dupN; });   /* 신입 명단에서도 제거 (부활 방지) */
   if(!state.deletedStudents) state.deletedStudents={};
   state.deletedStudents[dupN]=Date.now();
+  return true;
 }
 window.openNameCleanup=function(){
   if(myRole()!=="admin"){ alert("관리자 권한이 필요합니다."); return; }
@@ -2268,13 +2308,13 @@ function scanDuplicates(){
     if(g.length>=2){
       var mem=g.map(mk);
       var withPh=mem.filter(function(m){return m.phones.length;});
-      var conflict=false;
+      var share=false;
       if(withPh.length>=2){
-        var share=false;
         for(var i=0;i<withPh.length&&!share;i++){ for(var j=i+1;j<withPh.length;j++){ if(withPh[i].phones.some(function(p){return withPh[j].phones.indexOf(p)>-1;})){ share=true; break; } } }
-        conflict=!share;
       }
-      nameGroups.push({ key:"nm:"+k, kind:conflict?"maybe":"sure", label:normNameKey(g[0].n), members:mem });
+      /* '확실'은 전원이 전화를 갖고 있고 그 전화가 일치할 때만. 전화 미입력자가 섞이면 동명이인일 수 있어 '확인 필요' */
+      var sure = share && withPh.length===mem.length;
+      nameGroups.push({ key:"nm:"+k, kind:sure?"sure":"maybe", label:normNameKey(g[0].n), members:mem });
     } else if(/님$/.test(g[0].n) && g[0].n.length>=3){
       honorificSolo.push({ from:g[0].n, to:normNameKey(g[0].n), active:stuActive(g[0].n) });
     }
@@ -2321,6 +2361,8 @@ window.mergeDupGroup=function(gk){
   var g=null; d.nameGroups.concat(d.siblingGroups).forEach(function(x){ if(x.key===gk)g=x; });
   if(!g){ render(); return; }
   var master=(state.dupMasterPick&&state.dupMasterPick[gk])||pickMaster(g.members);
+  /* 안전장치: 선택했던 대표가 이미 병합·삭제되어 그룹에 없으면 자동추천으로 되돌림 (유령 이름으로 병합 방지) */
+  if(!g.members.some(function(m){return m.n===master;})){ master=pickMaster(g.members); if(state.dupMasterPick) delete state.dupMasterPick[gk]; }
   var optIn=(g.kind==="maybe"||g.kind==="sibling");
   var targets=g.members.filter(function(m){
     if(m.n===master) return false;
@@ -2359,15 +2401,17 @@ function renderDupTool(){
   var groupCard=function(g){
     var kind=g.kind;
     var master=pick[g.key]||pickMaster(g.members);
+    if(!g.members.some(function(m){return m.n===master;})) master=pickMaster(g.members);
+    var gkey=String(g.key).replace(/'/g,"\\'");
     var optIn=(kind==="maybe"||kind==="sibling");
     var pal = kind==="sure" ? {bd:"#B7DFC4",bg:"#F2FBF5",tc:"var(--green)",lbl:"확실 — 표기·전화 일치"}
-            : kind==="maybe"? {bd:"#F3D5A6",bg:"#FFFBF3",tc:"#B45309",lbl:"확인 필요 — 이름 같고 전화 다름"}
+            : kind==="maybe"? {bd:"#F3D5A6",bg:"#FFFBF3",tc:"#B45309",lbl:"확인 필요 — 전화 불일치·미확인"}
                             : {bd:"#F0C4C4",bg:"#FFF6F6",tc:"var(--red)",lbl:"참고 — 같은 번호·다른 이름(형제일 수 있음)"};
     var head='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+
       '<span style="background:'+pal.tc+';color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800">'+pal.lbl+'</span>'+
       (g.phone?'<span style="font-size:11.5px;color:var(--sub)">'+fmtPhoneShort(g.phone)+'</span>':'')+
       '<span style="flex:1"></span>'+
-      '<button class="chip sm" style="color:var(--sub);border-color:var(--line);font-size:11px;padding:4px 9px" onclick="ignoreDupGroup(\''+g.key+'\')">다른 사람 · 무시</button>'+
+      '<button class="chip sm" style="color:var(--sub);border-color:var(--line);font-size:11px;padding:4px 9px" onclick="ignoreDupGroup(\''+gkey+'\')">다른 사람 · 무시</button>'+
       '</div>';
     var rows=g.members.map(function(m){
       var isMaster=(m.n===master);
@@ -2377,15 +2421,15 @@ function renderDupTool(){
           : '<label style="font-size:11.5px;color:var(--sub);cursor:pointer;display:inline-flex;align-items:center;gap:4px"><input type="checkbox" '+(skip[m.n]?'':'checked')+' onclick="toggleDupSkip(\''+esc(m.n).replace(/'/g,"\\'")+'\')"> 합치기</label>';
       return '<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid #EFEFEA">'+
         '<label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;flex:1;min-width:0">'+
-          '<input type="radio" name="mst_'+g.key+'" '+(isMaster?'checked':'')+' onclick="setDupMaster(\''+g.key+'\',\''+esc(m.n).replace(/'/g,"\\'")+'\')">'+
+          '<input type="radio" name="mst_'+esc(g.key)+'" '+(isMaster?'checked':'')+' onclick="setDupMaster(\''+gkey+'\',\''+esc(m.n).replace(/'/g,"\\'")+'\')">'+
           '<span style="min-width:0"><b style="font-size:13.5px">'+esc(m.n)+'</b>'+stBadge(m.n)+'<br>'+info(m)+'</span>'+
         '</label>'+
         '<div style="flex-shrink:0">'+chk+'</div>'+
       '</div>';
     }).join('');
     var btn = kind==="sure"
-      ? '<button style="background:var(--green);border:none;color:#fff;border-radius:9px;padding:8px 14px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12.5px" onclick="mergeDupGroup(\''+g.key+'\')">이 묶음 합치기</button>'
-      : '<button style="background:#fff;border:1.5px solid '+pal.tc+';color:'+pal.tc+';border-radius:9px;padding:8px 14px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12.5px" onclick="mergeDupGroup(\''+g.key+'\')">선택 항목 합치기</button>';
+      ? '<button style="background:var(--green);border:none;color:#fff;border-radius:9px;padding:8px 14px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12.5px" onclick="mergeDupGroup(\''+gkey+'\')">이 묶음 합치기</button>'
+      : '<button style="background:#fff;border:1.5px solid '+pal.tc+';color:'+pal.tc+';border-radius:9px;padding:8px 14px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12.5px" onclick="mergeDupGroup(\''+gkey+'\')">선택 항목 합치기</button>';
     return '<div style="border:1.5px solid '+pal.bd+';background:'+pal.bg+';border-radius:12px;padding:12px 14px;margin-bottom:10px">'+
       head+rows+'<div style="display:flex;justify-content:flex-end;margin-top:10px">'+btn+'</div></div>';
   };
@@ -2530,11 +2574,17 @@ window.editRefCnt=function(name, ym, v){
   var clean=String(v).replace(/[^0-9]/g,"");
   if(!state.refCntMap) state.refCntMap={};
   var key=name+"|"+ym;
-  if(clean===""){ delete state.refCntMap[key]; }
-  else { state.refCntMap[key]={ v:Number(clean), t:Date.now() }; }
+  if(clean===""){
+    /* 비우기: 직접 입력값이 있을 때만 해제 (자동값 비우기는 무시 → 결제기록 w 보호) */
+    var had = state.refCntMap[key] && state.refCntMap[key].v!=null;
+    if(!had){ render(); return; }
+    state.refCntMap[key]={ v:null, t:Date.now() };   /* 묘비 방식 (동기화 부활 방지) */
+    persist(); render(); return;
+  }
+  state.refCntMap[key]={ v:Number(clean), t:Date.now() };
   /* 같은 달 수련비 결제가 있으면 그 결제의 기준수련횟수(w)도 맞춰줌 (일관성 유지) */
   (state.payments||[]).forEach(function(p){
-    if(p.name===name && p.cat==="수련비" && (p.date||"").slice(0,7)===ym){ p.w = (clean===""?null:Number(clean)); }
+    if(p.name===name && p.cat==="수련비" && (p.date||"").slice(0,7)===ym){ p.w = Number(clean); }
   });
   persist();
   render();
@@ -2559,7 +2609,9 @@ window.setBaseCntN=function(v){ if(state.baseCntModal){ state.baseCntModal.n=Str
 window.saveBaseCnt=function(){
   var m=state.baseCntModal; if(!m) return;
   if(m.n===""||m.n==null){
-    if(state.refBaseMap) delete state.refBaseMap[m.name];
+    /* 묘비 방식 삭제: 키를 지우면 클라우드 병합에서 옛 값이 부활하므로, 최신 시각의 빈 기록으로 덮어씀 */
+    if(!state.refBaseMap) state.refBaseMap={};
+    state.refBaseMap[m.name]={ del:true, t:Date.now() };
     state.baseCntSaved="'"+m.name+"' 기준수련횟수를 삭제했습니다.";
   } else {
     if(!state.refBaseMap) state.refBaseMap={};
@@ -3498,7 +3550,8 @@ window.saveNewStudent=function(){
   for(var i=0;i<STUDENTS.length;i++){
     if(STUDENTS[i].n===e.n){ alert("이미 등록된 이름입니다."); return; }
   }
-  var newStu={ n:e.n, b:e.b, g:e.g, e:"", p:[], by:e.by||"", joinDate:e.joinDate||"" };
+  var newStu={ n:e.n, b:e.b, g:e.g, e:"", p:[], by:e.by||"", joinDate:e.joinDate||"", _t:Date.now() };
+  if(state.deletedStudents) delete state.deletedStudents[e.n];   /* 같은 이름의 옛 묘비 해제 (신규 등록 보호) */
   state.newStudents.push(newStu);
   STUDENTS.push(newStu);
   state.rosterT=Date.now();
@@ -4197,7 +4250,7 @@ function statListHtml(view){
           }).join('')+'</div>'
       : '<span style="font-size:11.5px;color:var(--sub)">출석 없음</span>';
     /* 고정폭 칸으로 세로 줄맞춤 (기준·실제·미달태그·날짜 모두 같은 x에서 시작) */
-    x+='<div style="border-top:1px solid var(--line);padding:9px 0;display:flex;align-items:center;gap:8px">'+
+    x+='<div style="border-top:1px solid var(--line);padding:9px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
       avatarHtml(s.n, s.g, 34)+
       '<span style="flex:0 0 auto;width:4px;height:22px;border-radius:2px;background:'+gradeColor(s.grade||"")+'"></span>'+
       '<b style="flex:0 0 84px;font-size:14px;cursor:pointer;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="클릭하면 학적부가 열립니다 (수정도 가능)" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+esc(s.n)+'</b>'+
@@ -4384,7 +4437,7 @@ function renderBriefTab(){
     '</span>'+
     '</div></div>';
 
-  x+='<div style="display:flex;gap:10px;flex-wrap:wrap">'+
+  x+='<div class="briefRow">'+
     card('<div style="font-size:12px;color:var(--sub)">'+esc(P.label)+' 총 출석</div><div style="font-size:30px;font-weight:900">'+cur.total+'<span style="font-size:14px">회</span></div>'+
       '<div style="font-size:12px;font-weight:800;color:'+(diff>=0?'var(--blue)':'var(--red)')+'">'+esc(P.prevLabel)+'('+prev.total+') 대비 '+(diff>=0?'+':'')+diff+'</div>')+
     card('<div style="font-size:12px;color:var(--sub)">결석률</div><div style="font-size:30px;font-weight:900">'+absRate+'<span style="font-size:14px">%</span></div>'+
@@ -4409,7 +4462,7 @@ function renderBriefTab(){
     trendCard=card('<b style="font-size:14px">월별 출석 추이 ('+esc(P.label)+')</b><div style="margin-top:8px">'+
       P.months.map(function(ym){ return barRow(Number(ym.slice(5))+"월", cur.byMonth[ym]||0, mMax, ym===nowYm?"var(--red)":"var(--blue)"); }).join('')+'</div>');
   }
-  x+='<div style="display:flex;gap:10px;flex-wrap:wrap">'+trendCard+
+  x+='<div class="briefRow">'+trendCard+
     card('<b style="font-size:14px">반 그룹별 출석 ('+esc(P.label)+')</b><div style="margin-top:8px">'+
       GROUPS.map(function(g){ return barRow(g, cur.groups[g]||0, gMax, ({"킨더":"#E3B341","주니어":"#D9C25A","시니어":"#5B8DDB","청소년·성인":"#4CAF7D"})[g]); }).join('')+
       '</div><div style="font-size:11.5px;color:var(--sub);margin-top:6px">'+esc(P.prevLabel)+': '+GROUPS.map(function(g){return g+" "+(prev.groups[g]||0);}).join(" · ")+'</div>')+
@@ -4419,7 +4472,7 @@ function renderBriefTab(){
     '</div>';
 
   var kindsMax=Math.max.apply(null, ATT_KINDS.map(function(k){return cur.kinds[k.k]||0;}).concat([1]));
-  x+='<div style="display:flex;gap:10px;flex-wrap:wrap">'+
+  x+='<div class="briefRow">'+
     card('<b style="font-size:14px">출석 종류 분석</b><div style="margin-top:8px">'+
       ATT_KINDS.map(function(k){ return barRow(kindLabel(k.k), cur.kinds[k.k]||0, kindsMax, k.c); }).join('')+'</div>')+
     card('<b style="font-size:14px">⚠️ 연락 권장 — 최근 2주 출석 없음 ('+risk.length+'명 · 현재)</b>'+
@@ -4517,8 +4570,8 @@ function renderBriefTab(){
   var reopened=[], rlog=state.reopenLog||{};
   for(var rn in rlog){ (rlog[rn]||[]).forEach(function(e){ if(e.reopenDate && mset[(e.reopenDate||"").slice(0,7)] && reopened.indexOf(rn)===-1) reopened.push(rn); }); }
   var reopenActive=reopened.filter(function(n){ return !state.closedMap[n]&&!isQuit(n); });
-  x+='<div class="card" style="padding:10px 16px"><b style="font-size:15px">👥 인원 브리핑</b> <span style="font-size:11.5px;color:var(--sub)">자세한 표는 [인원현황] 탭</span></div>';
-  x+='<div style="display:flex;gap:10px;flex-wrap:wrap">'+
+  x+='<div class="card" style="padding:10px 16px"><b class="sectionMark" style="font-size:15px">👥 인원 브리핑</b> <span style="font-size:11.5px;color:var(--sub)">자세한 표는 [인원현황] 탭</span></div>';
+  x+='<div class="briefRow">'+
     card('<div style="font-size:12px;color:var(--sub)">재원생</div><div style="font-size:30px;font-weight:900">'+pc.재원+'<span style="font-size:14px">명</span></div>'+
       '<div style="font-size:12px;color:var(--sub)">휴관 '+pc.휴관+'명 · 임시(체험) '+tempN+'명</div>')+
     card('<div style="font-size:12px;color:var(--sub)">'+esc(P.label)+' 신규 등록</div><div style="font-size:30px;font-weight:900">'+newbies.length+'<span style="font-size:14px">명</span></div>'+
@@ -4530,8 +4583,8 @@ function renderBriefTab(){
       ((banCnt["미지정"])?'<div style="font-size:11.5px;color:var(--sub);margin-top:4px">반 미지정 '+banCnt["미지정"]+'명</div>':'')+'</div>')+
     '</div>';
 
-  x+='<div class="card" style="padding:10px 16px"><b style="font-size:15px">🥋 심사 브리핑</b></div>';
-  x+='<div style="display:flex;gap:10px;flex-wrap:wrap">'+
+  x+='<div class="card" style="padding:10px 16px"><b class="sectionMark" style="font-size:15px">🥋 심사 브리핑</b></div>';
+  x+='<div class="briefRow">'+
     card('<b style="font-size:14px">심사 파이프라인 (현재)</b><div style="margin-top:8px">'+
       barRow("추천(조건충족)", pipe.ready.length, pMax, "var(--red)")+
       barRow("임박 20~23회", pipe.soon.length, pMax, "#F59E0B")+
@@ -6003,12 +6056,23 @@ window.saveStuM=function(){
   comps.forEach(function(c){ if(!c.id) c.id=newCompId(); });   /* 폭증 방지: 모든 대회이력에 고정 id 보장 */
   if(m.mode==="new"){
     var stu={ n:name, b:m.b, g:m.g, t:m.t||"", by:m.by||"", e:null, p:[], sp:(m.sp||"").trim(), grade:(m.grade||"").trim(), bd:m.bd||"", note:m.note||"", joinDate:m.joinDate||"", reg:m.reg||"월별", gd:gd, comps:comps, sid:newSid(), _t:Date.now() };
+    if(state.deletedStudents) delete state.deletedStudents[name];   /* 같은 이름의 옛 묘비 해제 (신규 등록 보호) */
     STUDENTS.push(stu);
   } else {
     var s=STUDENTS.find(function(x){return x.n===m.orig;});
     if(!s) return;
     s.n=name; s.b=m.b; s.g=m.g; s.by=m.by; s.t=m.t; s.grade=(m.grade||"").trim(); s.bd=m.bd||""; s.note=m.note||"";
     s.sp=(m.sp||"").trim(); s.joinDate=m.joinDate||""; s.reg=m.reg||s.reg; s.gd=gd; s.comps=comps; s._t=Date.now();
+    /* 학적부에서 이름 변경 시: 결제·출석·심사·기준수련횟수·홀딩 등 모든 기록을 새 이름으로 이동 + 옛 이름 묘비 */
+    if(name!==m.orig){
+      _moveNameKeys(m.orig, name, false);
+      (state.newStudents||[]).forEach(function(ns){ if(ns.n===m.orig) ns.n=name; });
+      if(!state.deletedStudents) state.deletedStudents={};
+      state.deletedStudents[m.orig]=Date.now();
+      if(state.detail===m.orig) state.detail=name;
+      if(state.photoMap && state.photoMap[name]){ state.photoT=Date.now(); if(typeof photoSync==="function") photoSync(); }
+      if(typeof examNotifyRosterChanged==="function") examNotifyRosterChanged();
+    }
   }
   state.rosterT=Date.now();
   persistAtt();
@@ -6761,7 +6825,7 @@ function applyAtt(m){
   if(m.roster && m.roster.list && m.roster.list.length && (m.roster.t||0)>=(state.rosterT||0)){
     STUDENTS = m.roster.list;
     state.rosterT = m.roster.t||0;
-    if(state.deletedStudents) for(var di=STUDENTS.length-1;di>=0;di--){ if(state.deletedStudents[STUDENTS[di].n]) STUDENTS.splice(di,1); }
+    if(state.deletedStudents) for(var di=STUDENTS.length-1;di>=0;di--){ if((state.deletedStudents[STUDENTS[di].n]||0) > (STUDENTS[di]._t||0)) STUDENTS.splice(di,1); }
   }
   state.schedule = m.schedule || state.schedule;
   state.tempStudents = m.tempStudents || state.tempStudents || [];
@@ -7547,7 +7611,13 @@ function render(){
         var b=(t==="납부내역"&&urgent.length)?'<span class="badge">'+urgent.length+'</span>':'';
         return '<button class="tab'+(state.tab===t?' on':'')+'" onclick="setTab(\''+t+'\')">'+t+b+'</button>';
      }).join('')+'</div></div>');
-  h+='<div class="wrap"'+(state.topCat==="출석"&&state.attTab==="수련시간표"?' style="max-width:min(97vw,1900px)"':'')+'>';
+  /* 탭별 컨테이너 폭: 대시보드=넓게 · 명단/내역=중간 · 입력폼=좁게 (일반 모니터 최적화) */
+  h+='<div class="wrap'+(function(){
+      var t=(state.topCat==="출석")?state.attTab:state.tab;
+      if(t==="📊 브리핑"||t==="인원현황") return " wrap--wide";
+      if(t==="출석 현황"||t==="심사대상"||t==="수련생 명단"||t==="시간표 설정"||t==="납부내역"||t==="납부집계") return " wrap--md";
+      return "";
+    })()+'"'+(state.topCat==="출석"&&state.attTab==="수련시간표"?' style="max-width:min(97vw,1900px)"':'')+'>';
   /* ── 심사관리: 격리된 평가 시스템(iframe) 표시 ── */
   if(state.topCat==="심사"){
     h+='</div>';
@@ -8430,6 +8500,7 @@ function render(){
        '<div style="display:flex;justify-content:space-between;font-size:12px;color:#B8BCC6;margin-top:4px">'+
        '<span>남 '+(total?Math.round(tm/total*100):0)+'%</span><span>여 '+(total?Math.round(tw/total*100):0)+'%</span></div></div>';
     /* (이름/중복 정리 도구는 '수련생 명단' 탭으로 이동했습니다) */
+    h+='<div class="statGrid">';   /* 넓은 화면: 연령대별·과거시점 카드를 좌우 2단 배치 */
     h+='<div class="card"><span class="label">현재 연령대별 인원 (남 · 여)</span>';
     rows.forEach(function(r){
       var pct=total?Math.round(r.t/total*1000)/10:0;
@@ -8531,7 +8602,7 @@ function render(){
     if(!yearList.length) yearList=[String(new Date().getFullYear())];
     if(state.stuStatYear==null || allYearSet[state.stuStatYear]==null) state.stuStatYear=yearList[yearList.length-1];
 
-    h+='<div class="card"><span class="label">연도·월별 신규+복관 · 휴관 통계</span>'+
+    h+='<div class="card span2"><span class="label">연도·월별 신규+복관 · 휴관 통계</span>'+
        '<div class="chips" style="margin-bottom:10px">'+yearList.map(function(y){
          return '<button class="chip'+(state.stuStatYear===y?" on":"")+'" onclick="setStuStatYear(\''+y+'\')">'+y+'년</button>';
        }).join('')+'</div>';
@@ -8561,6 +8632,7 @@ function render(){
          '</div></div>';
     }
     h+='<div style="margin-top:10px;font-size:12px;color:var(--sub)">등록일·휴관일 기준. 원생 정보에 등록일을 입력하면 자동 반영됩니다.</div></div>';
+    h+='</div>';   /* statGrid 닫기 */
   }
 
   if(state.tab==="납부집계"){
