@@ -85,6 +85,7 @@
 
   /* ══ 데스크톱 레이아웃 (일반 모니터 최적화) ══ */
   .wrap--md   { max-width:1000px; }
+  .wrap--lg   { max-width:1200px; }
   .wrap--wide { max-width:min(96vw,1440px); }
 
   /* 브리핑 카드 행: 넓은 화면에서 옆으로 나란히, 좁으면 자동 줄바꿈 */
@@ -8193,8 +8194,11 @@ function render(){
       }).join('')+'</div>'
     : '<div class="tabs">'+["회계입력","납부내역","납부집계","장기등록관리","회계백업"].map(function(t){
         var b=(t==="납부내역"&&urgent.length)?'<span class="badge">'+urgent.length+'</span>':'';
-        return '<button class="tab'+(state.tab===t?' on':'')+'" onclick="setTab(\''+t+'\')">'+t+b+'</button>';
-      }).join('')+'</div>';
+        var lbl=(t==="납부내역"?"수납 관리":t==="납부집계"?"매출 현황":t);   /* 회계 용어 정리: 할 일=수납 관리 · 보고=매출 현황 */
+        return '<button class="tab'+(state.tab===t?' on':'')+'" onclick="setTab(\''+t+'\')">'+lbl+b+'</button>';
+      }).join('')+
+      '<button class="tab" style="color:var(--blue);font-weight:800" onclick="openBriefing()">📊 브리핑만들기</button>'+
+      '</div>';
 
   /* ── 상단 메뉴 접힘: 얇은 바(펼치기 + 탭)만 표시해 아래 내용이 화면을 꽉 채움 ── */
   var __hdrDone=false;
@@ -8252,7 +8256,8 @@ function render(){
   h+='<div class="wrap'+(function(){
       var t=(state.topCat==="출석")?state.attTab:state.tab;
       if(t==="📊 브리핑"||t==="인원현황"||t==="출석 현황") return " wrap--wide";   /* 출석현황: 심사 통합으로 정보량 증가 → 넓게 */
-      if(t==="수련생 명단"||t==="시간표 설정"||t==="납부내역"||t==="납부집계") return " wrap--md";
+      if(t==="납부내역"||t==="납부집계") return " wrap--lg";   /* 회계 표: 고정폭 컬럼 정렬을 위해 1200px */
+      if(t==="수련생 명단"||t==="시간표 설정") return " wrap--md";
       return "";
     })()+'"'+(state.topCat==="출석"&&state.attTab==="수련시간표"?' style="max-width:min(97vw,1900px)"':'')+'>';
   /* ── 심사관리: 격리된 평가 시스템(iframe) 표시 ── */
@@ -8356,7 +8361,7 @@ function render(){
     var stuInfo=null;
     for(var si=0;si<STUDENTS.length;si++){ if(STUDENTS[si].n===state.detail){ stuInfo=STUDENTS[si]; break; } }
     h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
-       '<div style="font-size:19px;font-weight:900">'+esc(state.detail)+' 수련생 납부내역</div>'+
+       '<div style="font-size:19px;font-weight:900;display:flex;align-items:center">'+demoTag(state.detail,20)+'<span>'+esc(state.detail)+' 수련생 납부내역</span></div>'+
        '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
        '<button onclick="openBaseCntModal()" style="border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📌 기준수련횟수</button>'+
        '<button onclick="editStudent(\''+state.detail.replace(/'/g,"\\'")+'\')" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit">원생 정보</button>'+
@@ -8817,55 +8822,30 @@ function render(){
     var closedNames=Object.keys(state.closedMap);
     /* 재원생 카운트는 실제 필터 결과와 동일하게 사용 (불일치 방지) */
     var activeCount=STUDENTS.filter(function(s){ return !state.closedMap[s.n]&&!isQuit(s.n); }).length;
-
-    /* ── 홀딩(등록 연장) 검토 필요: 30일 이상 결석 예정인데 아직 승인 판단이 안 된 재원생 ── */
-    if(typeof liveHolds==="function"){
-      var _tdR=today(), _pend=[];
-      STUDENTS.forEach(function(s){
-        if(state.closedMap[s.n]||isQuit(s.n)) return;
-        liveHolds(s.n).forEach(function(e){
-          if(e.ext) return;                                        /* 이미 승인됨 */
-          var days = e.open ? _holdDays(e.from, _tdR) : _holdDays(e.from, e.to);
-          if(days<30) return;                                      /* 한 달 미만은 보강 대체가 원칙 */
-          if(!e.open && e.to < addDays(_tdR,-60)) return;          /* 오래전 종료건 제외 */
-          _pend.push({ n:s.n, from:e.from, to:e.to, open:e.open, days:days, reason:e.reason||"" });
-        });
-      });
-      if(_pend.length){
-        _pend.sort(function(a,b){ return b.days-a.days; });
-        h+='<div class="card" style="border:1.5px solid var(--amber);background:#FFFBF2">'+
-           '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;cursor:pointer" onclick="state.holdReviewOpen=!state.holdReviewOpen;render()">'+
-           '<b style="font-size:14px;color:#B45309">⏳ 홀딩(등록 연장) 검토 필요 '+_pend.length+'건</b>'+
-           '<span style="font-size:11.5px;color:var(--sub)">한 달 이상 결석 예정 — 연장해 줄지 회계에서 판단해 주세요</span>'+
-           '<span style="flex:1"></span><span style="font-size:12px;color:var(--sub)">'+(state.holdReviewOpen?'▲ 접기':'▼ 펼치기')+'</span></div>'+
-           (state.holdReviewOpen? _pend.slice(0,30).map(function(p){
-             return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-top:1px dashed #F0D6A8;font-size:12.5px">'+
-               demoSlot(p.n)+
-               '<b style="flex:0 0 84px;color:var(--blue);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="납부내역 열기" onclick="showDetail(\''+esc(p.n).replace(/'/g,"\\'")+'\')">'+esc(p.n)+'</b>'+
-               '<span style="color:#1D4ED8;font-weight:700;font-variant-numeric:tabular-nums">'+esc(p.from)+' ~ '+(p.open?'미정':esc(p.to))+'</span>'+
-               '<span style="background:#FFF3E0;color:#B45309;border-radius:5px;padding:1px 6px;font-size:10.5px;font-weight:800">'+p.days+'일'+(p.open?'+':'')+'</span>'+
-               (p.reason?'<span style="color:var(--sub)">'+esc(p.reason)+'</span>':'')+
-               '<span style="flex:1"></span>'+
-               '<span style="font-size:11px;color:var(--sub)">이름 클릭 → 상세에서 승인</span></div>';
-           }).join('')+(_pend.length>30?'<div style="font-size:11px;color:var(--sub);margin-top:6px">외 '+(_pend.length-30)+'건</div>':'') : '')+
-           '</div>';
-      }
-    }
-    h+='<div class="card"><span class="label">원생 이름 검색 → 납부내역 열기</span>'+
-       '<input class="input" placeholder="이름을 입력하고 Enter (예: 설아윤)" value="'+esc(state.search||"")+'" oninput="setSearch(this.value)" onkeydown="if(event.isComposing||event.keyCode===229)return; if(event.key===\'Enter\')searchEnter()"><div id="searchlist"></div></div>';
-
-    /* 주간 백업 알림 (마지막 백업으로부터 7일 경과) */
-    var lastBackup=Number(localStorage.getItem("naracha_last_backup_day")||0);
-    var daysAgo=Math.floor((Date.now()-lastBackup)/(1000*60*60*24));
-    if(daysAgo>=7){
-      h+='<div class="card" style="background:#FEE2E2;border-color:#EF4444;margin-bottom:8px">'+
-         '<div style="font-weight:900;color:#991B1B;margin-bottom:6px">💾 주간 백업이 필요합니다</div>'+
-         '<div style="font-size:13px;color:#991B1B;margin-bottom:10px">마지막 백업으로부터 '+(lastBackup?daysAgo+'일 경과':'백업 이력 없음')+'</div>'+
-         '<button onclick="doWeeklyBackup()" style="width:100%;padding:10px;border:none;background:#DC2626;color:#fff;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit">지금 백업 다운로드</button>'+
-         '</div>';
+    var todayStr=today();
+    function diffDays(a,b){
+      var da=new Date(a+"T00:00:00"), db=new Date(b+"T00:00:00");
+      return Math.floor((db-da)/(1000*60*60*24));
     }
 
-    /* 이번 달 미청구 원생 알림 */
+    /* ══ 회계 원칙(전문가 합의): 관장이 매일 챙길 3가지 = ①미납(미수금) ②미청구 ③만료 임박 + 홀딩 판단 ══ */
+
+    /* ① 미납 10일 경과 (원생별 합산) */
+    var overdue=state.payments.filter(function(pm){
+      return !pm.paid && pm.cat==="수련비" && diffDays(pm.date,todayStr)>=10;
+    });
+    var overdueByName={};
+    overdue.forEach(function(pm){
+      if(!overdueByName[pm.name]) overdueByName[pm.name]={name:pm.name,count:0,sum:0,oldest:pm.date};
+      overdueByName[pm.name].count++;
+      overdueByName[pm.name].sum+=pm.amount;
+      if(pm.date<overdueByName[pm.name].oldest) overdueByName[pm.name].oldest=pm.date;
+    });
+    var overdueList=Object.keys(overdueByName).map(function(k){return overdueByName[k];})
+      .sort(function(a,b){return a.oldest.localeCompare(b.oldest);});
+    var overdueSum=overdueList.reduce(function(a,x){return a+x.sum;},0);
+
+    /* ② 이번 달 미청구 (성인 횟수제 제외) */
     var thisYm=new Date().toISOString().slice(0,7);
     var billedThisMonth={};
     state.payments.forEach(function(p){
@@ -8873,60 +8853,116 @@ function render(){
     });
     var notBilled=STUDENTS.filter(function(s){
       if(state.closedMap[s.n]) return false;
-      /* 성인반은 횟수제라 제외 */
       if((state.regTypeMap[s.n]||(/성인/.test(s.b||"")?"횟수":"월별"))==="횟수") return false;
       return !billedThisMonth[s.n];
     });
-    if(notBilled.length>0){
-      h+='<div class="card" style="background:#FEF3C7;border-color:#F59E0B;margin-bottom:8px">'+
-         '<div style="font-weight:900;color:#92400E;margin-bottom:6px">📋 이번 달 미청구 원생 '+notBilled.length+'명</div>'+
-         '<div style="font-size:13px;color:#92400E;margin-bottom:5px">'+thisYm+' 아직 수련비 청구 안 된 원생입니다</div>'+
-         '<div style="max-height:200px;overflow-y:auto;background:#fff;border-radius:6px;padding:8px">'+
+
+    /* ③ 홀딩(등록 연장) 검토 대기: 30일 이상 결석 예정인데 승인 판단 전 */
+    var _pend=[];
+    if(typeof liveHolds==="function"){
+      var _tdR=todayStr;
+      STUDENTS.forEach(function(s){
+        if(state.closedMap[s.n]||isQuit(s.n)) return;
+        liveHolds(s.n).forEach(function(e){
+          if(e.ext) return;
+          var days = e.open ? _holdDays(e.from, _tdR) : _holdDays(e.from, e.to);
+          if(days<30) return;
+          if(!e.open && e.to < addDays(_tdR,-60)) return;
+          _pend.push({ n:s.n, from:e.from, to:e.to, open:e.open, days:days, reason:e.reason||"" });
+        });
+      });
+      _pend.sort(function(a,b){ return b.days-a.days; });
+    }
+
+    /* ④ 만료·임박 (만료 지남 + 이번달 만료) — urgent는 상단에서 계산됨 */
+
+    /* ── 오늘의 수납 할 일: KPI 카드 4장 (클릭=아래 상세/필터) ── */
+    var kpiCard=function(onclick, active, icon, label, big, sub, tone){
+      /* tone: red(미수금)·amber(조치 대기)·gray */
+      var C = tone==="red"   ? {bd:"var(--red)",  num:"var(--red)",  bg:"#FFF6F6"}
+            : tone==="amber" ? {bd:"var(--amber)",num:"#B45309",     bg:"#FFFBF2"}
+            :                  {bd:"var(--line)", num:"var(--ink)",  bg:"#fff"};
+      if(!big){ C={bd:"var(--line)",num:"#9AA1AA",bg:"#FAFAFA"}; }
+      return '<div onclick="'+onclick+'" style="cursor:pointer;border:1.5px solid '+(active?C.bd:'var(--line)')+';background:'+C.bg+';border-radius:12px;padding:12px 14px;'+(active?'box-shadow:0 2px 8px rgba(0,0,0,.07);':'')+'">'+
+        '<div style="font-size:12px;font-weight:800;color:var(--sub)">'+icon+' '+label+'</div>'+
+        '<div style="font-size:22px;font-weight:900;color:'+C.num+';margin:3px 0 1px;font-variant-numeric:tabular-nums">'+(big||'✓ 없음')+'</div>'+
+        '<div style="font-size:11px;color:var(--sub);min-height:14px">'+(sub||'')+'</div></div>';
+    };
+    h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px">'+
+      kpiCard("state.overdueOpen=!state.overdueOpen;render()", state.overdueOpen,
+        '⚠','미납 (10일 경과)', overdueList.length?overdueList.length+'명':'', overdueList.length?('받을 돈 '+won(overdueSum)+' · 클릭=명단'):'','red')+
+      kpiCard("state.notBilledOpen=!state.notBilledOpen;render()", state.notBilledOpen,
+        '📋','이번 달 미청구', notBilled.length?notBilled.length+'명':'', notBilled.length?(thisYm+' 수련비 청구 전 · 클릭=명단'):'','amber')+
+      kpiCard("state.holdReviewOpen=!state.holdReviewOpen;render()", state.holdReviewOpen,
+        '⏳','홀딩 검토', _pend.length?_pend.length+'건':'', _pend.length?'한 달 이상 결석 — 연장 판단 필요':'','amber')+
+      kpiCard("setReSort('expiry');setBillFilter('all')", state.reSort==="expiry",
+        '📅','만료·임박', urgent.length?urgent.length+'명':'', urgent.length?'만료 지남·이번달 만료 · 클릭=임박순 정렬':'','gray')+
+      '</div>';
+
+    /* KPI 상세 ①: 미납 명단 */
+    if(state.overdueOpen && overdueList.length){
+      h+='<div class="card" style="border:1.5px solid var(--red);background:#FFF6F6">'+
+         '<div style="font-size:13.5px;font-weight:900;color:var(--red);margin-bottom:4px">⚠ 미납 10일 경과 '+overdueList.length+'명 · 합계 '+won(overdueSum)+'</div>'+
+         overdueList.slice(0,15).map(function(x){
+           var days=diffDays(x.oldest,todayStr);
+           return '<div style="display:grid;grid-template-columns:22px 150px 130px 1fr 130px;gap:0 10px;align-items:center;cursor:pointer;padding:6px 0;font-size:13.5px;border-top:1px dashed #F3C8C8" onclick="showDetail(\''+x.name.replace(/'/g,"\\'")+'\')">'+
+             demoSlot(x.name)+'<b style="color:var(--blue);text-decoration:underline">'+esc(x.name)+'</b>'+
+             '<span style="color:var(--sub);font-size:12px">'+days+'일 경과 · '+x.count+'건</span><span></span>'+
+             '<span style="font-weight:800;color:var(--red);text-align:right;font-variant-numeric:tabular-nums">'+won(x.sum)+'</span></div>';
+         }).join('')+
+         (overdueList.length>15?'<div style="font-size:12px;color:var(--sub);margin-top:6px">...외 '+(overdueList.length-15)+'명 더</div>':'')+
+         '</div>';
+    }
+    /* KPI 상세 ②: 미청구 명단 */
+    if(state.notBilledOpen && notBilled.length){
+      h+='<div class="card" style="border:1.5px solid var(--amber);background:#FFFBF2">'+
+         '<div style="font-size:13.5px;font-weight:900;color:#92400E;margin-bottom:4px">📋 이번 달 미청구 '+notBilled.length+'명 <span style="font-weight:500;font-size:12px">— 이름 클릭 → 회계입력으로 이동</span></div>'+
+         '<div style="max-height:230px;overflow-y:auto;background:#fff;border-radius:8px;padding:6px 10px">'+
          notBilled.map(function(s){
-           return '<div style="padding:4px 6px;border-bottom:1px solid var(--line);font-size:13px;cursor:pointer" onclick="goInputForStudent(\''+s.n.replace(/\'/g,"\\\\'")+'\')">'+demoSlot(s.n)+'<b>'+esc(s.n)+'</b> <span style="color:var(--sub)">'+esc(s.b||"")+'</span></div>';
+           return '<div style="display:grid;grid-template-columns:22px 150px 1fr;gap:0 10px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line);font-size:13px;cursor:pointer" onclick="goInputForStudent(\''+s.n.replace(/\'/g,"\\\\'")+'\')">'+demoSlot(s.n)+'<b>'+esc(s.n)+'</b><span style="color:var(--sub);font-size:12px">'+esc(s.b||"")+'</span></div>';
          }).join('')+
          '</div></div>';
     }
+    /* KPI 상세 ③: 홀딩 검토 명단 */
+    if(state.holdReviewOpen && _pend.length){
+      h+='<div class="card" style="border:1.5px solid var(--amber);background:#FFFBF2">'+
+         '<div style="font-size:13.5px;font-weight:900;color:#B45309;margin-bottom:4px">⏳ 홀딩(등록 연장) 검토 '+_pend.length+'건 <span style="font-weight:500;font-size:12px">— 이름 클릭 → 상세에서 승인 (결석 일수는 참고용)</span></div>'+
+         _pend.slice(0,30).map(function(p){
+           return '<div style="display:grid;grid-template-columns:22px 150px 170px 78px 1fr;gap:0 10px;align-items:center;padding:6px 0;border-top:1px dashed #F0D6A8;font-size:12.5px">'+
+             demoSlot(p.n)+
+             '<b style="color:var(--blue);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="납부내역 열기" onclick="showDetail(\''+esc(p.n).replace(/'/g,"\\'")+'\')">'+esc(p.n)+'</b>'+
+             '<span style="color:#1D4ED8;font-weight:700;font-variant-numeric:tabular-nums">'+esc(p.from)+' ~ '+(p.open?'미정':esc(p.to))+'</span>'+
+             '<span style="background:#FFF3E0;color:#B45309;border-radius:5px;padding:1px 6px;font-size:10.5px;font-weight:800;text-align:center">'+p.days+'일'+(p.open?'+':'')+'</span>'+
+             (p.reason?'<span style="color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.reason)+'</span>':'<span></span>')+'</div>';
+         }).join('')+(_pend.length>30?'<div style="font-size:11px;color:var(--sub);margin-top:6px">외 '+(_pend.length-30)+'건</div>':'')+
+         '</div>';
+    }
 
-    /* 재원생 / 휴원생 전환 (1계층: 상태) */
-    h+='<div class="chips" style="margin-bottom:8px">'+
+    /* 백업 배너 (슬림 · 조치 안내 — 위험 아님이므로 빨강 금지) */
+    var lastBackup=Number(localStorage.getItem("naracha_last_backup_day")||0);
+    var daysAgo=Math.floor((Date.now()-lastBackup)/(1000*60*60*24));
+    if(daysAgo>=7){
+      h+='<div style="display:flex;align-items:center;gap:10px;background:#F4F4F6;border:1px solid var(--line);border-radius:10px;padding:8px 14px;margin-bottom:10px;font-size:13px">'+
+         '<span>💾</span><b>주간 백업이 필요합니다</b><span style="color:var(--sub);font-size:12px">'+(lastBackup?'마지막 백업 후 '+daysAgo+'일 경과':'백업 이력 없음')+'</span>'+
+         '<span style="flex:1"></span>'+
+         '<button onclick="doWeeklyBackup()" style="border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:8px;padding:6px 14px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">백업 다운로드</button></div>';
+    }
+
+    /* ── 도구 바: 검색 + 재원/휴원 + 정렬 (1줄) ── */
+    h+='<div class="card" style="padding:12px 16px">'+
+       '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+       '<div style="position:relative;flex:0 0 260px"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px">🔍</span>'+
+       '<input class="input" style="padding-left:32px" placeholder="원생 이름 검색 (Enter=열기)" value="'+esc(state.search||"")+'" oninput="setSearch(this.value)" onkeydown="if(event.isComposing||event.keyCode===229)return; if(event.key===\'Enter\')searchEnter()"></div>'+
        '<button class="chip tier1'+(state.stuView==="active"?" on":"")+'" onclick="setStuView(\'active\')">재원생 '+activeCount+'명</button>'+
-       '<button class="chip tier1'+(state.stuView==="closed"?" on":"")+'" onclick="setStuView(\'closed\')">휴원생 '+closedNames.length+'명</button></div>';
+       '<button class="chip tier1'+(state.stuView==="closed"?" on":"")+'" onclick="setStuView(\'closed\')">휴원생 '+closedNames.length+'명</button>'+
+       '<span style="flex:1"></span>'+
+       (state.stuView==="active"?
+         '<span style="font-size:11.5px;color:var(--sub)">정렬:</span>'+
+         '<button class="chip tier4'+(state.reSort==="ban"?" on":"")+'" onclick="setReSort(\'ban\')">반별 순</button>'+
+         '<button class="chip tier4'+(state.reSort==="expiry"?" on":"")+'" onclick="setReSort(\'expiry\')">만료 임박순</button>' : '')+
+       '</div><div id="searchlist"></div></div>';
 
     if(state.stuView==="active"){
-      /* 미납 10일 경과 알림 */
-      var todayStr=today();
-      function diffDays(a,b){
-        var da=new Date(a+"T00:00:00"), db=new Date(b+"T00:00:00");
-        return Math.floor((db-da)/(1000*60*60*24));
-      }
-      var overdue=state.payments.filter(function(pm){
-        return !pm.paid && pm.cat==="수련비" && diffDays(pm.date,todayStr)>=10;
-      });
-      /* 원생별 그룹핑 (같은 원생 여러 건이면 합산) */
-      var overdueByName={};
-      overdue.forEach(function(pm){
-        if(!overdueByName[pm.name]) overdueByName[pm.name]={name:pm.name,count:0,sum:0,oldest:pm.date};
-        overdueByName[pm.name].count++;
-        overdueByName[pm.name].sum+=pm.amount;
-        if(pm.date<overdueByName[pm.name].oldest) overdueByName[pm.name].oldest=pm.date;
-      });
-      var overdueList=Object.keys(overdueByName).map(function(k){return overdueByName[k];})
-        .sort(function(a,b){return a.oldest.localeCompare(b.oldest);});
-
-      if(overdueList.length){
-        h+='<div class="card" style="background:var(--redSoft);border-color:var(--red)">'+
-           '<div style="font-size:16px;font-weight:900;color:var(--red);margin-bottom:5px">⚠ 미납 10일 경과 '+overdueList.length+'명</div>'+
-           overdueList.slice(0,10).map(function(x){
-             var days=diffDays(x.oldest,todayStr);
-             return '<div class="row" style="cursor:pointer;padding:6px 0;font-size:14px" onclick="showDetail(\''+x.name.replace(/'/g,"\\'")+'\')">'+
-               '<span>'+demoSlot(x.name)+'<b style="color:var(--blue);text-decoration:underline">'+esc(x.name)+'</b> <span style="color:var(--sub);font-size:12px">'+days+'일 경과 · '+x.count+'건</span></span>'+
-               '<span style="font-weight:800;color:var(--red)">'+won(x.sum)+'</span></div>';
-           }).join('')+
-           (overdueList.length>10?'<div style="font-size:12px;color:var(--sub);margin-top:6px">...외 '+(overdueList.length-10)+'명 더</div>':'')+
-           '</div>';
-      }
-
       /* 이번 달 청구 대상 (아직 청구 안 된 재원생) - 아래 필터로 이동 */
       var curYm=todayStr.slice(0,7);
       var billedThisMonth={};
@@ -8987,28 +9023,23 @@ function render(){
       else if(state.billFilter==="billed") filteredAlerts=filteredAlerts.filter(function(a){ var s=billStatus(a.n); return s==="billed"||s==="mixed"; });
       else if(state.billFilter==="paid")   filteredAlerts=filteredAlerts.filter(function(a){ var s=billStatus(a.n); return s==="paid"||s==="mixed"; });
 
-      /* 등록 유형 전환 (2계층: 유형) */
-      h+='<div class="chips" style="margin-bottom:5px">'+
-         '<button class="chip tier2'+(state.stuType==="all"?" on":"")+'" onclick="setStuType(\'all\')">전체 '+alerts.length+'명</button>'+
-         '<button class="chip tier2'+(state.stuType==="long"?" on":"")+'" onclick="setStuType(\'long\')">장기등록 '+alerts.filter(function(a){return isLongTerm(a.n);}).length+'명</button>'+
-         '<button class="chip tier2'+(state.stuType==="normal"?" on":"")+'" onclick="setStuType(\'normal\')">일반 '+alerts.filter(function(a){return !isLongTerm(a.n);}).length+'명</button>'+
-         '</div>';
-
-      /* 청구·납부 상태 필터 (3계층: 청구) */
-      h+='<div class="chips" style="margin-bottom:12px">'+
+      /* 유형 + 청구·납부 상태 필터 (1줄 통합) */
+      h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+
+         '<span style="font-size:11.5px;color:var(--sub);font-weight:700">유형</span>'+
+         '<button class="chip tier2'+(state.stuType==="all"?" on":"")+'" onclick="setStuType(\'all\')">전체 '+alerts.length+'</button>'+
+         '<button class="chip tier2'+(state.stuType==="long"?" on":"")+'" onclick="setStuType(\'long\')">장기등록 '+alerts.filter(function(a){return isLongTerm(a.n);}).length+'</button>'+
+         '<button class="chip tier2'+(state.stuType==="normal"?" on":"")+'" onclick="setStuType(\'normal\')">일반 '+alerts.filter(function(a){return !isLongTerm(a.n);}).length+'</button>'+
+         '<span style="width:1px;height:18px;background:var(--line);margin:0 6px"></span>'+
+         '<span style="font-size:11.5px;color:var(--sub);font-weight:700">납부 상태</span>'+
          '<button class="chip tier3'+(state.billFilter==="all"?" on":"")+'" onclick="setBillFilter(\'all\')">전체</button>'+
          '<button class="chip tier3'+(state.billFilter==="none"?" on":"")+'" onclick="setBillFilter(\'none\')">청구 안 됨</button>'+
          '<button class="chip tier3'+(state.billFilter==="billed"?" on":"")+'" onclick="setBillFilter(\'billed\')">청구됨·미납</button>'+
          '<button class="chip tier3'+(state.billFilter==="paid"?" on":"")+'" onclick="setBillFilter(\'paid\')">납부 완료</button>'+
          '</div>';
 
-      /* 전체 재원생 목록 (정렬 전환) */
+      /* 전체 재원생 목록 (정렬은 상단 도구 바) */
       h+='<div class="card"><span class="label">'+
-         (state.stuType==="long"?"장기등록":state.stuType==="normal"?"일반":"전체")+' 재원생 '+filteredAlerts.length+'명 · 이름을 누르면 납부내역이 열립니다</span>'+
-         '<div class="chips" style="margin-bottom:5px">'+
-         '<button class="chip tier4'+(state.reSort==="ban"?" on":"")+'" onclick="setReSort(\'ban\')">반별 순</button>'+
-         '<button class="chip tier4'+(state.reSort==="expiry"?" on":"")+'" onclick="setReSort(\'expiry\')">만료 임박순</button>'+
-         '</div>';
+         (state.stuType==="long"?"장기등록":state.stuType==="normal"?"일반":"전체")+' 재원생 '+filteredAlerts.length+'명 · 이름을 누르면 납부내역이 열립니다</span>';
       if(state.reSort==="ban"){
         var BANS_LIST=["1킨더(7이하)","2초주니어(8~10)","3초시니어(11~13)","4청소년(14-19)","5성인1(20-39)","6성인2(40이상)"];
         if(state.banFilter==null) state.banFilter="all";
@@ -9089,27 +9120,36 @@ function render(){
           return a.n.localeCompare(b.n,"ko");
         });
       }
-      h+=sorted.map(function(a){
+      /* ── 고정폭 컬럼 표: 같은 정보가 같은 x좌표 — 시선이 세로로만 이동 ── */
+      var GRID='display:grid;grid-template-columns:24px 140px 170px 52px 92px 1fr 190px;gap:0 10px;align-items:center';
+      h+='<div style="'+GRID+';padding:6px 0 5px;border-bottom:2px solid var(--line);font-size:11px;font-weight:800;color:var(--sub)">'+
+         '<span></span><span>이름</span><span>반</span><span style="text-align:center">나이</span><span style="text-align:center">납부</span><span></span><span style="text-align:center">등록 만료</span></div>';
+      h+=sorted.map(function(a, idx){
         var recentTag="";
         if(state.reSort==="recent"){
           var d=lastInput[a.n];
           if(d) recentTag=' <span style="color:var(--blue);font-size:11px;font-weight:600">('+d+' 결제)</span>';
         }
         var pu=paidUntil(a.n);
-        var paidTag = pu ? ' <span style="color:var(--green);font-size:11px;font-weight:600">'+Number(pu.slice(5,7))+'월까지</span>' : '';
-        /* 반별 정렬 시 반 옆에 나이 표시 */
+        var paidTag = pu ? '<span style="color:var(--green);font-size:12px;font-weight:700">'+Number(pu.slice(5,7))+'월까지</span>' : '<span style="color:#C4C9D0;font-size:12px">–</span>';
         var stuInfo=null;
         for(var si=0;si<STUDENTS.length;si++){ if(STUDENTS[si].n===a.n){ stuInfo=STUDENTS[si]; break; } }
         var ageTag="";
         if(stuInfo && stuInfo.by){
           var age=new Date().getFullYear()-Number(stuInfo.by.slice(0,4));
-          ageTag=' ('+age+'세)';
+          ageTag=age+'세';
         }
-        return '<div class="row" style="padding:8px 0;font-size:14px;cursor:pointer" onclick="showDetail(\''+a.n.replace(/'/g,"\\'")+'\')"><span>'+demoSlot(a.n)+'<b style="color:var(--blue);text-decoration:underline;font-weight:600">'+esc(a.n)+'</b> <span style="color:var(--sub);font-size:12px">'+esc(a.b)+esc(ageTag)+'</span>'+paidTag+recentTag+'</span>'+
-          '<span class="pill" style="background:'+a.st.s+';color:'+a.st.c+'">'+(a.e?a.e+' · ':'')+a.st.label+'</span></div>';
+        return '<div style="'+GRID+';padding:9px 0;font-size:14px;cursor:pointer;border-bottom:1px solid var(--line);'+(idx%2?'background:#FAFAFB;':'')+'" onmouseover="this.style.background=\'#F0F6FF\'" onmouseout="this.style.background=\''+(idx%2?'#FAFAFB':'')+'\'" onclick="showDetail(\''+a.n.replace(/'/g,"\\'")+'\')">'+
+          demoSlot(a.n)+
+          '<b style="color:var(--blue);text-decoration:underline;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(a.n)+'</b>'+
+          '<span style="color:var(--sub);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(a.b)+'</span>'+
+          '<span style="color:var(--sub);font-size:12px;text-align:center">'+ageTag+'</span>'+
+          '<span style="text-align:center">'+paidTag+'</span>'+
+          '<span>'+recentTag+'</span>'+
+          '<span class="pill" style="background:'+a.st.s+';color:'+a.st.c+';text-align:center;justify-self:stretch;font-variant-numeric:tabular-nums">'+(a.e?a.e+' · ':'')+a.st.label+'</span></div>';
       }).join('')+'</div>';
     } else {
-      /* 휴원생 목록 */
+      /* 휴원생 목록 (같은 표 형식) */
       h+='<div class="card"><span class="label">휴원생 '+closedNames.length+'명 · 이름을 누르면 복관 처리할 수 있습니다</span>';
       if(!closedNames.length){
         h+='<div style="color:var(--sub);font-size:14px;padding:12px 0">휴원생이 없습니다.</div>';
@@ -9120,9 +9160,14 @@ function render(){
           return { n:n, b:stu?stu.b:"", info:state.closedMap[n] };
         });
         closedList.sort(function(a,b){ return (b.info.t||0)-(a.info.t||0); });
-        h+=closedList.map(function(x){
-          return '<div class="row" style="padding:8px 0;font-size:14px;cursor:pointer" onclick="showDetail(\''+x.n.replace(/'/g,"\\'")+'\')">'+
-            '<span>'+demoSlot(x.n)+'<b style="color:var(--blue);text-decoration:underline">'+esc(x.n)+'</b> <span style="color:var(--sub);font-size:12px">'+esc(x.b)+'</span></span>'+
+        var CGRID='display:grid;grid-template-columns:24px 140px 170px 1fr;gap:0 10px;align-items:center';
+        h+='<div style="'+CGRID+';padding:6px 0 5px;border-bottom:2px solid var(--line);font-size:11px;font-weight:800;color:var(--sub)">'+
+           '<span></span><span>이름</span><span>반</span><span>휴관 시작 · 사유</span></div>';
+        h+=closedList.map(function(x, idx){
+          return '<div style="'+CGRID+';padding:9px 0;font-size:14px;cursor:pointer;border-bottom:1px solid var(--line);'+(idx%2?'background:#FAFAFB;':'')+'" onclick="showDetail(\''+x.n.replace(/'/g,"\\'")+'\')">'+
+            demoSlot(x.n)+
+            '<b style="color:var(--blue);text-decoration:underline;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(x.n)+'</b>'+
+            '<span style="color:var(--sub);font-size:12.5px">'+esc(x.b)+'</span>'+
             '<span style="color:var(--sub);font-size:12px">'+esc(x.info.start||"")+(x.info.reason?' · '+esc(x.info.reason):'')+'</span></div>';
         }).join('');
       }
@@ -9341,53 +9386,80 @@ function render(){
     if(state.listYear==null) state.listYear=years[years.length-1]||new Date().getFullYear();
 
     /* 브리핑 자료 버튼 */
-    h+='<button class="big" style="background:var(--ink);margin-bottom:8px" onclick="openBriefing()">📊 연말 브리핑 자료 만들기</button>';
 
     if(state.listMonth==null) state.listMonth=0;
     if(state.listCat==null) state.listCat="전체";
     if(state.listLong==null) state.listLong="all";
 
-    /* 월별 합계 (상단) */
+    /* 월별 합계 */
     var monthly={};
     all.forEach(function(r){ var k=r.y+"-"+p2(r.m);
       if(!monthly[k]) monthly[k]={총:0}; monthly[k].총+=r.amount;
       monthly[k][r.cat]=(monthly[k][r.cat]||0)+r.amount; });
     var keys=Object.keys(monthly).sort().reverse();
 
-    h+='<div class="card"><span class="label">월별 총 수입 · '+(state.collectMode==="billed"?"청구된 금액 기준 (미납 포함)":"실제 납부된 금액만 집계")+'</span>'+
-       '<div class="chips" style="margin:6px 0 10px">'+
-       '<button class="chip'+(state.collectMode!=="billed"?" on":"")+'" onclick="setCollectMode(\'paid\')">납부 기준</button>'+
-       '<button class="chip'+(state.collectMode==="billed"?" on":"")+'" onclick="setCollectMode(\'billed\')">청구 기준</button>'+
+    /* ══ 요약 KPI 스트립 (관리회계: 이번 달 · 전월 대비 · 올해 누계 · 월평균) ══ */
+    var curYmS=today().slice(0,7), curYearS=curYmS.slice(0,4);
+    var prevYmS=(function(ymv){ var a=ymv.split("-"); var t=a[0]*12+(a[1]-1)-1; return Math.floor(t/12)+"-"+p2(t%12+1); })(curYmS);   /* addMonths는 날짜용이라 YYYY-MM엔 직접 계산 */
+    var curMonAmt=(monthly[curYmS]||{}).총||0, prevMonAmt=(monthly[prevYmS]||{}).총||0;
+    var deltaAmt=curMonAmt-prevMonAmt;
+    var deltaPct=prevMonAmt? Math.round(deltaAmt/prevMonAmt*100) : null;
+    var yearKeys=keys.filter(function(k){ return k.slice(0,4)===curYearS; });
+    var yearTotal=yearKeys.reduce(function(a,k){ return a+monthly[k].총; },0);
+    var yearAvg=yearKeys.length? Math.round(yearTotal/yearKeys.length) : 0;
+    var modeLbl=(state.collectMode==="billed"?"청구한 금액":"실제 받은 돈");
+    var kpi2=function(label,val,sub,color){
+      return '<div style="border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px">'+
+        '<div style="font-size:12px;font-weight:800;color:var(--sub)">'+label+'</div>'+
+        '<div style="font-size:20px;font-weight:900;color:'+(color||'var(--ink)')+';margin:3px 0 1px;font-variant-numeric:tabular-nums;white-space:nowrap">'+val+'</div>'+
+        '<div style="font-size:11px;color:var(--sub);min-height:14px">'+(sub||'')+'</div></div>';
+    };
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+
+       '<b style="font-size:14px">매출 현황 <span style="font-weight:500;font-size:12px;color:var(--sub)">— '+modeLbl+' 기준</span></b><span style="flex:1"></span>'+
+       '<button class="chip'+(state.collectMode!=="billed"?" on":"")+'" onclick="setCollectMode(\'paid\')">실제 받은 돈</button>'+
+       '<button class="chip'+(state.collectMode==="billed"?" on":"")+'" onclick="setCollectMode(\'billed\')">청구한 금액 (미납 포함)</button>'+
+       '</div>'+
+       '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">'+
+       kpi2('이번 달 수입 ('+Number(curYmS.slice(5,7))+'월)', won(curMonAmt),'', 'var(--blue)')+
+       kpi2('전월 대비', (deltaAmt>=0?'▲ ':'▼ ')+won(Math.abs(deltaAmt)), (deltaPct===null?'전월 기록 없음':(deltaAmt>=0?'+':'−')+Math.abs(deltaPct)+'%'), deltaAmt>=0?'var(--blue)':'#6B7280')+
+       kpi2(curYearS+'년 누계', won(yearTotal), yearKeys.length+'개월 기록','var(--ink)')+
+       kpi2('월평균 ('+curYearS+'년)', won(yearAvg),'','var(--ink)')+
        '</div>';
+
+    /* ══ 월별 수입 표 (행=월 · 열=구분 피벗 — 나열 대신 한 화면 비교) ══ */
+    var PIVOT_MAIN=["수련비","승급심사","용품구입"];
+    h+='<div class="card"><span class="label">월별 수입 (최근 12개월 · '+modeLbl+')</span>';
     if(!keys.length) h+='<div style="color:var(--sub);font-size:15px;padding:10px 0">기록이 없습니다.</div>';
     else {
-      /* 전체 합계 */
-      var grandTotal=0;
-      var grandByCat={};
-      keys.forEach(function(k){
+      var PGRID='display:grid;grid-template-columns:96px 1fr 1fr 1fr 1fr 1.15fr;gap:0 12px;align-items:center';
+      var show12=keys.slice(0,12);
+      h+='<div style="'+PGRID+';padding:6px 0 5px;border-bottom:2px solid var(--line);font-size:11px;font-weight:800;color:var(--sub)">'+
+         '<span>월</span><span style="text-align:right">수련비</span><span style="text-align:right">승급심사</span><span style="text-align:right">용품구입</span><span style="text-align:right">기타</span><span style="text-align:right">합계</span></div>';
+      var t12={수련비:0,승급심사:0,용품구입:0,기타:0,총:0};
+      show12.forEach(function(k, idx){
         var mo=monthly[k];
-        grandTotal+=mo.총;
-        Object.keys(mo).forEach(function(c){
-          if(c!=="총") grandByCat[c]=(grandByCat[c]||0)+mo[c];
-        });
+        var etcCats=Object.keys(mo).filter(function(c){ return c!=="총" && PIVOT_MAIN.indexOf(c)<0; });
+        var etcSum=etcCats.reduce(function(a,c){ return a+mo[c]; },0);
+        var etcTip=etcCats.map(function(c){ return c+' '+won(mo[c]); }).join(' · ');
+        t12.수련비+=(mo["수련비"]||0); t12.승급심사+=(mo["승급심사"]||0); t12.용품구입+=(mo["용품구입"]||0); t12.기타+=etcSum; t12.총+=mo.총;
+        var cell=function(v){ return '<span style="text-align:right;font-variant-numeric:tabular-nums;font-size:13px;color:'+(v?'var(--ink)':'#C4C9D0')+'">'+(v?won(v):'–')+'</span>'; };
+        h+='<div style="'+PGRID+';padding:8px 0;border-bottom:1px solid var(--line);'+(idx%2?'background:#FAFAFB;':'')+(k===curYmS?'background:var(--blueSoft);':'')+'">'+
+           '<b style="font-size:13px'+(k===curYmS?';color:var(--blue)':'')+'">'+k.slice(0,4)+'년 '+Number(k.slice(5,7))+'월</b>'+
+           cell(mo["수련비"]||0)+cell(mo["승급심사"]||0)+cell(mo["용품구입"]||0)+
+           '<span style="text-align:right;font-variant-numeric:tabular-nums;font-size:13px;color:'+(etcSum?'var(--ink)':'#C4C9D0')+'"'+(etcTip?' title="'+esc(etcTip)+'"':'')+'>'+(etcSum?won(etcSum):'–')+'</span>'+
+           '<b style="text-align:right;font-variant-numeric:tabular-nums;font-size:13.5px;color:var(--blue)">'+won(mo.총)+'</b></div>';
       });
-      h+='<div style="background:var(--blueSoft);border-radius:10px;padding:12px 14px;margin-bottom:10px">'+
-         '<div style="display:flex;justify-content:space-between;font-weight:900;font-size:16px;color:var(--blue)">'+
-         '<span>전체 합계</span><span>'+won(grandTotal)+'</span></div>'+
-         '<div style="font-size:12px;color:var(--sub);margin-top:6px">'+
-         Object.keys(grandByCat).map(function(c){ return esc(c)+' '+won(grandByCat[c]); }).join(' · ')+
-         '</div></div>';
+      h+='<div style="'+PGRID+';padding:9px 0 3px;border-top:2px solid var(--line);font-weight:900">'+
+         '<span style="font-size:12.5px">12개월 합계</span>'+
+         '<span style="text-align:right;font-variant-numeric:tabular-nums;font-size:13px">'+won(t12.수련비)+'</span>'+
+         '<span style="text-align:right;font-variant-numeric:tabular-nums;font-size:13px">'+won(t12.승급심사)+'</span>'+
+         '<span style="text-align:right;font-variant-numeric:tabular-nums;font-size:13px">'+won(t12.용품구입)+'</span>'+
+         '<span style="text-align:right;font-variant-numeric:tabular-nums;font-size:13px">'+won(t12.기타)+'</span>'+
+         '<span style="text-align:right;font-variant-numeric:tabular-nums;font-size:14px;color:var(--blue)">'+won(t12.총)+'</span></div>';
+      /* 전체 기간 합계 (참고 · 한 줄) */
+      var grandTotal=0; keys.forEach(function(k){ grandTotal+=monthly[k].총; });
+      h+='<div style="font-size:11.5px;color:var(--sub);margin-top:8px">전체 기간('+keys.length+'개월) 합계 <b style="color:var(--ink)">'+won(grandTotal)+'</b> · 기타 칸에 마우스를 올리면 세부 구분이 보입니다</div>';
     }
-    keys.slice(0,12).forEach(function(k){
-      var mo=monthly[k];
-      var cats=Object.keys(mo).filter(function(c){return c!=="총";});
-      h+='<div style="padding:10px 0;border-bottom:1px solid var(--line)">'+
-         '<div style="display:flex;justify-content:space-between;font-weight:800;font-size:15px">'+
-         '<span>'+k.replace("-","년 ").replace(/^(\d+년\s)0?/,"$1")+'월</span><span>'+won(mo.총)+'</span></div>'+
-         (cats.length ? '<div style="font-size:11px;color:var(--sub);margin-top:4px">'+
-           cats.map(function(c){ return esc(c)+' '+won(mo[c]); }).join(' · ')+'</div>' : '')+
-         '</div>';
-    });
     h+='</div>';
 
     /* 납부자 명단 (연도·월·구분 필터) */
@@ -9490,50 +9562,49 @@ function render(){
         if(a.effDate && b.effDate && a.effDate!==b.effDate) return a.effDate.localeCompare(b.effDate);
         return a.name.localeCompare(b.name,"ko");
       });
-      list.forEach(function(x){
+      var LGRID='display:grid;grid-template-columns:24px 140px 1fr 170px;gap:0 10px;align-items:center';
+      h+='<div style="'+LGRID+';padding:6px 0 5px;border-bottom:2px solid var(--line);font-size:11px;font-weight:800;color:var(--sub)">'+
+         '<span></span><span>이름</span><span>등록 기간</span><span style="text-align:right">결제</span></div>';
+      list.forEach(function(x, idx){
         var color, period, bg="";
         if(x.hold){
           color="var(--amber)"; bg="background:var(--amberSoft);";
           period='⏸ '+x.hold.reason+' · '+(x.effDate?'~'+x.effDate:x.hold.period);
         } else if(x.over){
           color="var(--sub)";
-          period=x.latest ? '('+x.latest.s+' ~ '+x.latest.e+' · 종료)' : '';
+          period=x.latest ? x.latest.s+' ~ '+x.latest.e+' · 종료' : '';
         } else {
           color="var(--blue)";
-          period=x.latest ? '('+x.latest.s+' ~ '+x.latest.e+')' : '';
+          period=x.latest ? x.latest.s+' ~ '+x.latest.e : '';
         }
-        h+='<div class="row" style="padding:8px 0;font-size:14px;cursor:pointer;'+bg+'" onclick="showDetail(\''+x.name.replace(/'/g,"\\'")+'\')">'+
-           '<span>'+demoSlot(x.name)+'<b style="color:var(--blue);text-decoration:underline">'+esc(x.name)+'</b> '+
-           '<span style="color:'+color+';font-size:11px;font-weight:600">'+period+'</span></span>'+
-           '<span style="color:var(--sub);font-size:12px">결제 '+x.count+'건 · '+won(x.sum)+'</span></div>';
+        h+='<div style="'+LGRID+';padding:8px 0;font-size:14px;cursor:pointer;border-bottom:1px solid var(--line);'+(bg||(idx%2?'background:#FAFAFB;':''))+'" onclick="showDetail(\''+x.name.replace(/'/g,"\\'")+'\')">'+
+           demoSlot(x.name)+
+           '<b style="color:var(--blue);text-decoration:underline;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(x.name)+'</b>'+
+           '<span style="color:'+color+';font-size:12px;font-weight:600;font-variant-numeric:tabular-nums">'+period+'</span>'+
+           '<span style="color:var(--sub);font-size:12px;text-align:right;font-variant-numeric:tabular-nums">'+x.count+'건 · <b style="color:var(--ink)">'+won(x.sum)+'</b></span></div>';
       });
     } else {
-      filt.forEach(function(r){
-        var tag = r.cat==="수련비" ? "" :
-          ' <span class="pill" style="background:var(--amberSoft);color:var(--amber);font-size:11px">'+esc(r.cat)+'</span>';
-        var longTag = "";
-        if(state.listLong==="long"){
-          var stu=null;
-          for(var i=0;i<STUDENTS.length;i++){ if(STUDENTS[i].n===r.name){ stu=STUDENTS[i]; break; } }
-          if(stu && stu.p && stu.p.length){
-            /* 원생별 최신(가장 나중) 만료 기간 찾기 */
-            var latest2=stu.p[0];
-            stu.p.forEach(function(pp){ if(pp.e>latest2.e) latest2=pp; });
-            var now2=new Date(); var curM=now2.getFullYear()+"-"+p2(now2.getMonth()+1);
-            var isOver = latest2.e<curM;
-            var color = isOver ? "var(--sub)" : "var(--blue)";
-            var suffix = isOver ? " · 종료" : "";
-            longTag=' <span style="color:'+color+';font-size:11px;font-weight:600">('+latest2.s+' ~ '+latest2.e+suffix+')</span>';
-          } else {
-            var ov=state.expiryMap[r.name];
-            if(ov) longTag=' <span style="color:var(--blue);font-size:11px;font-weight:600">('+ov+'까지)</span>';
-          }
-        }
-        h+='<div class="row" style="padding:8px 0;font-size:14px;cursor:pointer" onclick="showDetail(\''+r.name.replace(/'/g,"\\'")+'\')">'+
-           '<span>'+demoSlot(r.name)+'<b style="color:var(--blue);text-decoration:underline">'+esc(r.name)+'</b>'+longTag+tag+
-           ' <span style="color:var(--sub);font-size:12px">'+r.m+'월'+(r.long?' · 장기등록 분할':'')+(r.note?' · '+esc(r.note):'')+(r.device?' · 💻'+esc(r.device):'')+'</span></span>'+
-           '<span style="font-weight:800">'+won(r.amount)+' <span style="color:var(--sub);font-weight:500;font-size:12px">'+esc(r.method)+'</span></span></div>';
+      var NGRID='display:grid;grid-template-columns:52px 24px 140px 100px 1fr 84px 110px;gap:0 10px;align-items:center';
+      h+='<div style="'+NGRID+';padding:6px 0 5px;border-bottom:2px solid var(--line);font-size:11px;font-weight:800;color:var(--sub)">'+
+         '<span>월</span><span></span><span>이름</span><span>구분</span><span>메모</span><span style="text-align:center">결제방법</span><span style="text-align:right">금액</span></div>';
+      filt.forEach(function(r, idx){
+        var tag = r.cat==="수련비"
+          ? '<span style="font-size:11.5px;color:var(--sub)">수련비</span>'
+          : '<span class="pill" style="background:var(--amberSoft);color:var(--amber);font-size:11px;justify-self:start">'+esc(r.cat)+'</span>';
+        var noteTx=[r.long?'장기등록 분할':'', r.note||'', r.device?'💻'+r.device:''].filter(Boolean).join(' · ');
+        h+='<div style="'+NGRID+';padding:8px 0;font-size:14px;cursor:pointer;border-bottom:1px solid var(--line);'+(idx%2?'background:#FAFAFB;':'')+'" onclick="showDetail(\''+r.name.replace(/'/g,"\\'")+'\')">'+
+           '<span style="font-size:12.5px;color:var(--sub);font-variant-numeric:tabular-nums">'+r.m+'월</span>'+
+           demoSlot(r.name)+
+           '<b style="color:var(--blue);text-decoration:underline;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(r.name)+'</b>'+
+           tag+
+           '<span style="color:var(--sub);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"'+(noteTx?' title="'+esc(noteTx)+'"':'')+'>'+esc(noteTx)+'</span>'+
+           '<span style="color:var(--sub);font-size:12px;text-align:center">'+esc(r.method)+'</span>'+
+           '<b style="text-align:right;font-variant-numeric:tabular-nums">'+won(r.amount)+'</b></div>';
       });
+      /* 합계 행 (회계 실무: 필터 결과 합계는 표 아래에도) */
+      h+='<div style="'+NGRID+';padding:9px 0 3px;border-top:2px solid var(--line);font-weight:900">'+
+         '<span style="font-size:12px">합계</span><span></span><span style="font-size:12px;color:var(--sub)">'+filt.length+'건</span><span></span><span></span><span></span>'+
+         '<b style="text-align:right;font-variant-numeric:tabular-nums;color:var(--blue)">'+won(ftot)+'</b></div>';
     }
     h+='<div style="margin-top:10px;font-size:12px;color:var(--sub)">이름을 누르면 그 원생의 전체 납부내역이 열립니다.</div></div>';
   }
