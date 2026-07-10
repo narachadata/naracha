@@ -7281,15 +7281,36 @@ window.submitChangePw=function(){
 window.lockNow=function(){ state.unlocked=false; render(); };
 
 var __composing=false;
-document.addEventListener("compositionstart", function(){ __composing=true; });
+document.addEventListener("compositionstart", function(){ __composing=true; window.__composeT=Date.now(); });
+document.addEventListener("compositionupdate", function(){ window.__composeT=Date.now(); });
 document.addEventListener("compositionend", function(){
   __composing=false;
   if(window.__pendingRender){ window.__pendingRender=false; setTimeout(render, 0); }
 });
+/* ── 조합신호 유실 안전장치 ①: 다른 곳을 클릭하는 순간 조합은 끝난 것으로 간주
+   (크롬에서 한글 조합 중 자동완성 드롭다운을 마우스로 고르면 compositionend가 유실되어
+    화면 갱신이 영영 멈추는 문제 방지 — 클릭 시 입력칸이 blur되며 조합이 어차피 확정됨) */
+document.addEventListener("pointerdown", function(e){
+  if(__composing && e.target!==document.activeElement){
+    __composing=false;
+    if(window.__pendingRender){ window.__pendingRender=false; setTimeout(render, 0); }
+  }
+}, true);
 function render(){
   if(state.topCat!=="심사" && typeof hideExam==="function") hideExam();
   /* ① 한글 조합 중엔 다시 그리지 않음 (글자 깨짐·튕김 방지) */
-  if(__composing){ window.__pendingRender=true; return; }
+  if(__composing){
+    window.__pendingRender=true;
+    /* ── 조합신호 유실 안전장치 ②(워치독): 0.9초 뒤에도 입력 활동이 없으면 강제 해제 후 그리기 */
+    if(!window.__composeWatch){
+      window.__composeWatch=setTimeout(function(){
+        window.__composeWatch=null;
+        if(__composing && Date.now()-(window.__composeT||0)>800) __composing=false;
+        if(!__composing && window.__pendingRender){ window.__pendingRender=false; render(); }
+      }, 900);
+    }
+    return;
+  }
   /* ② 입력 중이던 칸 기억 → 다시 그린 뒤 포커스·커서 복원 */
   var __ae=document.activeElement, __fi=null;
   if(__ae && (__ae.tagName==="INPUT"||__ae.tagName==="TEXTAREA")){
