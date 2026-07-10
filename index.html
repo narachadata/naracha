@@ -3116,6 +3116,8 @@ window.setSearch=function(v){ state.search=v; renderSearchList(); };
 window.setListYear=function(y){ state.listYear=Number(y); render(); };
 window.setListMonth=function(m){ state.listMonth=Number(m); render(); };
 window.setListCat=function(c){ state.listCat=c; render(); };
+window.setListBan=function(b){ state.listBan=b; render(); };
+window.setListGrade=function(g){ state.listGrade=g; render(); };
 window.setReSort=function(s){ state.reSort=s; render(); };
 window.setStuView=function(v){ state.stuView=v; render(); };
 window.setStuType=function(t){ state.stuType=t; render(); };
@@ -9463,31 +9465,68 @@ function render(){
     }
     h+='</div>';
 
-    /* 납부자 명단 (연도·월·구분 필터) */
-    h+='<div class="card"><span class="label">납부자 명단 (연도 · 월 · 구분 선택)</span>'+
-       '<div style="font-size:12px;color:var(--sub);margin-bottom:5px">연도</div>'+
-       '<div class="chips">'+years.map(function(y){
-         return '<button class="chip'+(y===state.listYear?' on':'')+'" onclick="setListYear('+y+')">'+y+'년</button>';
-       }).join('')+'</div>'+
-       '<div style="font-size:12px;color:var(--sub);margin-bottom:5px">월</div>'+
-       '<div class="chips"><button class="chip'+(state.listMonth===0?' on':'')+'" onclick="setListMonth(0)">전체</button>'+
-       [1,2,3,4,5,6,7,8,9,10,11,12].map(function(m){
-         return '<button class="chip'+(state.listMonth===m?' on':'')+'" onclick="setListMonth('+m+')">'+m+'월</button>';
-       }).join('')+'</div>'+
-       '<div style="font-size:12px;color:var(--sub);margin-bottom:5px">구분</div>'+
-       '<div class="chips">'+["전체","수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"].map(function(c){
-         return '<button class="chip'+(state.listCat===c?' on':'')+'" onclick="setListCat(\''+c+'\')">'+c+'</button>';
-       }).join('')+'</div>'+
-       '<div style="font-size:12px;color:var(--sub);margin-bottom:5px">표시</div>'+
-       '<div class="chips">'+[["전체","all"],["장기등록만","long"]].map(function(o){
-         return '<button class="chip'+(state.listLong===o[1]?' on':'')+'" onclick="setListLong(\''+o[1]+'\')">'+o[0]+'</button>';
-       }).join('')+'</div>';
+    /* 납부자 명단 필터 (위계별 디자인: 기간=드롭다운+칩 · 구분=칩 · 반/급수=드롭다운 · 표시=칩) */
+    if(state.listBan==null) state.listBan="전체";
+    if(state.listGrade==null) state.listGrade="전체";
+    /* 이름→원생 조회 맵 (반·급수) */
+    var stuByName={};
+    for(var _si=0;_si<STUDENTS.length;_si++){ stuByName[STUDENTS[_si].n]=STUDENTS[_si]; }
+    /* 급수 목록: 데이터에 존재하는 급수만 (급수 순서대로) */
+    var GRADE_ORDER=["10급","9급","8급","7급","6급","5급","4급","3급","2급","1급","1품","2품","3품","4품","1단","2단","3단","4단","5단"];
+    var gradePresent={};
+    all.forEach(function(r){ var st=stuByName[r.name]; if(st&&st.grade) gradePresent[st.grade]=1; });
+    var gradeList=GRADE_ORDER.filter(function(g){ return gradePresent[g]; });
+    Object.keys(gradePresent).forEach(function(g){ if(GRADE_ORDER.indexOf(g)<0) gradeList.push(g); });
+    var BANS_F=["1킨더(7이하)","2초주니어(8~10)","3초시니어(11~13)","4청소년(14-19)","5성인1(20-39)","6성인2(40이상)"];
+    var LBL='font-size:11.5px;font-weight:800;color:var(--sub);flex:0 0 34px';
+    var SEL='padding:6px 26px 6px 10px;font-size:12.5px;font-weight:700;border:1px solid var(--line);border-radius:9px;background:#fff url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'10\' viewBox=\'0 0 10 10\'%3E%3Cpath d=\'M2 3.5L5 6.5L8 3.5\' stroke=\'%23667\' stroke-width=\'1.4\' fill=\'none\' stroke-linecap=\'round\'/%3E%3C/svg%3E") no-repeat right 9px center;color:var(--ink);cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none';
+    var scBtn=function(cur,val,lab,fn){ return '<button class="chip sm'+(String(cur)===String(val)?' on':'')+'" style="padding:5px 11px;font-size:12px;border-radius:8px" onclick="'+fn+'(\''+String(val).replace(/'/g,"\\'")+'\')">'+esc(lab)+'</button>'; };
+
+    h+='<div class="card"><span class="label">납부자 명단</span>'+
+       '<div style="display:flex;flex-direction:column;gap:9px">'+
+       /* 1행: 기간 (연도 드롭다운 + 월 칩) */
+       '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+         '<span style="'+LBL+'">기간</span>'+
+         '<select style="'+SEL+'" onchange="setListYear(this.value)">'+years.map(function(y){ return '<option value="'+y+'"'+(y===state.listYear?' selected':'')+'>'+y+'년</option>'; }).join('')+'</select>'+
+         '<span style="width:1px;height:20px;background:var(--line);margin:0 2px"></span>'+
+         '<div style="display:flex;gap:4px;flex-wrap:wrap">'+
+         '<button class="chip sm'+(state.listMonth===0?' on':'')+'" style="padding:5px 10px;font-size:12px;border-radius:8px" onclick="setListMonth(0)">전체</button>'+
+         [1,2,3,4,5,6,7,8,9,10,11,12].map(function(m){
+           return '<button class="chip sm'+(state.listMonth===m?' on':'')+'" style="padding:5px 9px;font-size:12px;border-radius:8px;min-width:34px" onclick="setListMonth('+m+')">'+m+'월</button>';
+         }).join('')+'</div>'+
+       '</div>'+
+       /* 2행: 구분 칩 */
+       '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:9px">'+
+         '<span style="'+LBL+'">구분</span>'+
+         '<div style="display:flex;gap:4px;flex-wrap:wrap">'+["전체","수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"].map(function(c){
+           return scBtn(state.listCat,c,c,"setListCat");
+         }).join('')+'</div>'+
+       '</div>'+
+       /* 3행: 반 · 급수 · 표시 (드롭다운 2 + 칩 · 나란히) */
+       '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:9px">'+
+         '<div style="display:flex;align-items:center;gap:8px"><span style="'+LBL+'">반</span>'+
+           '<select style="'+SEL+'" onchange="setListBan(this.value)"><option value="전체"'+(state.listBan==="전체"?' selected':'')+'>전체 반</option>'+
+           BANS_F.map(function(b){ return '<option value="'+esc(b)+'"'+(state.listBan===b?' selected':'')+'>'+esc(b.split("(")[0])+'</option>'; }).join('')+'</select></div>'+
+         '<div style="display:flex;align-items:center;gap:8px"><span style="'+LBL+';flex-basis:auto">급수</span>'+
+           '<select style="'+SEL+'" onchange="setListGrade(this.value)"><option value="전체"'+(state.listGrade==="전체"?' selected':'')+'>전체 급수</option>'+
+           gradeList.map(function(g){ return '<option value="'+esc(g)+'"'+(state.listGrade===g?' selected':'')+'>'+esc(g)+'</option>'; }).join('')+'</select></div>'+
+         '<div style="display:flex;align-items:center;gap:8px"><span style="'+LBL+';flex-basis:auto">표시</span>'+
+           '<div style="display:flex;gap:4px">'+[["전체","all"],["장기등록만","long"]].map(function(o){
+             return scBtn(state.listLong,o[1],o[0],"setListLong");
+           }).join('')+'</div></div>'+
+       '</div>'+
+       '</div>';
 
     var filt=all.filter(function(r){
       if(r.y!==state.listYear) return false;
       if(state.listMonth && r.m!==state.listMonth) return false;
       if(state.listCat!=="전체" && r.cat!==state.listCat) return false;
       if(state.listLong==="long" && !r.long) return false;
+      if(state.listBan!=="전체" || state.listGrade!=="전체"){
+        var st=stuByName[r.name];
+        if(state.listBan!=="전체" && (!st || st.b!==state.listBan)) return false;
+        if(state.listGrade!=="전체" && (!st || st.grade!==state.listGrade)) return false;
+      }
       return true;
     });
     function getExpiry(name){
@@ -9528,7 +9567,7 @@ function render(){
         ' <span style="color:var(--sub);font-size:12px">· 종료된 장기등록 기록: '+Object.keys(endedNames).length+'명</span></div>';
     }
     h+='<div style="background:var(--blueSoft);border-radius:10px;padding:12px 14px;margin:10px 0;display:flex;justify-content:space-between;font-weight:900;font-size:15px">'+
-       '<span>'+state.listYear+'년'+(state.listMonth?' '+state.listMonth+'월':'')+' · '+state.listCat+'</span>'+
+       '<span>'+state.listYear+'년'+(state.listMonth?' '+state.listMonth+'월':'')+' · '+state.listCat+(state.listBan!=="전체"?' · '+esc(state.listBan.split("(")[0]):'')+(state.listGrade!=="전체"?' · '+esc(state.listGrade):'')+'</span>'+
        '<span style="color:var(--blue)">'+filt.length+'건 · '+won(ftot)+'</span></div>'+longSummary;
     if(!filt.length){
       h+='<div style="color:var(--sub);font-size:14px;padding:8px 0">해당 조건의 기록이 없습니다.</div>';
