@@ -3770,7 +3770,7 @@ function renderSearchList(){
         ? '<span style="display:inline-block;padding:2px 8px;background:#F1F0EA;color:var(--sub);border-radius:4px;font-size:11px;font-weight:700;margin-right:6px">'+esc(closedInfo.reason||"휴관")+'</span>'
         : '<span style="display:inline-block;padding:2px 8px;background:var(--greenSoft);color:var(--green);border-radius:4px;font-size:11px;font-weight:700;margin-right:6px">재원</span>';
       return '<button class="pickbtn" onclick="showDetail(\''+s.n.replace(/'/g,"\\'")+'\')">'+
-        '<span style="font-weight:700;color:var(--blue)">'+statusBadge+esc(s.n)+
+        '<span style="font-weight:700;color:var(--blue)">'+statusBadge+demoTag(s.n)+esc(s.n)+
         ' <span style="font-weight:400;color:var(--sub);font-size:13px">'+esc(s.b)+'</span></span>'+
         '<span style="font-size:13px;color:var(--sub)">납부내역 보기 →</span></button>';
     }).join('');
@@ -3798,7 +3798,7 @@ function renderPickList(){
       var reopenBtn = closedInfo
         ? '<button onclick="event.stopPropagation();reopenClosed(\''+s.n.replace(/'/g,"\\'")+'\')" style="border:1px solid var(--green);background:#fff;color:var(--green);border-radius:5px;padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:8px">복관</button>'
         : '';
-      return '<button class="pickbtn" onclick="pick('+i+')"><span style="font-weight:700">'+statusBadge+esc(s.n)+
+      return '<button class="pickbtn" onclick="pick('+i+')"><span style="font-weight:700">'+statusBadge+demoTag(s.n)+esc(s.n)+
         ' <span style="font-weight:400;color:var(--sub);font-size:13px">'+esc(s.b)+'</span></span>'+
         '<span style="font-size:13px;font-weight:700;color:'+st.c+'">'+(e?e+"까지":"월 단위")+reopenBtn+'</span></button>';
     }).join('');
@@ -4455,7 +4455,7 @@ function renderStatusTab(){
     /* 선택 인원 (크게) */
     '<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:12px 2px 6px">'+
     '<div id="statCountArea">'+statCountHtml(view.length)+'</div>'+
-    '<span style="font-size:11px;color:var(--sub)">날짜: <span style="background:#EAF3FF;color:var(--blue);border:1px solid #CFE2FA;border-radius:5px;padding:1px 5px;font-weight:800">평일</span> <span style="background:#FFF3E6;color:#C2410C;border:1px solid #FBD3AE;border-radius:5px;padding:1px 5px;font-weight:800">주말</span> <span style="background:#EDE0FF;color:#6D28D9;border:1px dashed #C4A6F0;border-radius:5px;padding:1px 5px;font-weight:800">미포함</span> <span style="background:linear-gradient(105deg,#EAF3FF 0%,#EAF3FF 47%,#EDE0FF 53%,#EDE0FF 100%);color:#3E2E63;border:1px solid #C4A6F0;border-radius:5px;padding:1px 5px;font-weight:800">혼합</span> <b style="color:var(--ink)">×2</b> = 같은 날 2회 — 체험·심사·국기원·대회연습은 출석 표시만 되고 수련횟수(기준 대비 실제·심사 누적)에는 포함되지 않습니다</span>'+
+    '<span style="font-size:11px;color:var(--sub)">날짜: <span style="background:#2563EB;color:#fff;border-radius:5px;padding:1px 6px;font-weight:800">평일</span> <span style="background:#EA580C;color:#fff;border-radius:5px;padding:1px 6px;font-weight:800">주말</span> <span style="background:#8B5CF6;color:#fff;border:1px dashed #DDD0FA;border-radius:5px;padding:1px 6px;font-weight:800">미포함</span> <span style="background:linear-gradient(100deg,#2563EB 0%,#2563EB 48%,#8B5CF6 52%,#8B5CF6 100%);color:#fff;border-radius:5px;padding:1px 6px;font-weight:800">혼합</span> <b style="color:var(--ink)">×2</b> = 같은 날 2회 — 체험·심사·국기원·대회연습은 출석 표시만 되고 수련횟수(기준 대비 실제·심사 누적)에는 포함되지 않습니다</span>'+
     '</div>'+
     '<div id="statListArea">'+statListHtml(view)+'</div></div>';
   return x;
@@ -4478,17 +4478,18 @@ function statListHtml(view){
       ? '<div style="display:grid;grid-template-columns:repeat(13,max-content);gap:5px 6px;justify-content:start;align-content:start">'+
           dts.map(function(o){
             var wend=(o.wd==="토"||o.wd==="일");
-            var cBg=wend?'#FFF3E6':'#EAF3FF', cFg=wend?'#C2410C':'var(--blue)', cBd=wend?'#FBD3AE':'#CFE2FA';   /* 카운팅 색 (평일 파랑 / 주말 주황) */
-            var ncBg='#EDE0FF', ncFg='#6D28D9', ncBd='#C4A6F0';   /* 미포함 색 (보라, 진하게) */
+            /* 카운팅=진한 채움색(파랑/주말 주황) · 미포함=진한 채움 보라 → 채움색끼리 확실히 대비 */
+            var cBg=wend?'#EA580C':'#2563EB', cBd=wend?'#C2410C':'#1D4ED8';   /* 카운팅 (평일 파랑 / 주말 주황) */
+            var ncBg='#8B5CF6', ncBd='#6D28D9';                               /* 미포함 (보라) */
             var mult = o.c>=2 ? '<span style="font-size:8.5px;font-weight:900;line-height:1;margin-top:1px;letter-spacing:-.3px">×'+o.c+'</span>' : '';
-            var wrap='display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;border-radius:6px;padding:1px 6px;font-size:11px;font-weight:800;white-space:nowrap;min-width:24px;';
-            if(o.c>0 && o.nc2>0){   /* 혼합: 카운팅+미포함 → 배지를 좌우 반으로 나눠 두 색 */
-              return '<span title="카운팅 '+o.c+'회 + 미포함 '+o.nc2+'회" style="'+wrap+'background:linear-gradient(105deg,'+cBg+' 0%,'+cBg+' 47%,'+ncBg+' 53%,'+ncBg+' 100%);color:#3E2E63;border:1px solid '+ncBd+'"><span>'+o.d+o.wd+'</span>'+mult+'</span>';
+            var wrap='display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:800;white-space:nowrap;min-width:24px;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.25);';
+            if(o.c>0 && o.nc2>0){   /* 혼합: 카운팅+미포함 → 배지를 좌우 반으로 나눠 두 채움색 */
+              return '<span title="카운팅 '+o.c+'회 + 미포함 '+o.nc2+'회" style="'+wrap+'background:linear-gradient(100deg,'+cBg+' 0%,'+cBg+' 48%,'+ncBg+' 52%,'+ncBg+' 100%);border:1px solid '+ncBd+'"><span>'+o.d+o.wd+'</span>'+mult+'</span>';
             }
             if(o.c===0){   /* 미포함만 (체험·심사·국기원·대회연습) */
-              return '<span title="수련횟수 미포함 (체험·심사·국기원·대회연습)" style="'+wrap+'background:'+ncBg+';color:'+ncFg+';border:1px dashed '+ncBd+'"><span>'+o.d+o.wd+'</span></span>';
+              return '<span title="수련횟수 미포함 (체험·심사·국기원·대회연습)" style="'+wrap+'background:'+ncBg+';border:1px dashed #DDD0FA"><span>'+o.d+o.wd+'</span></span>';
             }
-            return '<span'+(o.c>=2?' title="같은 날 '+o.c+'회 수련"':'')+' style="'+wrap+'background:'+cBg+';color:'+cFg+';border:1px solid '+cBd+'"><span>'+o.d+o.wd+'</span>'+mult+'</span>';
+            return '<span'+(o.c>=2?' title="같은 날 '+o.c+'회 수련"':'')+' style="'+wrap+'background:'+cBg+';border:1px solid '+cBd+'"><span>'+o.d+o.wd+'</span>'+mult+'</span>';
           }).join('')+'</div>'
       : '<span style="font-size:11.5px;color:var(--sub)">출석 없음</span>';
     /* 심사 클러스터 (구 심사대상 탭 통합): 누적횟수(클릭=수동수정) · 마지막 심사일 · 상태 배지 · 응심 버튼 */
@@ -5007,6 +5008,20 @@ function kindColor(k){ var f=ATT_KINDS.find(function(x){return x.k===k;}); retur
 var NO_COUNT_KINDS={ "체험":1, "심사":1, "국기원":1, "대회연습":1 };
 function kindCounts(k){ return !NO_COUNT_KINDS[k||"정규"]; }
 var DEMO_BADGE="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20112%22%3E%3Cpolygon%20points%3D%2250%2C3%2092%2C27.5%2092%2C84.5%2050%2C109%208%2C84.5%208%2C27.5%22%20fill%3D%22%23FFFFFF%22%20stroke%3D%22%231A1A1A%22%20stroke-width%3D%226.5%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2244%22%20cy%3D%2219.5%22%20r%3D%224.6%22%20fill%3D%22%23C8342A%22%2F%3E%3Cpath%20d%3D%22M35%2030%20q11-7%2026-3%20q-4%208-16%208%20q-8%200-10-5z%22%20fill%3D%22%231F2E5C%22%2F%3E%3Cpath%20d%3D%22M53%2017%20q9-5%2016%201%20q-3%206-11%205%20q-5-1-5-6z%22%20fill%3D%22%23C8342A%22%2F%3E%3Crect%20x%3D%2217%22%20y%3D%2240%22%20width%3D%2266%22%20height%3D%222.6%22%20fill%3D%22%231A1A1A%22%2F%3E%3Crect%20x%3D%2217%22%20y%3D%2258.5%22%20width%3D%2266%22%20height%3D%222.6%22%20fill%3D%22%231A1A1A%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2254.5%22%20font-family%3D%22Georgia%2Cserif%22%20font-size%3D%2213.5%22%20font-weight%3D%22bold%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%220.5%22%20fill%3D%22%231A1A1A%22%3ENARACHA%3C%2Ftext%3E%3Ctext%20x%3D%2250%22%20y%3D%2268.5%22%20font-family%3D%22Georgia%2Cserif%22%20font-size%3D%227%22%20text-anchor%3D%22middle%22%20fill%3D%22%231A1A1A%22%3ETaekwondo%3C%2Ftext%3E%3Ctext%20x%3D%2250%22%20y%3D%2292%22%20font-family%3D%22sans-serif%22%20font-size%3D%2216%22%20font-weight%3D%22800%22%20text-anchor%3D%22middle%22%20fill%3D%22%231A1A1A%22%3E%EC%8B%9C%EB%B2%94%EB%8B%A8%3C%2Ftext%3E%3C%2Fsvg%3E";   /* 시범단 육각 배지 (투명 배경 SVG) */
+function isDemo(name){ var s=STUDENTS.find(function(x){return x.n===name;}); return !!(s && s.demo); }
+/* 회계 목록: 이름 앞 고정폭 시범단 슬롯 — 비시범단도 같은 폭을 확보해 이름 첫글자가 일렬로 정렬됨 */
+function demoSlot(name, sz){
+  sz = sz || 15; var w = sz+4;
+  var on = isDemo(name) && typeof DEMO_BADGE!=="undefined";
+  return '<span style="display:inline-block;width:'+w+'px;min-width:'+w+'px;flex:0 0 '+w+'px;text-align:center;vertical-align:middle">'+
+    (on?'<img src="'+DEMO_BADGE+'" alt="시범단" title="시범단 — 수련비·용품 등 전 비용 혜택" style="width:'+sz+'px;height:auto;vertical-align:middle;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))">':'')+'</span>';
+}
+/* 인라인 시범단 배지 (검색·선택 표시용) — 시범단일 때만 이름 앞에 붙음 */
+function demoTag(name, sz){
+  sz = sz || 15;
+  if(!(isDemo(name) && typeof DEMO_BADGE!=="undefined")) return '';
+  return '<img src="'+DEMO_BADGE+'" alt="시범단" title="시범단 — 수련비·용품 등 전 비용 혜택" style="width:'+sz+'px;height:auto;vertical-align:middle;margin-right:4px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))">';
+}
 /* ── 장기 결석 판정: 실제 출석 기준 — 4주(28일) 동안 연속으로 출석이 없을 때 · 수동 설정/해제(laManual) 오버라이드 ── */
 var __laCache=null, __laCacheT=0;
 function _laData(){
@@ -8684,7 +8699,7 @@ function render(){
     h+='<div class="card acctSearch"><span class="label" style="color:var(--blue);font-weight:800">1. 원생 찾기</span>';
     if(state.picked){
       h+='<div style="display:flex;justify-content:space-between;align-items:center;background:#fff;border:1.5px solid var(--blue);border-radius:10px;padding:12px 14px">'+
-         '<div><span style="font-size:18px;font-weight:800;color:var(--blue)">'+esc(state.picked.n)+'</span>'+
+         '<div>'+demoTag(state.picked.n,18)+'<span style="font-size:18px;font-weight:800;color:var(--blue)">'+esc(state.picked.n)+'</span>'+
          '<span style="font-size:14px;color:var(--sub);margin-left:8px">'+esc(state.picked.b)+(state.picked.t?' · '+esc(state.picked.t):'')+'</span></div>'+
          '<button onclick="unpick()" style="border:none;background:none;color:var(--sub);font-size:14px;cursor:pointer;text-decoration:underline;font-family:inherit">다시 선택</button></div>';
     } else {
@@ -8762,7 +8777,7 @@ function render(){
       h+='<div class="card" style="margin-top:14px"><span class="label">최근 일주일 입력 '+recentPays.length+'건</span>'+
         '<div style="max-height:400px;overflow-y:auto;border:1px solid var(--line);border-radius:8px">'+
         recentPays.map(function(pm){
-          return '<div class="row" style="border-bottom:1px solid var(--line);padding:10px"><div><b style="color:var(--blue);cursor:pointer;text-decoration:underline" title="클릭하면 브리핑이 열립니다" onclick="showDetail(\''+esc(pm.name).replace(/'/g,"\\'")+'\')">'+esc(pm.name)+'</b> <span style="color:var(--sub);font-size:13px">'+pm.date+' · '+esc(pm.cat)+' · '+esc(pm.method)+(pm.device?' · 💻'+esc(pm.device):'')+'</span>'+
+          return '<div class="row" style="border-bottom:1px solid var(--line);padding:10px"><div>'+demoSlot(pm.name)+'<b style="color:var(--blue);cursor:pointer;text-decoration:underline" title="클릭하면 브리핑이 열립니다" onclick="showDetail(\''+esc(pm.name).replace(/'/g,"\\'")+'\')">'+esc(pm.name)+'</b> <span style="color:var(--sub);font-size:13px">'+pm.date+' · '+esc(pm.cat)+' · '+esc(pm.method)+(pm.device?' · 💻'+esc(pm.device):'')+'</span>'+
             '<div style="font-weight:800">'+won(pm.amount)+(pm.expiry?' <span style="color:var(--blue);font-weight:600;font-size:13px">('+pm.expiry+'까지)</span>':'')+'</div></div>'+
             '<div style="display:flex;gap:6px">'+
             '<button onclick="editPay('+pm.id+')" style="border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit">수정</button>'+
@@ -8801,6 +8816,7 @@ function render(){
            '<span style="flex:1"></span><span style="font-size:12px;color:var(--sub)">'+(state.holdReviewOpen?'▲ 접기':'▼ 펼치기')+'</span></div>'+
            (state.holdReviewOpen? _pend.slice(0,30).map(function(p){
              return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-top:1px dashed #F0D6A8;font-size:12.5px">'+
+               demoSlot(p.n)+
                '<b style="flex:0 0 84px;color:var(--blue);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="납부내역 열기" onclick="showDetail(\''+esc(p.n).replace(/'/g,"\\'")+'\')">'+esc(p.n)+'</b>'+
                '<span style="color:#1D4ED8;font-weight:700;font-variant-numeric:tabular-nums">'+esc(p.from)+' ~ '+(p.open?'미정':esc(p.to))+'</span>'+
                '<span style="background:#FFF3E0;color:#B45309;border-radius:5px;padding:1px 6px;font-size:10.5px;font-weight:800">'+p.days+'일'+(p.open?'+':'')+'</span>'+
@@ -8843,7 +8859,7 @@ function render(){
          '<div style="font-size:13px;color:#92400E;margin-bottom:5px">'+thisYm+' 아직 수련비 청구 안 된 원생입니다</div>'+
          '<div style="max-height:200px;overflow-y:auto;background:#fff;border-radius:6px;padding:8px">'+
          notBilled.map(function(s){
-           return '<div style="padding:4px 6px;border-bottom:1px solid var(--line);font-size:13px;cursor:pointer" onclick="goInputForStudent(\''+s.n.replace(/\'/g,"\\\\'")+'\')"><b>'+esc(s.n)+'</b> <span style="color:var(--sub)">'+esc(s.b||"")+'</span></div>';
+           return '<div style="padding:4px 6px;border-bottom:1px solid var(--line);font-size:13px;cursor:pointer" onclick="goInputForStudent(\''+s.n.replace(/\'/g,"\\\\'")+'\')">'+demoSlot(s.n)+'<b>'+esc(s.n)+'</b> <span style="color:var(--sub)">'+esc(s.b||"")+'</span></div>';
          }).join('')+
          '</div></div>';
     }
@@ -8880,7 +8896,7 @@ function render(){
            overdueList.slice(0,10).map(function(x){
              var days=diffDays(x.oldest,todayStr);
              return '<div class="row" style="cursor:pointer;padding:6px 0;font-size:14px" onclick="showDetail(\''+x.name.replace(/'/g,"\\'")+'\')">'+
-               '<span><b style="color:var(--blue);text-decoration:underline">'+esc(x.name)+'</b> <span style="color:var(--sub);font-size:12px">'+days+'일 경과 · '+x.count+'건</span></span>'+
+               '<span>'+demoSlot(x.name)+'<b style="color:var(--blue);text-decoration:underline">'+esc(x.name)+'</b> <span style="color:var(--sub);font-size:12px">'+days+'일 경과 · '+x.count+'건</span></span>'+
                '<span style="font-weight:800;color:var(--red)">'+won(x.sum)+'</span></div>';
            }).join('')+
            (overdueList.length>10?'<div style="font-size:12px;color:var(--sub);margin-top:6px">...외 '+(overdueList.length-10)+'명 더</div>':'')+
@@ -9065,7 +9081,7 @@ function render(){
           var age=new Date().getFullYear()-Number(stuInfo.by.slice(0,4));
           ageTag=' ('+age+'세)';
         }
-        return '<div class="row" style="padding:8px 0;font-size:14px;cursor:pointer" onclick="showDetail(\''+a.n.replace(/'/g,"\\'")+'\')"><span><b style="color:var(--blue);text-decoration:underline;font-weight:600">'+esc(a.n)+'</b> <span style="color:var(--sub);font-size:12px">'+esc(a.b)+esc(ageTag)+'</span>'+paidTag+recentTag+'</span>'+
+        return '<div class="row" style="padding:8px 0;font-size:14px;cursor:pointer" onclick="showDetail(\''+a.n.replace(/'/g,"\\'")+'\')"><span>'+demoSlot(a.n)+'<b style="color:var(--blue);text-decoration:underline;font-weight:600">'+esc(a.n)+'</b> <span style="color:var(--sub);font-size:12px">'+esc(a.b)+esc(ageTag)+'</span>'+paidTag+recentTag+'</span>'+
           '<span class="pill" style="background:'+a.st.s+';color:'+a.st.c+'">'+(a.e?a.e+' · ':'')+a.st.label+'</span></div>';
       }).join('')+'</div>';
     } else {
@@ -9082,7 +9098,7 @@ function render(){
         closedList.sort(function(a,b){ return (b.info.t||0)-(a.info.t||0); });
         h+=closedList.map(function(x){
           return '<div class="row" style="padding:8px 0;font-size:14px;cursor:pointer" onclick="showDetail(\''+x.n.replace(/'/g,"\\'")+'\')">'+
-            '<span><b style="color:var(--blue);text-decoration:underline">'+esc(x.n)+'</b> <span style="color:var(--sub);font-size:12px">'+esc(x.b)+'</span></span>'+
+            '<span>'+demoSlot(x.n)+'<b style="color:var(--blue);text-decoration:underline">'+esc(x.n)+'</b> <span style="color:var(--sub);font-size:12px">'+esc(x.b)+'</span></span>'+
             '<span style="color:var(--sub);font-size:12px">'+esc(x.info.start||"")+(x.info.reason?' · '+esc(x.info.reason):'')+'</span></div>';
         }).join('');
       }
@@ -9463,7 +9479,7 @@ function render(){
           period=x.latest ? '('+x.latest.s+' ~ '+x.latest.e+')' : '';
         }
         h+='<div class="row" style="padding:8px 0;font-size:14px;cursor:pointer;'+bg+'" onclick="showDetail(\''+x.name.replace(/'/g,"\\'")+'\')">'+
-           '<span><b style="color:var(--blue);text-decoration:underline">'+esc(x.name)+'</b> '+
+           '<span>'+demoSlot(x.name)+'<b style="color:var(--blue);text-decoration:underline">'+esc(x.name)+'</b> '+
            '<span style="color:'+color+';font-size:11px;font-weight:600">'+period+'</span></span>'+
            '<span style="color:var(--sub);font-size:12px">결제 '+x.count+'건 · '+won(x.sum)+'</span></div>';
       });
@@ -9490,7 +9506,7 @@ function render(){
           }
         }
         h+='<div class="row" style="padding:8px 0;font-size:14px;cursor:pointer" onclick="showDetail(\''+r.name.replace(/'/g,"\\'")+'\')">'+
-           '<span><b style="color:var(--blue);text-decoration:underline">'+esc(r.name)+'</b>'+longTag+tag+
+           '<span>'+demoSlot(r.name)+'<b style="color:var(--blue);text-decoration:underline">'+esc(r.name)+'</b>'+longTag+tag+
            ' <span style="color:var(--sub);font-size:12px">'+r.m+'월'+(r.long?' · 장기등록 분할':'')+(r.note?' · '+esc(r.note):'')+(r.device?' · 💻'+esc(r.device):'')+'</span></span>'+
            '<span style="font-weight:800">'+won(r.amount)+' <span style="color:var(--sub);font-weight:500;font-size:12px">'+esc(r.method)+'</span></span></div>';
       });
@@ -9565,6 +9581,7 @@ function render(){
       var isNew=(Date.now()-(r.t||0))<86400000;
       h+='<div style="border-top:1px solid var(--line);padding:10px 0">'+
          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+         demoSlot(r.name)+
          '<b style="flex:0 0 84px;font-size:15px;color:var(--blue);cursor:pointer;text-decoration:underline;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="클릭하면 브리핑이 열립니다" onclick="showDetail(\''+esc(r.name).replace(/'/g,"\\'")+'\')">'+esc(r.name)+'</b>'+
          '<span style="flex:0 0 58px">'+mBadge+'</span>'+
          '<span style="flex:0 0 40px;font-size:12px;color:var(--sub);text-align:center">'+(r.freq?esc(r.freq):'–')+'</span>'+
@@ -9573,7 +9590,7 @@ function render(){
          ((r.coupon==="티셔츠"||r.coupon==="도복")?'<button class="chip" style="color:var(--blue);flex:0 0 auto" onclick="downloadCoupon(\''+r.id+'\')">🎫 쿠폰 저장</button>':'')+
          '<button class="chip" style="color:var(--red);border-color:var(--redSoft);flex:0 0 auto" onclick="deleteLong(\''+r.id+'\')">삭제</button>'+
          '</div>'+
-         '<div style="display:flex;align-items:center;gap:16px;margin-top:6px;flex-wrap:wrap;padding-left:84px">'+
+         '<div style="display:flex;align-items:center;gap:16px;margin-top:6px;flex-wrap:wrap;padding-left:111px">'+
          '<span style="font-size:13px;font-weight:700">쿠폰: '+esc(r.coupon||"")+'</span>'+
          '<label style="font-size:13px;cursor:pointer"><input type="checkbox" '+(r.issued?'checked':'')+' onchange="toggleLongIssued(\''+r.id+'\')"> 발행</label>'+
          '<label style="font-size:13px;cursor:pointer"><input type="checkbox" '+(r.used?'checked':'')+' onchange="toggleLongUsed(\''+r.id+'\')"> 사용완료</label>'+
