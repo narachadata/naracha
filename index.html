@@ -4457,7 +4457,7 @@ function renderStatusTab(){
     /* 선택 인원 (크게) */
     '<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:12px 2px 6px">'+
     '<div id="statCountArea">'+statCountHtml(view.length)+'</div>'+
-    '<span style="font-size:11px;color:var(--sub)">날짜: <span style="background:#2563EB;color:#fff;border-radius:5px;padding:1px 6px;font-weight:800">평일</span> <span style="background:#EA580C;color:#fff;border-radius:5px;padding:1px 6px;font-weight:800">주말</span> <span style="background:#8B5CF6;color:#fff;border:1px dashed #DDD0FA;border-radius:5px;padding:1px 6px;font-weight:800">미포함</span> <span style="background:linear-gradient(100deg,#2563EB 0%,#2563EB 48%,#8B5CF6 52%,#8B5CF6 100%);color:#fff;border-radius:5px;padding:1px 6px;font-weight:800">혼합</span> <b style="color:var(--ink)">×2</b> = 같은 날 2회 — 체험·심사·국기원·대회연습은 출석 표시만 되고 수련횟수(기준 대비 실제·심사 누적)에는 포함되지 않습니다</span>'+
+    '<span style="font-size:11px;color:var(--sub)">날짜: <span style="background:#2563EB;color:#fff;border-radius:5px;padding:1px 6px;font-weight:800">평일</span> <span style="background:#EA580C;color:#fff;border-radius:5px;padding:1px 6px;font-weight:800">주말</span> <span style="background:#FB7185;color:#fff;border:1px dashed #FECACA;border-radius:5px;padding:1px 6px;font-weight:800">미포함</span> <span style="background:linear-gradient(100deg,#2563EB 0%,#2563EB 48%,#FB7185 52%,#FB7185 100%);color:#fff;border-radius:5px;padding:1px 6px;font-weight:800">혼합</span> <b style="color:var(--ink)">×2</b> = 같은 날 2회 — 체험·심사·국기원·대회연습은 출석 표시만 되고 수련횟수(기준 대비 실제·심사 누적)에는 포함되지 않습니다</span>'+
     '</div>'+
     '<div id="statListArea">'+statListHtml(view)+'</div></div>';
   return x;
@@ -4477,19 +4477,20 @@ function statListHtml(view){
     /* 출석 날짜 버튼 (그 달) — 한 줄 10개, 넘으면 이 칸 안에서 줄바꿈 */
     var dts=attendDates(s.n, ym);
     var dateBtns = dts.length
-      ? '<div style="display:grid;grid-template-columns:repeat(13,max-content);gap:5px 6px;justify-content:start;align-content:start">'+
+      ? '<div style="display:grid;grid-template-columns:repeat(13,36px);gap:5px 6px;justify-content:start;align-content:start">'+
           dts.map(function(o){
             var wend=(o.wd==="토"||o.wd==="일");
-            /* 카운팅=진한 채움색(파랑/주말 주황) · 미포함=진한 채움 보라 → 채움색끼리 확실히 대비 */
-            var cBg=wend?'#EA580C':'#2563EB', cBd=wend?'#C2410C':'#1D4ED8';   /* 카운팅 (평일 파랑 / 주말 주황) */
-            var ncBg='#8B5CF6', ncBd='#6D28D9';                               /* 미포함 (보라) */
-            var mult = o.c>=2 ? '<span style="font-size:8.5px;font-weight:900;line-height:1;margin-top:1px;letter-spacing:-.3px">×'+o.c+'</span>' : '';
-            var wrap='display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:800;white-space:nowrap;min-width:24px;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.25);';
-            if(o.c>0 && o.nc2>0){   /* 혼합: 카운팅+미포함 → 배지를 좌우 반으로 나눠 두 채움색 */
+            /* 카운팅=진한 채움색(평일 파랑/주말 주황) · 미포함=붉은 파스텔 → 확실히 대비 */
+            var cBg=wend?'#EA580C':'#2563EB', cBd=wend?'#C2410C':'#1D4ED8';
+            var ncBg='#FB7185', ncBd='#E11D48';                              /* 미포함 (붉은 파스텔) */
+            var mult = o.c>=2 ? '<span style="font-size:8px;font-weight:900;line-height:1;margin-top:1px;letter-spacing:-.3px">×'+o.c+'</span>' : '';
+            /* 모든 배지 동일 크기(가장 큰 ×N 배지 기준 높이)로 통일 → 격자 정렬 · 세로 가운데 */
+            var wrap='display:inline-flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;width:36px;height:33px;line-height:1.05;border-radius:7px;font-size:11px;font-weight:800;white-space:nowrap;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.3);';
+            if(o.c>0 && o.nc2>0){   /* 혼합: 카운팅+미포함 → 좌 파랑/주황 · 우 붉은 파스텔 */
               return '<span title="카운팅 '+o.c+'회 + 미포함 '+o.nc2+'회" style="'+wrap+'background:linear-gradient(100deg,'+cBg+' 0%,'+cBg+' 48%,'+ncBg+' 52%,'+ncBg+' 100%);border:1px solid '+ncBd+'"><span>'+o.d+o.wd+'</span>'+mult+'</span>';
             }
             if(o.c===0){   /* 미포함만 (체험·심사·국기원·대회연습) */
-              return '<span title="수련횟수 미포함 (체험·심사·국기원·대회연습)" style="'+wrap+'background:'+ncBg+';border:1px dashed #DDD0FA"><span>'+o.d+o.wd+'</span></span>';
+              return '<span title="수련횟수 미포함 (체험·심사·국기원·대회연습)" style="'+wrap+'background:'+ncBg+';border:1px dashed #FECACA"><span>'+o.d+o.wd+'</span></span>';
             }
             return '<span'+(o.c>=2?' title="같은 날 '+o.c+'회 수련"':'')+' style="'+wrap+'background:'+cBg+';border:1px solid '+cBd+'"><span>'+o.d+o.wd+'</span>'+mult+'</span>';
           }).join('')+'</div>'
