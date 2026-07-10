@@ -177,6 +177,12 @@
      font-family:inherit;letter-spacing:0;vertical-align:1px;
      background:rgba(0,0,0,.06);color:var(--sub);border:1px solid rgba(0,0,0,.12);box-shadow:0 1px 0 rgba(0,0,0,.08)}
 .kbd.onBlue{background:rgba(255,255,255,.22);color:#fff;border-color:rgba(255,255,255,.35);box-shadow:none}
+/* 시간표 이름검색 일치 칩: 강렬한 노란색 테두리가 스르륵 점멸 */
+@keyframes ttHitPulse{
+  0%,100%{ box-shadow:0 0 0 1.5px rgba(245,158,11,.45), 0 0 4px rgba(245,158,11,.25); }
+  50%{ box-shadow:0 0 0 3.5px #FBBF24, 0 0 16px rgba(245,158,11,.9); }
+}
+.ttHit{ animation:ttHitPulse 1.25s ease-in-out infinite; position:relative; z-index:5; }
 </style>
 </head>
 <body>
@@ -4290,9 +4296,11 @@ function attendCnt(name, ym){
   }
   return c;
 }
-/* 그 달에 출석한 '날짜' 목록 (중복 날짜는 1번) → [{d:일, wd:'수'}] 오름차순 */
+/* 그 달에 출석한 '날짜' 목록 (하루에 여러 번도 집계) → [{d:일, wd:'수', c:카운팅수, nc2:미포함수, nc:미포함만}] 오름차순
+   c  = 그 날 '수련횟수 포함' 출석 수 (2회 이상이면 ×2·×3 표시)
+   nc2= 그 날 '미포함(체험·심사·국기원·대회연습)' 출석 수 (색으로만 구분, ×표시 안 함) */
 function attendDates(name, ym){
-  var set={};   /* 날짜 → true=카운팅 포함, false=미포함(심사·국기원·대회연습만 있던 날) */
+  var map={};   /* 날짜 → {c:포함수, nc:미포함수} */
   for(var wk in state.weeks){
     var w=state.weeks[wk]; if(!w||!w.cells) continue;
     for(var key in w.cells){
@@ -4303,16 +4311,16 @@ function attendDates(name, ym){
         var md=addDays(wk, DAY_IDX[day]||0);
         if(md.slice(0,7)===ym){
           var d=Number(md.slice(8,10));
-          if(kindCounts(mk.k)) set[d]=true;             /* 포함 출석이 하나라도 있으면 포함색 */
-          else if(set[d]===undefined) set[d]=false;
+          if(!map[d]) map[d]={c:0, nc:0};
+          if(kindCounts(mk.k)) map[d].c++; else map[d].nc++;   /* 포함 vs 미포함 각각 누적 */
         }
       }
     }
   }
   var WD="일월화수목금토";
-  return Object.keys(set).map(Number).sort(function(a,b){return a-b;}).map(function(d){
-    var dt=new Date(ym+"-"+p2(d)+"T00:00:00");
-    return { d:d, wd:WD.charAt(dt.getDay()), nc:!set[d] };
+  return Object.keys(map).map(Number).sort(function(a,b){return a-b;}).map(function(d){
+    var dt=new Date(ym+"-"+p2(d)+"T00:00:00"), m=map[d];
+    return { d:d, wd:WD.charAt(dt.getDay()), c:m.c, nc2:m.nc, nc:(m.c===0) };
   });
 }
 /* 그룹(전체/반별/급수별)까지 적용한 기준 목록 — 상태 카운트·추가필터의 바탕 */
@@ -4447,7 +4455,7 @@ function renderStatusTab(){
     /* 선택 인원 (크게) */
     '<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:12px 2px 6px">'+
     '<div id="statCountArea">'+statCountHtml(view.length)+'</div>'+
-    '<span style="font-size:11px;color:var(--sub)">날짜: <span style="background:#EAF3FF;color:var(--blue);border:1px solid #CFE2FA;border-radius:5px;padding:1px 5px;font-weight:800">평일</span> <span style="background:#FFF3E6;color:#C2410C;border:1px solid #FBD3AE;border-radius:5px;padding:1px 5px;font-weight:800">주말</span> <span style="background:#F3E8FF;color:#7C3AED;border:1px dashed #D8B4FE;border-radius:5px;padding:1px 5px;font-weight:800">미포함</span> — 체험·심사·국기원·대회연습은 출석 표시만 되고 수련횟수(기준 대비 실제·심사 누적)에는 포함되지 않습니다</span>'+
+    '<span style="font-size:11px;color:var(--sub)">날짜: <span style="background:#EAF3FF;color:var(--blue);border:1px solid #CFE2FA;border-radius:5px;padding:1px 5px;font-weight:800">평일</span> <span style="background:#FFF3E6;color:#C2410C;border:1px solid #FBD3AE;border-radius:5px;padding:1px 5px;font-weight:800">주말</span> <span style="background:#EDE0FF;color:#6D28D9;border:1px dashed #C4A6F0;border-radius:5px;padding:1px 5px;font-weight:800">미포함</span> <span style="background:linear-gradient(105deg,#EAF3FF 0%,#EAF3FF 47%,#EDE0FF 53%,#EDE0FF 100%);color:#3E2E63;border:1px solid #C4A6F0;border-radius:5px;padding:1px 5px;font-weight:800">혼합</span> <b style="color:var(--ink)">×2</b> = 같은 날 2회 — 체험·심사·국기원·대회연습은 출석 표시만 되고 수련횟수(기준 대비 실제·심사 누적)에는 포함되지 않습니다</span>'+
     '</div>'+
     '<div id="statListArea">'+statListHtml(view)+'</div></div>';
   return x;
@@ -4469,11 +4477,18 @@ function statListHtml(view){
     var dateBtns = dts.length
       ? '<div style="display:grid;grid-template-columns:repeat(13,max-content);gap:5px 6px;justify-content:start;align-content:start">'+
           dts.map(function(o){
-            if(o.nc){   /* 수련횟수 미포함(심사·국기원·대회연습) — 보라색으로 구분 */
-              return '<span title="수련횟수 미포함 (체험·심사·국기원·대회연습)" style="display:inline-flex;align-items:center;justify-content:center;background:#F3E8FF;color:#7C3AED;border:1px dashed #D8B4FE;border-radius:6px;padding:2px 6px;font-size:11px;font-weight:800;white-space:nowrap">'+o.d+o.wd+'</span>';
-            }
             var wend=(o.wd==="토"||o.wd==="일");
-            return '<span style="display:inline-flex;align-items:center;justify-content:center;background:'+(wend?'#FFF3E6':'#EAF3FF')+';color:'+(wend?'#C2410C':'var(--blue)')+';border:1px solid '+(wend?'#FBD3AE':'#CFE2FA')+';border-radius:6px;padding:2px 6px;font-size:11px;font-weight:800;white-space:nowrap">'+o.d+o.wd+'</span>';
+            var cBg=wend?'#FFF3E6':'#EAF3FF', cFg=wend?'#C2410C':'var(--blue)', cBd=wend?'#FBD3AE':'#CFE2FA';   /* 카운팅 색 (평일 파랑 / 주말 주황) */
+            var ncBg='#EDE0FF', ncFg='#6D28D9', ncBd='#C4A6F0';   /* 미포함 색 (보라, 진하게) */
+            var mult = o.c>=2 ? '<span style="font-size:8.5px;font-weight:900;line-height:1;margin-top:1px;letter-spacing:-.3px">×'+o.c+'</span>' : '';
+            var wrap='display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;border-radius:6px;padding:1px 6px;font-size:11px;font-weight:800;white-space:nowrap;min-width:24px;';
+            if(o.c>0 && o.nc2>0){   /* 혼합: 카운팅+미포함 → 배지를 좌우 반으로 나눠 두 색 */
+              return '<span title="카운팅 '+o.c+'회 + 미포함 '+o.nc2+'회" style="'+wrap+'background:linear-gradient(105deg,'+cBg+' 0%,'+cBg+' 47%,'+ncBg+' 53%,'+ncBg+' 100%);color:#3E2E63;border:1px solid '+ncBd+'"><span>'+o.d+o.wd+'</span>'+mult+'</span>';
+            }
+            if(o.c===0){   /* 미포함만 (체험·심사·국기원·대회연습) */
+              return '<span title="수련횟수 미포함 (체험·심사·국기원·대회연습)" style="'+wrap+'background:'+ncBg+';color:'+ncFg+';border:1px dashed '+ncBd+'"><span>'+o.d+o.wd+'</span></span>';
+            }
+            return '<span'+(o.c>=2?' title="같은 날 '+o.c+'회 수련"':'')+' style="'+wrap+'background:'+cBg+';color:'+cFg+';border:1px solid '+cBd+'"><span>'+o.d+o.wd+'</span>'+mult+'</span>';
           }).join('')+'</div>'
       : '<span style="font-size:11.5px;color:var(--sub)">출석 없음</span>';
     /* 심사 클러스터 (구 심사대상 탭 통합): 누적횟수(클릭=수동수정) · 마지막 심사일 · 상태 배지 · 응심 버튼 */
@@ -5222,7 +5237,7 @@ function chipHtml(name, key, wk){
   if(kind==="보강") fg="#083A55";
   var base='display:flex;align-items:center;justify-content:center;gap:2px;padding:3px 5px;border-radius:5px;font-size:12px;cursor:pointer;min-width:0;font-weight:700;';
   var __q=(state.tsQ||"").trim();
-  if(__q.length>=2 && name.indexOf(__q)>-1){ base+='box-shadow:0 0 0 2.5px #F59E0B, 0 0 10px rgba(245,158,11,.55);'; }
+  var hitCls = (__q.length>=2 && name.indexOf(__q)>-1) ? ' ttHit' : '';
   var style;
   if(done){
     style=base+'background:'+col+';color:'+fg+';border:1px solid rgba(0,0,0,.14);';
@@ -5236,8 +5251,9 @@ function chipHtml(name, key, wk){
     style=base+'background-color:#F3F4F6;background-image:linear-gradient(#9AA1AA,#9AA1AA);background-size:88% 2px;background-position:center;background-repeat:no-repeat;color:#8A8F98;border:1px dashed #C4C9D0;border-left:6px solid #C4C9D0;';
     mk = Object.assign({}, mk, { m:(ab.reason?ab.reason+' · ':'')+(ab.open?'결석예정 '+ab.from+'~미정':'결석예정 '+ab.from+'~'+ab.to) });
   }
-  var tip = mk.m ? ' class="hasTip" data-tip="'+esc(mk.m)+'"' : '';
-  return '<span draggable="true" ondragstart="dragChip(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" style="'+style+'"'+tip+' onpointerdown="chipDown(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" onpointerup="chipUp(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" onpointerleave="chipCancelLP()" oncontextmenu="event.preventDefault()">'+
+  var clsAttr = ' class="'+(mk.m?'hasTip':'')+hitCls+'"';
+  var tip = mk.m ? ' data-tip="'+esc(mk.m)+'"' : '';
+  return '<span draggable="true" ondragstart="dragChip(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" style="'+style+'"'+clsAttr+tip+' onpointerdown="chipDown(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" onpointerup="chipUp(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" onpointerleave="chipCancelLP()" oncontextmenu="event.preventDefault()">'+
     '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;letter-spacing:-0.3px'+(name.length>=5?';font-size:9px':'')+'">'+esc(name)+'</span>'+(kind==="심사"?"📋":"")+(mk.m?"📝":"")+
     ((s&&isBdayDate(s, addDays(wk, DAY_IDX[key.split("-")[0]]||0)))?"🎂":"")+
 
