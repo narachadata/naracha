@@ -6604,7 +6604,7 @@ function renderStuChart(m){
         '<div style="position:relative;flex-shrink:0"><div style="width:72px;height:72px;border-radius:14px;overflow:hidden;background:'+(m.photo?'rgba(255,255,255,.15)':genderBg(m.g))+';display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.25)">'+
           (m.photo ? '<img src="'+m.photo+'" style="width:100%;height:100%;object-fit:cover">' : genderIcon(m.g, 40))+
         '</div>'+
-        (m.demo && typeof DEMO_BADGE!=="undefined" ? '<img src="'+DEMO_BADGE+'" alt="시범단" style="position:absolute;right:-7px;bottom:-6px;width:42px;height:auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));pointer-events:none">' : '')+
+        (m.demo && typeof DEMO_BADGE!=="undefined" ? '<img src="'+DEMO_BADGE+'" alt="시범단" style="position:absolute;right:-6px;bottom:-5px;width:38px;height:auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));pointer-events:none">' : '')+
         '</div>'+
         '<div style="flex:1;min-width:0">'+
           '<div style="font-size:23px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1.1;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(m.n||"")+(typeof longAbsBadge==="function"?longAbsBadge(m.n):'')+'</div>'+
@@ -7528,7 +7528,7 @@ function avatarHtml(name, gender, size, radius, photo){
   var ph = (photo!==undefined) ? photo : getPhoto(name);
   var stu = STUDENTS.find(function(x){return x.n===name;});
   var badge = (stu && stu.demo && typeof DEMO_BADGE!=="undefined")
-    ? '<img src="'+DEMO_BADGE+'" alt="시범단" style="position:absolute;right:-'+Math.round(size*0.10)+'px;bottom:-'+Math.round(size*0.08)+'px;width:'+Math.round(size*0.58)+'px;height:auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));pointer-events:none">'
+    ? '<img src="'+DEMO_BADGE+'" alt="시범단" style="position:absolute;right:-'+Math.round(size*0.09)+'px;bottom:-'+Math.round(size*0.07)+'px;width:'+Math.round(size*0.52)+'px;height:auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));pointer-events:none">'
     : '';
   var inner = ph
     ? '<div style="width:100%;height:100%;border-radius:'+radius+';overflow:hidden;background:#EDEDF0"><img src="'+ph+'" style="width:100%;height:100%;object-fit:cover"></div>'
