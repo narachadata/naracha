@@ -2361,7 +2361,7 @@ function analyzeHonorific(){
 }
 /* 이름을 쓰는 모든 데이터의 키/필드를 새 이름으로 이동 */
 function _moveNameKeys(oldN, newN, overwrite){
-  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences','laManual','contactLog'].forEach(function(mk){
+  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences','laManual','contactLog','dunLog'].forEach(function(mk){
     var m=state[mk]; if(m && m[oldN]!==undefined){ if(overwrite || m[newN]===undefined) m[newN]=m[oldN]; delete m[oldN]; }
   });
   if(state.refCntMap){ for(var k in state.refCntMap){ if(k.indexOf(oldN+"|")===0){ var nk=newN+k.slice(oldN.length); if(overwrite||state.refCntMap[nk]===undefined) state.refCntMap[nk]=state.refCntMap[k]; delete state.refCntMap[k]; } } }
@@ -2399,7 +2399,7 @@ function mergeDupInto(dupN, baseN){
     if(state.quitMap && state.quitMap[baseN] && !state.quitMap[baseN].del) state.quitMap[baseN]={del:true,t:Date.now()};
   }
   /* dup의 잔여 키 제거 */
-  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences','laManual','contactLog'].forEach(function(mk){ if(state[mk]) delete state[mk][dupN]; });
+  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences','laManual','contactLog','dunLog'].forEach(function(mk){ if(state[mk]) delete state[mk][dupN]; });
   /* 대표(base) 학적 정보 보강: 대표에 비어있는 값은 dup에서 채우고, 보호자·대회이력은 합쳐 보존 */
   var _b=null,_d=null;
   for(var bi=0;bi<STUDENTS.length;bi++){ if(STUDENTS[bi].n===baseN)_b=STUDENTS[bi]; if(STUDENTS[bi].n===dupN)_d=STUDENTS[bi]; }
@@ -5666,6 +5666,27 @@ window.markContacted=function(name){
   state.contactLog[name]={ d:today(), t:Date.now() };
   persistAtt(); render();
 };
+/* ── 미납 독촉 문구 복사 & 독촉 이력 (수납 관리) — 출석 연락 이력과 별개 ── */
+function _guardianTel(name){
+  var s=STUDENTS.find(function(x){return x.n===name;}); var tel="";
+  if(s){ if(s.gd&&s.gd.length){ var g=s.gd.find(function(x){return (x.p||"").trim();}); if(g) tel=g.p; } if(!tel&&s.sp) tel=s.sp; }
+  return tel;
+}
+window.copyDunMsg=function(name, amount){
+  var tel=_guardianTel(name);
+  var amtTx=(amount&&amount>0)?" (미납 "+won(amount)+")":"";
+  var msg="[나라차태권도] 안녕하세요, "+name+" 학부모님 🙂\n"+name+" 수련비"+amtTx+" 납부가 아직 확인되지 않아 안내드립니다. 확인 후 납부 부탁드리며, 이미 보내주셨다면 알려주시면 바로 처리하겠습니다. 감사합니다!";
+  try{
+    var ta=document.createElement("textarea"); ta.value=msg; ta.style.cssText="position:fixed;left:-9999px";
+    document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+    toast("📋 독촉 문구 복사 완료"+(tel?" · "+tel:" · 연락처 미등록"));
+  }catch(e){ prompt("아래 문구를 복사해 사용하세요:", msg); }
+};
+window.markDunned=function(name){
+  if(!state.dunLog) state.dunLog={};
+  state.dunLog[name]={ d:today(), t:Date.now() };
+  persistAtt(); render();
+};
 
 /* 길게 누르면(0.5초) 설정 창, 짧게 누르면 순환 출석 */
 function toast(msg){
@@ -5757,7 +5778,7 @@ function dateOfKey(key, wk){
   var idx={mon:0,tue:1,wed:2,thu:3,fri:4,sat:5}[key.split("-")[0]];
   return addDays(wk, idx);
 }
-window.openAbsM=function(){ state.absM={ q:"", pick:"", from:today(), to:"", reason:"", editHid:null }; state.absDone=null; render(); };
+window.openAbsM=function(prefill){ state.absM={ q:prefill||"", pick:prefill||"", from:today(), to:"", reason:"", editHid:null }; state.absDone=null; render(); };
 window.setAbsSort=function(s){ state.absSort=s; render(); };
 window.closeAbsM=function(){ state.absM=null; state.absDone=null; render(); };
 window.absQ=function(v){
@@ -7169,6 +7190,7 @@ function attState(){
   return { attV:1, schemaVer:SCHEMA_VER,
     absences: state.absences || {},
     contactLog: state.contactLog || {},
+    dunLog: state.dunLog || {},   /* 미납 독촉 이력 */
     laManual: state.laManual || {},
     roster:{ list:STUDENTS, t:state.rosterT||0 },
     schedule: state.schedule || null,
@@ -7381,6 +7403,7 @@ function mergeAtt(a, b){
     return { meta:meta, students:out, t:Math.max(x.t||0, y.t||0) };
   }
   var _cl={}; [a.contactLog||{}, b.contactLog||{}].forEach(function(src){ for(var _k in src){ if(!_cl[_k]||(src[_k].t||0)>(_cl[_k].t||0)) _cl[_k]=src[_k]; } });
+  var _dl={}; [a.dunLog||{}, b.dunLog||{}].forEach(function(src){ for(var _kd in src){ if(!_dl[_kd]||(src[_kd].t||0)>(_dl[_kd].t||0)) _dl[_kd]=src[_kd]; } });
   var _lm={}; [a.laManual||{}, b.laManual||{}].forEach(function(src){ for(var _k2 in src){ if(!_lm[_k2]||(src[_k2].t||0)>(_lm[_k2].t||0)) _lm[_k2]=src[_k2]; } });
   /* 삭제 묘비: 이름별 최신 시각 union */
   var _ds={}; [a.deletedStudents||{}, b.deletedStudents||{}].forEach(function(src){ for(var _d in src){ if(!_ds[_d]||src[_d]>_ds[_d]) _ds[_d]=src[_d]; } });
@@ -7390,7 +7413,7 @@ function mergeAtt(a, b){
       if(!_rl[_r].some(function(x){ return ((x.closed&&x.closed.start||"")+"|"+(x.reopenDate||""))===sig; })) _rl[_r].push(lg); }); } });
   /* 마지막 심사일: 이름별로 더 나중 날짜가 이김 (통-블롭이면 동시 갱신 유실) */
   var _lx={}; [ (a.lastExam||{}).map||{}, (b.lastExam||{}).map||{} ].forEach(function(src){ for(var _e in src){ if(!_lx[_e]||src[_e]>_lx[_e]) _lx[_e]=src[_e]; } });
-  return { absences:abs, contactLog:_cl, laManual:_lm, attV:1, roster:roster, schedule:schedule, tempStudents:temps, weeks:weeks,
+  return { absences:abs, contactLog:_cl, dunLog:_dl, laManual:_lm, attV:1, roster:roster, schedule:schedule, tempStudents:temps, weeks:weeks,
            deletedStudents:_ds, reopenLog:_rl,
            rosterFileV:Math.max(a.rosterFileV||0, b.rosterFileV||0),
            quitMapAtt:mergeStamped(a.quitMapAtt,b.quitMapAtt), closedMapAtt:mergeStamped(a.closedMapAtt,b.closedMapAtt),
@@ -7411,6 +7434,7 @@ function applyAtt(m){
   if(m.rosterFileV) state.rosterFileV = Math.max(state.rosterFileV||0, m.rosterFileV);   /* 시드 명단 재적용 방지 */
   if(m.absences) state.absences = m.absences;
   if(m.contactLog) state.contactLog = m.contactLog;
+  if(m.dunLog) state.dunLog = m.dunLog;
   if(m.laManual) state.laManual = m.laManual;
   if(m.roster && m.roster.list && m.roster.list.length && (m.roster.t||0)>=(state.rosterT||0)){
     STUDENTS = m.roster.list;
@@ -8961,6 +8985,17 @@ function render(){
       _pend.sort(function(a,b){ return b.days-a.days; });
     }
 
+    /* ③-b 장기결석인데 결석예정 미등록: 4주+ 무출석 자동감지됐지만 결석예정(홀딩)이 없어 검토 흐름에 안 잡힌 원생 → 등록 유도 */
+    var _laNoAbs=[];
+    if(typeof isLongAbsent==="function"){
+      STUDENTS.forEach(function(s){
+        if(state.closedMap[s.n]||isQuit(s.n)) return;
+        if(!isLongAbsent(s.n)) return;
+        if(liveHolds(s.n).length) return;   /* 이미 결석예정 등록된 원생은 제외(홀딩 검토로 감) */
+        _laNoAbs.push(s.n);
+      });
+    }
+
     /* ④ 만료·임박 (만료 지남 + 이번달 만료) — urgent는 상단에서 계산됨 */
 
     /* ── 오늘의 수납 할 일: KPI 카드 4장 (클릭=아래 상세/필터) ── */
@@ -8986,15 +9021,48 @@ function render(){
         '📅','만료·임박', urgent.length?urgent.length+'명':'', urgent.length?'만료 지남·이번달 만료 · 클릭=임박순 정렬':'','gray')+
       '</div>';
 
-    /* KPI 상세 ①: 미납 명단 */
+    /* ── 장기결석인데 결석예정 미등록: 등록 유도 (실수 방지) ── */
+    if(_laNoAbs.length){
+      h+='<div class="card" style="border:1.5px solid #F0C36D;background:#FFFBF2;margin-bottom:10px">'+
+         '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;cursor:pointer" onclick="state.laNoAbsOpen=!state.laNoAbsOpen;render()">'+
+         '<b style="font-size:13.5px;color:#B45309">🗓 장기결석 · 결석예정 미등록 '+_laNoAbs.length+'명</b>'+
+         '<span style="font-size:11.5px;color:var(--sub)">4주 이상 무출석인데 결석예정이 없습니다 — 등록하면 홀딩(등록 연장) 검토로 이어집니다</span>'+
+         '<span style="flex:1"></span><span style="font-size:12px;color:var(--sub)">'+(state.laNoAbsOpen?'▲ 접기':'▼ 펼치기')+'</span></div>'+
+         (state.laNoAbsOpen? _laNoAbs.slice(0,20).map(function(nm){
+           var eN=nm.replace(/'/g,"\\'");
+           return '<div style="display:grid;grid-template-columns:24px 150px 1fr 160px;gap:0 10px;align-items:center;padding:6px 0;border-top:1px dashed #F0D6A8;font-size:13px">'+
+             demoSlot(nm)+
+             '<b style="color:var(--blue);text-decoration:underline;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="showDetail(\''+eN+'\')">'+esc(nm)+'</b>'+
+             '<span style="color:var(--sub);font-size:12px">🚫 4주 이상 무출석</span>'+
+             '<button class="chip sm" style="justify-self:end;padding:3px 11px;font-size:11.5px;color:var(--blue);border-color:var(--blue)" onclick="openAbsM(\''+eN+'\')">🗓 결석예정 등록</button>'+
+             '</div>';
+         }).join('')+(_laNoAbs.length>20?'<div style="font-size:11px;color:var(--sub);margin-top:6px">외 '+(_laNoAbs.length-20)+'명</div>':'') : '')+
+         '</div>';
+    }
+
+    /* KPI 상세 ①: 미납 명단 (+ 독촉 문구 복사·독촉 이력) */
     if(state.overdueOpen && overdueList.length){
+      var _dun=state.dunLog||{};
+      var DGRID='display:grid;grid-template-columns:22px 110px 120px 130px 180px 1fr 120px;gap:0 10px;align-items:center';
       h+='<div class="card" style="border:1.5px solid var(--red);background:#FFF6F6">'+
-         '<div style="font-size:13.5px;font-weight:900;color:var(--red);margin-bottom:4px">⚠ 미납 10일 경과 '+overdueList.length+'명 · 합계 '+won(overdueSum)+'</div>'+
+         '<div style="font-size:13.5px;font-weight:900;color:var(--red);margin-bottom:6px">⚠ 미납 10일 경과 '+overdueList.length+'명 · 합계 '+won(overdueSum)+'</div>'+
+         '<div style="'+DGRID+';padding:4px 0 5px;border-bottom:1px solid #F3C8C8;font-size:10.5px;font-weight:800;color:var(--sub)"><span></span><span>이름</span><span>경과</span><span>독촉 이력</span><span>안내</span><span></span><span style="text-align:right">미납액</span></div>'+
          overdueList.slice(0,15).map(function(x){
            var days=diffDays(x.oldest,todayStr);
-           return '<div style="display:grid;grid-template-columns:22px 150px 130px 1fr 130px;gap:0 10px;align-items:center;cursor:pointer;padding:6px 0;font-size:13.5px;border-top:1px dashed #F3C8C8" onclick="showDetail(\''+x.name.replace(/'/g,"\\'")+'\')">'+
-             demoSlot(x.name)+'<b style="color:var(--blue);text-decoration:underline">'+esc(x.name)+'</b>'+
-             '<span style="color:var(--sub);font-size:12px">'+days+'일 경과 · '+x.count+'건</span><span></span>'+
+           var eN=x.name.replace(/'/g,"\\'");
+           var d=_dun[x.name];
+           var dunTx = d ? '<span style="font-size:11px;font-weight:700;color:var(--green)">'+esc(d.d.slice(5))+' 독촉함</span>'
+                         : '<span style="font-size:11px;color:#B45309;font-weight:700">미독촉</span>';
+           return '<div style="'+DGRID+';padding:7px 0;font-size:13.5px;border-top:1px dashed #F3C8C8">'+
+             demoSlot(x.name)+
+             '<b style="color:var(--blue);text-decoration:underline;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="showDetail(\''+eN+'\')">'+esc(x.name)+'</b>'+
+             '<span style="color:var(--sub);font-size:12px">'+days+'일 · '+x.count+'건</span>'+
+             dunTx+
+             '<span style="display:flex;gap:5px">'+
+               '<button class="chip sm" style="padding:2px 8px;font-size:11px;color:var(--blue)" onclick="copyDunMsg(\''+eN+'\','+x.sum+')">📋 문구</button>'+
+               '<button class="chip sm" style="padding:2px 8px;font-size:11px;color:var(--green);border-color:#9BD9B4" onclick="markDunned(\''+eN+'\')">독촉함 ✓</button>'+
+             '</span>'+
+             '<span></span>'+
              '<span style="font-weight:800;color:var(--red);text-align:right;font-variant-numeric:tabular-nums">'+won(x.sum)+'</span></div>';
          }).join('')+
          (overdueList.length>15?'<div style="font-size:12px;color:var(--sub);margin-top:6px">...외 '+(overdueList.length-15)+'명 더</div>':'')+
