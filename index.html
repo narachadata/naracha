@@ -5202,7 +5202,17 @@ function tsMoveTo(toKey, toLi){
   dropChip({ preventDefault:function(){}, stopPropagation:function(){} }, toKey, toLi);
 }
 /* 이름 클릭 = 미정→출석→결석→미정 순환 (누적 규칙은 저장 창과 동일) */
+/* 홀딩 가드: 해당 날짜에 홀딩 중인 수련생이면 출결 처리 차단 (먼저 홀딩 해제 후 처리) */
+function heldGuard(key, name){
+  var ab=absOf(name, dateOfKey(key, curWeek()));
+  if(ab){
+    toast(name+" 님은 홀딩 중입니다 ("+(ab.reason?ab.reason+' · ':'')+(ab.open?'~미정':'~'+ab.to)+"). 출결을 처리하려면 먼저 홀딩을 해제하세요. [🤕 홀딩] 버튼에서 해제할 수 있습니다.");
+    return true;
+  }
+  return false;
+}
 window.cycleAttend=function(key, name){
+  if(heldGuard(key, name)) return;
   var c=wcell(key);
   var prev=c.marks[name]||{};
   var order={ "":"출석", "출석":"결석", "결석":"" };
@@ -5498,6 +5508,7 @@ window.addName=function(){
 
 /* 출석 처리 창 */
 window.openMark=function(key, name){
+  if(heldGuard(key, name)) return;
   var c=wcell(key), mk=c.marks[name]||{};
   var s=STUDENTS.find(function(x){return x.n===name;});
   var __sa=(((state.sigA||{})[curWeek()]||{})[name]||{}).a||"";
