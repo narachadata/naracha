@@ -168,6 +168,9 @@
   content:""; position:absolute; bottom:calc(100% + 1px); left:50%; transform:translateX(-50%);
   border:6px solid transparent; border-top-color:#1D1D1F; pointer-events:none; z-index:60;
 }
+/* 화면 끝 요일에서 툴팁 잘림 방지: 오른쪽 칼럼(금·토)은 오른끝 정렬, 첫 칼럼(월)은 왼끝 정렬 */
+.dayCol-fri .hasTip:hover::after, .dayCol-sat .hasTip:hover::after { left:auto; right:0; transform:none; }
+.dayCol-mon .hasTip:hover::after { left:0; right:auto; transform:none; }
 
 /* 단축키 배지 */
 .kbd{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:5px;font-size:10px;font-weight:700;
@@ -2107,6 +2110,14 @@ function applyHold(name, from, to, open, reason){ return addHold(name, from, to,
 /* 기존 데이터(옛 명단 홀딩)를 시간표에도 보이도록 1회 동기화 — 로드/병합 후 호출, 여러 번 불려도 안전 */
 function migrateHolds(){
   if(!state.absences) state.absences={};
+  /* ⓪ [복구] 출처 표식(src) 없는 옛 홀딩건 전부 → src:"hold" 승격
+     (absences 창고는 원래 홀딩 전용이므로 안전. 표식이 없어 목록에서 숨겨졌던 기존 홀딩을 되살림) */
+  Object.keys(state.absences).forEach(function(nm){
+    (state.absences[nm]||[]).forEach(function(e){
+      if(!e.src) e.src="hold";
+      if(e.src==="hold" && !e.hid) e.hid=_newHid();   /* 개별 수정·삭제용 고유번호 */
+    });
+  });
   /* ① 기존 holdMap만 있고 absences에 없는 옛 명단 홀딩 → absences로 편입 */
   var hm=state.holdMap||{};
   Object.keys(hm).forEach(function(nm){
@@ -2117,10 +2128,13 @@ function migrateHolds(){
     if(!state.absences[nm]) state.absences[nm]=[];
     state.absences[nm].push({ hid:_newHid(), from:h.start, to:to, open:open, reason:h.reason||"", src:"hold", t:h.t||Date.now() });
   });
-  /* ② hid 없는 옛 홀딩건에 hid 부여 (개별 수정·삭제 가능하도록) */
-  var touched={};
+  /* ② 같은 시작일 중복 정리 (클라우드 병합 규칙과 동일: 시작일 같으면 최신 것만) */
   Object.keys(state.absences).forEach(function(nm){
-    (state.absences[nm]||[]).forEach(function(e){ if(e.src==="hold" && !e.hid){ e.hid=_newHid(); touched[nm]=1; } });
+    var seen={};
+    liveHolds(nm).slice().sort(function(a,b){ return (b.t||0)-(a.t||0); }).forEach(function(e){
+      if(seen[e.from]){ e.del=true; e.t=Date.now(); }
+      else seen[e.from]=1;
+    });
   });
   /* ③ 대표 holdMap 재계산 (다건 합산 반영) */
   Object.keys(state.absences).forEach(function(nm){ if(liveHolds(nm).length) recomputeHoldMap(nm); });
@@ -5078,7 +5092,7 @@ function renderWeekTab(){
     var day=D[0], dayNm=D[1], date=addDays(wk,D[2]);
     var wmemo=(weekData().memo||{})[day]||"";
     var isOff=!!((weekData().off||{})[day]);
-    x+='<div style="'+(state.dayView?'flex:0 1 800px;max-width:800px;margin:0 auto;min-width:320px':(state.fitW?'flex:1;min-width:0':'flex:1;min-width:280px'))+';background:'+(isOff?'#FFF0F0':'var(--card)')+';border:'+(isOff?'2px solid var(--red)':'1px solid var(--line)')+';border-radius:12px;display:flex;flex-direction:column">'+
+    x+='<div class="dayCol dayCol-'+day+'" style="'+(state.dayView?'flex:0 1 800px;max-width:800px;margin:0 auto;min-width:320px':(state.fitW?'flex:1;min-width:0':'flex:1;min-width:280px'))+';background:'+(isOff?'#FFF0F0':'var(--card)')+';border:'+(isOff?'2px solid var(--red)':'1px solid var(--line)')+';border-radius:12px;display:flex;flex-direction:column">'+
        (function(){ var isToday=(date===today());
          return '<div style="position:sticky;top:0;z-index:6;border-radius:12px 12px 0 0;padding:7px 10px;border-bottom:2px solid var(--red);font-weight:900;font-size:15px;display:flex;justify-content:space-between;align-items:center;background:'+(isOff?'var(--red)':(isToday?'var(--redSoft)':'#fff'))+(isOff?';color:#fff':'')+'"><span>'+dayNm+
            (isOff?' <span style="font-size:10px;background:#fff;color:var(--red);border-radius:6px;padding:1px 6px;vertical-align:1px;font-weight:900">휴관</span>':(isToday?' <span style="font-size:10px;background:var(--red);color:#fff;border-radius:6px;padding:1px 6px;vertical-align:1px">오늘</span>':''))+
@@ -7029,6 +7043,7 @@ function applyAtt(m){
   }
   pruneClosedByReopen();   /* 복관이 더 나중이면 그 휴관은 끝난 것 — 출석·회계 창고 병합 규칙 통일(재원수 깜빡임 방지) */
   syncStFromMaps();   /* 병합된 상태를 명단 꼬리표에 반영 */
+  if(typeof migrateHolds==="function") migrateHolds();   /* 다른 기기의 옛 형식 홀딩도 즉시 복구·정규화 */
 }
 function parseCloudRows(rows){
   if(!rows || rows.length<2 || rows.error) return null;
@@ -7757,16 +7772,18 @@ function render(){
       /* 등록/수정 폼 */
       '<div style="border:1.5px solid '+(am.editHid?'#F5D9A8':'#D6E2F5')+';background:'+(am.editHid?'#FFFBF3':'#F4F9FF')+';border-radius:10px;padding:12px;margin-top:10px">'+
         '<div style="font-size:12.5px;font-weight:800;color:'+(am.editHid?'#B45309':'var(--blue)')+';margin-bottom:8px">'+(am.editHid?'✏️ 홀딩 수정 중':'＋ 새 홀딩 등록')+(picked?' — '+esc(picked):'')+'</div>'+
-        '<div style="display:flex;gap:8px">'+
-          '<div style="flex:1"><span class="label" style="font-size:12px">시작일</span><input type="date" class="input" value="'+esc(am.from||"")+'" onchange="absF(\'from\',this.value)"></div>'+
-          '<div style="flex:1"><span class="label" style="font-size:12px">종료일 <span style="color:var(--sub);font-weight:400">(선택)</span></span><input type="date" class="input" value="'+esc(am.to||"")+'" onchange="absF(\'to\',this.value)"></div>'+
+        '<div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">'+
+          '<div style="flex:1;min-width:118px"><span class="label" style="font-size:11.5px">시작일</span><input type="date" class="input" style="padding:7px 9px;font-size:13px;border-radius:8px" value="'+esc(am.from||"")+'" onchange="absF(\'from\',this.value)"></div>'+
+          '<div style="flex:1;min-width:118px"><span class="label" style="font-size:11.5px">종료일 <span style="color:var(--sub);font-weight:400">(선택)</span></span><input type="date" class="input" style="padding:7px 9px;font-size:13px;border-radius:8px" value="'+esc(am.to||"")+'" onchange="absF(\'to\',this.value)"></div>'+
         '</div>'+
         '<div style="font-size:11px;color:var(--sub);margin-top:3px">종료일을 비우면 <b>기간 미정</b> 홀딩</div>'+
-        '<span class="label" style="font-size:12px;margin-top:8px;display:block">사유 (선택)</span>'+
-        '<input class="input" value="'+esc(am.reason||"")+'" placeholder="예: 발 깁스 · 해외여행" oninput="absF(\'reason\',this.value)">'+
-        '<div style="display:flex;gap:8px;margin-top:12px">'+
-          (am.editHid? '<button class="big" style="flex:1;background:#eee;color:#333" onclick="absNewMode()">새 홀딩으로</button>':'')+
-          '<button class="big" style="flex:1.5" onclick="saveAbs()">'+(am.editHid?'수정 저장':'＋ 홀딩 추가')+'</button>'+
+        '<div style="display:flex;gap:8px;align-items:flex-end;margin-top:8px">'+
+          '<div style="flex:1"><span class="label" style="font-size:11.5px">사유 (선택)</span>'+
+          '<input class="input" style="padding:7px 10px;font-size:13px;border-radius:8px" value="'+esc(am.reason||"")+'" placeholder="예: 발 깁스 · 해외여행" oninput="absF(\'reason\',this.value)"></div>'+
+        '</div>'+
+        '<div style="display:flex;gap:8px;margin-top:10px">'+
+          (am.editHid? '<button style="flex:1;background:#fff;border:1.5px solid var(--line);color:var(--ink);border-radius:9px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit" onclick="absNewMode()">새 홀딩으로</button>':'')+
+          '<button style="flex:1.5;background:var(--blue);border:none;color:#fff;border-radius:9px;padding:9px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit" onclick="saveAbs()">'+(am.editHid?'수정 저장':'＋ 홀딩 추가')+'</button>'+
         '</div>'+
       '</div>'+
       (state.absDone?'<div style="background:#E9F8EE;border:1px solid #B7DFC4;color:#1B7A3D;border-radius:9px;padding:8px 11px;font-size:12.5px;font-weight:700;margin-top:10px">✅ '+esc(state.absDone)+'</div>':'')+
