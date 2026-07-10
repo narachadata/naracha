@@ -45,7 +45,7 @@
   .card { background:var(--card); border:none; border-radius:18px;
           padding:22px; margin-bottom:14px;
           box-shadow:0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04); }
-  .label { font-size:13px; font-weight:600; color:var(--sub); margin-bottom:8px; display:block;
+  .label { font-size:12.5px; font-weight:600; color:var(--sub); margin-bottom:8px; display:block;
            letter-spacing:-0.01em; }
   .input { width:100%; font-size:17px; padding:14px 16px; border:1.5px solid var(--line);
            border-radius:12px; background:#FAFAFC; outline:none; font-family:inherit;
@@ -712,6 +712,7 @@ function loadAll(){
     if(attRaw){ var am=JSON.parse(attRaw); applyAtt(am); }
   }catch(e){}
   if(typeof migrateHolds==="function") migrateHolds();   /* 기존 명단 홀딩을 시간표에도 표시 (absences 로드 후 1회 동기화) */
+  if(typeof normalizeYmData==="function") normalizeYmData();   /* 과거 addMonths 오염 만료월 정규화 */
   myRole();
   if(state.role==="coach") state.topCat="출석";
   /* 장기등록 씨앗(수기 명단)을 한 번만 편입 — 삭제했던 항목은 다시 넣지 않음 */
@@ -900,8 +901,17 @@ function _mergeArchivedYears(a,b){
   return { map:out, t:Math.max(a.t||0, b.t||0) };
 }
 /* 올해·작년은 항상 라이브로 유지, 그 이전 연도 중 데이터가 있는 연도가 아카이브 대상 */
+/* 급수별 심사 주기(개월): 하위 급수 2개월 · 3~1급 3개월 · 품/단 12개월(국기원 연한) */
+function examCycleMonths(grade){
+  var g=String(grade||"");
+  if(/품|단/.test(g)) return 12;
+  var m=g.match(/^([0-9]+)급$/);
+  if(m && Number(m[1])<=3) return 3;
+  return 2;
+}
 function archiveCandidates(){
-  var cy=Number(today().slice(0,4)), keep={}; keep[cy]=1; keep[cy-1]=1;
+  var cy=Number(today().slice(0,4)), keep={}; keep[cy]=1;
+  if(!state.archIncludePrev) keep[cy-1]=1;   /* 옵션: 작년까지 아카이브 허용 (올해만 라이브) */
   var years={};
   for(var k in (state.weeks||{})){ var y=yearOfWeek(k); if(y && !keep[y] && !isArchivedYear(y)) years[y]=1; }
   (state.payments||[]).forEach(function(p){ var y=yearOfPay(p); if(y && !keep[y] && !isArchivedYear(y)) years[y]=1; });
@@ -959,6 +969,13 @@ function _archiveYearsSeq(years, i){
      state.archivedYears[y]=Date.now();
      if(!state.loadedArchives) state.loadedArchives={};
      state.loadedArchives[y]={ weeks:wYear, payments:pYear };   /* 세션엔 계속 보이게 */
+     /* 이중 안전장치: 구글시트 단일본이 되지 않도록 로컬 JSON 파일도 자동 다운로드 */
+     try{
+       var _bk=new Blob([JSON.stringify({archV:1, year:y, weeks:wYear, payments:pYear, savedAt:Date.now()})],{type:"application/json"});
+       var _a=document.createElement("a"); _a.href=URL.createObjectURL(_bk);
+       _a.download="나라차_아카이브_"+y+"년.json"; document.body.appendChild(_a); _a.click();
+       setTimeout(function(){ URL.revokeObjectURL(_a.href); _a.remove(); },1500);
+     }catch(e){}
      _archiveYearsSeq(years, i+1);
    })
    .catch(function(e){
@@ -2123,6 +2140,13 @@ function updateHold(name, hid, from, to, open, reason){
   if(e.ext) _extendLong(name, from, (e.extDays!=null?e.extDays:_holdDays(e.from, e.to)));   /* 승인된 건: 승인 일수 유지한 채 재기록 */
   return hid;
 }
+/* 홀딩 검토 종결: 연장하지 않기로 판단 (보강 대체 등) — 기록은 남고 검토 목록에서만 제외 */
+window.dismissHoldReview=function(name, hid){
+  if(!confirm(name+" 님의 이 결석 건을 '연장 안 함'으로 종결할까요?\n(등록 연장 없이 검토 목록에서 내립니다. 결석 기록은 그대로 남습니다)")) return;
+  var arr=(state.absences||{})[name]||[];
+  arr.forEach(function(e){ if((hid && e.hid===hid) || (!hid && !e.hid)){ e.noExt=true; e.t=Date.now(); } });
+  persistAtt(); render();
+};
 /* 등록 연장(홀딩) 승인/해제 — 회계관리자 전용. days를 주면 수동 지정 연장, 없으면 결석 일수만큼 */
 window.approveHoldExt=function(name, hid, on, days){
   var e=((state.absences||{})[name]||[]).filter(function(x){return x.hid===hid && !x.del;})[0];
@@ -2350,6 +2374,9 @@ function _moveNameKeys(oldN, newN, overwrite){
   if(state.kkwPending){ var ix2=state.kkwPending.indexOf(oldN); if(ix2>-1){ if(state.kkwPending.indexOf(newN)===-1) state.kkwPending[ix2]=newN; else state.kkwPending.splice(ix2,1); } }
   (state.payments||[]).forEach(function(p){ if(p.name===oldN) p.name=newN; });
   (state.longRegs||[]).forEach(function(r){ if(r.name===oldN) r.name=newN; });
+  /* 과거데이터 수정표식(이름|type|idx 키)·휴지통 결제도 새 이름으로 */
+  if(state.histEdits){ for(var hk in state.histEdits){ if(hk.indexOf(oldN+"|")===0){ var nhk=newN+hk.slice(oldN.length); if(overwrite||state.histEdits[nhk]===undefined) state.histEdits[nhk]=state.histEdits[hk]; delete state.histEdits[hk]; } } }
+  (state.trash||[]).forEach(function(t){ if(t.pm && t.pm.name===oldN) t.pm.name=newN; });
 }
 /* 단독 '님' 이름 → '님' 제거 (참조 전부 이동) */
 function renameStudentName(oldN, newN){
@@ -3704,7 +3731,7 @@ window.pickRegType=function(name){
     "\n\n숫자를 입력하세요:";
   var v=prompt(msg,"");
   if(v==="1") state.regTypeMap[name]="monthly";
-  else if(v==="2") delete state.regTypeMap[name];
+  else if(v==="2") state.regTypeMap[name]="2months";   /* delete하면 동기화 union에서 옛 값 부활 → 명시 저장 */
   else if(v==="3") state.regTypeMap[name]="annual";
   else return;
   persist(); render();
@@ -4011,10 +4038,29 @@ window.saveSchedule=function(){
 };
 
 /* ══════════ 출석 카테고리 화면 ══════════ */
-function addMonths(dateStr, mo){
-  var d=new Date(dateStr+"T00:00:00"); d.setMonth(d.getMonth()+mo);
+/* ⚠ 이 정의가 482행 정의를 덮어씀(호이스팅) — 두 형식을 모두 처리하는 단일 함수로 통합.
+   "YYYY-MM" → "YYYY-MM" (만료월 계산 · 예전처럼 월 산술)
+   "YYYY-MM-DD" → "YYYY-MM-DD" (심사 주기 등 날짜 계산 · 일 단위 보존 → 2개월 규칙이 정확해짐) */
+function addMonths(v, mo){
+  if(/^\d{4}-\d{2}$/.test(String(v))){ var a=String(v).split("-"); var t=a[0]*12+(a[1]-1)+mo; return Math.floor(t/12)+"-"+p2(t%12+1); }
+  var d=new Date(v+"T00:00:00"); d.setMonth(d.getMonth()+mo);
   var m=d.getMonth()+1, dd=d.getDate();
   return d.getFullYear()+"-"+(m<10?"0":"")+m+"-"+(dd<10?"0":"")+dd;
+}
+/* 과거 addMonths 오염 데이터 정규화 (만료월에 일까지 붙은 값 등) — 로드·병합 후 1회씩 호출해도 안전(멱등) */
+function normalizeYmData(){
+  try{
+    for(var k in (state.expiryMap||{})){ var v=state.expiryMap[k];
+      if(typeof v==="string" && /^\d{4}-\d{2}-\d{2}/.test(v)) state.expiryMap[k]=v.slice(0,7); }
+    (state.payments||[]).forEach(function(pm){
+      if(pm.expiry && /^\d{4}-\d{2}-\d{2}/.test(pm.expiry)) pm.expiry=pm.expiry.slice(0,7);
+      if(pm.date && /^\d{4}-\d{2}-\d{2}-/.test(pm.date)) pm.date=pm.date.slice(0,10);
+    });
+    (state.longRegs||[]).forEach(function(r){
+      if(r.startYm && r.startYm.length>7) r.startYm=r.startYm.slice(0,7);
+      if(r.endYm && r.endYm.length>7) r.endYm=r.endYm.slice(0,7);
+    });
+  }catch(e){}
 }
 function renderAttContent(){
   var t=state.attTab, x="";
@@ -4287,7 +4333,9 @@ function contractCnt(name, ym){
 var DAY_IDX={mon:0,tue:1,wed:2,thu:3,fri:4,sat:5};
 function attendCnt(name, ym){
   var c=0;
+  var _lo=ym+"-01", _hi=ym+"-31";
   for(var wk in state.weeks){
+    if(addDays(wk,5)<_lo || wk>_hi) continue;   /* 대상 월 밖의 주는 스킵 (3년치 데이터 성능) */
     var w=state.weeks[wk]; if(!w||!w.cells) continue;
     for(var key in w.cells){
       if(dayIsOff(wk, key.split("-")[0])) continue;    /* 휴관일 제외 */
@@ -4305,7 +4353,9 @@ function attendCnt(name, ym){
    nc2= 그 날 '미포함(체험·심사·국기원·대회연습)' 출석 수 (색으로만 구분, ×표시 안 함) */
 function attendDates(name, ym){
   var map={};   /* 날짜 → {c:포함수, nc:미포함수} */
+  var _lo=ym+"-01", _hi=ym+"-31";
   for(var wk in state.weeks){
+    if(addDays(wk,5)<_lo || wk>_hi) continue;   /* 대상 월 밖의 주는 스킵 */
     var w=state.weeks[wk]; if(!w||!w.cells) continue;
     for(var key in w.cells){
       var day=key.split("-")[0];
@@ -4338,7 +4388,7 @@ function statBaseRows(){
       /* 심사 정보 (구 심사대상 탭 통합) */
       var acc=state.accMap[s.n]||0;
       var last=state.lastExamMap[s.n]||"";
-      var cycleOk=!last || addMonths(last,2)<=today();
+      var cycleOk=!last || addMonths(last,examCycleMonths(s.grade))<=today();   /* 급수별 주기 */
       var kkw=!!kkwSet[s.n];
       var ready=acc>=24 && cycleOk && !kkw;
       return { s:s, ct:ct, ac:ac, st:st, diff: ct?Math.abs(ac-ct.n):0,
@@ -4435,13 +4485,12 @@ function renderStatusTab(){
       '<span style="flex:1"></span><span style="font-size:12px;color:var(--sub)">'+(state.riskOpen?'▲ 접기':'▼ 펼치기')+'</span></div>'+
       (state.riskOpen? risk.slice(0,40).map(function(n){
         var c=cl[n]; var recent=c&&c.d>=addDays(today(),-7);
-        return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:5px 0;border-top:1px dashed #F0D6A8;font-size:12.5px'+(recent?';opacity:.55':'')+'">'+
-          '<b style="flex:0 0 84px;color:var(--blue);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="event.stopPropagation();openStuM(\''+esN(n)+'\')">'+esc(n)+'</b>'+
+        return '<div style="display:grid;grid-template-columns:100px 130px 110px 110px 1fr;gap:0 10px;align-items:center;padding:5px 0;border-top:1px dashed #F0D6A8;font-size:12.5px'+(recent?';opacity:.55':'')+'">'+
+          '<b style="color:var(--blue);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="event.stopPropagation();openStuM(\''+esN(n)+'\')">'+esc(n)+'</b>'+
           (c?'<span style="font-size:11px;font-weight:800;color:'+(recent?'var(--green)':'var(--sub)')+'">'+(recent?'✓ ':'')+esc(c.d.slice(5))+' 연락함</span>':'<span style="font-size:11px;color:#B45309;font-weight:700">미연락</span>')+
-          '<span style="flex:1"></span>'+
           '<button class="chip sm" style="padding:2px 9px;font-size:11px;color:var(--blue)" onclick="event.stopPropagation();copyContactMsg(\''+esN(n)+'\',\'away\')">📋 문구 복사</button>'+
           '<button class="chip sm" style="padding:2px 9px;font-size:11px;color:var(--green);border-color:#9BD9B4" onclick="event.stopPropagation();markContacted(\''+esN(n)+'\')">연락함 ✓</button>'+
-          '</div>';
+          '<span></span></div>';
       }).join('')+(risk.length>40?'<div style="font-size:11px;color:var(--sub);margin-top:5px">외 '+(risk.length-40)+'명</div>':'') : '')+
       '</div>';
   })();
@@ -4504,6 +4553,7 @@ function statListHtml(view){
     /* 심사 클러스터 (구 심사대상 탭 통합): 누적횟수(클릭=수동수정) · 마지막 심사일 · 상태 배지 · 응심 버튼 */
     var esn2=esc(s.n).replace(/'/g,"\\'");
     var exBadge = r.kkw ? '<span style="background:#EEE;color:#666;border-radius:6px;padding:2px 7px;font-size:10.5px;font-weight:800;white-space:nowrap">국기원 대기</span>'
+      : (r.ready && isLongAbsent(s.n)) ? '<span title="누적·주기는 충족했지만 4주 이상 무출석 — 연락 먼저" style="background:#FFF3E0;color:#B45309;border:1px dashed #F0C36D;border-radius:6px;padding:2px 7px;font-size:10.5px;font-weight:800;white-space:nowrap">추천·연락필요</span>'
       : r.ready ? '<span style="background:var(--redSoft);color:var(--red);border-radius:6px;padding:2px 7px;font-size:10.5px;font-weight:800;white-space:nowrap">추천</span>'
       : r.acc<24 ? '<span style="font-size:10.5px;color:var(--sub);white-space:nowrap">'+(24-r.acc)+'회 남음</span>'
       : '';   /* 24회 이상·주기 미충족: 재응시 가능일 표기는 생략 (마지막 심사일로 판단) */
@@ -4701,8 +4751,8 @@ function renderBriefTab(){
     }).join('')+
     '<span style="flex:1;min-width:2px"></span>'+
     '<span style="display:inline-flex;gap:5px;flex:0 0 auto">'+
-      '<button class="chip" style="color:var(--red);border-color:var(--red);padding:5px 9px;font-size:12px" onclick="briefPdf()">🖨 PDF</button>'+
-      '<button class="chip" style="color:#B45309;border-color:#B45309;padding:5px 9px;font-size:12px" onclick="briefPpt()">📑 PPT</button>'+
+      '<button class="chip" style="color:var(--blue);border-color:var(--blue);padding:5px 9px;font-size:12px" onclick="briefPdf()">🖨 PDF</button>'+
+      '<button class="chip" style="padding:5px 9px;font-size:12px" onclick="briefPpt()">📑 PPT</button>'+
     '</span>'+
     '</div></div>';
 
@@ -4763,7 +4813,7 @@ function renderBriefTab(){
     var a2=state.accMap[s.n]||0;
     if((state.kkwPending||[]).indexOf(s.n)>-1) return;
     var last=state.lastExamMap[s.n];
-    var cycleOk=!last || addMonths(last,2)<=today();
+    var cycleOk=!last || addMonths(last,examCycleMonths(s.grade))<=today();
     if(a2>=24 && cycleOk) pipe.ready.push(s.n);
     else if(a2>=20) pipe.soon.push(s.n);
     else if(a2>=12) pipe.mid.push(s.n);
@@ -4860,7 +4910,7 @@ function renderBriefTab(){
       barRow("임박 20~23회", pipe.soon.length, pMax, "#F59E0B")+
       barRow("중간 12~19회", pipe.mid.length, pMax, "var(--blue)")+
       barRow("11회 이하", pipe.low, pMax, "#B9C2CF")+'</div>'+
-      '<div style="font-size:11.5px;color:var(--sub);margin-top:6px">다음 심사 예상 규모: <b style="color:var(--ink)">'+(pipe.ready.length+pipe.soon.length)+'명</b> (추천+임박) · 국기원 대기 '+(state.kkwPending||[]).length+'명 별도</div>')+
+      '<div style="font-size:11.5px;color:var(--sub);margin-top:6px">다음 심사 예상 규모: <b style="color:var(--ink)">'+(pipe.ready.length+pipe.soon.length)+'명</b> (추천+임박) · 국기원 대기 '+(state.kkwPending||[]).filter(function(n){ return !state.closedMap[n]&&!isQuit(n); }).length+'명 별도</div>')+
     card('<b style="font-size:14px">'+esc(P.label)+' 응심 완료 <span style="color:var(--red)">'+done.length+'명</span></b>'+
       '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">'+
       (done.length?done.slice(0,12).map(function(o){return '<span class="chip sm" style="white-space:nowrap;cursor:pointer" title="클릭하면 학적부가 열립니다" onclick="openStuM(\''+esc(o.n).replace(/'/g,"\\'")+'\')">'+esc(o.n)+' <i style="font-size:9.5px;color:var(--sub)">'+esc(o.d.slice(5))+'</i></span>';}).join('')+(done.length>12?'<span style="align-self:center;font-size:11.5px;color:var(--sub)">외 '+(done.length-12)+'명</span>':''):'<span style="color:var(--sub)">기록 없음</span>')+'</div>')+
@@ -4882,7 +4932,7 @@ function briefExportData(){
     var a2=state.accMap[s.n]||0;
     if((state.kkwPending||[]).indexOf(s.n)>-1) return;
     var last=state.lastExamMap[s.n];
-    var cycleOk=!last || addMonths(last,2)<=today();
+    var cycleOk=!last || addMonths(last,examCycleMonths(s.grade))<=today();
     if(a2>=24 && cycleOk) pipe.ready.push(s.n);
     else if(a2>=20) pipe.soon.push(s.n);
     else if(a2>=12) pipe.mid.push(s.n);
@@ -4910,7 +4960,7 @@ function briefExportData(){
     days:W_DAYS.map(function(D){return [D[1], cur.days[D[0]]||0];}),
     kinds:ATT_KINDS.map(function(k){return [kindLabel(k.k), cur.kinds[k.k]||0];}),
     byMonth:P.months.map(function(ym){return [ym, cur.byMonth[ym]||0];}),
-    kkwN:(state.kkwPending||[]).length,
+    kkwN:(state.kkwPending||[]).filter(function(n){ return !state.closedMap[n]&&!isQuit(n); }).length,   /* 재원생만 */
     absRate: cur.placed?Math.round(cur.absent/cur.placed*100):0 };
 }
 window.briefPdf=function(){
@@ -6115,7 +6165,7 @@ function examRowsData(){
     .map(function(s){
       var acc=state.accMap[s.n]||0;
       var last=state.lastExamMap[s.n]||"";
-      var nextOk = last ? addMonths(last,2) : "";
+      var nextOk = last ? addMonths(last,examCycleMonths(s.grade)) : "";
       var cycleOk = !last || nextOk<=today();
       var kkw = !!kkwSet[s.n];
       var ready = acc>=24 && cycleOk && !kkw;
@@ -6577,13 +6627,15 @@ window.saveStuM=function(){
   /* 사진이 있으면 photo 창고에 저장 (명단과 분리) */
   if(m.photo){ savePhoto(name, m.photo); }
   else if(m.photoWasDeleted && state.photoMap && state.photoMap[m.orig]){
-    delete state.photoMap[m.orig]; state.photoT=Date.now();
+    state.photoMap[m.orig]={ d:"", t:Date.now() };   /* 빈 묘비 — 동기화 병합에서 원격 사본 부활 방지 */
+    state.photoT=Date.now();
     try{ localStorage.setItem("naracha-photo", JSON.stringify(photoState())); }catch(e){}
     photoSync();
   }
-  /* 이름이 바뀌었으면 사진 키도 이동 */
-  if(m.mode!=="new" && m.orig && name!==m.orig && state.photoMap && state.photoMap[m.orig]){
-    state.photoMap[name]=state.photoMap[m.orig]; delete state.photoMap[m.orig];
+  /* 이름이 바뀌었으면 사진 키도 이동 (옛 키는 묘비로) */
+  if(m.mode!=="new" && m.orig && name!==m.orig && state.photoMap && state.photoMap[m.orig] && (state.photoMap[m.orig].d||"")!==""){
+    state.photoMap[name]=state.photoMap[m.orig];
+    state.photoMap[m.orig]={ d:"", t:Date.now() };
     state.photoT=Date.now(); photoSync();
   }
   if(m.tempId!=null){ state.tempStudents=(state.tempStudents||[]).filter(function(t){return t.id!==m.tempId;}); persistAtt(); }
@@ -7134,6 +7186,8 @@ function attState(){
     kkw:{ list:state.kkwPending||[], t:state.kkwT||0 },
     /* [완전 분리] 심사데이터는 exam 창고로 이전됨 → 출석 창고에는 더 이상 저장하지 않음.
        (기존 출석 창고에 남아 있던 심사데이터는 applyAtt에서 계속 읽어 exam으로 합쳐짐 = 유실 없음) */
+    deletedStudents: state.deletedStudents||{},   /* 삭제 묘비를 출석 창고에도 → 사범 기기 유령 부활 방지 */
+    reopenLog: state.reopenLog||{},               /* 복관 기록도 동기화 → 사범 기기 휴관 고착 방지 */
     rosterFileV: state.rosterFileV||0, savedAt: Date.now() };
 }
 function persistAtt(){
@@ -7328,14 +7382,33 @@ function mergeAtt(a, b){
   }
   var _cl={}; [a.contactLog||{}, b.contactLog||{}].forEach(function(src){ for(var _k in src){ if(!_cl[_k]||(src[_k].t||0)>(_cl[_k].t||0)) _cl[_k]=src[_k]; } });
   var _lm={}; [a.laManual||{}, b.laManual||{}].forEach(function(src){ for(var _k2 in src){ if(!_lm[_k2]||(src[_k2].t||0)>(_lm[_k2].t||0)) _lm[_k2]=src[_k2]; } });
+  /* 삭제 묘비: 이름별 최신 시각 union */
+  var _ds={}; [a.deletedStudents||{}, b.deletedStudents||{}].forEach(function(src){ for(var _d in src){ if(!_ds[_d]||src[_d]>_ds[_d]) _ds[_d]=src[_d]; } });
+  /* 복관 기록: 이름별 union (중복 제거) */
+  var _rl={}; [a.reopenLog||{}, b.reopenLog||{}].forEach(function(src){ for(var _r in src){ if(!_rl[_r]) _rl[_r]=[];
+    (src[_r]||[]).forEach(function(lg){ var sig=(lg.closed&&lg.closed.start||"")+"|"+(lg.reopenDate||"");
+      if(!_rl[_r].some(function(x){ return ((x.closed&&x.closed.start||"")+"|"+(x.reopenDate||""))===sig; })) _rl[_r].push(lg); }); } });
+  /* 마지막 심사일: 이름별로 더 나중 날짜가 이김 (통-블롭이면 동시 갱신 유실) */
+  var _lx={}; [ (a.lastExam||{}).map||{}, (b.lastExam||{}).map||{} ].forEach(function(src){ for(var _e in src){ if(!_lx[_e]||src[_e]>_lx[_e]) _lx[_e]=src[_e]; } });
   return { absences:abs, contactLog:_cl, laManual:_lm, attV:1, roster:roster, schedule:schedule, tempStudents:temps, weeks:weeks,
+           deletedStudents:_ds, reopenLog:_rl,
+           rosterFileV:Math.max(a.rosterFileV||0, b.rosterFileV||0),
            quitMapAtt:mergeStamped(a.quitMapAtt,b.quitMapAtt), closedMapAtt:mergeStamped(a.closedMapAtt,b.closedMapAtt),
-           acc:mergeAcc(a.acc,b.acc), accBase:mergeAccBase(a.accBase,b.accBase), sig:mergeSig(a.sig,b.sig), lastExam:newerBlob(a.lastExam,b.lastExam,{}), kkw:newerBlob(a.kkw,b.kkw,{}),
+           acc:mergeAcc(a.acc,b.acc), accBase:mergeAccBase(a.accBase,b.accBase), sig:mergeSig(a.sig,b.sig),
+           lastExam:{ map:_lx, t:Math.max((a.lastExam||{}).t||0,(b.lastExam||{}).t||0) }, kkw:newerBlob(a.kkw,b.kkw,{}),
            examData:mergeExam(a.examData,b.examData),
            archivedYears:_mergeArchivedYears(a.archivedYears,b.archivedYears),
            savedAt:Math.max(a.savedAt||0,b.savedAt||0) };
 }
 function applyAtt(m){
+  /* 삭제 묘비·복관 기록·명단파일 버전 먼저 복원 (아래 roster 필터가 묘비를 쓰므로 순서 중요) */
+  if(m.deletedStudents){ if(!state.deletedStudents) state.deletedStudents={};
+    for(var _dn in m.deletedStudents){ if((m.deletedStudents[_dn]||0)>(state.deletedStudents[_dn]||0)) state.deletedStudents[_dn]=m.deletedStudents[_dn]; } }
+  if(m.reopenLog){ if(!state.reopenLog) state.reopenLog={};
+    for(var _rn in m.reopenLog){ if(!state.reopenLog[_rn]) state.reopenLog[_rn]=[];
+      (m.reopenLog[_rn]||[]).forEach(function(lg){ var sig=(lg.closed&&lg.closed.start||"")+"|"+(lg.reopenDate||"");
+        if(!state.reopenLog[_rn].some(function(x){ return ((x.closed&&x.closed.start||"")+"|"+(x.reopenDate||""))===sig; })) state.reopenLog[_rn].push(lg); }); } }
+  if(m.rosterFileV) state.rosterFileV = Math.max(state.rosterFileV||0, m.rosterFileV);   /* 시드 명단 재적용 방지 */
   if(m.absences) state.absences = m.absences;
   if(m.contactLog) state.contactLog = m.contactLog;
   if(m.laManual) state.laManual = m.laManual;
@@ -7390,6 +7463,7 @@ function applyAtt(m){
   pruneClosedByReopen();   /* 복관이 더 나중이면 그 휴관은 끝난 것 — 출석·회계 창고 병합 규칙 통일(재원수 깜빡임 방지) */
   syncStFromMaps();   /* 병합된 상태를 명단 꼬리표에 반영 */
   if(typeof migrateHolds==="function") migrateHolds();   /* 다른 기기의 옛 형식 홀딩도 즉시 복구·정규화 */
+  if(typeof normalizeYmData==="function") normalizeYmData();
 }
 function parseCloudRows(rows){
   if(!rows || rows.length<2 || rows.error) return null;
@@ -8621,20 +8695,21 @@ function render(){
             if(r.paid){ paidTag = ' <span class="pill" style="background:var(--greenSoft);color:var(--green);font-size:11px">✓ 납부 '+esc(r.paidDate||"")+'</span>'; }
             else { paidTag = ' <span class="pill" style="background:var(--redSoft);color:var(--red);font-size:11px">청구됨</span>'; }
             checkBtn = '<button onclick="event.stopPropagation();togglePaid('+r.id+')" style="border:1px solid '+(r.paid?"var(--sub)":"var(--green)")+';background:'+(r.paid?"#fff":"var(--green)")+';color:'+(r.paid?"var(--sub)":"#fff")+';border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">'+(r.paid?"납부 취소":"납부 체크")+'</button>';
-            actions = '<div style="display:flex;gap:4px;margin-top:4px">'+checkBtn+
+            actions = '<div style="display:flex;gap:4px">'+checkBtn+
               '<button onclick="event.stopPropagation();editPay('+r.id+')" style="border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">수정</button>'+
               '<button onclick="event.stopPropagation();removePay('+r.id+')" style="border:1px solid var(--red);background:#fff;color:var(--red);border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">삭제</button>'+
               '</div>';
           } else if(r.src==="장부" && r.histKey){
-            actions = '<div style="display:flex;gap:4px;margin-top:4px">'+
+            actions = '<div style="display:flex;gap:4px">'+
               '<button onclick="event.stopPropagation();editHist(\''+r.histKey+'\')" style="border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">수정</button>'+
               '<button onclick="event.stopPropagation();removeHist(\''+r.histKey+'\')" style="border:1px solid var(--red);background:#fff;color:var(--red);border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">삭제</button>'+
               '</div>';
           }
-          h+='<div class="row"><span>'+(r.m?r.m+'월':'')+tag+paidTag+' <span style="color:var(--sub);font-size:12px">'+
+          h+='<div style="display:grid;grid-template-columns:1fr 150px 150px;gap:0 10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)"><span>'+(r.m?r.m+'월':'')+tag+paidTag+' <span style="color:var(--sub);font-size:12px">'+
              (r.d?Y+'-'+p2(r.m)+'-'+p2(r.d):(r.m?'월 귀속':''))+(r.long?' · 장기등록 분할':'')+
-             (r.note?' · '+esc(r.note):'')+(r.src==="신규"?' · 💻'+esc(r.device||"미지정"):'')+'</span>'+actions+'</span>'+
-             '<span style="font-weight:800">'+won(r.amount)+'<span style="color:var(--sub);font-weight:500;font-size:12px"> '+esc(r.method||'')+'</span></span></div>';
+             (r.note?' · '+esc(r.note):'')+(r.src==="신규"?' · 💻'+esc(r.device||"미지정"):'')+'</span></span>'+
+             '<span>'+actions+'</span>'+
+             '<span style="font-weight:800;text-align:right;font-variant-numeric:tabular-nums">'+won(r.amount)+'<span style="color:var(--sub);font-weight:500;font-size:12px"> '+esc(r.method||'')+'</span></span></div>';
         });
         h+='</div>';
       }
@@ -8813,12 +8888,15 @@ function render(){
       h+='<div class="card" style="margin-top:14px"><span class="label">최근 일주일 입력 '+recentPays.length+'건</span>'+
         '<div style="max-height:400px;overflow-y:auto;border:1px solid var(--line);border-radius:8px">'+
         recentPays.map(function(pm){
-          return '<div class="row" style="border-bottom:1px solid var(--line);padding:10px"><div>'+demoSlot(pm.name)+'<b style="color:var(--blue);cursor:pointer;text-decoration:underline" title="클릭하면 브리핑이 열립니다" onclick="showDetail(\''+esc(pm.name).replace(/'/g,"\\'")+'\')">'+esc(pm.name)+'</b> <span style="color:var(--sub);font-size:13px">'+pm.date+' · '+esc(pm.cat)+' · '+esc(pm.method)+(pm.device?' · 💻'+esc(pm.device):'')+'</span>'+
-            '<div style="font-weight:800">'+won(pm.amount)+(pm.expiry?' <span style="color:var(--blue);font-weight:600;font-size:13px">('+pm.expiry+'까지)</span>':'')+'</div></div>'+
-            '<div style="display:flex;gap:6px">'+
+          return '<div style="display:grid;grid-template-columns:24px 100px 1fr 170px 130px;gap:0 10px;align-items:center;border-bottom:1px solid var(--line);padding:10px">'+
+            demoSlot(pm.name)+
+            '<b style="color:var(--blue);cursor:pointer;text-decoration:underline;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="클릭하면 브리핑이 열립니다" onclick="showDetail(\''+esc(pm.name).replace(/'/g,"\\'")+'\')">'+esc(pm.name)+'</b>'+
+            '<span style="color:var(--sub);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+pm.date+' · '+esc(pm.cat)+' · '+esc(pm.method)+(pm.device?' · 💻'+esc(pm.device):'')+'</span>'+
+            '<span style="font-weight:800;text-align:right;font-variant-numeric:tabular-nums">'+won(pm.amount)+(pm.expiry?' <span style="color:var(--blue);font-weight:600;font-size:12px">('+pm.expiry+'까지)</span>':'')+'</span>'+
+            '<span style="display:flex;gap:6px;justify-content:flex-end">'+
             '<button onclick="editPay('+pm.id+')" style="border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit">수정</button>'+
             '<button class="del" onclick="removePay('+pm.id+')">삭제</button>'+
-            '</div></div>';
+            '</span></div>';
         }).join('')+'</div></div>';
     }
   }
@@ -8852,15 +8930,16 @@ function render(){
       .sort(function(a,b){return a.oldest.localeCompare(b.oldest);});
     var overdueSum=overdueList.reduce(function(a,x){return a+x.sum;},0);
 
-    /* ② 이번 달 미청구 (성인 횟수제 제외) */
-    var thisYm=new Date().toISOString().slice(0,7);
+    /* ② 이번 달 미청구 (성인 횟수제·퇴관·선납 유효기간 내 제외) */
+    var thisYm=today().slice(0,7);   /* UTC가 아닌 로컬 기준 (매월 1일 오전 오판 방지) */
     var billedThisMonth={};
     state.payments.forEach(function(p){
       if(p.cat==="수련비" && p.date && p.date.slice(0,7)===thisYm) billedThisMonth[p.name]=true;
     });
     var notBilled=STUDENTS.filter(function(s){
-      if(state.closedMap[s.n]) return false;
+      if(state.closedMap[s.n]||isQuit(s.n)) return false;   /* 퇴관생 제외 */
       if((state.regTypeMap[s.n]||(/성인/.test(s.b||"")?"횟수":"월별"))==="횟수") return false;
+      var _ex=effExpiry(s.n); if(_ex && _ex>=thisYm) return false;   /* 선납 등록기간이 아직 유효하면 청구 대상 아님 */
       return !billedThisMonth[s.n];
     });
 
@@ -8872,10 +8951,11 @@ function render(){
         if(state.closedMap[s.n]||isQuit(s.n)) return;
         liveHolds(s.n).forEach(function(e){
           if(e.ext) return;
+          if(e.noExt) return;   /* '연장 안 함'으로 종결한 건 (보강 대체 등) */
           var days = e.open ? _holdDays(e.from, _tdR) : _holdDays(e.from, e.to);
           if(days<30) return;
           if(!e.open && e.to < addDays(_tdR,-60)) return;
-          _pend.push({ n:s.n, from:e.from, to:e.to, open:e.open, days:days, reason:e.reason||"" });
+          _pend.push({ n:s.n, hid:e.hid||"", from:e.from, to:e.to, open:e.open, days:days, reason:e.reason||"" });
         });
       });
       _pend.sort(function(a,b){ return b.days-a.days; });
@@ -8935,12 +9015,13 @@ function render(){
       h+='<div class="card" style="border:1.5px solid var(--amber);background:#FFFBF2">'+
          '<div style="font-size:13.5px;font-weight:900;color:#B45309;margin-bottom:4px">⏳ 홀딩(등록 연장) 검토 '+_pend.length+'건 <span style="font-weight:500;font-size:12px">— 이름 클릭 → 상세에서 승인 (결석 일수는 참고용)</span></div>'+
          _pend.slice(0,30).map(function(p){
-           return '<div style="display:grid;grid-template-columns:22px 150px 170px 78px 1fr;gap:0 10px;align-items:center;padding:6px 0;border-top:1px dashed #F0D6A8;font-size:12.5px">'+
+           return '<div style="display:grid;grid-template-columns:22px 150px 170px 78px 1fr 92px;gap:0 10px;align-items:center;padding:6px 0;border-top:1px dashed #F0D6A8;font-size:12.5px">'+
              demoSlot(p.n)+
              '<b style="color:var(--blue);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="납부내역 열기" onclick="showDetail(\''+esc(p.n).replace(/'/g,"\\'")+'\')">'+esc(p.n)+'</b>'+
              '<span style="color:#1D4ED8;font-weight:700;font-variant-numeric:tabular-nums">'+esc(p.from)+' ~ '+(p.open?'미정':esc(p.to))+'</span>'+
              '<span style="background:#FFF3E0;color:#B45309;border-radius:5px;padding:1px 6px;font-size:10.5px;font-weight:800;text-align:center">'+p.days+'일'+(p.open?'+':'')+'</span>'+
-             (p.reason?'<span style="color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.reason)+'</span>':'<span></span>')+'</div>';
+             (p.reason?'<span style="color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.reason)+'</span>':'<span></span>')+
+             '<button class="chip sm" style="padding:2px 9px;font-size:11px;justify-self:end" title="검토 완료 — 등록 연장하지 않음 (보강 대체 등). 기록은 남습니다" onclick="dismissHoldReview(\''+esc(p.n).replace(/'/g,"\\'")+'\',\''+esc(p.hid||"")+'\')">연장 안 함</button>'+'</div>';
          }).join('')+(_pend.length>30?'<div style="font-size:11px;color:var(--sub);margin-top:6px">외 '+(_pend.length-30)+'건</div>':'')+
          '</div>';
     }
@@ -9359,8 +9440,8 @@ function render(){
       var jv=joinPlusReopen[mn], cv=cArr[mn], rv=rArr[mn];
       var newTag=(rv>0)?'신규+복관 '+jv+' (복관 '+rv+')':'신규+복관 '+jv;
       h+='<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:13px">'+
-         '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'+
-         '<span style="font-weight:700">'+mn+'월</span>'+
+         '<div style="display:flex;gap:14px;align-items:baseline;margin-bottom:3px">'+
+         '<span style="font-weight:700;flex:0 0 34px">'+mn+'월</span>'+
          '<span style="color:var(--sub)">'+newTag+' · 휴관 '+cv+'</span></div>'+
          '<div style="display:flex;height:12px;background:#F1F0EA;border-radius:4px;overflow:hidden">'+
          (jv?'<div style="width:'+(jv/maxV*50)+'%;background:var(--green)"></div>':'')+
@@ -9792,7 +9873,8 @@ function render(){
       var archived=Object.keys(state.archivedYears||{}).sort();
       var loaded=state.loadedArchives||{};
       h+='<div class="card"><div style="font-size:17px;font-weight:900;margin-bottom:2px">🗄️ 연도별 아카이브</div>'+
-         '<div style="font-size:12.5px;color:var(--sub);line-height:1.55;margin-bottom:10px">오래된 출석·결제를 연도별 저장소(att_YYYY·acct_YYYY)로 옮겨 라이브를 가볍게 유지합니다. <b>올해·작년은 항상 라이브</b>로 남고, 옮긴 기록은 삭제되지 않으며 언제든 다시 불러올 수 있습니다.</div>';
+         '<div style="font-size:12.5px;color:var(--sub);line-height:1.55;margin-bottom:8px">오래된 출석·결제를 연도별 저장소(att_YYYY·acct_YYYY)로 옮겨 라이브를 가볍게 유지합니다. 옮긴 기록은 삭제되지 않고 <b>클라우드+로컬 파일</b>에 보존되며 언제든 다시 불러올 수 있습니다.</div>'+
+         '<label style="display:flex;align-items:center;gap:7px;font-size:12.5px;cursor:pointer;margin-bottom:10px"><input type="checkbox" '+(state.archIncludePrev?'checked':'')+' onchange="state.archIncludePrev=this.checked;render()"> <b>작년까지 아카이브</b> <span style="color:var(--sub)">(체크하면 올해만 라이브 보관 — 용량 절반 절감)</span></label>';
       if(cands.length){
         h+='<div style="background:#FFF7ED;border:1px solid #FDBA74;border-radius:9px;padding:9px 11px;margin-bottom:8px;font-size:13px">정리 가능한 연도: <b>'+cands.join(", ")+'</b></div>'+
            '<button class="big" '+(state.archiveBusy?'disabled':'')+' onclick="archiveOldData()" style="background:#B45309">'+(state.archiveBusy?'정리 중…':('오래된 기록 아카이브 ('+cands.length+'개 연도)'))+'</button>';
