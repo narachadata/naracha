@@ -3186,6 +3186,8 @@ window.deleteStudent=function(name){
 window.toggleInstantPay=function(){ state.instantPay=!state.instantPay; render(); };
 window.setCollectMode=function(m){ state.collectMode=m; render(); };
 
+/* 공통 드롭다운(select) 스타일 — 연도 등 항목이 늘어나도 가로로 안 늘어짐 */
+var ACCT_SEL='padding:6px 28px 6px 12px;font-size:13px;font-weight:700;border:1px solid var(--line);border-radius:9px;background:#fff url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'10\' viewBox=\'0 0 10 10\'%3E%3Cpath d=\'M2 3.5L5 6.5L8 3.5\' stroke=\'%23667\' stroke-width=\'1.4\' fill=\'none\' stroke-linecap=\'round\'/%3E%3C/svg%3E") no-repeat right 10px center;color:var(--blue);cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none';
 /* ============ 연간 브리핑: 화면 미리보기 탭 ============ */
 function briefAvailYears(){
   var ys={};
@@ -3232,8 +3234,9 @@ function renderAnnualBriefTab(){
       '<button class="chip" style="color:var(--blue);border-color:var(--blue);padding:6px 12px;font-size:12.5px;font-weight:700" onclick="generateBriefing('+Y+',\'pdf\')">🖨 PDF</button>'+
       '<button class="chip" style="padding:6px 12px;font-size:12.5px;font-weight:700" onclick="generateBriefing('+Y+',\'ppt\')">📑 PPT</button>'+
     '</span></div>'+
-    '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:11.5px;color:var(--sub);font-weight:700">연도</span>'+
-    years.map(function(y){ return '<button class="chip sm'+(y===Y?' on':'')+'" style="padding:5px 11px;font-size:12px;border-radius:8px" onclick="setBriefYearAcct('+y+')">'+y+'년</button>'; }).join('')+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:11.5px;color:var(--sub);font-weight:700">브리핑 연도</span>'+
+    '<select style="'+ACCT_SEL+'" onchange="setBriefYearAcct(this.value)">'+years.map(function(y){ return '<option value="'+y+'"'+(y===Y?' selected':'')+'>'+y+'년</option>'; }).join('')+'</select>'+
+    '<span style="font-size:11px;color:var(--sub)">← 선택한 연도의 브리핑이 위 PDF·PPT로 저장됩니다</span>'+
     '<span style="flex:1"></span>'+
     '<button class="chip sm'+(state.collectMode!=="billed"?" on":"")+'" style="padding:5px 10px;font-size:11.5px" onclick="setCollectMode(\'paid\')">실제 받은 돈</button>'+
     '<button class="chip sm'+(state.collectMode==="billed"?" on":"")+'" style="padding:5px 10px;font-size:11.5px" onclick="setCollectMode(\'billed\')">청구 기준</button>'+
@@ -3252,9 +3255,9 @@ function renderAnnualBriefTab(){
     kc('재원 순증감 (연초→연말)', (eDiff>=0?'+':'')+eDiff+'명', eStart+'명 → '+eEnd+'명', eDiff>=0?'var(--blue)':'#9AA1AA')+
     '</div>';
 
-  /* 월별 수입 (연도 고정 = 브리핑 연도) — 매출현황과 동일한 카드 재사용 */
+  /* 월별 수입 (기준 = 브리핑 선택 연도 + 과거 3개년) — 매출현황과 동일한 카드 재사용 */
   var keys=Object.keys(monthly).sort().reverse();
-  h+=monthlyRevenueCard(monthly, keys, modeLbl, "brief");
+  h+=monthlyRevenueCard(monthly, keys, modeLbl, Y);
 
   /* 구분별 매출 요약 */
   var catArr=Object.keys(catTot).filter(function(c){return catTot[c];}).sort(function(a,b){return catTot[b]-catTot[a];});
@@ -4508,59 +4511,55 @@ function statViewRows(){
   else rows.sort(function(a,b){ return b.diff-a.diff || b.ac-a.ac; });
   return rows;
 }
-/* 월별 수입 카드: 연도 선택 + 전년 동월 비교 (올해=크게 파랑 · 전년=오른쪽 회색 비교)
-   monthly: {"YYYY-MM":{총, 구분...}} · keys: 정렬된 YM 배열(desc) · stKey: 상태 연도 키 접두사 */
-function monthlyRevenueCard(monthly, keys, modeLbl, stKey){
+/* 월별 수입 카드: 기준연도 + 과거 최대 3개년(올해 포함 4개년) 나란히 비교
+   monthly: {"YYYY-MM":{총, 구분...}} · baseYear: 기준(가장 최근·크게 표시) 연도. 연도 선택 없이 항상 기준연도+과거로 표시 */
+function monthlyRevenueCard(monthly, keys, modeLbl, baseYear){
   var CATS_MAIN=["수련비","승급심사","용품구입"];
-  /* 데이터에 존재하는 연도 목록 */
-  var yset={}; keys.forEach(function(k){ yset[k.slice(0,4)]=1; });
-  var years=Object.keys(yset).map(Number).sort(function(a,b){return b-a;});   /* 최신 연도 먼저 */
-  if(!years.length){ return '<div class="card"><span class="label">월별 수입</span><div style="color:var(--sub);font-size:15px;padding:10px 0">기록이 없습니다.</div></div>'; }
-  var yKey=stKey+"Year";
-  var Y=state[yKey]; if(!Y || years.indexOf(Y)<0) Y=years[0];
-  var PY=Y-1;
+  var yset={}; keys.forEach(function(k){ yset[Number(k.slice(0,4))]=1; });
+  if(!Object.keys(yset).length){ return '<div class="card"><span class="label">월별 수입</span><div style="color:var(--sub);font-size:15px;padding:10px 0">기록이 없습니다.</div></div>'; }
+  var base=baseYear;
+  function hasData(y){ for(var m=1;m<=12;m++){ if((monthly[y+"-"+p2(m)]||{}).총) return true; } return false; }
+  /* 기준연도 + 과거 3개년(데이터 있는 것만) = 최대 4개년 */
+  var cols=[base];
+  for(var k=1;k<=3;k++){ var yy=base-k; if(hasData(yy)) cols.push(yy); }
   var curYm=today().slice(0,7);
+  /* 그리드: 월 + 기준연도(넓게) + 과거연도들 */
+  var tmpl='56px 1.3fr'; for(var ci=1;ci<cols.length;ci++) tmpl+=' 1fr';
+  var G='display:grid;grid-template-columns:'+tmpl+';gap:0 12px;align-items:center';
   var h='<div class="card"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+
-    '<span class="label" style="margin:0">월별 수입 <span style="font-weight:500;color:var(--sub)">· '+modeLbl+'</span></span>'+
-    '<span style="flex:1"></span>'+
-    '<span style="font-size:11.5px;color:var(--sub);font-weight:700">연도</span>'+
-    years.map(function(y){ return '<button class="chip sm'+(y===Y?' on':'')+'" style="padding:5px 11px;font-size:12px;border-radius:8px" onclick="set'+(stKey==="rev"?"RevYear":"BriefYearAcct")+'('+y+')">'+y+'년</button>'; }).join('')+
-    '</div>';
-  var G='display:grid;grid-template-columns:64px 1fr 250px;gap:0 14px;align-items:center';
+    '<span class="label" style="margin:0">월별 수입 <span style="font-weight:500;color:var(--sub)">· '+modeLbl+' · 최근 '+cols.length+'개년 비교</span></span></div>';
+  /* 헤더 (기준연도=파랑 굵게, 과거=회색) */
   h+='<div style="'+G+';padding:5px 2px 6px;border-bottom:2px solid var(--line);font-size:11px;font-weight:800;color:var(--sub)">'+
-     '<span>월</span><span style="text-align:right">'+Y+'년 수입</span><span style="text-align:right">'+PY+'년 동월 대비</span></div>';
-  var yTot=0, pTot=0;
+     '<span>월</span>'+cols.map(function(y,i){ return '<span style="text-align:right;'+(i===0?'color:var(--blue);font-size:12px':'')+'">'+y+'년'+(i===0?' (기준)':'')+'</span>'; }).join('')+'</div>';
+  var totals=cols.map(function(){return 0;});
   for(var m=1;m<=12;m++){
-    var mm=(m<10?"0":"")+m;
-    var moC=monthly[Y+"-"+mm]||{}, moP=monthly[PY+"-"+mm]||{};
-    var cur=moC.총||0, prev=moP.총||0;
-    yTot+=cur; pTot+=prev;
-    var d=cur-prev, isCur=(Y+"-"+mm)===curYm;
-    /* 구분 내역 툴팁 */
-    var tip=CATS_MAIN.concat(Object.keys(moC).filter(function(c){return c!=="총"&&CATS_MAIN.indexOf(c)<0;}))
-      .filter(function(c){return moC[c];}).map(function(c){return c+' '+won(moC[c]);}).join(' · ');
-    /* 전년 비교 셀 */
-    var cmp;
-    if(!prev && !cur){ cmp='<span style="color:#C4C9D0;font-size:12px">—</span>'; }
-    else if(!prev){ cmp='<span style="color:var(--sub);font-size:12px">작년 기록 없음</span>'; }
-    else {
-      var pctv=Math.round(d/prev*100);
-      var arrow=d>=0?'▲':'▼', ac=d>=0?'var(--blue)':'#9AA1AA';
-      cmp='<span style="color:var(--sub);font-size:12px;font-variant-numeric:tabular-nums">'+won(prev)+'</span>'+
-          ' <span style="color:'+ac+';font-weight:800;font-size:12px;margin-left:6px">'+arrow+(d>=0?'+':'−')+Math.abs(pctv)+'%</span>';
-    }
+    var mm=p2(m);
+    var amts=cols.map(function(y){ return (monthly[y+"-"+mm]||{}).총||0; });
+    cols.forEach(function(y,i){ totals[i]+=amts[i]; });
+    var isCur=(base+"-"+mm)===curYm;
+    /* 기준연도 구분 내역 툴팁 */
+    var moB=monthly[base+"-"+mm]||{};
+    var tip=CATS_MAIN.concat(Object.keys(moB).filter(function(c){return c!=="총"&&CATS_MAIN.indexOf(c)<0;}))
+      .filter(function(c){return moB[c];}).map(function(c){return c+' '+won(moB[c]);}).join(' · ');
+    /* 기준연도 셀: 큰 파랑 + 직전연도 대비 ▲▼% */
+    var baseAmt=amts[0], prevAmt=cols.length>1?amts[1]:0;
+    var deltaTx='';
+    if(cols.length>1 && prevAmt){ var d=baseAmt-prevAmt, pc=Math.round(d/prevAmt*100);
+      deltaTx=' <span style="font-size:11px;font-weight:800;color:'+(d>=0?'var(--blue)':'#9AA1AA')+'">'+(d>=0?'▲+':'▼−')+Math.abs(pc)+'%</span>'; }
     h+='<div style="'+G+';padding:9px 2px;border-bottom:1px solid var(--line);'+(isCur?'background:var(--blueSoft);border-radius:8px;':'')+'">'+
-       '<b style="font-size:13.5px;'+(isCur?'color:var(--blue)':'')+'">'+m+'월</b>'+
-       '<b'+(tip?' title="'+esc(tip)+'"':'')+' style="text-align:right;font-size:16px;font-weight:900;font-variant-numeric:tabular-nums;color:'+(cur?'var(--ink)':'#C4C9D0')+'">'+(cur?won(cur):'–')+'</b>'+
-       '<span style="text-align:right">'+cmp+'</span></div>';
+       '<b style="font-size:13px;'+(isCur?'color:var(--blue)':'')+'">'+m+'월</b>'+
+       '<b'+(tip?' title="'+esc(tip)+'"':'')+' style="text-align:right;font-size:15.5px;font-weight:900;font-variant-numeric:tabular-nums;color:'+(baseAmt?'var(--ink)':'#C4C9D0')+'">'+(baseAmt?won(baseAmt):'–')+deltaTx+'</b>'+
+       cols.slice(1).map(function(y,i){ var v=amts[i+1]; return '<span style="text-align:right;font-size:12.5px;color:'+(v?'var(--sub)':'#D2D6DC')+';font-variant-numeric:tabular-nums">'+(v?won(v):'–')+'</span>'; }).join('')+
+       '</div>';
   }
   /* 합계 행 */
-  var dT=yTot-pTot, pctT=pTot?Math.round(dT/pTot*100):null;
+  var dT=cols.length>1?(totals[0]-totals[1]):0, pctT=(cols.length>1&&totals[1])?Math.round(dT/totals[1]*100):null;
   h+='<div style="'+G+';padding:11px 2px 3px;border-top:2px solid var(--line);align-items:baseline">'+
      '<b style="font-size:13px">합계</b>'+
-     '<b style="text-align:right;font-size:19px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--blue)">'+won(yTot)+'</b>'+
-     '<span style="text-align:right;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums">'+(pTot?won(pTot)+(pctT!==null?' <span style="color:'+(dT>=0?'var(--blue)':'#9AA1AA')+';font-weight:800">'+(dT>=0?'▲+':'▼−')+Math.abs(pctT)+'%</span>':''):'작년 기록 없음')+'</span></div>'+
-     '<div style="font-size:11px;color:var(--sub);margin-top:8px">금액에 마우스를 올리면 구분(수련비·승급심사 등) 내역이 보입니다</div>';
+     '<b style="text-align:right;font-size:18px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--blue)">'+won(totals[0])+(pctT!==null?' <span style="font-size:11px;color:'+(dT>=0?'var(--blue)':'#9AA1AA')+'">'+(dT>=0?'▲+':'▼−')+Math.abs(pctT)+'%</span>':'')+'</b>'+
+     cols.slice(1).map(function(y,i){ return '<span style="text-align:right;font-size:12.5px;color:var(--sub);font-variant-numeric:tabular-nums">'+won(totals[i+1])+'</span>'; }).join('')+
+     '</div>'+
+     '<div style="font-size:11px;color:var(--sub);margin-top:8px">기준연도(파랑) 금액에 마우스를 올리면 구분(수련비·승급심사 등) 내역이 보입니다 · %는 직전 연도 대비</div>';
   return h+'</div>';
 }
 function renderStatusTab(){
@@ -9728,8 +9727,8 @@ function render(){
        kpi2('월평균 ('+curYearS+'년)', won(yearAvg),'','var(--ink)')+
        '</div>';
 
-    /* ══ 월별 수입 (연도 선택 + 전년 동월 비교) — 올해는 크게, 전년은 오른쪽 비교 ══ */
-    h+=monthlyRevenueCard(monthly, keys, modeLbl, "rev");
+    /* ══ 월별 수입 (올해 기준 + 과거 3개년 = 4개년 비교) ══ */
+    h+=monthlyRevenueCard(monthly, keys, modeLbl, Number(curYearS));
     h+='</div>';
 
     /* 납부자 명단 필터 (위계별 디자인: 기간=드롭다운+칩 · 구분=칩 · 반/급수=드롭다운 · 표시=칩) */
