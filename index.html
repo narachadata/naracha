@@ -4375,7 +4375,7 @@ function statListHtml(view){
     /* 출석 날짜 버튼 (그 달) — 한 줄 10개, 넘으면 이 칸 안에서 줄바꿈 */
     var dts=attendDates(s.n, ym);
     var dateBtns = dts.length
-      ? '<div style="display:grid;grid-template-columns:repeat(10,max-content);gap:5px 6px;justify-content:start;align-content:start">'+
+      ? '<div style="display:grid;grid-template-columns:repeat(13,max-content);gap:5px 6px;justify-content:start;align-content:start">'+
           dts.map(function(o){
             if(o.nc){   /* 수련횟수 미포함(심사·국기원·대회연습) — 보라색으로 구분 */
               return '<span title="수련횟수 미포함 (심사·국기원·대회연습)" style="display:inline-flex;align-items:center;justify-content:center;background:#F3E8FF;color:#7C3AED;border:1px dashed #D8B4FE;border-radius:6px;padding:2px 6px;font-size:11px;font-weight:800;white-space:nowrap">'+o.d+o.wd+'</span>';
