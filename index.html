@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>나라차태권도 분당도장 수련비관리</title>
+<title>나라차태권도 수련생관리</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -5287,6 +5287,13 @@ function todayTodoData(){
   var expng=[]; act.forEach(function(s){ var e=effExpiry(s.n); var st=status(e); if(st.k==="over"||st.k==="now") expng.push({n:s.n,e:e||""}); });
   return { absent:Object.keys(absent), returning:returning, bdays:bd, expiring:expng };
 }
+/* 주간 날짜 범위: 반복되는 연·월은 한 번만 (월·연이 걸치면 그 부분만 다시 표기) */
+function fmtWeekRange(s, e){
+  var sy=s.slice(0,4), sm=s.slice(5,7), ey=e.slice(0,4), em=e.slice(5,7), ed=e.slice(8,10);
+  if(sy===ey && sm===em) return s+' ~ '+ed;          /* 같은 연·월 → 끝은 '일'만 */
+  if(sy===ey)            return s+' ~ '+em+'-'+ed;    /* 같은 연, 다른 월 → 끝은 '월-일' */
+  return s+' ~ '+e;                                    /* 연도가 걸침 → 전체 표기 */
+}
 function renderWeekTab(){
   if(!state.schedule) state.schedule=seedSchedule();
   var wk=curWeek();
@@ -5326,7 +5333,7 @@ function renderWeekTab(){
   x+='<div class="card" style="padding:14px 16px">'+
    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+
    '<button class="chip" onclick="moveWeek(-1)">◀ 지난주</button>'+
-   '<b style="font-size:15px">'+esc(wk)+' ~ '+esc(addDays(wk,5))+'</b>'+
+   '<b style="font-size:15px;white-space:nowrap">'+esc(fmtWeekRange(wk, addDays(wk,5)))+'</b>'+
    '<button class="chip" onclick="moveWeek(1)">다음주 ▶</button>'+
    '<button class="chip" onclick="goThisWeek()">이번 주</button>'+
    '<input id="tsSearchIn" class="input" style="max-width:170px;padding:6px 11px;font-size:12.5px;border-radius:9px" placeholder="🔍 이름 검색 ('+(/Mac|iPhone|iPad/i.test(navigator.platform||navigator.userAgent)?"⌘F":"Ctrl+F")+')" value="'+esc(state.tsQ||"")+'" oninput="tsQF(this.value)">'+
@@ -5335,8 +5342,13 @@ function renderWeekTab(){
    '<button class="tool" onclick="openAbsM()">🗓 결석 예정</button>'+
    '<button class="tool'+(state.pastEdit?' warn':'')+'" title="지난 날짜 출결 수정 잠금/해제" onclick="togglePastEdit()">'+(state.pastEdit?'🔓 지난날짜 수정 켜짐':'🔒 지난날짜 수정')+'</button>'+
    '<span style="flex:1"></span>'+
-   '<button class="chip'+(!state.dayView?' on':'')+'" onclick="setDayView(null)">주간</button>'+
-   W_DAYS.map(function(d){ return '<button class="chip'+(state.dayView===d[0]?' on':'')+'" onclick="setDayView(\''+d[0]+'\')">'+d[1]+'</button>'; }).join('')+
+   '<button onclick="setDayView(null)" style="padding:5px 11px;font-size:12px;font-weight:800;border-radius:8px;cursor:pointer;font-family:inherit;border:1px solid '+(!state.dayView?'var(--blue)':'var(--line)')+';background:'+(!state.dayView?'var(--blue)':'#fff')+';color:'+(!state.dayView?'#fff':'var(--ink)')+'">주간</button>'+
+   W_DAYS.map(function(d){
+     var on=state.dayView===d[0], sat=d[0]==="sat";
+     var base='width:29px;padding:5px 0;font-size:12px;font-weight:800;border-radius:8px;cursor:pointer;font-family:inherit;';
+     if(sat) return '<button onclick="setDayView(\''+d[0]+'\')" style="'+base+'border:1px solid '+(on?'#0284C7':'#7DD3FC')+';background:'+(on?'#0EA5E9':'#E0F2FE')+';color:'+(on?'#fff':'#0369A1')+'">'+d[1]+'</button>';
+     return '<button onclick="setDayView(\''+d[0]+'\')" style="'+base+'border:1px solid '+(on?'var(--blue)':'var(--line)')+';background:'+(on?'var(--blue)':'#fff')+';color:'+(on?'#fff':'var(--ink)')+'">'+d[1]+'</button>';
+   }).join('')+
    '</div>'+
    tsBarHtml()+
    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--sub);margin-bottom:4px">'+
@@ -6866,7 +6878,12 @@ function renderStuModal(){
    '<div class="stuMBox" style="background:#fff;border-radius:14px;padding:14px 16px;max-width:480px;width:100%;max-height:94vh;overflow:auto" onclick="event.stopPropagation()">'+
    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+
      '<div style="font-size:17px;font-weight:900">'+(m.mode==="new"?"＋ 원생 등록":"원생 정보")+'</div>'+
-     (m.mode==="edit"?'<span style="font-size:12px;color:var(--sub);font-weight:700">수정 중</span><span style="flex:1"></span><button type="button" class="chip" onclick="stuMToView()" style="font-size:12px">← 보기로</button>':'')+
+     (m.mode==="edit"?'<span style="font-size:12px;color:var(--sub);font-weight:700">수정 중</span>':'')+
+     '<span style="flex:1"></span>'+
+     /* 상단 저장/취소 (수정·등록 모드 · 저장은 강조색) */
+     '<button type="button" onclick="closeStuM()" style="background:#F1F1F4;border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">취소</button>'+
+     '<button type="button" onclick="saveStuM()" style="background:var(--blue);border:1px solid var(--blue);color:#fff;border-radius:9px;padding:7px 15px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 1px 3px rgba(37,99,235,.35)">'+(m.mode==="new"?"등록":"저장")+'</button>'+
+     (m.mode==="edit"?'<button type="button" class="chip" onclick="stuMToView()" style="font-size:12px">← 보기로</button>':'')+
    '</div>'+
    /* ── 사진 섹션 (출석 단말기용) ── */
    '<div style="display:flex;gap:12px;align-items:center;margin-bottom:10px;padding:10px;background:#F5F5F7;border-radius:12px">'+
@@ -8187,7 +8204,7 @@ function render(){
      '<div class="dbar" style="display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:18px 24px;background:#0F172A">'+
        '<div style="display:flex;align-items:center;gap:12px"><img src="'+LOGO_SYM+'" alt="" style="height:44px;width:auto"><div><div style="font-size:20px;font-weight:800;letter-spacing:-.4px;color:#fff">나라차태권도 분당도장</div>'+
        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px">'+
-       '<span style="font-size:12.5px;color:#94A3B8">수련비 관리 · 재원생 '+activeCount+'명'+(function(){ var hc=Object.keys(state.closedMap).filter(function(n){return !isQuit(n);}).length; return hc?' · 휴관 '+hc+'명':''; })()+' · <span style="color:#64748B;font-weight:700">'+APP_VER+'</span></span>'+
+       '<span style="font-size:12.5px;color:#94A3B8">수련생 관리 · 재원생 '+activeCount+'명'+(function(){ var hc=Object.keys(state.closedMap).filter(function(n){return !isQuit(n);}).length; return hc?' · 휴관 '+hc+'명':''; })()+' · <span style="color:#64748B;font-weight:700">'+APP_VER+'</span></span>'+
        (state.syncStatus?'<span id="syncBadge" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#86EFAC;background:rgba(34,197,94,.12);padding:2px 9px;border-radius:20px"><span style="width:6px;height:6px;border-radius:50%;background:#22C55E"></span>'+esc(state.syncStatus)+'</span>':'<span id="syncBadge"></span>')+
        '</div></div></div>'+
        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
