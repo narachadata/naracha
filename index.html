@@ -3941,7 +3941,7 @@ function renderAttContent(){
   var t=state.attTab, x="";
   if(t==="수련생 명단") return renderRosterTab();
   if(t==="시간표 설정") return renderScheduleTab();
-  if(t==="심사대상") return renderExamTab();
+  if(t==="심사대상"){ state.attTab="출석 현황"; return renderStatusTab(); }   /* 심사대상 탭은 출석 현황에 통합됨 */
   if(t==="수련시간표") return renderWeekTab();
   if(t==="출석 현황") return renderStatusTab();
   if(t==="📊 브리핑") return renderBriefTab();
@@ -4256,11 +4256,19 @@ function attendDates(name, ym){
 /* 그룹(전체/반별/급수별)까지 적용한 기준 목록 — 상태 카운트·추가필터의 바탕 */
 function statBaseRows(){
   var ym=state.statYm;
+  var kkwSet={}; (state.kkwPending||[]).forEach(function(n){ kkwSet[n]=1; });
   var rows=STUDENTS.filter(function(s){ return !state.closedMap[s.n]&&!isQuit(s.n); })
     .map(function(s){
       var ct=contractCnt(s.n, ym), ac=attendCnt(s.n, ym);
       var st = !ct ? "기준없음" : ac>ct.n ? "초과" : ac<ct.n ? "미달" : "정상";
-      return { s:s, ct:ct, ac:ac, st:st, diff: ct?Math.abs(ac-ct.n):0 };
+      /* 심사 정보 (구 심사대상 탭 통합) */
+      var acc=state.accMap[s.n]||0;
+      var last=state.lastExamMap[s.n]||"";
+      var cycleOk=!last || addMonths(last,2)<=today();
+      var kkw=!!kkwSet[s.n];
+      var ready=acc>=24 && cycleOk && !kkw;
+      return { s:s, ct:ct, ac:ac, st:st, diff: ct?Math.abs(ac-ct.n):0,
+               acc:acc, last:last, kkw:kkw, ready:ready };
     });
   var grp=state.statGroup||"전체";
   if(grp==="반별" && state.statBanF){ rows=rows.filter(function(r){ return (r.s.b||"")===state.statBanF; }); }
@@ -4277,19 +4285,21 @@ function statViewRows(){
   var rows=statBaseRows();
   var q=(state.statQ||"").trim(), f=state.statF||"";
   if(q) rows=rows.filter(function(r){ return r.s.n.indexOf(q)>-1; });
-  if(f) rows=rows.filter(function(r){ return r.st===f; });
-  rows.sort(function(a,b){ return b.diff-a.diff || b.ac-a.ac; });
+  if(f==="추천") rows=rows.filter(function(r){ return r.ready; });
+  else if(f) rows=rows.filter(function(r){ return r.st===f; });
+  if(f==="추천") rows.sort(function(a,b){ return b.acc-a.acc; });   /* 추천 보기: 누적횟수 많은 순 */
+  else rows.sort(function(a,b){ return b.diff-a.diff || b.ac-a.ac; });
   return rows;
 }
 function renderStatusTab(){
   if(!state.statYm) state.statYm=today().slice(0,7);
   var ym=state.statYm, f=state.statF||"";
   var base=statBaseRows();
-  var cnt={미달:0,초과:0,정상:0};
-  base.forEach(function(r){ if(cnt[r.st]!=null) cnt[r.st]++; });
+  var cnt={미달:0,초과:0,정상:0,추천:0};
+  base.forEach(function(r){ if(cnt[r.st]!=null) cnt[r.st]++; if(r.ready) cnt.추천++; });
 
-  /* 상태 필터 버튼 (미달/초과/일치) — 위계 1: 크고 뜻에 맞는 색 · 전체 없음(다시 누르면 해제) */
-  var SF=[{k:"미달",c:"#B45309"},{k:"초과",c:"#D0332A"},{k:"정상",lbl:"일치",c:"#1E7B3C"}];
+  /* 상태 필터 버튼 (미달/초과/일치/심사추천) — 위계 1: 크고 뜻에 맞는 색 · 다시 누르면 해제 */
+  var SF=[{k:"미달",c:"#B45309"},{k:"초과",c:"#D0332A"},{k:"정상",lbl:"일치",c:"#1E7B3C"},{k:"추천",lbl:"🥋 심사추천",c:"var(--brandRed)"}];
   var sfBtns=SF.map(function(o){
     var on=(f===o.k);
     return '<button onclick="setStatF(\''+o.k+'\')" style="padding:9px 16px;border-radius:11px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;border:1.5px solid '+o.c+';'+(on?'background:'+o.c+';color:#fff':'background:#fff;color:'+o.c)+'">'+(o.lbl||o.k)+' '+(cnt[o.k]||0)+'</button>';
@@ -4364,16 +4374,31 @@ function statListHtml(view){
             return '<span style="display:inline-flex;align-items:center;justify-content:center;background:'+(wend?'#FFF3E6':'#EAF3FF')+';color:'+(wend?'#C2410C':'var(--blue)')+';border:1px solid '+(wend?'#FBD3AE':'#CFE2FA')+';border-radius:6px;padding:2px 6px;font-size:11px;font-weight:800;white-space:nowrap">'+o.d+o.wd+'</span>';
           }).join('')+'</div>'
       : '<span style="font-size:11.5px;color:var(--sub)">출석 없음</span>';
-    /* 고정폭 칸으로 세로 줄맞춤 (기준·실제·미달태그·날짜 모두 같은 x에서 시작) */
+    /* 심사 클러스터 (구 심사대상 탭 통합): 누적횟수(클릭=수동수정) · 마지막 심사일 · 상태 배지 · 응심 버튼 */
+    var esn2=esc(s.n).replace(/'/g,"\\'");
+    var exBadge = r.kkw ? '<span style="background:#EEE;color:#666;border-radius:6px;padding:2px 7px;font-size:10.5px;font-weight:800;white-space:nowrap">국기원 대기</span>'
+      : r.ready ? '<span style="background:var(--redSoft);color:var(--red);border-radius:6px;padding:2px 7px;font-size:10.5px;font-weight:800;white-space:nowrap">추천</span>'
+      : r.acc<24 ? '<span style="font-size:10.5px;color:var(--sub);white-space:nowrap">'+(24-r.acc)+'회 남음</span>'
+      : '';   /* 24회 이상·주기 미충족: 재응시 가능일 표기는 생략 (마지막 심사일로 판단) */
+    var examCl='<div style="flex:0 0 226px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden">'+
+      '<span style="font-size:11px;color:var(--sub)">심사</span>'+
+      '<b style="font-size:12.5px;color:'+(r.acc>=24?'var(--red)':'var(--ink)')+';cursor:pointer;border-bottom:1px dashed var(--sub);font-variant-numeric:tabular-nums" title="클릭하면 누적횟수 수동 수정" onclick="editAcc(\''+esn2+'\')">'+r.acc+'회</b>'+
+      (r.last?'<span style="font-size:10.5px;color:var(--sub);font-variant-numeric:tabular-nums" title="마지막 심사일">'+esc(r.last.slice(2))+'</span>':'')+
+      exBadge+
+      ((r.ready||r.acc>=24)?'<button class="chip sm" style="color:var(--blue);border-color:var(--blue);padding:2px 8px;font-size:10.5px" onclick="doExam(\''+esn2+'\')">응심</button>':'')+
+      '</div>';
+    /* 고정폭 칸으로 세로 줄맞춤 (급수·기준·실제·태그·심사·날짜 모두 같은 x에서 시작) */
     x+='<div style="border-top:1px solid var(--line);padding:9px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
       avatarHtml(s.n, s.g, 34)+
       '<span style="flex:0 0 auto;width:4px;height:22px;border-radius:2px;background:'+gradeColor(s.grade||"")+'"></span>'+
       '<b style="flex:0 0 84px;font-size:14px;cursor:pointer;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="클릭하면 학적부가 열립니다 (수정도 가능)" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+esc(s.n)+'</b>'+
+      '<span style="flex:0 0 56px;font-size:11.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="급수">'+esc(s.grade||"급수?")+'</span>'+
       '<span style="flex:0 0 52px;font-size:12px;color:var(--sub)">기준 <b style="color:var(--ink)">'+(r.ct?r.ct.n:'–')+'</b></span>'+
       '<span style="flex:0 0 48px;font-size:12px;color:var(--sub)">실제 <b style="color:var(--blue)">'+r.ac+'</b></span>'+
       '<div style="flex:0 0 74px;display:flex;justify-content:flex-start">'+tag+'</div>'+
+      examCl+
       /* 오른쪽: 출석 날짜 버튼 (모든 행 같은 x에서 시작) */
-      '<div style="flex:1;min-width:0">'+dateBtns+'</div>'+
+      '<div style="flex:1;min-width:200px">'+dateBtns+'</div>'+
       '</div>';
   });
   if(view.length>250) x+='<div style="font-size:12px;color:var(--sub);margin-top:8px">외 '+(view.length-250)+'명</div>';
@@ -6305,10 +6330,16 @@ function renderStuChart(m){
 
     /* ── 헤더 밴드 (도복 남색) ── */
     '<div style="background:linear-gradient(135deg,'+NAVY+' 0%,#22406C 100%);padding:18px 20px 16px;border-radius:16px 16px 0 0;position:relative">'+
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">'+
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px">'+
         '<span style="font-size:11px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.7)">원생 학적부</span>'+
         '<span style="flex:1"></span>'+
-        '<button onclick="closeStuM()" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:26px;height:26px;border-radius:8px;cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center">×</button>'+
+        /* 상단 액션: 수정 → 출력 → 닫기 (헤더 톤에 맞춘 디자인) */
+        '<button onclick="stuMToEdit()" style="background:#fff;border:none;color:'+NAVY+';border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;box-shadow:0 1px 3px rgba(0,0,0,.18)">'+
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>수정</button>'+
+        '<button onclick="exportStuPdf(\''+esafe+'\')" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px">'+
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>출력</button>'+
+        '<button onclick="closeStuM()" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px">'+
+          '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>닫기</button>'+
       '</div>'+
       '<div style="display:flex;gap:14px;align-items:center">'+
         '<div style="width:72px;height:72px;border-radius:14px;overflow:hidden;background:'+(m.photo?'rgba(255,255,255,.15)':genderBg(m.g))+';flex-shrink:0;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.25)">'+
@@ -6393,16 +6424,7 @@ function renderStuChart(m){
       '</div>';
     })()+
 
-    /* ── 하단 액션: 닫기 / 출력 / 수정 ── */
-    '<div style="display:flex;gap:8px;padding:16px 20px 18px">'+
-      '<button onclick="closeStuM()" style="flex:1;background:transparent;border:1.5px solid '+LINE+';color:'+SUB+';border-radius:11px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">닫기</button>'+
-      '<button onclick="exportStuPdf(\''+esafe+'\')" style="flex:1.2;background:#fff;border:1.5px solid '+NAVY+';color:'+NAVY+';border-radius:11px;padding:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">'+
-        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>출력'+
-      '</button>'+
-      '<button onclick="stuMToEdit()" style="flex:1.2;background:'+NAVY+';border:none;color:#fff;border-radius:11px;padding:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">'+
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>수정'+
-      '</button>'+
-    '</div>'+
+    '<div style="height:18px"></div>'+
 
     '</div></div>';
   return x;
@@ -7846,7 +7868,7 @@ function render(){
   var __tabsHtml = (state.topCat==="심사")
     ? ''
     : state.topCat==="출석"
-    ? '<div class="tabs">'+["수련시간표","출석 현황","심사대상","수련생 명단","시간표 설정","인원현황","📊 브리핑"].map(function(t){
+    ? '<div class="tabs">'+["수련시간표","출석 현황","수련생 명단","시간표 설정","인원현황","📊 브리핑"].map(function(t){
         return '<button class="tab'+(state.attTab===t?' on':'')+'" onclick="setAttTab(\''+t+'\')">'+t+'</button>';
       }).join('')+'</div>'
     : '<div class="tabs">'+["회계입력","납부내역","납부집계","장기등록관리","회계백업"].map(function(t){
@@ -7909,8 +7931,8 @@ function render(){
   /* 탭별 컨테이너 폭: 대시보드=넓게 · 명단/내역=중간 · 입력폼=좁게 (일반 모니터 최적화) */
   h+='<div class="wrap'+(function(){
       var t=(state.topCat==="출석")?state.attTab:state.tab;
-      if(t==="📊 브리핑"||t==="인원현황") return " wrap--wide";
-      if(t==="출석 현황"||t==="심사대상"||t==="수련생 명단"||t==="시간표 설정"||t==="납부내역"||t==="납부집계") return " wrap--md";
+      if(t==="📊 브리핑"||t==="인원현황"||t==="출석 현황") return " wrap--wide";   /* 출석현황: 심사 통합으로 정보량 증가 → 넓게 */
+      if(t==="수련생 명단"||t==="시간표 설정"||t==="납부내역"||t==="납부집계") return " wrap--md";
       return "";
     })()+'"'+(state.topCat==="출석"&&state.attTab==="수련시간표"?' style="max-width:min(97vw,1900px)"':'')+'>';
   /* ── 심사관리: 격리된 평가 시스템(iframe) 표시 ── */
