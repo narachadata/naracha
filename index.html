@@ -268,7 +268,7 @@ window.examCountAttendAfter = function(name, fromDate){
         var day = key.split("-")[0];
         if(typeof dayIsOff==="function" && dayIsOff(wk, day)) continue; /* 휴관일 제외 */
         var mk = w.cells[key].marks && w.cells[key].marks[name];
-        if(mk && mk.s==="출석"){
+        if(mk && mk.s==="출석" && (typeof kindCounts!=="function" || kindCounts(mk.k))){   /* 심사·국기원·대회연습 미포함 */
           var date = addDays(wk, (DAY_IDX[day]||0));
           if(date > fromDate) c++;   /* 당일 제외, 그 이후만 */
         }
@@ -4224,7 +4224,7 @@ function attendCnt(name, ym){
     for(var key in w.cells){
       if(dayIsOff(wk, key.split("-")[0])) continue;    /* 휴관일 제외 */
       var mk=w.cells[key].marks && w.cells[key].marks[name];
-      if(mk && mk.s==="출석"){
+      if(mk && mk.s==="출석" && kindCounts(mk.k)){     /* 심사·국기원·대회연습은 미포함 */
         var day=key.split("-")[0];
         if(addDays(wk, DAY_IDX[day]||0).slice(0,7)===ym) c++;
       }
@@ -4234,7 +4234,7 @@ function attendCnt(name, ym){
 }
 /* 그 달에 출석한 '날짜' 목록 (중복 날짜는 1번) → [{d:일, wd:'수'}] 오름차순 */
 function attendDates(name, ym){
-  var set={};
+  var set={};   /* 날짜 → true=카운팅 포함, false=미포함(심사·국기원·대회연습만 있던 날) */
   for(var wk in state.weeks){
     var w=state.weeks[wk]; if(!w||!w.cells) continue;
     for(var key in w.cells){
@@ -4243,14 +4243,18 @@ function attendDates(name, ym){
       var mk=w.cells[key].marks && w.cells[key].marks[name];
       if(mk && mk.s==="출석"){
         var md=addDays(wk, DAY_IDX[day]||0);
-        if(md.slice(0,7)===ym) set[Number(md.slice(8,10))]=1;
+        if(md.slice(0,7)===ym){
+          var d=Number(md.slice(8,10));
+          if(kindCounts(mk.k)) set[d]=true;             /* 포함 출석이 하나라도 있으면 포함색 */
+          else if(set[d]===undefined) set[d]=false;
+        }
       }
     }
   }
   var WD="일월화수목금토";
   return Object.keys(set).map(Number).sort(function(a,b){return a-b;}).map(function(d){
     var dt=new Date(ym+"-"+p2(d)+"T00:00:00");
-    return { d:d, wd:WD.charAt(dt.getDay()) };
+    return { d:d, wd:WD.charAt(dt.getDay()), nc:!set[d] };
   });
 }
 /* 그룹(전체/반별/급수별)까지 적용한 기준 목록 — 상태 카운트·추가필터의 바탕 */
@@ -4349,7 +4353,10 @@ function renderStatusTab(){
     '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'+grpBtns+'</div>'+subSel+
     '</div>'+
     /* 선택 인원 (크게) */
-    '<div id="statCountArea" style="margin:12px 2px 6px">'+statCountHtml(view.length)+'</div>'+
+    '<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:12px 2px 6px">'+
+    '<div id="statCountArea">'+statCountHtml(view.length)+'</div>'+
+    '<span style="font-size:11px;color:var(--sub)">날짜: <span style="background:#EAF3FF;color:var(--blue);border:1px solid #CFE2FA;border-radius:5px;padding:1px 5px;font-weight:800">평일</span> <span style="background:#FFF3E6;color:#C2410C;border:1px solid #FBD3AE;border-radius:5px;padding:1px 5px;font-weight:800">주말</span> <span style="background:#F3E8FF;color:#7C3AED;border:1px dashed #D8B4FE;border-radius:5px;padding:1px 5px;font-weight:800">미포함</span> — 심사·국기원·대회연습은 출석 표시만 되고 수련횟수(기준 대비 실제·심사 누적)에는 포함되지 않습니다</span>'+
+    '</div>'+
     '<div id="statListArea">'+statListHtml(view)+'</div></div>';
   return x;
 }
@@ -4370,6 +4377,9 @@ function statListHtml(view){
     var dateBtns = dts.length
       ? '<div style="display:grid;grid-template-columns:repeat(10,max-content);gap:5px 6px;justify-content:start;align-content:start">'+
           dts.map(function(o){
+            if(o.nc){   /* 수련횟수 미포함(심사·국기원·대회연습) — 보라색으로 구분 */
+              return '<span title="수련횟수 미포함 (심사·국기원·대회연습)" style="display:inline-flex;align-items:center;justify-content:center;background:#F3E8FF;color:#7C3AED;border:1px dashed #D8B4FE;border-radius:6px;padding:2px 6px;font-size:11px;font-weight:800;white-space:nowrap">'+o.d+o.wd+'</span>';
+            }
             var wend=(o.wd==="토"||o.wd==="일");
             return '<span style="display:inline-flex;align-items:center;justify-content:center;background:'+(wend?'#FFF3E6':'#EAF3FF')+';color:'+(wend?'#C2410C':'var(--blue)')+';border:1px solid '+(wend?'#FBD3AE':'#CFE2FA')+';border-radius:6px;padding:2px 6px;font-size:11px;font-weight:800;white-space:nowrap">'+o.d+o.wd+'</span>';
           }).join('')+'</div>'
@@ -4878,9 +4888,13 @@ window.moveBriefYm=function(n){ moveBrief(n); };
 /* ══════════ 수련시간표 보드 ══════════ */
 var ATT_KINDS=[
  {k:"정규", c:"#2B5FB8"}, {k:"보강", c:"#38BDF8"}, {k:"체험", c:"#F3C614"},
- {k:"첫주", c:"#F472B6"}, {k:"관리", c:"#10B981"}, {k:"심사", c:"#8B5CF6"}];
+ {k:"관리", c:"#10B981"}, {k:"심사", c:"#8B5CF6"},
+ {k:"국기원", c:"#0F766E"}, {k:"대회연습", c:"#DB2777"}];
 function kindLabel(k){ return k==="정규" ? "출석" : k; }
 function kindColor(k){ var f=ATT_KINDS.find(function(x){return x.k===k;}); return f?f.c:"#2B5FB8"; }
+/* 수련횟수 카운팅 제외 종류: 배치·출석 표시는 되지만 회계 '실제'와 심사 누적횟수에는 포함 안 됨 */
+var NO_COUNT_KINDS={ "심사":1, "국기원":1, "대회연습":1 };
+function kindCounts(k){ return !NO_COUNT_KINDS[k||"정규"]; }
 var W_DAYS=[["mon","월",0],["tue","화",1],["wed","수",2],["thu","목",3],["fri","금",4],["sat","토",5]];
 function fmtYmd(d){
   var m=d.getMonth()+1, dd=d.getDate();
@@ -4970,6 +4984,7 @@ function derivedAccCounts(){
       for(var name in marks){
         var mk=marks[name];
         if(!mk || mk.s!=="출석") continue;
+        if(!kindCounts(mk.k)) continue;       /* 심사·국기원·대회연습은 수련횟수 미포함 */
         var l=le[name];
         if(l && mdate<=l) continue;           /* 마지막 심사일 당일까지는 제외 (다음날부터 카운트) */
         counts[name]=(counts[name]||0)+1;
