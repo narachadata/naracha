@@ -28,6 +28,15 @@
   .tabs { display:flex; gap:26px; margin-top:0; padding:0 24px; overflow-x:auto; background:#fff; }
   .tab { flex:0 0 auto; padding:15px 2px 13px; font-size:14.5px; background:none; border:none;
          color:#64748B; border-bottom:2.5px solid transparent; cursor:pointer; font-family:inherit; font-weight:600; white-space:nowrap; }
+  /* 상단 메뉴 접기/펼치기 */
+  .hdrToggle { flex:0 0 auto; margin-left:auto; align-self:center; background:#F1F5F9!important; color:#475569!important; border:1px solid #E2E8F0!important;
+               border-radius:8px; padding:5px 11px!important; font-size:12px!important; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; display:inline-flex; align-items:center; gap:5px; }
+  .slimbar { display:flex; align-items:center; gap:4px; padding:0 14px 0 24px; background:#0F172A; border-bottom:1px solid #1E293B; }
+  .slimbar .slimExpand { flex:0 0 auto; margin-left:auto; background:rgba(255,255,255,.08); color:#E2E8F0; border:1px solid rgba(255,255,255,.12);
+               border-radius:8px; padding:7px 12px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; margin-top:7px; margin-bottom:7px; }
+  .slimbar .tabs { flex:0 1 auto; min-width:0; background:transparent; padding:0; gap:20px; }
+  .slimbar .tab { color:#94A3B8; padding:12px 2px 11px; }
+  .slimbar .tab.on { color:#fff!important; border-bottom-color:var(--brandRed)!important; }
   .pwbox { -webkit-text-security: disc; }
   .tab.on { color:#4F46E5 !important; font-weight:800; border-bottom-color:#4F46E5 !important; background:none; border-radius:0; }
   .badge { margin-left:5px; background:var(--red); color:#fff; border-radius:999px;
@@ -5128,6 +5137,12 @@ window.setDayMemo=function(day,v){
   touchWeek();
 };
 try{ state.fitW = (localStorage.getItem("naracha-fitw")||"1")==="1"; }catch(e){ state.fitW=true; }
+try{ state.hdrCollapsed = localStorage.getItem("naracha-hdr-collapsed")==="1"; }catch(e){ state.hdrCollapsed=false; }
+window.toggleHeader=function(){
+  state.hdrCollapsed=!state.hdrCollapsed;
+  try{ localStorage.setItem("naracha-hdr-collapsed", state.hdrCollapsed?"1":"0"); }catch(e){}
+  render();
+};
 window.toggleFitW=function(){
   state.fitW=!state.fitW;
   try{ localStorage.setItem("naracha-fitw", state.fitW?"1":"0"); }catch(e){}
@@ -7708,6 +7723,28 @@ function render(){
        '</div></div></div>';
   }
   var activeCount=STUDENTS.filter(function(s){ return !state.closedMap[s.n]&&!isQuit(s.n); }).length;
+  /* ── 탭 줄 HTML (접힘/펼침 공용) ── */
+  var __tabsHtml = (state.topCat==="심사")
+    ? ''
+    : state.topCat==="출석"
+    ? '<div class="tabs">'+["수련시간표","출석 현황","심사대상","수련생 명단","시간표 설정","인원현황","📊 브리핑"].map(function(t){
+        return '<button class="tab'+(state.attTab===t?' on':'')+'" onclick="setAttTab(\''+t+'\')">'+t+'</button>';
+      }).join('')+'</div>'
+    : '<div class="tabs">'+["회계입력","납부내역","납부집계","장기등록관리","회계백업"].map(function(t){
+        var b=(t==="납부내역"&&urgent.length)?'<span class="badge">'+urgent.length+'</span>':'';
+        return '<button class="tab'+(state.tab===t?' on':'')+'" onclick="setTab(\''+t+'\')">'+t+b+'</button>';
+      }).join('')+'</div>';
+
+  /* ── 상단 메뉴 접힘: 얇은 바(펼치기 + 탭)만 표시해 아래 내용이 화면을 꽉 채움 ── */
+  var __hdrDone=false;
+  if(state.hdrCollapsed){
+    h+='<div class="header"><div class="slimbar">'+
+       (__tabsHtml||'<span style="color:#94A3B8;font-size:13px;padding:12px 4px">심사관리</span>')+
+       '<button class="slimExpand" onclick="toggleHeader()" title="상단 메뉴 펼치기"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>메뉴 펼치기</button>'+
+       '</div></div>';
+    __hdrDone=true;
+  }
+  if(!__hdrDone){
   h+='<div class="header">'+
      /* ── 다크 상단 바 (확정 디자인) ── */
      '<div class="dbar" style="display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:18px 24px;background:#0F172A">'+
@@ -7722,6 +7759,7 @@ function render(){
        '<span style="width:1px;height:22px;background:rgba(255,255,255,.15);margin:0 2px"></span>'+
        '<button onclick="showChangePw()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"></circle><path d="M10.85 12.15 19 4l2 2-2 2 2 2"></path></svg>비번변경</button>'+
        '<button onclick="lockNow()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>잠금</button>'+
+       '<button onclick="toggleHeader()" title="상단 메뉴 접기 — 아래 내용을 화면 가득 보기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"></path></svg>접기</button>'+
        '</div></div>'+
      /* ── 카테고리 행 ── */
      '<div style="display:flex;gap:9px;padding:14px 24px;align-items:center;flex-wrap:wrap;background:#fff;border-bottom:1px solid #F1F5F9">'+
@@ -7747,16 +7785,8 @@ function render(){
           : '<span style="font-size:12px;color:var(--sub);font-weight:700">'+esc(state.attStatus)+'</span>')
         :'')+
       '</div>'+
-      (state.topCat==="심사"
-      ? '</div>'   /* 심사관리: 하단 탭 줄 없음 (iframe이 자체 탭을 가짐) */
-      : state.topCat==="출석"
-      ? '<div class="tabs">'+["수련시간표","출석 현황","심사대상","수련생 명단","시간표 설정","인원현황","📊 브리핑"].map(function(t){
-          return '<button class="tab'+(state.attTab===t?' on':'')+'" onclick="setAttTab(\''+t+'\')">'+t+'</button>';
-        }).join('')+'</div></div>'
-      : '<div class="tabs">'+["회계입력","납부내역","납부집계","장기등록관리","회계백업"].map(function(t){
-        var b=(t==="납부내역"&&urgent.length)?'<span class="badge">'+urgent.length+'</span>':'';
-        return '<button class="tab'+(state.tab===t?' on':'')+'" onclick="setTab(\''+t+'\')">'+t+b+'</button>';
-     }).join('')+'</div></div>');
+      __tabsHtml + '</div>';
+  }   /* if(!__hdrDone) 끝 */
   /* 탭별 컨테이너 폭: 대시보드=넓게 · 명단/내역=중간 · 입력폼=좁게 (일반 모니터 최적화) */
   h+='<div class="wrap'+(function(){
       var t=(state.topCat==="출석")?state.attTab:state.tab;
