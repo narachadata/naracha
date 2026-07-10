@@ -691,6 +691,7 @@ function loadAll(){
     var attRaw=localStorage.getItem("naracha-att");
     if(attRaw){ var am=JSON.parse(attRaw); applyAtt(am); }
   }catch(e){}
+  if(typeof migrateHolds==="function") migrateHolds();   /* 기존 명단 홀딩을 시간표에도 표시 (absences 로드 후 1회 동기화) */
   myRole();
   if(state.role==="coach") state.topCat="출석";
   /* 장기등록 씨앗(수기 명단)을 한 번만 편입 — 삭제했던 항목은 다시 넣지 않음 */
@@ -2014,27 +2015,67 @@ window.deleteLong=function(id){
   persist(); render();
 };
 
-window.saveHold=function(){
-  var e=state.holdEdit;
-  state.holdMap[e.name]={ start:e.start, period:e.period, days:HOLD_DAYS[e.period]||0,
-                          reason:e.reason, memo:e.memo||"", t:Date.now() };
-  /* 진행 중인 장기등록이 있으면 홀딩 일수만큼 자동 연장 */
-  var hDays=HOLD_DAYS[e.period]||0;
-  if(hDays>0){
+/* ══════════ 홀딩 통합 코어 — 명단·시간표 어디서 등록해도 동일 처리 ══════════
+   holdMap(재등록 만료·장기등록 연장의 근거) + absences(시간표 자동표시·명단 배지·복사 결석)를 항상 함께 갱신 */
+function _holdDays(from,to){ if(!from||!to) return 0; var d=Math.round((Date.parse(to)-Date.parse(from))/86400000)+1; return d>0?d:0; }
+function applyHold(name, from, to, open, reason, memo, period){
+  if(!name||!from) return;
+  open=!!open;
+  var effTo = open ? "" : (to||from);
+  var days = open ? 0 : _holdDays(from, effTo);
+  /* ① holdMap */
+  state.holdMap[name]={ start:from, period:(period||(open?"미정":"지정")), days:days,
+                        reason:reason||"", memo:memo||"", to:effTo, open:open, t:Date.now() };
+  /* ② absences (from 키로 최신 우선 병합 — 기존 규칙과 호환) */
+  if(!state.absences) state.absences={};
+  var arr=state.absences[name]||[]; var reused=false;
+  arr.forEach(function(e){
+    if(e.src!=="hold") return;
+    if(e.from===from && !reused){ e.to=(open?"9999-12-31":effTo); e.open=open; e.reason=reason||""; e.del=false; e.t=Date.now(); reused=true; }
+    else if(!e.del){ e.del=true; e.t=Date.now(); }   /* 시작일이 바뀐 옛 홀딩건은 취소 */
+  });
+  if(!reused) arr.push({ from:from, to:(open?"9999-12-31":effTo), open:open, reason:reason||"", src:"hold", t:Date.now() });
+  state.absences[name]=arr;
+  /* ③ 진행 중인 장기등록 연장 (기간이 정해진 경우만) */
+  if(days>0){
     var nowYm=ym(today());
     (state.longRegs||[]).forEach(function(r){
-      if(r.name===e.name && r.endYm && r.endYm>=nowYm){
+      if(r.name===name && r.endYm && r.endYm>=nowYm){
         if(!r.holdLog) r.holdLog={};
-        r.holdLog[e.start]=hDays;   /* 같은 시작일의 홀딩을 수정하면 덮어써 중복 연장 방지 */
-        r.t=Date.now();
+        r.holdLog[from]=days; r.t=Date.now();
       }
     });
   }
-  state.holdEdit=null; persist(); render();
+}
+function clearHold(name){
+  delete state.holdMap[name];
+  var arr=(state.absences||{})[name]||[];
+  arr.forEach(function(e){ if(e.src==="hold" && !e.del){ e.del=true; e.t=Date.now(); } });
+}
+/* 기존 데이터(옛 명단 홀딩)를 시간표에도 보이도록 1회 동기화 — 로드/병합 후 호출, 여러 번 불려도 안전 */
+function migrateHolds(){
+  var hm=state.holdMap||{};
+  Object.keys(hm).forEach(function(nm){
+    var h=hm[nm]; if(!h||!h.start) return;
+    var arr=(state.absences&&state.absences[nm])||[];
+    if(arr.some(function(e){return e.src==="hold" && !e.del;})) return;   /* 이미 동기화됨 */
+    var open = (h.open!=null) ? !!h.open : (!h.days || h.period==="미정");
+    var to = open ? "9999-12-31" : (h.to || (h.days>0? addDays(h.start, h.days-1) : h.start));
+    if(!state.absences) state.absences={};
+    if(!state.absences[nm]) state.absences[nm]=[];
+    state.absences[nm].push({ from:h.start, to:to, open:open, reason:h.reason||"", src:"hold", t:h.t||Date.now() });
+  });
+}
+window.saveHold=function(){
+  var e=state.holdEdit;
+  var open=(e.period==="미정");
+  var to = open ? "" : addDays(e.start, (HOLD_DAYS[e.period]||0)-1);
+  applyHold(e.name, e.start, to, open, e.reason, e.memo, e.period);
+  state.holdEdit=null; persistAtt(); persist(); render();
 };
 window.removeHold=function(name){
   if(!confirm(name+" 원생의 홀딩을 해제할까요? 만료일이 원래대로 돌아갑니다.")) return;
-  delete state.holdMap[name]; persist(); render();
+  clearHold(name); persistAtt(); persist(); render();
 };
 
 window.doWeeklyBackup=function(){
@@ -5262,6 +5303,7 @@ function dateOfKey(key, wk){
   return addDays(wk, idx);
 }
 window.openAbsM=function(){ state.absM={ q:"", pick:"", from:today(), to:"", reason:"" }; render(); };
+window.setAbsSort=function(s){ state.absSort=s; render(); };
 window.closeAbsM=function(){ state.absM=null; render(); };
 window.absQ=function(v){
   state.absM.q=v; state.absM.pick="";
@@ -5290,12 +5332,9 @@ window.saveAbs=function(){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(m.from)){ alert("시작일을 입력해 주세요."); return; }
   var hasTo=/^\d{4}-\d{2}-\d{2}$/.test(m.to);
   if(hasTo && m.to<m.from){ alert("종료일이 시작일보다 빠릅니다."); return; }
-  if(!state.absences) state.absences={};
-  if(!state.absences[nm]) state.absences[nm]=[];
-  /* 종료일 미입력 = 미정 홀딩 (언제 끝날지 모름) → to를 먼 미래로 두고 open 표시 */
-  state.absences[nm].push({ from:m.from, to:(hasTo?m.to:"9999-12-31"), open:!hasTo,
-                            reason:(m.reason||"").trim(), t:Date.now() });
-  state.absM=null; persistAtt(); render();
+  /* 통합 경로: 명단 홀딩과 동일하게 처리 → 재등록 만료·장기등록 연장도 함께 반영 */
+  applyHold(nm, m.from, hasTo?m.to:"", !hasTo, (m.reason||"").trim(), "", null);
+  state.absM=null; persistAtt(); persist(); render();
 };
 window.endAbsence=function(name){
   var arr=(state.absences||{})[name]||[];
@@ -5314,12 +5353,18 @@ window.endAbsence=function(name){
     best.open=false;
   }
   best.t=Date.now();   /* 최신 표시 → 다른 기기의 옛 기록을 병합에서 이김 */
-  persistAtt(); render();
+  /* 통합: 명단 홀딩(holdMap)도 함께 정리 */
+  if(best.src==="hold"){
+    if(best.del){ delete state.holdMap[name]; }
+    else { var h=state.holdMap[name]; if(h){ h.to=best.to; h.open=false; h.days=_holdDays(h.start,best.to); h.t=Date.now(); } }
+  }
+  persistAtt(); persist(); render();
 };
 window.delAbs=function(name, from, to){
-  var arr=(state.absences||{})[name]||[];
-  arr.forEach(function(e){ if(e.from===from&&e.to===to){ e.del=true; e.t=Date.now(); } });
-  persistAtt(); render();
+  var arr=(state.absences||{})[name]||[]; var wasHold=false;
+  arr.forEach(function(e){ if(e.from===from&&e.to===to){ e.del=true; e.t=Date.now(); if(e.src==="hold") wasHold=true; } });
+  if(wasHold) delete state.holdMap[name];   /* 통합: 명단 홀딩도 함께 해제 */
+  persistAtt(); if(wasHold) persist(); render();
 };
 window.cycleLvT=function(key,li){
   var coaches=(state.schedule&&state.schedule.coaches)||[];
@@ -5340,9 +5385,10 @@ window.copyPrevWeek=function(){
     alert("지난주("+prevWk+")에 복사할 배치가 없습니다."); return;
   }
   /* 복사 대상 계산: 보강·체험 제외, 출석 표시는 비움, 관리는 메모 유지 */
-  var total=0, skipped=0;
+  var total=0, skipped=0, setCells=0;
   for(var key in prev.cells){
     var pc=prev.cells[key];
+    if(pc.cat || (pc.tch!==undefined&&pc.tch!=="") || (pc.lvT&&pc.lvT.some(function(x){return x;}))) setCells++;
     for(var li=0; li<3; li++){
       (pc.lv[li]||[]).forEach(function(nm){
         var mk=(pc.marks||{})[nm]||{};
@@ -5351,12 +5397,24 @@ window.copyPrevWeek=function(){
       });
     }
   }
-  if(!total){ alert("복사할 정규 배치가 없습니다. (보강·체험 "+skipped+"명은 제외됩니다)"); return; }
-  if(!confirm("지난주("+prevWk+") 배치 "+total+"명을 이번 주로 복사할까요?\n\n· 보강·체험 "+skipped+"명은 제외\n· 출석/결석 표시는 새로 시작 (취소선 없이)\n· 이미 배치된 이름은 건너뜀")) return;
-  var added=0;
+  if(!total && !setCells){ alert("복사할 정규 배치가 없습니다. (보강·체험 "+skipped+"명은 제외됩니다)"); return; }
+  if(!confirm("지난주("+prevWk+") 시간표를 이번 주로 복사할까요?\n\n"+
+    "· 정규 배치 "+total+"명 복사 (보강·체험 "+skipped+"명은 제외)\n"+
+    "· 수업유형·지도진·시간별 사범 이니셜도 함께 복사\n"+
+    "· 홀딩 중인 수련생은 자동으로 '결석 · 홀딩 사유' 표시\n"+
+    "· 그 외 출석/결석 표시는 새로 시작 · 이미 배치된 이름은 건너뜀")) return;
+  var added=0, heldMarked=0;
   for(var key2 in prev.cells){
     var pc2=prev.cells[key2];
     var cur=wcell(key2);
+    /* ① 셀 설정 복사: 수업유형·지도진·시간별 사범 이니셜(레벨별) — 이번 주에 아직 없을 때만 채움(수동 설정 보존) */
+    if(pc2.cat && !cur.cat) cur.cat=pc2.cat;
+    if(pc2.tch!==undefined && pc2.tch!=="" && (cur.tch===undefined||cur.tch==="")) cur.tch=pc2.tch;
+    if(pc2.lvT && pc2.lvT.some(function(x){return x;})){
+      if(!cur.lvT) cur.lvT=["","",""];
+      for(var lt=0; lt<3; lt++){ if(pc2.lvT[lt] && !cur.lvT[lt]) cur.lvT[lt]=pc2.lvT[lt]; }
+    }
+    /* ② 이름 배치 복사 */
     for(var li2=0; li2<3; li2++){
       (pc2.lv[li2]||[]).forEach(function(nm){
         var mk=(pc2.marks||{})[nm]||{};
@@ -5365,13 +5423,22 @@ window.copyPrevWeek=function(){
         if(s && (s.st==="휴관" || state.closedMap[nm])) return; /* 그새 휴관된 원생 제외 */
         for(var q=0;q<3;q++){ if(cur.lv[q].indexOf(nm)>-1) return; } /* 중복 건너뜀 */
         cur.lv[li2].push(nm);
-        if(mk.k==="관리"){ cur.marks[nm]={k:"관리", m:mk.m||"", t:Date.now()}; }
+        /* ③ 홀딩 적용: 이번 주 해당 요일에 홀딩 중이면 자동으로 결석 + 사유 기록 */
+        var ab=absOf(nm, dateOfKey(key2, wk));
+        if(ab){
+          var reason=(ab.reason?ab.reason+' · ':'')+(ab.open?'홀딩 '+ab.from+'~미정':'홀딩 '+ab.from+'~'+ab.to);
+          cur.marks[nm]={ k:(mk.k||"정규"), s:"결석", m:reason, t:Date.now() };
+          heldMarked++;
+        } else if(mk.k==="관리"){
+          cur.marks[nm]={ k:"관리", m:mk.m||"", t:Date.now() };
+        }
         added++;
       });
     }
   }
   touchWeek();
-  alert("✅ "+added+"명 복사 완료 (출석 표시는 새로 시작합니다)");
+  alert("✅ 복사 완료 — "+added+"명 배치"+(heldMarked?" · 홀딩 "+heldMarked+"건 자동 결석 처리":"")+
+        "\n(수업유형·지도진·사범 이니셜 포함 · 그 외 출석 표시는 새로 시작)");
   render();
 };
 window.moveWeek=function(n){ state.weekSel=addDays(curWeek(), n*7); render(); };
@@ -7542,8 +7609,28 @@ function render(){
     var am=state.absM;
     var cur=[];
     var A=state.absences||{};
-    Object.keys(A).forEach(function(an){ (A[an]||[]).forEach(function(e){ if(!e.del) cur.push({n:an,from:e.from,to:e.to,open:!!e.open,reason:e.reason||""}); }); });
-    cur.sort(function(x,y){ return x.from<y.from?1:-1; });
+    var _td=today();
+    Object.keys(A).forEach(function(an){ (A[an]||[]).forEach(function(e){
+      /* 현재/예정 홀딩만 (지난 홀딩·해제건 제외) */
+      if(e.del) return;
+      if(!e.open && e.to < _td) return;
+      cur.push({n:an,from:e.from,to:e.to,open:!!e.open,reason:e.reason||""});
+    }); });
+    var openN=cur.filter(function(e){return e.open;}).length;
+    var absSort=state.absSort||"endAsc";   /* 기본: 복귀 임박순 (운영자에게 가장 유용) */
+    if(absSort==="openOnly") cur=cur.filter(function(e){return e.open;});
+    cur.sort(function(x,y){
+      if(absSort==="startAsc")  return x.from<y.from?-1:(x.from>y.from?1:0);
+      if(absSort==="startDesc") return x.from>y.from?-1:(x.from<y.from?1:0);
+      if(absSort==="endDesc"){   /* 나중에 마치는 순 (미정=가장 나중) */
+        var ex=x.open?"9999-99-99":x.to, ey=y.open?"9999-99-99":y.to;
+        return ex>ey?-1:(ex<ey?1:0);
+      }
+      /* endAsc / openOnly: 복귀 임박순 (미정은 맨 뒤) */
+      var ax=x.open?"9999-99-99":x.to, ay=y.open?"9999-99-99":y.to;
+      return ax<ay?-1:(ax>ay?1:0);
+    });
+    var _sortChip=function(k,lbl){ return '<button onclick="setAbsSort(\''+k+'\')" style="border:1px solid '+((absSort===k)?'var(--blue)':'var(--line)')+';background:'+((absSort===k)?'var(--blue)':'#fff')+';color:'+((absSort===k)?'#fff':'var(--sub)')+';border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">'+lbl+'</button>'; };
     h+='<div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeAbsM()">'+
       '<div style="background:#fff;border-radius:14px;max-width:460px;width:100%;max-height:86vh;overflow:auto;padding:20px">'+
       '<div style="font-size:17px;font-weight:900;margin-bottom:4px">🤕 홀딩 등록</div>'+
@@ -7562,11 +7649,38 @@ function render(){
       '<button class="big" style="flex:1;background:#eee;color:#333" onclick="closeAbsM()">취소</button>'+
       '<button class="big" style="flex:1.4" onclick="saveAbs()">저장</button>'+
       '</div>'+
-      (cur.length?'<div style="border-top:1px solid var(--line);margin-top:16px;padding-top:10px"><div style="font-size:13px;font-weight:900;margin-bottom:4px">현재 홀딩 ('+cur.length+'건)</div>'+
-        cur.slice(0,20).map(function(e){
+      ((openN+cur.length)?'<div style="border-top:1px solid var(--line);margin-top:16px;padding-top:10px">'+
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;flex-wrap:wrap"><div style="font-size:13px;font-weight:900">현재 홀딩 ('+cur.length+'건)</div>'+
+          (openN?'<span style="font-size:11px;font-weight:800;color:#B45309;background:#FFF3E0;border-radius:6px;padding:2px 7px">미정 '+openN+'건</span>':'')+'</div>'+
+        '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">'+
+          _sortChip("endAsc","복귀 임박순")+_sortChip("endDesc","복귀 늦은순")+
+          _sortChip("startDesc","최근 등록순")+_sortChip("startAsc","오래된순")+
+          _sortChip("openOnly","미정만")+'</div>'+
+        cur.slice(0,40).map(function(e){
           var span = e.open ? esc(e.from)+' ~ <b style="color:var(--amber)">미정</b>' : esc(e.from)+' ~ '+esc(e.to);
-          return '<div style="display:flex;align-items:center;gap:6px;font-size:12.5px;padding:5px 0;border-bottom:1px dashed var(--line)"><b>'+esc(e.n)+'</b><span style="color:var(--sub)">'+span+(e.reason?' · '+esc(e.reason):'')+'</span><span style="flex:1"></span><button style="border:1px solid var(--line);background:#fff;color:var(--red);border-radius:6px;padding:2px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit" onclick="delAbs(\''+esc(e.n).replace(/'/g,"\\'")+'\',\''+e.from+'\',\''+e.to+'\')">해제</button></div>';
-        }).join("")+'</div>':'')+
+          /* 상태·D-day 배지 */
+          var badge="";
+          if(e.open){
+            badge='<span style="font-size:10.5px;font-weight:800;color:#B45309;background:#FFF3E0;border-radius:5px;padding:1px 6px">미정</span>';
+          } else if(e.from>_td){
+            var dS=Math.round((Date.parse(e.from)-Date.parse(_td))/86400000);
+            badge='<span style="font-size:10.5px;font-weight:800;color:var(--blue);background:var(--blueSoft);border-radius:5px;padding:1px 6px">'+dS+'일 후 시작</span>';
+          } else {
+            var dLeft=Math.round((Date.parse(e.to)-Date.parse(_td))/86400000);
+            badge = dLeft<=0
+              ? '<span style="font-size:10.5px;font-weight:800;color:var(--green);background:var(--greenSoft);border-radius:5px;padding:1px 6px">오늘 복귀</span>'
+              : (dLeft<=3
+                ? '<span style="font-size:10.5px;font-weight:800;color:#fff;background:var(--green);border-radius:5px;padding:1px 6px">D-'+dLeft+' 복귀</span>'
+                : '<span style="font-size:10.5px;font-weight:800;color:var(--sub);background:#F1F0EA;border-radius:5px;padding:1px 6px">D-'+dLeft+'</span>');
+          }
+          return '<div style="display:flex;align-items:center;gap:6px;font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--line)">'+
+            '<b style="flex:0 0 auto">'+esc(e.n)+'</b>'+badge+
+            '<span style="color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+span+(e.reason?' · '+esc(e.reason):'')+'</span>'+
+            '<span style="flex:1"></span>'+
+            '<button style="border:1px solid var(--line);background:#fff;color:var(--red);border-radius:6px;padding:2px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;flex:0 0 auto" onclick="delAbs(\''+esc(e.n).replace(/'/g,"\\'")+'\',\''+e.from+'\',\''+e.to+'\')">해제</button></div>';
+        }).join("")+
+        (cur.length>40?'<div style="font-size:11px;color:var(--sub);margin-top:6px">외 '+(cur.length-40)+'건</div>':'')+
+        '</div>':'')+
       '</div></div>';
   }
   if(state.reopenDialog){
