@@ -8943,6 +8943,28 @@ function workData(){
   /* ── 차량관리(차계부): 날짜별 계기판 주행거리 기록 ── */
   if(!state.work.car) state.work.car={};
   if(!state.work.tombCar) state.work.tombCar={};
+  /* ── 정비 관리: 경유차 소모품 교체 주기(중요도 순) ── */
+  if(!state.work.carMaint) state.work.carMaint={};
+  if(!state.work.tombCarMaint) state.work.tombCarMaint={};
+  if(!state.work.carMaintSeeded && !Object.keys(state.work.carMaint).length){
+    /* [항목, 주기km, 주기개월(0=km만), 안내] · 중요도(엔진→연료계통→안전→디젤전용) 순 · 고정 id */
+    [["cm1","엔진오일 + 오일필터",15000,12,"엔진 수명 핵심. 짧게 타면(가혹조건) 7,500~10,000km 권장"],
+     ["cm2","연료필터",30000,24,"디젤 필수 — 인젝터 보호. 물빼기 경고등 뜨면 즉시"],
+     ["cm3","에어필터(에어클리너)",30000,24,"엔진오일 2회당 1회 점검·교체"],
+     ["cm4","브레이크 패드",40000,0,"안전 직결. 소음·밀림 있으면 주기 전이라도 점검"],
+     ["cm5","브레이크 오일",40000,24,"2년 또는 4만km. 수분 흡수로 제동력 저하"],
+     ["cm6","타이어",50000,48,"마모·편마모 점검. 1만km마다 위치교환 권장"],
+     ["cm7","에어컨·실내필터",15000,12,"6개월~1년. 냄새·곰팡이·냉방효율"],
+     ["cm8","미션(변속기)오일",80000,0,"자동 6~10만km. 무교환 사양은 점검만"],
+     ["cm9","냉각수(부동액)",40000,24,"2년 또는 4만km. 최초 장수명은 더 길 수 있음"],
+     ["cm10","타이밍벨트",90000,0,"벨트식이면 필수(끊기면 엔진 대파). 체인식은 교체 불필요 → 항목 삭제"],
+     ["cm11","DPF 클리닝",120000,0,"디젤 전용. 2만km마다 상태 점검, 10~15만km에 클리닝"],
+     ["cm12","흡기 클리닝(카본 제거)",60000,0,"디젤 카본 누적 → 출력·연비 저하 예방"],
+     ["cm13","예열플러그(글로우플러그)",120000,0,"디젤 전용. 시동성 저하·경고등 시 점검"],
+     ["cm14","배터리",60000,48,"3~5년. 시동 지연·전압 저하 시 교체"]
+    ].forEach(function(r,i){ state.work.carMaint[r[0]]={id:r[0],name:r[1],intervalKm:r[2],intervalMonths:r[3],note:r[4],order:i,lastKm:null,lastDate:"",memo:"",_t:1}; });
+    state.work.carMaintSeeded=1;
+  }
   /* 기본 루틴 씨앗 (실제 업무일지 분석 기반 · 고정 id → 여러 PC에서 중복 생성 안 됨 · 자유롭게 수정/삭제 가능) */
   if(!state.work.routineSeeded && !Object.keys(state.work.routines).length){
     [["ra1","행정","출근 시설 점검 (조명·화장실·환기·도장 냄새)"],
@@ -8969,12 +8991,12 @@ function applyWorkTomb(w, coll, tk){
 function mergeWork(local, remote){
   if(!remote||!remote.workV) return local;
   var out=JSON.parse(JSON.stringify(local));
-  ["manage","flags","events","logs","tasks","routines","rchecks","staff","car"].forEach(function(coll){
+  ["manage","flags","events","logs","tasks","routines","rchecks","staff","car","carMaint"].forEach(function(coll){
     var rc=remote[coll]||{}, oc=out[coll]||(out[coll]={});
     for(var k in rc){ if(!oc[k] || (rc[k]._t||0)>(oc[k]._t||0)) oc[k]=rc[k]; }
   });
   /* 삭제 표식 병합 (양쪽 최신 시각 유지) */
-  ["tombEvents","tombFlags","tombTasks","tombRoutines","tombCar"].forEach(function(tk){
+  ["tombEvents","tombFlags","tombTasks","tombRoutines","tombCar","tombCarMaint"].forEach(function(tk){
     var rt=remote[tk]||{}, ot=out[tk]||(out[tk]={});
     for(var k in rt){ if(!ot[k] || rt[k]>ot[k]) ot[k]=rt[k]; }
   });
@@ -8984,6 +9006,7 @@ function mergeWork(local, remote){
   applyWorkTomb(out, "tasks", "tombTasks");
   applyWorkTomb(out, "routines", "tombRoutines");
   applyWorkTomb(out, "car", "tombCar");
+  applyWorkTomb(out, "carMaint", "tombCarMaint");
   out.t=Math.max(local.t||0, remote.t||0);
   return out;
 }
@@ -9298,6 +9321,92 @@ function renderCarLog(){
   return h;
 }
 
+/* ── 정비 관리: 경유차 소모품 교체주기 (마이클 방식 — 주행거리+날짜로 다음 교체 시점 자동 계산) ── */
+function carCurrentOdo(){ var r=carRows(); return r.length?r[r.length-1].odo:null; }
+function maintList(){ var w=workData(); return Object.keys(w.carMaint||{}).map(function(k){return w.carMaint[k];}).filter(Boolean).sort(function(a,b){ return (a.order||0)-(b.order||0); }); }
+function maintCalc(it){
+  var cur=carCurrentOdo();
+  var o={remKm:null, nextKm:null, remDays:null, nextDate:null};
+  if(it.lastKm!=null && it.intervalKm>0){ o.nextKm=it.lastKm+it.intervalKm; if(cur!=null) o.remKm=o.nextKm-cur; }
+  if(it.lastDate && it.intervalMonths>0){ o.nextDate=addMonths(it.lastDate, it.intervalMonths); o.remDays=workDueDays(o.nextDate); }
+  var recorded=(it.lastKm!=null || !!it.lastDate);
+  var over=(o.remKm!=null && o.remKm<0) || (o.remDays!=null && o.remDays<0);
+  var soon=(o.remKm!=null && o.remKm<=2000) || (o.remDays!=null && o.remDays<=30);
+  o.status = !recorded ? '미기록' : (over ? '지남' : (soon ? '임박' : '여유'));
+  o.rank = o.status==='지남'?0 : o.status==='임박'?1 : o.status==='여유'?2 : 3;
+  o.sortVal = (o.remKm!=null)?o.remKm : (o.remDays!=null? o.remDays*30 : 9e9);
+  return o;
+}
+window.logMaint=function(id){ var w=workData(); var it=w.carMaint[id]; if(!it) return;
+  var cur=carCurrentOdo();
+  var v=prompt('['+it.name+'] 교체를 기록합니다.\n교체 시점의 주행거리(km)를 입력하세요.'+(cur!=null?'\n(현재 최신 주행거리: '+cur.toLocaleString()+'km)':'\n※ 차계부에 주행거리를 먼저 기록하면 남은 거리도 자동 계산됩니다.'), cur!=null?String(cur):'');
+  if(v===null) return; var km=numOnly(v);
+  it.lastKm = km||null; it.lastDate=today(); it.dev=workDev(); it._t=Date.now();
+  workPersist(); render();
+};
+window.editMaintInterval=function(id){ var w=workData(); var it=w.carMaint[id]; if(!it) return;
+  var v=prompt('['+it.name+'] 교체 주기를 입력하세요.\n형식: 킬로미터/개월  (예: 15000/12 · 개월 없으면 15000)', it.intervalKm+(it.intervalMonths?'/'+it.intervalMonths:''));
+  if(v===null) return; var m=String(v).split('/'); it.intervalKm=numOnly(m[0]); it.intervalMonths=m[1]?numOnly(m[1]):0; it._t=Date.now(); workPersist(); render();
+};
+window.editMaintLast=function(id){ var w=workData(); var it=w.carMaint[id]; if(!it) return;
+  var v=prompt('['+it.name+'] 마지막 교체 이력을 직접 입력합니다.\n형식: 날짜/주행거리  (예: 2026-03-15/85000)', (it.lastDate||today())+(it.lastKm!=null?'/'+it.lastKm:''));
+  if(v===null) return; var m=String(v).split('/'); var d=(m[0]||'').trim();
+  it.lastDate = /^\d{4}-\d{1,2}-\d{1,2}$/.test(d)? d : it.lastDate; it.lastKm = m[1]?numOnly(m[1]):it.lastKm; it._t=Date.now(); workPersist(); render();
+};
+window.addMaintItem=function(){ var w=workData(); var nm=prompt('추가할 정비/소모품 항목 이름을 입력하세요.\n(예: 와이퍼, 냉매 충전)'); if(nm===null) return; nm=nm.trim(); if(!nm) return;
+  var iv=prompt('교체 주기를 입력하세요.\n형식: 킬로미터/개월 (예: 20000/12)', '20000/12'); if(iv===null) return; var m=String(iv).split('/');
+  var id='cm'+Date.now(); var ord=maintList().length; w.carMaint[id]={id:id,name:nm,intervalKm:numOnly(m[0]),intervalMonths:m[1]?numOnly(m[1]):0,note:'',order:ord,lastKm:null,lastDate:'',memo:'',_t:Date.now()}; workPersist(); render();
+};
+window.delMaintItem=function(id){ var w=workData(); var it=w.carMaint[id]; if(!it) return; if(!confirm('"'+it.name+'" 정비 항목을 삭제할까요?')) return; if(!w.tombCarMaint)w.tombCarMaint={}; w.tombCarMaint[id]=Date.now(); delete w.carMaint[id]; workPersist(); render(); };
+function renderCarMaint(){
+  var items=maintList();
+  var cur=carCurrentOdo();
+  var calc=items.map(function(it){ return {it:it, c:maintCalc(it)}; });
+  var over=calc.filter(function(x){return x.c.status==='지남';}).length;
+  var soon=calc.filter(function(x){return x.c.status==='임박';}).length;
+  /* 긴급도 순 정렬: 지남 → 임박 → 여유 → 미기록, 그 안에서 남은거리 적은 순 */
+  calc.sort(function(a,b){ if(a.c.rank!==b.c.rank) return a.c.rank-b.c.rank; return a.c.sortVal-b.c.sortVal; });
+  var STC={'지남':'#B23A48','임박':'#B45309','여유':'#1E7B3C','미기록':'#9AA1AA'};
+  var h='<div class="card">'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+
+      '<b style="font-size:15px">🔧 정비 관리 <span style="font-size:12px;color:var(--sub);font-weight:600">경유차 소모품 · 중요도 순</span></b>'+
+      '<span style="flex:1"></span>'+
+      (over?'<span style="background:#FBECEC;color:#B23A48;border-radius:8px;padding:2px 9px;font-size:11.5px;font-weight:800">교체시기 지남 '+over+'</span>':'')+
+      (soon?'<span style="background:#FEF3E2;color:#B45309;border-radius:8px;padding:2px 9px;font-size:11.5px;font-weight:800">임박 '+soon+'</span>':'')+
+      '<button class="chip sm" style="color:var(--blue)" onclick="addMaintItem()">＋ 항목 추가</button>'+
+    '</div>'+
+    '<div style="font-size:11.5px;color:var(--sub);margin-bottom:10px">'+(cur!=null?'현재 최신 주행거리 <b style="color:var(--ink)">'+cur.toLocaleString()+'km</b> 기준으로 남은 거리를 계산합니다. ':'차계부에 주행거리를 먼저 기록하면 "남은 거리"가 자동 계산됩니다. ')+'교체하면 [교체 기록]을 눌러 주세요. 주기·이력은 ✎로 수정할 수 있습니다.</div>';
+  calc.forEach(function(x){ var it=x.it, c=x.c, col=STC[c.status];
+    var lastTxt = (it.lastKm!=null||it.lastDate) ? ((it.lastDate?esc(it.lastDate.slice(2)):'')+(it.lastKm!=null?(it.lastDate?' · ':'')+it.lastKm.toLocaleString()+'km':'')) : '<span style="color:#9AA1AA">미기록</span>';
+    var nextParts=[]; if(c.nextKm!=null) nextParts.push(c.nextKm.toLocaleString()+'km'); if(c.nextDate) nextParts.push(c.nextDate.slice(2));
+    var remTxt='';
+    if(c.remKm!=null) remTxt += (c.remKm<0?('★ '+Math.abs(c.remKm).toLocaleString()+'km 초과'):(c.remKm.toLocaleString()+'km 남음'));
+    if(c.remDays!=null){ var dpart=(c.remDays<0?('D+'+(-c.remDays)):('D-'+c.remDays)); remTxt += (remTxt?' · ':'')+dpart; }
+    h+='<div style="border-top:1px solid var(--line);padding:10px 0">'+
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+        '<span style="width:8px;height:8px;border-radius:50%;background:'+col+';flex:0 0 auto"></span>'+
+        '<b style="font-size:13.5px">'+esc(it.name)+'</b>'+
+        '<span style="font-size:11px;color:var(--sub)">주기 '+(it.intervalKm?it.intervalKm.toLocaleString()+'km':'')+(it.intervalMonths?(it.intervalKm?' · ':'')+it.intervalMonths+'개월':'')+'</span>'+
+        '<span style="flex:1"></span>'+
+        '<span style="background:'+col+'1a;color:'+col+';border-radius:8px;padding:2px 9px;font-size:11.5px;font-weight:800;white-space:nowrap">'+c.status+(remTxt?' · '+remTxt:'')+'</span>'+
+      '</div>'+
+      (it.note?'<div style="font-size:11px;color:var(--sub);margin:3px 0 0 16px">'+esc(it.note)+'</div>':'')+
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 0 16px;font-size:11.5px;color:var(--ink)">'+
+        '<span>마지막 교체: <b>'+lastTxt+'</b></span>'+
+        (nextParts.length?'<span style="color:var(--sub)">→ 다음: '+esc(nextParts.join(' / '))+'</span>':'')+
+        '<span style="flex:1"></span>'+
+        '<button class="chip sm" style="color:#1E7B3C" onclick="logMaint(\''+it.id+'\')">교체 기록</button>'+
+        '<button class="chip sm" title="주기 수정" onclick="editMaintInterval(\''+it.id+'\')">✎ 주기</button>'+
+        '<button class="chip sm" title="마지막 교체 이력 직접입력" onclick="editMaintLast(\''+it.id+'\')">✎ 이력</button>'+
+        '<b style="color:var(--red);cursor:pointer;font-size:14px;padding:0 3px" onclick="delMaintItem(\''+it.id+'\')">×</b>'+
+      '</div>'+
+      '</div>';
+  });
+  h+='<div style="font-size:10.5px;color:var(--sub);margin-top:10px;line-height:1.6">※ 표시된 주기는 일반적인 경유차 권장값입니다. 실제 주기는 차량 매뉴얼·운행 조건(단거리·공회전 많으면 더 짧게)에 따라 다를 수 있으니 ✎로 조정하세요. 타이밍벨트가 체인식인 차량은 해당 항목을 삭제하면 됩니다.</div>';
+  h+='</div>';
+  return h;
+}
+
 /* 담당자 앞으로 온 일 취합: 관리수련생 메모 @담당 + 행사 준비 담당 + 업무 보드 담당 */
 function journalPersonData(team){
   var w=workData(), names=journalStaffTokens(team);
@@ -9463,6 +9572,7 @@ function renderWorkJournal(){
   h+=taskRows(longT,'중장기 업무','중장기');
   h+='</div>';
   h+=renderCarLog();               /* 가장 하단: 차량관리(차계부) */
+  h+=renderCarMaint();             /* 차계부 아래: 정비 관리(소모품 교체주기) */
   return h;
 }
 
