@@ -8893,8 +8893,33 @@ function workData(){
   if(!state.work || !state.work.workV){ state.work={ workV:1, manage:{}, flags:{}, events:{}, logs:{}, t:0 }; }
   if(!state.work.manage) state.work.manage={};
   if(!state.work.flags) state.work.flags={};
+  if(!state.work.events) state.work.events={};
+  if(!state.work.logs) state.work.logs={};
   if(!state.work.tombEvents) state.work.tombEvents={};   /* 삭제 표식(툼스톤): 삭제가 동기화에 반영되게 */
   if(!state.work.tombFlags) state.work.tombFlags={};
+  /* ── 업무일지(3단계): 담당자·루틴·업무·일일체크 ── */
+  if(!state.work.staff) state.work.staff={};
+  if(!state.work.tasks) state.work.tasks={};
+  if(!state.work.routines) state.work.routines={};
+  if(!state.work.rchecks) state.work.rchecks={};
+  if(!state.work.tombTasks) state.work.tombTasks={};
+  if(!state.work.tombRoutines) state.work.tombRoutines={};
+  /* 기본 루틴 씨앗 (실제 업무일지 분석 기반 · 고정 id → 여러 PC에서 중복 생성 안 됨 · 자유롭게 수정/삭제 가능) */
+  if(!state.work.routineSeeded && !Object.keys(state.work.routines).length){
+    [["ra1","행정","출근 시설 점검 (조명·화장실·환기·도장 냄새)"],
+     ["ra2","행정","네이버 예약·문의 확인"],
+     ["ra3","행정","차량 운행 체크 (주행거리·정비 일정)"],
+     ["ra4","행정","체험·등록 문의 응대 및 관리톡 발송"],
+     ["ra5","행정","맘카페·블로그·밴드 확인 (매주 월 집중 대응)"],
+     ["re1","교육","병결·결석자 확인 및 관리 연락"],
+     ["re2","교육","수련생 특이사항 기록 (필요 시 관리수련생 등록)"],
+     ["re3","교육","체험수련 예약·진행 확인"],
+     ["re4","교육","물품 수량 확인 (도복·띠·심사물품)"]
+    ].forEach(function(r){ state.work.routines[r[0]]={id:r[0],team:r[1],text:r[2],_t:1}; });
+    state.work.routineSeeded=1;
+  }
+  /* 용량 관리: 90일 지난 루틴 체크 기록 자동 정리 (세션당 1회) */
+  if(!state.__rchkPruned){ state.__rchkPruned=1; try{ var cut=addDays(today(),-90); for(var rk in state.work.rchecks){ if(String(rk).slice(0,10)<cut) delete state.work.rchecks[rk]; } }catch(e){} }
   return state.work;
 }
 (function loadLocalWork(){ try{ var raw=localStorage.getItem("naracha-work"); if(raw){ var p=JSON.parse(raw); if(p&&p.workV){ state.work=p; } } }catch(e){} })();
@@ -8905,18 +8930,20 @@ function applyWorkTomb(w, coll, tk){
 function mergeWork(local, remote){
   if(!remote||!remote.workV) return local;
   var out=JSON.parse(JSON.stringify(local));
-  ["manage","flags","events","logs"].forEach(function(coll){
+  ["manage","flags","events","logs","tasks","routines","rchecks","staff"].forEach(function(coll){
     var rc=remote[coll]||{}, oc=out[coll]||(out[coll]={});
     for(var k in rc){ if(!oc[k] || (rc[k]._t||0)>(oc[k]._t||0)) oc[k]=rc[k]; }
   });
   /* 삭제 표식 병합 (양쪽 최신 시각 유지) */
-  ["tombEvents","tombFlags"].forEach(function(tk){
+  ["tombEvents","tombFlags","tombTasks","tombRoutines"].forEach(function(tk){
     var rt=remote[tk]||{}, ot=out[tk]||(out[tk]={});
     for(var k in rt){ if(!ot[k] || rt[k]>ot[k]) ot[k]=rt[k]; }
   });
   /* 표식 적용: 지워진 항목이 다시 살아나지 않게 */
   applyWorkTomb(out, "events", "tombEvents");
   applyWorkTomb(out, "flags", "tombFlags");
+  applyWorkTomb(out, "tasks", "tombTasks");
+  applyWorkTomb(out, "routines", "tombRoutines");
   out.t=Math.max(local.t||0, remote.t||0);
   return out;
 }
@@ -9007,16 +9034,18 @@ window.removeWorkFlag=function(name){ if(!confirm(name+" 님을 수동 관리대
 function wEsn(n){ return esc(n).replace(/\\/g,"\\\\").replace(/'/g,"\\'"); }   /* onclick JS 문자열 안전 이스케이프 */
 
 /* 통합 할 일: 관리수련생 메모 + 행사 준비물 (미완료·기한 있는 것) */
+function workKindColor(k){ return k==='행사'?'#7C3AED':k==='업무'?'#0E7490':'#2B5FB8'; }
 function workAllTodos(){
   var w=workData(), out=[];
   for(var n in (w.manage||{})){ var m=w.manage[n]; if(!m||!m.memo) continue; var tg=workTags(m.memo); if(!tg.due) continue; out.push({kind:'수련생',label:n,due:tg.due,start:null,done:!!m.done,mentions:tg.mentions,openFn:"openStuM('"+wEsn(n)+"')",doneFn:"toggleManageDone('"+wEsn(n)+"')"}); }
   for(var eid in (w.events||{})){ var ev=w.events[eid]; if(!ev) continue; (ev.prep||[]).forEach(function(p){ if(!p.due) return; var ms=(p.owner?[p.owner]:[]).concat(workTags(p.item||'').mentions); out.push({kind:'행사',label:(ev.title||'행사')+' · '+(p.item||'(준비)'),due:p.due,start:(p.start||null),done:!!p.done,mentions:ms,openFn:"openEvent('"+eid+"')",doneFn:"toggleEventPrep('"+eid+"','"+p.id+"')"}); }); }
+  for(var tid in (w.tasks||{})){ var t=w.tasks[tid]; if(!t||!t.due) continue; out.push({kind:'업무',label:(t.team?'['+t.team+'] ':'')+(t.title||'(제목 없음)'),due:t.due,start:(t.start||null),done:!!t.done,mentions:(t.owner?[t.owner]:[]),openFn:"openWorkJournal()",doneFn:"toggleTask('"+tid+"')"}); }
   out.sort(function(a,b){ return a.due<b.due?-1:1; });
   return out;
 }
 window.setTodoView=function(v){ state.todoView=v; render(); };
 function todoListCard(td){
-  var kc=td.kind==='행사'?'#7C3AED':'#2B5FB8';
+  var kc=workKindColor(td.kind);
   return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:8px 11px;'+(td.done?'background:#F6FBF7;':'')+'">'+
     (td.done?'<span style="background:#1E7B3C;color:#fff;border-radius:8px;padding:1px 8px;font-size:10.5px;font-weight:800">✓ 완료</span>':workDueBadge(td.due))+
     '<span style="background:'+kc+'1f;color:'+kc+';border-radius:8px;padding:1px 7px;font-size:10.5px;font-weight:800">'+td.kind+'</span>'+
@@ -9071,7 +9100,7 @@ function renderTodoGantt(todos){
   h+='<div style="display:flex;gap:8px;margin-bottom:6px"><div style="flex:0 0 '+LBL+'px"></div>'+
      '<div style="flex:1;position:relative;height:12px">'+todayLine+'<div style="position:absolute;left:'+todayPct+'%;transform:translateX(-50%);font-size:9.5px;font-weight:800;color:#2B5FB8;top:-1px">오늘</div></div><div style="flex:0 0 92px"></div></div>';
   function ganttRow(t){
-    var kc=t.kind==='행사'?'#7C3AED':'#2B5FB8';
+    var kc=workKindColor(t.kind);
     var dd=Math.round((new Date(t.due+"T00:00:00")-new Date(td+"T00:00:00"))/86400000);
     var overdue=(dd<0), barL, barR, col;
     var leftDate = t.start ? t.start : (overdue? t.due : td);   /* 시작일 있으면 시작일, 없으면 오늘(지난건 기한) */
@@ -9103,6 +9132,208 @@ function renderTodoGantt(todos){
   return h;
 }
 
+/* ══════════ 업무일지 (3단계) — 담당자별 취합·루틴·단기/중장기 업무 ══════════ */
+function journalStaff(team){ var w=workData(); var s=(w.staff||{})[team]; return (s&&s.name)||(team==='행정'?'행정담당':'교육담당'); }
+function journalStaffTokens(team){ return journalStaff(team).split(/[,·\/&\s]+/).filter(function(x){return x&&x.length>=2;}); }
+window.setStaffName=function(team){ var w=workData(); var v=prompt(team+"담당 이름을 입력하세요.\n(여러 명이면 쉼표로 구분: 김나영, 안상준)", journalStaff(team)); if(v===null) return; v=v.trim(); if(!v) return; w.staff[team]={name:v,_t:Date.now()}; workPersist(); render(); };
+/* 루틴 */
+window.addRoutine=function(team){ var v=prompt(team+"팀 매일 루틴 항목을 입력하세요.\n(예: 출근 시설 점검 — 조명·화장실·환기)"); if(v===null) return; v=v.trim(); if(!v) return; var w=workData(); var id='r'+Date.now(); w.routines[id]={id:id,team:team,text:v,_t:Date.now()}; workPersist(); render(); };
+window.editRoutine=function(id){ var w=workData(); var r=w.routines[id]; if(!r) return; var v=prompt("루틴 내용 수정", r.text); if(v===null) return; v=v.trim(); if(!v) return; r.text=v; r._t=Date.now(); workPersist(); render(); };
+window.delRoutine=function(id){ var w=workData(); var r=w.routines[id]; if(!r) return; if(!confirm('"'+r.text+'" 루틴을 삭제할까요?')) return; w.tombRoutines[id]=Date.now(); delete w.routines[id]; workPersist(); render(); };
+window.toggleRoutine=function(id){ var w=workData(); var k=today()+"|"+id; var c=w.rchecks[k]; w.rchecks[k]={done:!(c&&c.done),dev:workDev(),_t:Date.now()}; workPersist(); render(); };
+window.toggleRoutineEdit=function(team){ state['rEdit_'+team]=!state['rEdit_'+team]; render(); };
+/* 업무(단기/중장기) */
+window.setQadd=function(team,v){ state['qadd_'+team]=v; };
+window.quickAddTask=function(team){
+  var v=(state['qadd_'+team]||'').trim();
+  if(!v){ alert("업무 내용을 입력하세요.\n(예: 현수막 견적 받기 @임요한 #7/15)"); return; }
+  var tg=workTags(v);
+  var title=v.replace(/@[가-힣A-Za-z0-9._]+/g,'').replace(/#(\d{4}-\d{1,2}-\d{1,2}|\d{1,2}\/\d{1,2}|\d{1,2}월\s?\d{1,2}일)/g,'').replace(/\s+/g,' ').trim()||v;
+  var w=workData(); var id='t'+Date.now();
+  w.tasks[id]={id:id,team:team,title:title,owner:(tg.mentions[0]||journalStaffTokens(team)[0]||''),kind:'단기',start:'',due:(tg.due||''),done:false,dev:workDev(),_t:Date.now()};
+  state['qadd_'+team]=''; workPersist(); render();
+};
+window.addTaskRow=function(team,kind){ var w=workData(); var id='t'+Date.now(); w.tasks[id]={id:id,team:team,title:'',owner:(team==='공동'?'':(journalStaffTokens(team)[0]||'')),kind:kind,start:'',due:'',done:false,dev:workDev(),_t:Date.now()}; workPersist(); render(); };
+window.setTask=function(id,k,v){ var w=workData(); var t=w.tasks[id]; if(!t)return; t[k]=v; workSaveDebounced(); };
+window.commitTask=function(id){ var w=workData(); var t=w.tasks[id]; if(!t)return; t.dev=workDev(); t._t=Date.now(); workPersist(); render(); };
+window.toggleTask=function(id){ var w=workData(); var t=w.tasks[id]; if(!t)return; t.done=!t.done; t.doneT=t.done?Date.now():null; t.dev=workDev(); t._t=Date.now(); workPersist(); render(); };
+window.toggleTaskKind=function(id){ var w=workData(); var t=w.tasks[id]; if(!t)return; t.kind=(t.kind==='중장기'?'단기':'중장기'); t._t=Date.now(); workPersist(); render(); };
+window.delTask=function(id){ var w=workData(); var t=w.tasks[id]; if(!t)return; if(!confirm('"'+(t.title||'(제목 없음)')+'" 업무를 삭제할까요?')) return; w.tombTasks[id]=Date.now(); delete w.tasks[id]; workPersist(); render(); };
+window.setTaskGwan=function(id,v){ var w=workData(); var t=w.tasks[id]; if(!t)return; t.gwan=v; workSaveDebounced(); };
+window.commitTaskGwan=function(id){ var w=workData(); var t=w.tasks[id]; if(!t)return; t.gwanDev=workDev(); t.gwanT=Date.now(); t._t=Date.now(); workPersist(); render(); };
+window.setTaskTeamF=function(v){ state.taskTeamF=v; render(); };
+window.openWorkJournal=function(){ state.topCat="업무"; state.workTab="일지"; if(typeof workPull==="function") workPull(); render(); };
+/* 오늘 메모 */
+window.setTeamLog=function(team,v){ var w=workData(); var k=today()+"|"+team; if(!w.logs[k])w.logs[k]={}; w.logs[k].text=v; workSaveDebounced(); };
+window.commitTeamLog=function(team){ var w=workData(); var k=today()+"|"+team; if(!w.logs[k])w.logs[k]={}; w.logs[k].dev=workDev(); w.logs[k]._t=Date.now(); workPersist(); render(); };
+
+/* 담당자 앞으로 온 일 취합: 관리수련생 메모 @담당 + 행사 준비 담당 + 업무 보드 담당 */
+function journalPersonData(team){
+  var w=workData(), names=journalStaffTokens(team);
+  function hit(str){ if(!str) return false; for(var i=0;i<names.length;i++){ if(names[i] && String(str).indexOf(names[i])>-1) return true; } return false; }
+  var todos=[], noDue=[], evInfo=[];
+  for(var n in (w.manage||{})){ var m=w.manage[n]; if(!m||!m.memo) continue; var tg=workTags(m.memo);
+    if(!tg.mentions.some(hit)) continue;
+    var it={kind:'수련생',label:n,due:tg.due||null,start:null,done:!!m.done,mentions:tg.mentions,openFn:"openStuM('"+wEsn(n)+"')",doneFn:"toggleManageDone('"+wEsn(n)+"')"};
+    if(it.due) todos.push(it); else noDue.push(it);
+  }
+  for(var eid in (w.events||{})){ var ev=w.events[eid]; if(!ev||ev.status==='취소') continue;
+    var mine=(ev.prep||[]).filter(function(p){ return hit(p.owner)||workTags(p.item||'').mentions.some(hit); });
+    var descHit=workTags(ev.desc||'').mentions.some(hit);
+    if(!mine.length && !descHit) continue;
+    evInfo.push({ev:ev, preps:mine});
+    mine.forEach(function(p){
+      var it2={kind:'행사',label:(ev.title||'행사')+' · '+(p.item||'(준비)'),due:p.due||null,start:p.start||null,done:!!p.done,mentions:(p.owner?[p.owner]:[]),openFn:"openEvent('"+eid+"')",doneFn:"toggleEventPrep('"+eid+"','"+p.id+"')"};
+      if(it2.due) todos.push(it2); else noDue.push(it2);
+    });
+  }
+  for(var tid in (w.tasks||{})){ var t=w.tasks[tid]; if(!t) continue; if(!(hit(t.owner)||hit(t.title))) continue;
+    var it3={kind:'업무',label:(t.team&&t.team!==team?'['+t.team+'] ':'')+(t.title||'(제목 없음)'),due:t.due||null,start:t.start||null,done:!!t.done,mentions:(t.owner?[t.owner]:[]),openFn:"openWorkJournal()",doneFn:"toggleTask('"+tid+"')"};
+    if(it3.due) todos.push(it3); else noDue.push(it3);
+  }
+  todos.sort(function(a,b){ return a.due<b.due?-1:1; });
+  return {todos:todos, noDue:noDue, evInfo:evInfo};
+}
+
+function renderWorkJournal(){
+  var w=workData(), td=today(), isAdmin=(myRole()==="admin");
+  var dowN=['일','월','화','수','목','금','토'][new Date(td+"T00:00:00").getDay()];
+  var all=workAllTodos();
+  function ddx(t){ return workDueDays(t.due); }
+  var over=all.filter(function(t){return !t.done&&ddx(t)<0;}).length;
+  var tdy=all.filter(function(t){return !t.done&&ddx(t)===0;}).length;
+  var soon=all.filter(function(t){return !t.done&&ddx(t)>0&&ddx(t)<=3;}).length;
+  var rts={'행정':[],'교육':[]};
+  for(var rk in (w.routines||{})){ var r=w.routines[rk]; if(r&&rts[r.team]) rts[r.team].push(r); }
+  rts['행정'].sort(function(a,b){return a.id<b.id?-1:1;}); rts['교육'].sort(function(a,b){return a.id<b.id?-1:1;});
+  function rcnt(team){ var d=0; rts[team].forEach(function(r){ var c=w.rchecks[td+'|'+r.id]; if(c&&c.done)d++; }); return d; }
+  function pill(lbl,v,c){ return '<div style="flex:1 1 90px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:8px 10px;text-align:center"><div style="font-size:18px;font-weight:900;color:'+(v>0?c:'#9AA1AA')+'">'+v+'</div><div style="font-size:10.5px;color:var(--sub)">'+lbl+'</div></div>'; }
+
+  var h='<div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">'+
+    '<b style="font-size:15px">📔 업무일지</b>'+
+    '<span style="font-size:12.5px;color:var(--sub)">'+td+' ('+dowN+')</span>'+
+    '<span style="flex:1"></span>'+
+    '<span style="font-size:12px;color:var(--sub)">행정담당 <b style="color:var(--ink)">'+esc(journalStaff('행정'))+'</b> <button class="chip sm" onclick="setStaffName(\'행정\')">✎</button> &nbsp; 교육담당 <b style="color:var(--ink)">'+esc(journalStaff('교육'))+'</b> <button class="chip sm" onclick="setStaffName(\'교육\')">✎</button></span></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      pill('기한 지남',over,'#B23A48')+pill('오늘 마감',tdy,'#B45309')+pill('3일 내 마감',soon,'#B45309')+
+      pill('행정 루틴 남음',rts['행정'].length-rcnt('행정'),'#1F3A5F')+pill('교육 루틴 남음',rts['교육'].length-rcnt('교육'),'#1E7B3C')+
+    '</div>'+
+    '<div style="font-size:11px;color:var(--sub);margin-top:7px">이 화면의 목적은 기록이 아니라 <b>실행</b>입니다 — 기한 있는 일은 전부 맨 위 ⏰ 간트에 모이고, 끝나기 전까지 계속 표시됩니다.</div>'+
+    '</div>';
+
+  function teamBlock(team){
+    var col=(team==='행정')?'#1F3A5F':'#1E7B3C';
+    var icon=(team==='행정')?'🗂':'🥋';
+    var pd=journalPersonData(team);
+    var openCnt=pd.todos.filter(function(t){return !t.done;}).length+pd.noDue.filter(function(t){return !t.done;}).length;
+    var list=rts[team], doneR=rcnt(team), ed=!!state['rEdit_'+team];
+    var tok0=esc(journalStaffTokens(team)[0]||'이름');
+    var s='<div class="card" style="border-top:3px solid '+col+'">'+
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+
+        '<b style="font-size:15px;color:'+col+'">'+icon+' '+team+'팀 — '+esc(journalStaff(team))+'</b>'+
+        '<span style="font-size:11.5px;color:var(--sub)">내 앞으로 온 일 '+openCnt+'건 · 오늘 루틴 '+doneR+'/'+list.length+'</span>'+
+        '<span style="flex:1"></span></div>';
+    s+='<div style="font-size:12px;font-weight:800;color:'+col+';margin:2px 0 6px">📌 내 앞으로 온 일 <span style="font-weight:600;color:var(--sub)">— 관리수련생·행사·업무에서 @'+tok0+' 담당으로 지정된 것 (자동)</span></div>';
+    if(!pd.todos.length && !pd.noDue.length && !pd.evInfo.length){
+      s+='<div style="font-size:12.5px;color:var(--sub);padding:2px 0 6px">아직 없습니다. 다른 화면에서 담당자로 @'+tok0+'을 지정하면 여기에 자동으로 모입니다.</div>';
+    } else {
+      pd.evInfo.forEach(function(ei){ var ev=ei.ev;
+        s+='<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:7px 10px;margin-bottom:5px;background:#FBFAF6">'+
+          '<span style="background:#7C3AED1f;color:#7C3AED;border-radius:7px;padding:1px 7px;font-size:10.5px;font-weight:800">행사</span>'+
+          '<b style="font-size:12.5px;color:var(--blue);cursor:pointer;text-decoration:underline" onclick="openEvent(\''+ev.id+'\')">'+esc(ev.title||'(제목 없음)')+'</b>'+
+          (ev.date?'<span style="font-size:11px;color:var(--sub)">🗓 '+esc(ev.date)+(ev.time?' '+esc(ev.time):'')+'</span>'+workDueBadge(ev.date):'')+
+          (ev.place?'<span style="font-size:11px;color:var(--sub)">📍 '+esc(ev.place)+'</span>':'')+
+          '<span style="flex:1"></span><span style="font-size:11px;color:var(--sub)">내 준비 '+ei.preps.length+'건</span></div>';
+      });
+      if(pd.todos.length) s+=renderTodoGantt(pd.todos);
+      pd.noDue.filter(function(t){return !t.done;}).forEach(function(t){
+        var kc2=workKindColor(t.kind);
+        s+='<div style="display:flex;align-items:center;gap:7px;padding:4px 2px;font-size:12px">'+
+          '<span style="background:'+kc2+'1f;color:'+kc2+';border-radius:7px;padding:1px 7px;font-size:10px;font-weight:800">'+t.kind+'</span>'+
+          '<b style="color:var(--blue);cursor:pointer;text-decoration:underline" onclick="'+t.openFn+'">'+esc(t.label)+'</b>'+
+          '<span style="font-size:10.5px;color:#B45309;font-weight:700">기한 미정</span>'+
+          '<span style="flex:1"></span><button class="chip sm" style="color:#1E7B3C" onclick="'+t.doneFn+'">완료</button></div>';
+      });
+    }
+    s+='<div style="display:flex;align-items:center;gap:8px;margin:12px 0 5px;border-top:1px solid var(--line);padding-top:10px">'+
+      '<span style="font-size:12px;font-weight:800;color:'+col+'">☑ 오늘 루틴</span>'+
+      '<span style="font-size:11px;color:var(--sub)">매일 새로 시작 · 체크한 기기 기록</span>'+
+      '<span style="flex:1"></span>'+
+      '<button class="chip sm" onclick="toggleRoutineEdit(\''+team+'\')">'+(ed?'수정 끝':'루틴 수정')+'</button>'+
+      (ed?'<button class="chip sm" style="color:var(--blue)" onclick="addRoutine(\''+team+'\')">＋ 추가</button>':'')+'</div>';
+    if(!list.length) s+='<div style="font-size:12px;color:var(--sub)">루틴이 없습니다. [루틴 수정 → ＋추가]로 만드세요.</div>';
+    list.forEach(function(r){
+      var c=w.rchecks[td+'|'+r.id], on=!!(c&&c.done);
+      s+='<div style="display:flex;align-items:center;gap:8px;padding:4px 2px">'+
+        '<input type="checkbox" '+(on?'checked':'')+' onchange="toggleRoutine(\''+r.id+'\')" style="width:16px;height:16px;accent-color:'+col+'">'+
+        '<span style="font-size:12.5px;'+(on?'text-decoration:line-through;color:var(--sub)':'color:var(--ink)')+'">'+esc(r.text)+'</span>'+
+        (on&&c.dev?'<span style="font-size:10px;color:var(--sub)">🖥 '+esc(c.dev)+'</span>':'')+
+        '<span style="flex:1"></span>'+
+        (ed?'<button class="chip sm" onclick="editRoutine(\''+r.id+'\')">✎</button><b style="color:var(--red);cursor:pointer;font-size:14px;padding:0 4px" onclick="delRoutine(\''+r.id+'\')">×</b>':'')+
+        '</div>';
+    });
+    s+='<div style="display:flex;gap:6px;align-items:center;margin-top:10px;border-top:1px solid var(--line);padding-top:10px">'+
+      '<input class="input" placeholder="⚡ 업무 빠른 추가 — 예: 현수막 견적 받기 @'+tok0+' #7/15 (Enter)" style="flex:1;height:38px;padding:0 11px;font-size:12.5px" value="'+esc(state['qadd_'+team]||'')+'" oninput="setQadd(\''+team+'\',this.value)" onkeydown="if(event.isComposing||event.keyCode===229)return;if(event.key===\'Enter\'){event.preventDefault();quickAddTask(\''+team+'\')}">'+
+      '<button onclick="quickAddTask(\''+team+'\')" style="height:38px;padding:0 14px;background:'+col+';color:#fff;border:none;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">추가</button></div>';
+    var lg=(w.logs||{})[td+'|'+team]||{};
+    s+='<div style="margin-top:8px"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">📝 오늘 메모 (보고·특이사항 — 실행할 일은 위 ⚡로)</div>'+
+      '<textarea class="input" placeholder="오늘 보고·특이사항을 간단히 기록" style="width:100%;min-height:42px;resize:vertical;font-family:inherit;font-size:12.5px" oninput="setTeamLog(\''+team+'\',this.value)" onchange="commitTeamLog(\''+team+'\')">'+esc(lg.text||'')+'</textarea>'+
+      (lg.text?'<div style="font-size:12px;color:var(--ink);margin-top:3px;line-height:1.5">'+workHi(lg.text)+'</div>':'')+
+      (lg.dev?'<div style="margin-top:2px">'+workStamp(lg.dev,lg._t)+'</div>':'')+'</div>';
+    s+='</div>';
+    return s;
+  }
+  h+='<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">'+
+     '<div style="flex:1 1 380px;min-width:330px">'+teamBlock('행정')+'</div>'+
+     '<div style="flex:1 1 380px;min-width:330px">'+teamBlock('교육')+'</div>'+
+     '</div>';
+
+  var tf=state.taskTeamF||'전체';
+  var tasks=Object.keys(w.tasks||{}).map(function(k){return w.tasks[k];}).filter(function(t){return t&&(tf==='전체'||t.team===tf);});
+  function tsort(a,b){ if(!!a.done!==!!b.done) return a.done?1:-1; return (a.due||'9999')<(b.due||'9999')?-1:1; }
+  var shortT=tasks.filter(function(t){return t.kind!=='중장기';}).sort(tsort);
+  var longT=tasks.filter(function(t){return t.kind==='중장기';}).sort(tsort);
+  h+='<div class="card"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">'+
+    '<b style="font-size:15px">📋 업무 보드</b>'+
+    '<span style="font-size:11.5px;color:var(--sub)">단기·중장기 · 시작일/기한을 넣으면 맨 위 ⏰ 간트차트에 자동 표시</span>'+
+    '<span style="flex:1"></span>'+
+    ['전체','행정','교육','공동'].map(function(fk){ return '<button class="chip sm'+(tf===fk?' on':'')+'" onclick="setTaskTeamF(\''+fk+'\')">'+fk+'</button>'; }).join('')+'</div>';
+  function taskRows(arr, kindLabel, addKind){
+    var s='<div style="display:flex;align-items:center;gap:8px;margin:8px 0 3px"><b style="font-size:13px">'+kindLabel+' <span style="color:var(--sub);font-weight:600;font-size:11.5px">진행 '+arr.filter(function(t){return !t.done;}).length+'건</span></b><span style="flex:1"></span>'+
+      '<button class="chip sm" style="color:var(--blue)" onclick="addTaskRow(\''+(tf==='전체'?'공동':tf)+'\',\''+addKind+'\')">＋ '+kindLabel+' 추가</button></div>';
+    if(!arr.length) return s+'<div style="font-size:12px;color:var(--sub);padding:2px 0 6px">등록된 '+kindLabel+'가 없습니다.</div>';
+    arr.forEach(function(t){
+      var tc=t.team==='행정'?'#1F3A5F':t.team==='교육'?'#1E7B3C':'#B45309';
+      s+='<div style="border-top:1px solid var(--line);padding:7px 0;'+(t.done?'opacity:.6;':'')+'">'+
+        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
+        '<input type="checkbox" '+(t.done?'checked':'')+' onchange="toggleTask(\''+t.id+'\')" style="width:16px;height:16px;accent-color:#1E7B3C">'+
+        '<button class="chip sm" title="누르면 단기↔중장기 전환" onclick="toggleTaskKind(\''+t.id+'\')" style="padding:2px 8px">'+(t.kind==='중장기'?'중장기':'단기')+'</button>'+
+        '<span style="background:'+tc+'1f;color:'+tc+';border-radius:7px;padding:1px 7px;font-size:10px;font-weight:800">'+esc(t.team||'공동')+'</span>'+
+        '<input class="input" placeholder="업무 내용" style="flex:2 1 150px;height:34px;padding:0 9px;font-size:12.5px'+(t.done?';text-decoration:line-through':'')+'" value="'+esc(t.title||'')+'" oninput="setTask(\''+t.id+'\',\'title\',this.value)" onchange="commitTask(\''+t.id+'\')">'+
+        '<input class="input" placeholder="담당" style="flex:0 0 82px;height:34px;padding:0 8px;font-size:12px" value="'+esc(t.owner||'')+'" oninput="setTask(\''+t.id+'\',\'owner\',this.value)" onchange="commitTask(\''+t.id+'\')">'+
+        '<input class="input" type="date" title="시작일" style="flex:0 0 136px;height:34px;padding:0 7px;font-size:11.5px" value="'+esc(t.start||'')+'" onchange="setTask(\''+t.id+'\',\'start\',this.value);commitTask(\''+t.id+'\')">'+
+        '<input class="input" type="date" title="기한" style="flex:0 0 136px;height:34px;padding:0 7px;font-size:11.5px" value="'+esc(t.due||'')+'" onchange="setTask(\''+t.id+'\',\'due\',this.value);commitTask(\''+t.id+'\')">'+
+        (t.due&&!t.done?workDueBadge(t.due):'')+
+        '<b style="color:var(--red);cursor:pointer;font-size:15px;padding:0 4px" onclick="delTask(\''+t.id+'\')">×</b>'+
+        '</div>'+
+        '<div style="margin:4px 0 0 24px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+
+        (t.dev?workStamp(t.dev,t._t):'')+
+        '<span style="font-size:10.5px;font-weight:800;color:#8A6D1B">👑</span>'+
+        (isAdmin
+          ?'<input class="input" placeholder="관장 코멘트" style="flex:1;min-width:150px;height:30px;padding:0 9px;font-size:11.5px;background:#FFFDF5;border-color:#F0E4C0" value="'+esc(t.gwan||'')+'" oninput="setTaskGwan(\''+t.id+'\',this.value)" onchange="commitTaskGwan(\''+t.id+'\')">'
+          :(t.gwan?'<span style="font-size:11.5px;color:#5B4708;background:#FFFDF5;border:1px solid #F0E4C0;border-radius:7px;padding:2px 8px">'+esc(t.gwan)+'</span>':'<span style="font-size:10.5px;color:var(--sub)">코멘트 없음</span>'))+
+        '</div>'+
+        '</div>';
+    });
+    return s;
+  }
+  h+=taskRows(shortT,'단기 업무','단기');
+  h+='<div style="height:8px"></div>';
+  h+=taskRows(longT,'중장기 업무','중장기');
+  h+='</div>';
+  return h;
+}
+
 /* ── 업무관리 디스패처 ── */
 function renderWorkTab(){
   var wt=state.workTab||"관리";
@@ -9113,11 +9344,10 @@ function renderWorkTab(){
     '<span style="flex:1"></span>'+
     '<span style="font-size:11.5px;color:var(--sub)">🖥 이 기기: <b>'+esc(state.device||"미지정")+'</b>'+(state.device?'':' — 우상단 [기기 선택]에서 지정')+'</span></div>'+
     '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
-      tabBtn('관리','관리수련생 현황')+tabBtn('행사','행사 관리')+
-      '<button class="chip" style="opacity:.55;cursor:default" onclick="alert(\'3단계에서 추가됩니다 — 교육팀/행정팀 업무일지\')">업무일지 <span style="font-size:10px">준비중</span></button>'+
+      tabBtn('관리','관리수련생 현황')+tabBtn('행사','행사 관리')+tabBtn('일지','업무일지')+
     '</div></div>';
   h+=renderWorkTodoBoard();
-  h+=(wt==="행사")?renderWorkEvents():renderWorkManageBody();
+  h+=(wt==="행사")?renderWorkEvents():(wt==="일지")?renderWorkJournal():renderWorkManageBody();
   return h;
 }
 
@@ -9470,7 +9700,10 @@ window.exportEventDoc=function(id){
    · 저장 계정은 데이터 동기화 계정과 무관 — 로그인한 계정이 그 폴더에 '편집 권한'만 있으면 됨 */
 /* 구글 OAuth 클라이언트 ID (공개돼도 안전한 값 · 원본주소·테스트사용자로 보호됨) → 파일에 내장하면 모든 PC에서 바로 동작 */
 var GDRIVE_CLIENT_ID = "299837559641-4ha9abens4vv1rd7in49bifmgge5hhcn.apps.googleusercontent.com";
+var GDRIVE_ACCT_DEFAULT = "narachatkd@gmail.com";   /* 주 저장 계정 기본값 (PC마다 [기기 선택] 옆에서 바꿀 수 있음) */
 function gdriveClientId(){ try{ return (localStorage.getItem("naracha_gdrive_client")||GDRIVE_CLIENT_ID||""); }catch(e){ return GDRIVE_CLIENT_ID||""; } }
+function gdriveAcct(){ try{ return (localStorage.getItem("naracha_gdrive_acct")||GDRIVE_ACCT_DEFAULT||""); }catch(e){ return GDRIVE_ACCT_DEFAULT||""; } }
+window.setGdriveAcct=function(){ var cur=gdriveAcct(); var v=prompt("드라이브 저장에 주로 쓸 구글 계정 이메일을 입력하세요.\n(이 계정으로 바로 저장됩니다 · 이 PC에만 적용)", cur); if(v===null) return; v=v.trim(); try{ if(v) localStorage.setItem("naracha_gdrive_acct", v); else localStorage.removeItem("naracha_gdrive_acct"); }catch(e){} alert(v?("주 저장 계정: "+v):"주 저장 계정을 기본값으로 되돌렸습니다."); };
 window.setGdriveClientId=function(){
   var cur=gdriveClientId();
   var v=prompt("구글 OAuth 클라이언트 ID를 붙여넣으세요.\n(구글 클라우드 콘솔에서 만든 값 · ...apps.googleusercontent.com 로 끝남)\n\n지우려면 빈칸으로 두고 확인.", cur);
@@ -9508,6 +9741,7 @@ window.exportEventToDrive=function(id){
       var tc=google.accounts.oauth2.initTokenClient({
         client_id: cid,
         scope: 'https://www.googleapis.com/auth/drive.file',
+        hint: gdriveAcct(),            /* 주 저장 계정 미리 지정 → 매번 '계정 선택' 창 안 뜸 */
         callback: function(resp){
           if(resp && resp.access_token){ uploadEventToDrive(ev, folderId, resp.access_token); }
           else { alert("구글 로그인이 취소되었거나 실패했습니다."); }
@@ -10409,7 +10643,7 @@ function render(){
   }   /* if(!__hdrDone) 끝 */
   /* 탭별 컨테이너 폭: 대시보드=넓게 · 명단/내역=중간 · 입력폼=좁게 (일반 모니터 최적화) */
   h+='<div class="wrap'+(function(){
-      if(state.topCat==="업무") return (state.workTab==="행사"&&!state.eventSel) ? " wrap--lg" : " wrap--md";   /* 행사 캘린더+리스트는 넓게 */
+      if(state.topCat==="업무") return ((state.workTab==="행사"&&!state.eventSel)||state.workTab==="일지") ? " wrap--lg" : " wrap--md";   /* 행사 캘린더+리스트·업무일지는 넓게 */
       var t=(state.topCat==="출석")?state.attTab:state.tab;
       if(t==="📊 브리핑"||t==="인원현황"||t==="출석 현황") return " wrap--wide";   /* 출석현황: 심사 통합으로 정보량 증가 → 넓게 */
       if(t==="납부내역"||t==="납부집계"||t==="연간브리핑") return " wrap--lg";   /* 회계 표·브리핑: 고정폭 컬럼 정렬을 위해 1200px */
