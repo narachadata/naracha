@@ -9601,88 +9601,130 @@ function renderEventDayof(ev){
   return h;
 }
 function buildEventDocHtml(ev){
-  var NAVY="#1F3A5F", INK="#1E232B", SUB="#6B6B6B", LINE="#C9CDD4", SOFT="#EEF2F7";
+  var NAVY="#1F3A5F", INK="#22262C", SUB="#5A6472", LINE="#C9CDD4", SOFT="#EEF2F7", FAINT="#F6F8FB";
+  var GREEN="#1E7B3C", RED="#B23A48";
   function e2(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
   function nl(s){ return e2(s).replace(/\n/g,"<br>"); }
-  function row(k,v){ return '<tr><td class="k">'+e2(k)+'</td><td class="v">'+(v&&v!==""?v:'—')+'</td></tr>'; }
-  var basic='<table class="info">'+row('종류',e2(ev.type||''))+row('일시',e2((ev.date||'')+(ev.time?' '+ev.time:'')))+row('장소',e2(ev.place||''))+row('참가 대상',e2(ev.target||''))+row('상태',e2(ev.status||''))+'</table>';
+  function md(d){ return d?String(d).slice(5).replace('-','/'):''; }   /* 05/12 축약 */
+  function row(k,v){ return '<tr><td class="k">'+e2(k)+'</td><td class="v">'+(v&&v!==""?v:'<span class="dash">—</span>')+'</td></tr>'; }
+  /* ── ① 기본 정보 (2열 라벨/값) ── */
+  var basic='<table class="info">'+
+    row('행사 종류',e2(ev.type||''))+
+    row('일시',e2((ev.date||'')+(ev.time?'  '+ev.time:'')))+
+    row('장소',e2(ev.place||''))+
+    row('참가 대상',e2(ev.target||''))+
+    row('진행 상태',e2(ev.status||''))+'</table>';
+  /* ── ② 준비 ── */
   var prep=(ev.prep||[]);
   var prepHtml;
   if(prep.length){
     var dchkP=((ev.dayof&&ev.dayof.checks)||{});
-    prepHtml='<table class="grid"><tr><th style="width:52px">준비완료</th><th style="width:50px">당일체크</th><th>준비 항목</th><th style="width:66px">담당</th><th style="width:78px">시작일</th><th style="width:78px">기한</th><th style="width:78px">금액</th></tr>'+
-      prep.map(function(p){ var dc=dchkP[p.id]||{};
-        return '<tr><td style="text-align:center">'+(p.done?'✔':'')+'</td><td style="text-align:center">'+(dc.done?'✔':'')+'</td><td>'+e2(p.item||'')+'</td><td>'+e2(p.owner||'')+'</td><td>'+e2(p.start||'')+'</td><td>'+e2(p.due||'')+'</td><td style="text-align:right">'+((Number(p.amount)||0)?won(Number(p.amount)):'')+'</td></tr>';
+    prepHtml='<table class="grid"><colgroup><col style="width:46pt"><col style="width:46pt"><col><col style="width:52pt"><col style="width:50pt"><col style="width:50pt"><col style="width:66pt"></colgroup>'+
+      '<tr><th class="ctr">준비완료</th><th class="ctr">당일확인</th><th>준비 항목</th><th class="ctr">담당</th><th class="ctr">시작일</th><th class="ctr">기한</th><th class="num">금액</th></tr>'+
+      prep.map(function(p){ var dc=dchkP[p.id]||{}; var amt=Number(p.amount)||0;
+        return '<tr><td class="ctr chk">'+(p.done?'✔':'')+'</td><td class="ctr chk">'+(dc.done?'✔':'')+'</td><td>'+e2(p.item||'')+'</td><td class="ctr">'+e2(p.owner||'<span class="dash">—</span>')+'</td><td class="ctr">'+md(p.start)+'</td><td class="ctr">'+md(p.due)+'</td><td class="num">'+(amt?won(amt):'<span class="dash">—</span>')+'</td></tr>';
       }).join('')+'</table>';
     var gd=[]; prep.forEach(function(p){ if(p.due){ gd.push(p.start||p.due); gd.push(p.due); } });
     if(gd.length){
       var gmin=gd.reduce(function(a,b){return a<b?a:b;}), gmax=gd.reduce(function(a,b){return a>b?a:b;});
       var weeks=[], cur=gmin, guard=0; while(cur<=gmax && guard++<60){ weeks.push(cur); cur=addDays(cur,7); } if(!weeks.length) weeks=[gmin];
-      var gh='<table class="grid" style="font-size:9pt"><tr><th style="text-align:left;width:140pt">준비 항목(간트)</th>'+weeks.map(function(wk){return '<th style="text-align:center">'+wk.slice(5).replace('-','/')+'</th>';}).join('')+'</tr>'+
+      var gh='<table class="grid gantt"><tr><th style="width:150pt">준비 항목 (주별 진행)</th>'+weeks.map(function(wk){return '<th class="ctr">'+md(wk)+'</th>';}).join('')+'</tr>'+
         prep.filter(function(p){return p.due;}).map(function(p){ var s=(p.start||p.due), e=p.due;
-          return '<tr><td>'+e2(p.item||'')+'</td>'+weeks.map(function(wk){ var we=addDays(wk,6); var on=!(e<wk||s>we); return '<td style="text-align:center;'+(on?'background:'+(p.done?'#C9CDD4':'#2B5FB8')+';color:'+(p.done?'#C9CDD4':'#2B5FB8'):'')+'">'+(on?'■':'')+'</td>';}).join('')+'</tr>';
-        }).join('')+'</table>';
-      prepHtml+='<div style="font-size:9pt;color:#6B6B6B;margin:5pt 0 2pt">▪ 주별 간트 (파랑=진행 · 회색=완료)</div>'+gh;
+          return '<tr><td>'+e2(p.item||'')+'</td>'+weeks.map(function(wk){ var we=addDays(wk,6); var on=!(e<wk||s>we); var bg=p.done?'#C9CDD4':'#2B5FB8'; return '<td class="ctr"'+(on?' style="background:'+bg+';color:'+bg+'"':'')+'>'+(on?'■':'')+'</td>';}).join('')+'</tr>';
+        }).join('')+'</table>'+
+        '<p class="cap">주별 간트 · <span style="color:#2B5FB8">■ 진행</span> &nbsp; <span style="color:#C9CDD4">■ 완료</span></p>';
+      prepHtml+=gh;
     }
-  } else prepHtml='<p class="empty">준비 항목 없음</p>';
+  } else prepHtml='<p class="empty">등록된 준비 항목이 없습니다.</p>';
+  /* ── ③ 큐시트 ── */
   var cue=(ev.cue||[]);
-  var cueHtml=cue.length?'<table class="grid"><tr><th style="width:64px">시간</th><th>순서·내용</th><th style="width:84px">담당</th><th>비고</th></tr>'+cue.map(function(c){return '<tr><td>'+e2(c.time||'')+'</td><td>'+e2(c.content||'')+'</td><td>'+e2(c.who||'')+'</td><td>'+e2(c.note||'')+'</td></tr>';}).join('')+'</table>':'<p class="empty">큐시트 없음</p>';
+  var cueHtml=cue.length?'<table class="grid"><colgroup><col style="width:58pt"><col><col style="width:70pt"><col style="width:110pt"></colgroup>'+
+    '<tr><th class="ctr">시간</th><th>순서 · 내용</th><th class="ctr">담당</th><th>비고</th></tr>'+
+    cue.map(function(c){return '<tr><td class="ctr">'+e2(c.time||'')+'</td><td>'+e2(c.content||'')+'</td><td class="ctr">'+e2(c.who||'')+'</td><td>'+e2(c.note||'')+'</td></tr>';}).join('')+'</table>':'<p class="empty">등록된 큐시트가 없습니다.</p>';
+  /* ── ④ 주의점 ── */
   var ns=(ev.cautions||[]);
-  var nsHtml=ns.length?'<ul>'+ns.map(function(c){return '<li>'+(c.done?'[완료] ':'')+e2(c.text||'')+'</li>';}).join('')+'</ul>':'<p class="empty">주의점 없음</p>';
-  /* 예산 */
-  var b=ev.budget||{}, inc=(b.income||[]), exp=(b.expense||[]);
-  var bt=budgetTotals(ev);
-  var budgetHtml='';
-  if(inc.length||exp.length){
-    budgetHtml='<table class="grid"><tr><th colspan="3" style="background:#EAF7EE;color:#1E7B3C">➕ 수입</th></tr>'+
-      (inc.length?inc.map(function(r){return '<tr><td>'+e2(r.item||'')+'</td><td style="text-align:right">'+won(Number(r.amount)||0)+'</td><td>'+e2(r.memo||'')+'</td></tr>';}).join(''):'<tr><td colspan="3" class="empty">수입 없음</td></tr>')+
-      '<tr><td style="font-weight:bold">수입 합계</td><td style="text-align:right;font-weight:bold;color:#1E7B3C">'+won(bt.inc)+'</td><td></td></tr>'+
-      '<tr><th colspan="3" style="background:#FBECEC;color:#B23A48">➖ 지출</th></tr>'+
-      (exp.length?exp.map(function(r){return '<tr><td>'+e2(r.item||'')+'</td><td style="text-align:right">'+won(Number(r.amount)||0)+'</td><td>'+e2(r.memo||'')+'</td></tr>';}).join(''):'<tr><td colspan="3" class="empty">지출 없음</td></tr>')+
-      '<tr><td style="font-weight:bold">지출 합계</td><td style="text-align:right;font-weight:bold;color:#B23A48">'+won(bt.exp)+'</td><td></td></tr>'+
-      '<tr><td style="font-weight:bold;background:'+SOFT+'">잔액 (수입−지출)</td><td style="text-align:right;font-weight:bold;background:'+SOFT+';color:'+(bt.bal>=0?'#1E7B3C':'#B23A48')+'">'+(bt.bal>=0?'+':'−')+won(Math.abs(bt.bal))+'</td><td style="background:'+SOFT+'"></td></tr>'+
-      '</table>';
-  } else budgetHtml='<p class="empty">예산 미작성</p>';
-  var rv=ev.review||{};
-  var reviewHtml=(rv.good||rv.improve||rv.next)?'<table class="info">'+row('잘된 점',nl(rv.good||''))+row('개선할 점',nl(rv.improve||''))+row('다음 기획 참고',nl(rv.next||''))+'</table>':'<p class="empty">평가 미작성</p>';
-  var links=[]; if(ev.folderUrl) links.push({l:'📁 대표 자료 폴더',u:ev.folderUrl}); (ev.media||[]).forEach(function(m){links.push({l:(m.label||'링크'),u:m.url});});
-  var linkHtml=links.length?'<ul>'+links.map(function(x){return '<li>'+e2(x.l)+': <a href="'+e2(x.u)+'">'+e2(x.u)+'</a></li>';}).join('')+'</ul>':'<p class="empty">연결된 자료 없음</p>';
-  var gwanHtml=ev.gwan?'<div class="gwan">'+nl(ev.gwan)+'</div>':'<p class="empty">관장 코멘트 없음</p>';
-  /* 행사 당일 */
+  var nsHtml=ns.length?'<ul class="chklist">'+ns.map(function(c){return '<li>'+(c.done?'<span class="done">✔</span> ':'<span class="box">☐</span> ')+e2(c.text||'')+'</li>';}).join('')+'</ul>':'<p class="empty">등록된 주의점이 없습니다.</p>';
+  /* ── ⑤ 행사 당일 ── */
   var dof=ev.dayof||{}, dchk=dof.checks||{}, dman=(dof.manual||[]), dayRows=[];
   (ev.prep||[]).forEach(function(p){ var c=dchk[p.id]||{}; dayRows.push([c.done?'✔':'', p.item||'', (c.owner!=null?c.owner:(p.owner||'')), c.comment||'']); });
   dman.forEach(function(m){ dayRows.push([m.done?'✔':'', m.text||'', m.owner||'', m.comment||'']); });
-  var dayofHtml=dayRows.length?'<table class="grid"><tr><th style="width:44px">완료</th><th>항목</th><th style="width:80px">담당</th><th>코멘트</th></tr>'+dayRows.map(function(r){return '<tr><td style="text-align:center">'+e2(r[0])+'</td><td>'+e2(r[1])+'</td><td>'+e2(r[2])+'</td><td>'+e2(r[3])+'</td></tr>';}).join('')+'</table>':'<p class="empty">행사 당일 항목 없음</p>';
+  var dayofHtml=dayRows.length?'<table class="grid"><colgroup><col style="width:44pt"><col><col style="width:70pt"><col style="width:150pt"></colgroup>'+
+    '<tr><th class="ctr">완료</th><th>항목</th><th class="ctr">담당</th><th>코멘트</th></tr>'+
+    dayRows.map(function(r){return '<tr><td class="ctr chk">'+e2(r[0])+'</td><td>'+e2(r[1])+'</td><td class="ctr">'+e2(r[2]||'<span class="dash">—</span>')+'</td><td>'+e2(r[3]||'')+'</td></tr>';}).join('')+'</table>':'<p class="empty">등록된 당일 항목이 없습니다.</p>';
+  /* ── ⑥ 평가 ── */
+  var rv=ev.review||{};
+  var reviewHtml=(rv.good||rv.improve||rv.next)?'<table class="info">'+row('잘된 점',nl(rv.good||''))+row('개선할 점',nl(rv.improve||''))+row('다음 기획 참고',nl(rv.next||''))+'</table>':'<p class="empty">아직 작성된 평가가 없습니다.</p>';
+  /* ── ⑦ 자료·미디어 ── */
+  var links=[]; if(ev.folderUrl) links.push({l:'대표 자료 폴더',u:ev.folderUrl}); (ev.media||[]).forEach(function(m){links.push({l:(m.label||'링크'),u:m.url});});
+  var linkHtml=links.length?'<table class="grid"><colgroup><col style="width:130pt"><col></colgroup><tr><th>자료</th><th>링크</th></tr>'+
+    links.map(function(x){return '<tr><td>'+e2(x.l)+'</td><td><a href="'+e2(x.u)+'">'+e2(x.u)+'</a></td></tr>';}).join('')+'</table>':'<p class="empty">연결된 자료가 없습니다.</p>';
+  /* ── ⑧ 예산 (준비 금액 자동 포함) ── */
+  var b=ev.budget||{}, inc=(b.income||[]), exp=(b.expense||[]);
+  var expRows=exp.map(function(r){ return {item:(r.item||''), amount:Number(r.amount)||0, memo:(r.memo||'')}; });
+  prepExpenses(ev).forEach(function(p){ expRows.push({item:(p.item||'준비 항목'), amount:Number(p.amount)||0, memo:'준비'+(p.owner?' · '+p.owner:'')+(p.due?' · 기한 '+md(p.due):'')}); });
+  var bt=budgetTotals(ev);
+  var budgetHtml='';
+  if(inc.length||expRows.length){
+    budgetHtml='<table class="grid budget"><colgroup><col><col style="width:96pt"><col style="width:150pt"></colgroup>'+
+      '<tr><th class="sec inc" colspan="3">수입</th></tr>'+
+      (inc.length?inc.map(function(r){return '<tr><td>'+e2(r.item||'')+'</td><td class="num">'+won(Number(r.amount)||0)+'</td><td>'+e2(r.memo||'')+'</td></tr>';}).join(''):'<tr><td colspan="3" class="empty">수입 항목 없음</td></tr>')+
+      '<tr class="sum"><td>수입 합계</td><td class="num" style="color:'+GREEN+'">'+won(bt.inc)+'</td><td></td></tr>'+
+      '<tr><th class="sec exp" colspan="3">지출</th></tr>'+
+      (expRows.length?expRows.map(function(r){return '<tr><td>'+e2(r.item)+'</td><td class="num">'+won(r.amount)+'</td><td>'+e2(r.memo)+'</td></tr>';}).join(''):'<tr><td colspan="3" class="empty">지출 항목 없음</td></tr>')+
+      '<tr class="sum"><td>지출 합계</td><td class="num" style="color:'+RED+'">'+won(bt.exp)+'</td><td></td></tr>'+
+      '<tr class="bal"><td>잔액 (수입 − 지출)</td><td class="num" style="color:'+(bt.bal>=0?GREEN:RED)+'">'+(bt.bal>=0?'+':'−')+won(Math.abs(bt.bal))+'</td><td></td></tr>'+
+      '</table>';
+  } else budgetHtml='<p class="empty">아직 작성된 예산이 없습니다.</p>';
+  /* ── 관장 코멘트 ── */
+  var gwanHtml=ev.gwan?'<div class="gwan">'+nl(ev.gwan)+'</div>':'<p class="empty">관장 코멘트가 없습니다.</p>';
+  /* ── 스타일 ── */
   var css='<style>'+
-    'body{font-family:"맑은 고딕","Malgun Gothic",sans-serif;color:'+INK+';font-size:11pt;line-height:1.55}'+
-    'h1{color:'+NAVY+';font-size:20pt;margin:0 0 3pt;border-bottom:2.5pt solid '+NAVY+';padding-bottom:6pt}'+
-    '.sub{color:'+SUB+';font-size:9pt;margin:0 0 14pt}'+
-    'h2{color:'+NAVY+';font-size:12.5pt;margin:15pt 0 5pt;padding-left:7pt;border-left:4pt solid '+NAVY+'}'+
-    'table{border-collapse:collapse;width:100%;margin:3pt 0;font-size:10.5pt}'+
-    'table.info td.k{background:'+SOFT+';color:'+NAVY+';font-weight:bold;width:96pt;border:1pt solid '+LINE+';padding:5pt 8pt;vertical-align:top}'+
-    'table.info td.v{border:1pt solid '+LINE+';padding:5pt 8pt}'+
-    'table.grid th{background:'+SOFT+';color:'+NAVY+';border:1pt solid '+LINE+';padding:5pt 7pt;text-align:left}'+
-    'table.grid td{border:1pt solid '+LINE+';padding:5pt 7pt}'+
-    'ul{margin:3pt 0;padding-left:18pt}li{margin:2pt 0}'+
-    '.empty{color:'+SUB+';font-size:10pt;padding:3pt}'+
-    '.gwan{background:#FFFDF5;border:1pt solid #F0E4C0;padding:8pt 10pt}'+
-    '.foot{margin-top:18pt;color:'+SUB+';font-size:9pt;text-align:center;border-top:1pt solid '+LINE+';padding-top:8pt}'+
+    '@page{margin:2cm 1.8cm}'+
+    'body{font-family:"맑은 고딕","Malgun Gothic",sans-serif;color:'+INK+';font-size:10.5pt;line-height:1.5;margin:0}'+
+    '.cover{border:0.75pt solid '+LINE+';border-top:6pt solid '+NAVY+';padding:15pt 18pt 13pt;margin:0 0 4pt}'+
+    '.cover .badge{color:'+SUB+';font-size:9pt;letter-spacing:1pt;font-weight:bold;margin:0 0 4pt}'+
+    '.cover h1{color:'+NAVY+';font-size:23pt;margin:0;line-height:1.2}'+
+    '.cover .meta{color:'+SUB+';font-size:9.5pt;margin:8pt 0 0}'+
+    'h2{color:'+NAVY+';font-size:12.5pt;margin:16pt 0 5pt;padding:4pt 0 4pt 9pt;border-left:4pt solid '+NAVY+';background:'+FAINT+'}'+
+    'p.lead{margin:2pt 0 4pt;color:'+INK+'}'+
+    'table{border-collapse:collapse;width:100%;margin:4pt 0 2pt;font-size:10pt;mso-table-lspace:0pt;mso-table-rspace:0pt}'+
+    'th,td{border:0.75pt solid '+LINE+';padding:5pt 8pt;vertical-align:middle}'+
+    'th{background:'+SOFT+';color:'+NAVY+';font-weight:bold;text-align:left}'+
+    'td.k{background:'+FAINT+';color:'+NAVY+';font-weight:bold;width:92pt}'+
+    'td.v{vertical-align:middle}'+
+    '.ctr{text-align:center;white-space:nowrap}'+
+    '.num{text-align:right;white-space:nowrap}'+
+    '.chk{color:'+GREEN+';font-weight:bold}'+
+    '.dash{color:#AEB4BD}'+
+    'table.gantt{font-size:8.5pt}table.gantt td,table.gantt th{padding:3pt 4pt}'+
+    'p.cap{color:'+SUB+';font-size:8.5pt;margin:2pt 0 0}'+
+    'ul.chklist{list-style:none;margin:3pt 0;padding:0}ul.chklist li{margin:3pt 0;padding-left:2pt}'+
+    'ul.chklist .done{color:'+GREEN+';font-weight:bold}ul.chklist .box{color:#AEB4BD}'+
+    'table.budget th.sec{font-size:10pt}th.sec.inc{background:#EAF7EE;color:'+GREEN+'}th.sec.exp{background:#FBECEC;color:'+RED+'}'+
+    'table.budget tr.sum td{font-weight:bold;background:#FAFBFC}'+
+    'table.budget tr.bal td{font-weight:bold;background:'+SOFT+';font-size:10.5pt}'+
+    '.empty{color:'+SUB+';font-size:9.5pt;padding:4pt 2pt;font-style:italic}'+
+    '.gwan{background:#FFFDF5;border:0.75pt solid #F0E4C0;border-left:4pt solid #D8B84A;padding:9pt 12pt;margin:3pt 0}'+
+    'a{color:#2B5FB8}'+
+    '.foot{margin-top:22pt;color:'+SUB+';font-size:8.5pt;text-align:center;border-top:0.75pt solid '+LINE+';padding-top:9pt}'+
     '</style>';
-  var body='<h1>'+e2(ev.title||'행사')+'</h1>'+
-    '<p class="sub">나라차태권도 분당도장 · 행사 문서'+(ev.type?' · '+e2(ev.type):'')+' · 발행일 '+e2(today())+'</p>'+
+  /* ── 본문 조립 ── */
+  var body='<div class="cover"><p class="badge">나라차태권도 분당도장 · 행사 기획 문서</p>'+
+      '<h1>'+e2(ev.title||'행사')+'</h1>'+
+      '<p class="meta">'+(ev.type?e2(ev.type)+' &nbsp;|&nbsp; ':'')+(ev.date?e2(ev.date)+(ev.time?' '+e2(ev.time):'')+' &nbsp;|&nbsp; ':'')+(ev.place?e2(ev.place)+' &nbsp;|&nbsp; ':'')+'발행일 '+e2(today())+'</p></div>'+
     '<h2>① 기본 정보</h2>'+basic+
-    (ev.desc?'<h2>내용·개요</h2><div>'+nl(ev.desc)+'</div>':'')+
-    '<h2>② 준비</h2>'+prepHtml+
-    '<h2>③ 진행 큐시트</h2>'+cueHtml+
-    '<h2>④ 진행 시 주의점</h2>'+nsHtml+
-    '<h2>⑤ 행사 당일</h2>'+dayofHtml+
-    '<h2>⑥ 평가·회고</h2>'+reviewHtml+
-    '<h2>⑦ 자료·미디어</h2>'+linkHtml+
-    '<h2>⑧ 예산</h2>'+budgetHtml+
+    (ev.desc?'<h2>② 내용 · 개요</h2><p class="lead">'+nl(ev.desc)+'</p>':'')+
+    '<h2>'+(ev.desc?'③':'②')+' 준비 계획</h2>'+prepHtml+
+    '<h2>진행 큐시트</h2>'+cueHtml+
+    '<h2>진행 시 주의점</h2>'+nsHtml+
+    '<h2>행사 당일 점검</h2>'+dayofHtml+
+    '<h2>예산 (단식부기)</h2>'+budgetHtml+
+    '<h2>자료 · 미디어</h2>'+linkHtml+
+    '<h2>평가 · 회고</h2>'+reviewHtml+
     '<h2>관장 코멘트</h2>'+gwanHtml+
-    '<div class="foot">나라차태권도 분당도장 · 이 문서는 워드/구글 문서에서 열어 수정할 수 있습니다.</div>';
+    '<div class="foot">나라차태권도 분당도장 &nbsp;·&nbsp; 본 문서는 워드 및 구글 문서에서 열어 자유롭게 수정할 수 있습니다.</div>';
   return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>'+e2(ev.title||'행사')+'</title>'+
-    '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->'+css+'</head><body>'+body+'</body></html>';
+    '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->'+css+'</head><body>'+body+'</body></html>';
 }
 window.exportEventDoc=function(id){
   var w=workData(); var ev=w.events[id]; if(!ev){ alert("행사를 찾을 수 없습니다."); return; }
