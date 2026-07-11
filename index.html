@@ -4545,6 +4545,7 @@ function statBaseRows(){
                acc:acc, last:last, kkw:kkw, ready:ready };
     });
   var grp=state.statGroup||"전체";
+  if(grp==="시범단"){ rows=rows.filter(function(r){ return isDemo(r.s.n); }); }
   if(grp==="반별" && state.statBanF){ rows=rows.filter(function(r){ return (r.s.b||"")===state.statBanF; }); }
   if(grp==="급수별" && state.statGT){
     rows=rows.filter(function(r){ var g=r.s.grade||"";
@@ -4613,6 +4614,8 @@ function statViewRows(){
 
   if(grp==="전체"){
     rows.sort(makeRecentCmp(ym, cmpAgeYoung));      /* 최근출석순 → (없으면) 어린나이·이름 */
+  } else if(grp==="시범단"){
+    rows.sort(recentName);                          /* 시범단: 최근출석순 → 가나다 (하나의 그룹처럼) */
   } else if(grp==="반별"){
     if(state.statBanF){ rows.sort(recentName); }    /* 특정 반: 최근출석순 → 가나다 */
     else rows.sort(function(a,b){                    /* 반 전체: 어린 반 위(역순 시 반대) */
@@ -4703,6 +4706,14 @@ function renderStatusTab(){
     var on=(grp===k);
     return '<button onclick="setStatGroup(\''+k+'\')" style="padding:6px 13px;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid '+(on?'var(--blue)':'var(--line)')+';background:'+(on?'var(--blue)':'#fff')+';color:'+(on?'#fff':'var(--ink)')+'">'+k+'</button>';
   }).join('');
+  /* 시범단 버튼 — 급수별 옆 · 로고 활용 · 조금 작게 (도장 핵심 그룹) */
+  (function(){
+    var on=(grp==="시범단");
+    var logo=(typeof DEMO_BADGE!=="undefined")
+      ? '<img src="'+DEMO_BADGE+'" alt="" style="width:16px;height:auto;vertical-align:middle;'+(on?'filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))':'')+'">'
+      : '🥋';
+    grpBtns+='<button onclick="setStatGroup(\'시범단\')" title="시범단 원생만 보기" style="padding:4px 11px 4px 8px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;border:1.5px solid '+(on?'#B45309':'#F0C36D')+';background:'+(on?'#B45309':'#FFF7E0')+';color:'+(on?'#fff':'#8A5A00')+'">'+logo+'시범단</button>';
+  })();
 
   /* 하위 선택 (반/급수) — 위계 3: 가장 작은 chip */
   var subSel="";
