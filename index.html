@@ -433,7 +433,7 @@ var state = { tab:"회계입력", payments:[], expiryMap:{}, deletedIds:[], hold
               topCat:"출석", attTab:"수련시간표", role:null,
               schedule:null, scheduleT:0, tempStudents:[],
               attPulledOnce:false, attSyncing:false, attStatus:"", stuM:null, tempM:null,
-              accMap:{}, accT:0, lastExamMap:{}, lastExamT:0, kkwPending:[], kkwT:0,
+              accMap:{}, accT:0, lastExamMap:{}, lastExamT:0, kkwPending:[], kkwT:0, kkwInfo:{}, danDateMap:{},
               weeks:{}, weekSel:null, dayView:null, markM:null, addBox:null, newStudents:[], histEdits:{}, deletedStudents:{}, savedAt:0,
               device:"", syncStatus:"", syncing:false, lastSync:0,
               query:"", picked:null, date:today(), cat:"수련비", method:"카드",
@@ -2369,7 +2369,7 @@ function analyzeHonorific(){
 }
 /* 이름을 쓰는 모든 데이터의 키/필드를 새 이름으로 이동 */
 function _moveNameKeys(oldN, newN, overwrite){
-  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences','laManual','contactLog','dunLog'].forEach(function(mk){
+  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences','laManual','contactLog','dunLog','kkwInfo','danDateMap'].forEach(function(mk){
     var m=state[mk]; if(m && m[oldN]!==undefined){ if(overwrite || m[newN]===undefined) m[newN]=m[oldN]; delete m[oldN]; }
   });
   if(state.refCntMap){ for(var k in state.refCntMap){ if(k.indexOf(oldN+"|")===0){ var nk=newN+k.slice(oldN.length); if(overwrite||state.refCntMap[nk]===undefined) state.refCntMap[nk]=state.refCntMap[k]; delete state.refCntMap[k]; } } }
@@ -2407,7 +2407,7 @@ function mergeDupInto(dupN, baseN){
     if(state.quitMap && state.quitMap[baseN] && !state.quitMap[baseN].del) state.quitMap[baseN]={del:true,t:Date.now()};
   }
   /* dup의 잔여 키 제거 */
-  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences','laManual','contactLog','dunLog'].forEach(function(mk){ if(state[mk]) delete state[mk][dupN]; });
+  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences','laManual','contactLog','dunLog','kkwInfo','danDateMap'].forEach(function(mk){ if(state[mk]) delete state[mk][dupN]; });
   /* 대표(base) 학적 정보 보강: 대표에 비어있는 값은 dup에서 채우고, 보호자·대회이력은 합쳐 보존 */
   var _b=null,_d=null;
   for(var bi=0;bi<STUDENTS.length;bi++){ if(STUDENTS[bi].n===baseN)_b=STUDENTS[bi]; if(STUDENTS[bi].n===dupN)_d=STUDENTS[bi]; }
@@ -4065,6 +4065,51 @@ function nextGrade(g){
   if(m){ var k2=+m[1]-1; return k2>0 ? k2+"급" : "1품 후보(국기원)"; }
   return g;
 }
+/* ══════════ 국기원 심사 트랙 (급수체계 문서 기준) ══════════
+   대기 대상(마지막 단계): 1급(국기원보띠) · N품 1급(검정표식) · N단(유단자)
+   합격 시: 1급→1품 12급(미성년)/1단(성인) · N품 1급→(N+1)품 (N+1)×12급 · 4품 1급→4단(만15세↑) · N단→(N+1)단
+   연한(국기원 표준): 현재 품·단 숫자만큼 년 — 취득일(단증 수령일) 기준 */
+function kkwEligible(g){
+  g=(g||"").trim();
+  return g==="1급" || /^\d+품\s*1급$/.test(g) || /^\d+단$/.test(g);
+}
+/* 만 15세 이상(성인 트랙) 판정: 생년월일 우선, 없으면 성인반 여부 */
+function kkwIsAdult(s){
+  var age=(typeof ageFromBirth==="function")?ageFromBirth(s.by):null;
+  if(age!=null) return age>=15;
+  return !!(s.b && (s.b.indexOf("5성인")===0 || s.b.indexOf("6성인")===0));
+}
+/* 응시할 국기원 심사 이름 */
+function kkwExamName(g, adult){
+  g=(g||"").trim();
+  if(g==="1급") return adult ? "초단 승단심사 (합격 시 1단)" : "초단 승단심사 (합격 시 1품)";
+  var m=g.match(/^(\d+)품\s*1급$/);
+  if(m){ var n=+m[1]; return n>=4 ? "승단심사 (합격 시 4단 · 만15세 이상)" : (n+1)+"품 승품심사"; }
+  m=g.match(/^(\d+)단$/);
+  if(m) return (+m[1]+1)+"단 승단심사";
+  return "";
+}
+/* 단증 수령 시 자동 진급 급수 ("" = 진급 불가) */
+function kkwPromoted(g, adult){
+  g=(g||"").trim();
+  if(g==="1급") return adult ? "1단" : "1품 12급";
+  var m=g.match(/^(\d+)품\s*1급$/);
+  if(m){ var n=+m[1];
+    if(n>=4) return adult ? "4단" : "";          /* 4품→4단은 만15세 이상만 */
+    return (n+1)+"품 "+((n+1)*12)+"급"; }
+  m=g.match(/^(\d+)단$/);
+  if(m) return (+m[1]+1)+"단";
+  return "";
+}
+/* 다음 승품·승단 연한 정보: {n,unit,from,due,ok} · 품·단 아니면 null */
+function kkwTermInfo(name){
+  var s=STUDENTS.find(function(x){return x.n===name;}); if(!s) return null;
+  var m=(s.grade||"").match(/^(\d+)(품|단)/); if(!m) return null;
+  var n=+m[1], d=(state.danDateMap||{})[name]||"";
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) return {n:n, unit:m[2], from:"", due:"", ok:false};
+  var due=(Number(d.slice(0,4))+n)+d.slice(4);
+  return {n:n, unit:m[2], from:d, due:due, ok:due<=today()};
+}
 function beltChip(s){
   var g=s.grade||"";
   if(!g) return '<span style="font-size:11.5px;color:var(--sub)">급수 미입력</span>';
@@ -4776,16 +4821,23 @@ function statListHtml(view){
       : '<span style="font-size:11.5px;color:var(--sub)">출석 없음</span>';
     /* 심사 클러스터 (구 심사대상 탭 통합): 누적횟수(클릭=수동수정) · 마지막 심사일 · 상태 배지 · 응심 버튼 */
     var esn2=esc(s.n).replace(/'/g,"\\'");
-    var exBadge = r.kkw ? '<span style="background:#EEE;color:#666;border-radius:10px;padding:2px 7px;font-size:11.5px;font-weight:800;white-space:nowrap">국기원 대기</span>'
+    var kkwAp=r.kkw?(((state.kkwInfo||{})[s.n]||{}).ap||""):"";
+    var exBadge = r.kkw ? '<span title="'+(kkwAp?'국기원 접수일 '+esc(kkwAp)+' · ':'')+'이름을 누르면 학적부에서 단증 수령·취소 처리" style="background:#EEE;color:#666;border-radius:10px;padding:2px 7px;font-size:11.5px;font-weight:800;white-space:nowrap;cursor:help">국기원 대기'+(kkwAp?' '+esc(kkwAp.slice(5)):'')+'</span>'
       : (r.ready && isLongAbsent(s.n)) ? '<span title="누적·주기는 충족했지만 4주 이상 무출석 — 연락 먼저" style="background:#FFF3E0;color:#B45309;border:1px dashed #F0C36D;border-radius:10px;padding:2px 7px;font-size:11.5px;font-weight:800;white-space:nowrap">추천·연락필요</span>'
       : r.ready ? '<span style="background:var(--redSoft);color:var(--red);border-radius:10px;padding:2px 7px;font-size:11.5px;font-weight:800;white-space:nowrap">추천</span>'
       : r.acc<24 ? '<span style="font-size:11.5px;color:var(--sub);white-space:nowrap">'+(24-r.acc)+'회 남음</span>'
       : '';   /* 24회 이상·주기 미충족: 재응시 가능일 표기는 생략 (마지막 심사일로 판단) */
+    /* 품·단 마지막 단계(국기원 대상)인데 연한이 아직 안 됐으면 안내 칩 */
+    var termChip='';
+    if(!r.kkw && kkwEligible(s.grade)){
+      var ti2=kkwTermInfo(s.n);
+      if(ti2 && ti2.due && !ti2.ok) termChip='<span title="국기원 표준 연한: '+esc(ti2.due)+'부터 응시 가능" style="font-size:11.5px;color:#B45309;white-space:nowrap">연한 '+esc(ti2.due.slice(2))+'~</span>';
+    }
     var examCl='<div style="flex:0 0 226px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden">'+
       '<span style="font-size:11.5px;color:var(--sub)">심사</span>'+
       '<b style="font-size:13.5px;color:'+(r.acc>=24?'var(--red)':'var(--ink)')+';cursor:pointer;border-bottom:1px dashed var(--sub);font-variant-numeric:tabular-nums" title="클릭하면 누적횟수 수동 수정" onclick="editAcc(\''+esn2+'\')">'+r.acc+'회</b>'+
       (r.last?'<span style="font-size:11.5px;color:var(--sub);font-variant-numeric:tabular-nums" title="마지막 심사일">'+esc(r.last.slice(2))+'</span>':'')+
-      exBadge+
+      exBadge+termChip+
       ((r.ready||r.acc>=24)?'<button class="chip sm" style="color:var(--blue);border-color:var(--blue);padding:2px 8px;font-size:11.5px" onclick="doExam(\''+esn2+'\')">응심</button>':'')+
       '</div>';
     /* 고정폭 칸으로 세로 줄맞춤 (급수·기준·실제·태그·심사·날짜 모두 같은 x에서 시작) */
@@ -6499,7 +6551,15 @@ function renderExamTab(){
     '<b style="font-size:15px">심사대상</b>'+
     '<span style="background:var(--redSoft);color:var(--red);border-radius:10px;padding:3px 10px;font-size:13.5px;font-weight:800">추천 '+readyN+'명</span>'+
     '<span style="font-size:11.5px;color:var(--sub)">기준: 누적 24회 + 마지막 심사 후 2개월 경과 · 국기원 응심 대기자는 제외 · 횟수 숫자를 누르면 수동 수정</span></div>'+
-    '<div style="font-size:11.5px;color:var(--sub);margin-bottom:8px">국기원 대기: '+(state.kkwPending||[]).map(snLink).join(", ")+'</div>'+
+    '<div style="font-size:11.5px;color:var(--sub);margin-bottom:8px">국기원 대기: '+
+      ((state.kkwPending||[]).length ? (state.kkwPending||[]).map(function(n){
+        var ap=((state.kkwInfo||{})[n]||{}).ap||"";
+        var en=esc(n).replace(/'/g,"\\'");
+        return '<span style="display:inline-flex;align-items:center;gap:3px;margin-right:8px">'+snLink(n)+
+          (ap?'<span style="color:var(--sub)">('+esc(ap.slice(5))+')</span>':'')+
+          '<button class="chip sm" style="padding:1px 7px;font-size:10px;color:var(--blue)" title="단증 수령 처리 (자동 진급)" onclick="kkwReceive(\''+en+'\')">단증수령</button>'+
+          '<button class="chip sm" style="padding:1px 6px;font-size:10px;color:var(--sub)" title="대기 취소" onclick="kkwCancel(\''+en+'\')">취소</button></span>';
+      }).join("") : '<span>없음 — 학적부(이름 클릭)에서 [국기원 접수]로 등록</span>')+'</div>'+
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">'+'<input class="input" style="max-width:170px;padding:7px 12px;font-size:13.5px;border-radius:10px" placeholder="🔍 이름 검색" value="'+esc(state.examQ||"")+'" oninput="setExamQ(this.value)">'+
     ["추천순","반별","급수별","이름순"].map(function(k){
       return '<button class="chip'+((state.examSort||"추천순")===k?' on':'')+'" onclick="setExamSort(\''+k+'\')">'+k+'</button>';
@@ -6574,6 +6634,64 @@ window.doExam=function(name){
   if(myRole()==="admin") persist();
   if(typeof examNotifyRosterChanged==="function") examNotifyRosterChanged();
   render();
+};
+
+/* ══════════ 국기원 접수 → 대기 → 단증 수령 (급수체계 문서 기준) ══════════ */
+window.kkwApply=function(name){
+  var s=STUDENTS.find(function(x){return x.n===name;}); if(!s) return;
+  var adult=kkwIsAdult(s);
+  var exam=kkwExamName(s.grade, adult) || "국기원 심사";
+  var ti=kkwTermInfo(name);
+  var warn = (ti && ti.due && !ti.ok) ? "\n\n⚠️ 국기원 표준 연한("+ti.due+")이 아직 안 됐습니다. 그래도 접수 처리할까요?" : "";
+  if(!confirm(name+" 국기원 접수 (대기 등록)\n\n· 급수: "+(s.grade||"미입력")+"\n· 응시: "+exam+"\n· 접수일: 오늘("+today()+")\n\n대기 중에는 도장 심사추천에서 제외됩니다."+warn)) return;
+  if(!state.kkwPending) state.kkwPending=[];
+  if(state.kkwPending.indexOf(name)===-1) state.kkwPending.push(name);
+  if(!state.kkwInfo) state.kkwInfo={};
+  state.kkwInfo[name]={ap:today()};
+  state.kkwT=Date.now();
+  persistAtt(); if(myRole()==="admin") persist(); render();
+};
+window.kkwCancel=function(name){
+  if(!confirm(name+" 국기원 대기를 취소할까요?\n(접수 기록이 지워지고 도장 심사추천에 다시 포함됩니다)")) return;
+  var ix=(state.kkwPending||[]).indexOf(name); if(ix>-1) state.kkwPending.splice(ix,1);
+  if(state.kkwInfo) delete state.kkwInfo[name];
+  state.kkwT=Date.now();
+  persistAtt(); if(myRole()==="admin") persist(); render();
+};
+window.kkwReceive=function(name){
+  var s=STUDENTS.find(function(x){return x.n===name;}); if(!s) return;
+  var adult=kkwIsAdult(s);
+  var ng=kkwPromoted(s.grade, adult);
+  if(!ng){
+    if(/^4품/.test((s.grade||""))) alert("4품 → 4단 승단은 만 15세 이상만 가능합니다.\n생년월일을 확인해 주세요. (급수는 그대로 두었습니다)");
+    else alert("현재 급수("+(s.grade||"미입력")+")로는 자동 진급 규칙이 없습니다.\n학적부 [수정]에서 직접 급수를 바꿔 주세요.");
+    return;
+  }
+  if(!confirm(name+" 단증 수령 ✓\n\n· 급수: "+(s.grade||"미입력")+" → "+ng+"\n· 취득일: 오늘("+today()+") — 다음 연한 계산 기준\n· 누적 횟수: 1부터 다시 시작\n· 국기원 대기에서 빠집니다\n\n진행할까요?")) return;
+  s.grade=ng; s.lastPromo=today(); s._t=Date.now();
+  state.rosterT=Date.now();
+  if(!state.danDateMap) state.danDateMap={};
+  state.danDateMap[name]=today();
+  var ix=(state.kkwPending||[]).indexOf(name); if(ix>-1) state.kkwPending.splice(ix,1);
+  if(state.kkwInfo) delete state.kkwInfo[name];
+  state.kkwT=Date.now();
+  state.lastExamMap[name]=today(); state.lastExamT=Date.now();
+  /* 누적횟수 0부터 (도장 응심과 동일한 기준점 리셋) */
+  if(!state.accBaseMap) state.accBaseMap={}; if(!state.accBaseRef) state.accBaseRef={}; if(!state.accBaseTMap) state.accBaseTMap={};
+  state.accBaseMap[name]=0; state.accBaseRef[name]=0;
+  state.accBaseT=Date.now(); state.accBaseTMap[name]=Date.now();
+  reconcileAcc();
+  persistAtt(); if(myRole()==="admin") persist();
+  if(typeof examNotifyRosterChanged==="function") examNotifyRosterChanged();
+  render();
+};
+/* 기존 품·단 보유자의 취득일 직접 입력 (연한 계산용) */
+window.setDanDate=function(name, v){
+  if(v && !/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+  if(!state.danDateMap) state.danDateMap={};
+  if(v) state.danDateMap[name]=v; else delete state.danDateMap[name];
+  state.kkwT=Date.now();
+  persistAtt(); render();
 };
 
 /* ══════════ 원생 등록·수정 창 ══════════ */
@@ -6972,6 +7090,52 @@ function renderStuChart(m){
         '</button>'+
       '</div>'+
     '</div>'+
+
+    /* ── 🏛 국기원 심사 트랙 (접수→대기→단증 수령 · 연한 자동 표시) ── */
+    (function(){
+      var nm=m.n;
+      var pend=(state.kkwPending||[]).indexOf(nm)>-1;
+      var elig=kkwEligible(m.grade);
+      var ti=kkwTermInfo(nm);
+      if(!pend && !elig && !ti) return '';   /* 유급자 2급 이하 등: 카드 자체를 숨김 */
+      var s2=STUDENTS.find(function(x){return x.n===nm;})||m;
+      var adult=kkwIsAdult(s2);
+      var exam=kkwExamName(m.grade, adult);
+      var inner='';
+      if(pend){
+        var ap=((state.kkwInfo||{})[nm]||{}).ap||"";
+        inner+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+          '<span style="background:#EEE;color:#555;border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:800">국기원 대기 중</span>'+
+          (ap?'<span style="font-size:11.5px;color:'+SUB+'">접수일 '+esc(ap)+'</span>':'')+
+          (exam?'<span style="font-size:11.5px;color:'+SUB+'">· '+esc(exam)+'</span>':'')+
+          '<span style="flex:1"></span>'+
+          '<button onclick="kkwReceive(\''+esafe+'\')" style="background:'+NAVY+';border:none;color:#fff;border-radius:10px;padding:7px 12px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">단증 수령 ✓</button>'+
+          '<button onclick="kkwCancel(\''+esafe+'\')" style="background:#fff;border:1px solid '+LINE+';color:'+SUB+';border-radius:10px;padding:7px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit">대기 취소</button>'+
+          '</div>';
+      } else if(elig){
+        var termWarn = (ti && ti.due && !ti.ok) ? '<span style="font-size:11.5px;color:#B45309;font-weight:700">⚠️ 연한 '+esc(ti.due)+'부터</span>' : '';
+        inner+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+          '<span style="font-size:13.5px;color:'+INK+';font-weight:700">'+esc(exam||"국기원 심사 대상")+'</span>'+termWarn+
+          '<span style="flex:1"></span>'+
+          '<button onclick="kkwApply(\''+esafe+'\')" style="background:var(--brandRed);border:none;color:#fff;border-radius:10px;padding:7px 12px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">국기원 접수</button>'+
+          '</div>';
+      }
+      if(ti){
+        var termTx = ti.from
+          ? (esc(ti.from)+' 취득 → 다음 '+(ti.unit==="품"?"승품·승단":"승단")+' 연한 <b style="color:'+(ti.ok?'var(--green)':INK)+'">'+esc(ti.due)+'</b>'+(ti.ok?' <span style="color:var(--green);font-weight:800">· 연한 지남 (응시 가능)</span>':''))
+          : '취득일을 입력하면 다음 연한('+ti.n+'년)이 자동 계산됩니다';
+        inner+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:'+(inner?'8px':'0')+';padding-top:'+(inner?'8px':'0')+';'+(inner?'border-top:1px dashed '+LINE:'')+'">'+
+          '<span style="font-size:11.5px;font-weight:800;color:'+SUB+';letter-spacing:.5px">연한</span>'+
+          '<span style="font-size:11.5px;color:'+SUB+'">'+termTx+'</span>'+
+          '<span style="flex:1"></span>'+
+          '<input type="date" value="'+esc(ti.from||"")+'" onchange="setDanDate(\''+esafe+'\',this.value)" title="현재 품·단 취득일 (단증 수령일)" style="border:1px solid '+LINE+';border-radius:8px;padding:4px 7px;font-size:11.5px;font-family:inherit;background:#fff;color:'+INK+'">'+
+          '</div>';
+      }
+      return '<div style="padding:10px 20px 0">'+
+        '<div style="background:#fff;border:1px solid '+LINE+';border-radius:10px;padding:11px 14px">'+
+        '<div style="font-size:11.5px;font-weight:800;color:'+SUB+';letter-spacing:.5px;margin-bottom:7px">🏛 국기원 심사</div>'+
+        inner+'</div></div>';
+    })()+
 
     /* ── 대장 본문 ── */
     '<div style="padding:16px 20px 4px">'+
@@ -7435,7 +7599,7 @@ function attState(){
     accBase:{ base:state.accBaseMap||{}, ref:state.accBaseRef||{}, t:state.accBaseT||0, tmap:state.accBaseTMap||{} },
     sig:{ q:state.sigQ||{}, qt:state.sigQT||{}, a:state.sigA||{}, t:state.sigTT||0 },
     lastExam:{ map:state.lastExamMap||{}, t:state.lastExamT||0 },
-    kkw:{ list:state.kkwPending||[], t:state.kkwT||0 },
+    kkw:{ list:state.kkwPending||[], t:state.kkwT||0, info:state.kkwInfo||{}, dan:state.danDateMap||{} },
     /* [완전 분리] 심사데이터는 exam 창고로 이전됨 → 출석 창고에는 더 이상 저장하지 않음.
        (기존 출석 창고에 남아 있던 심사데이터는 applyAtt에서 계속 읽어 exam으로 합쳐짐 = 유실 없음) */
     deletedStudents: state.deletedStudents||{},   /* 삭제 묘비를 출석 창고에도 → 사범 기기 유령 부활 방지 */
@@ -7687,7 +7851,7 @@ function applyAtt(m){
   if(m.sig){ state.sigQ=m.sig.q||{}; state.sigQT=m.sig.qt||{}; state.sigA=m.sig.a||{}; state.sigTT=m.sig.t||0; }
   if(m.lastExam){ state.lastExamMap=m.lastExam.map||{}; state.lastExamT=m.lastExam.t||0; }
   reconcileAcc();   /* 동기화된 출석 마크(단말기 포함) + 수동 기준점을 수련횟수에 즉시 반영 */
-  if(m.kkw){ state.kkwPending=m.kkw.list||[]; state.kkwT=m.kkw.t||0; }
+  if(m.kkw){ state.kkwPending=m.kkw.list||[]; state.kkwT=m.kkw.t||0; state.kkwInfo=m.kkw.info||{}; state.danDateMap=m.kkw.dan||{}; }
   if(m.examData){
     /* 클라우드에서 온 심사 데이터를 현재와 레코드별 최신(_t)으로 합침 */
     if(!state.examData) state.examData = { meta:{}, students:{}, t:0 };
