@@ -10285,6 +10285,8 @@ function eventCardsHtml(){
     var yy=Number(ev.date.slice(0,4)), mm=Number(ev.date.slice(5,7)), dd=Number(ev.date.slice(8,10));
     if(yy!==y) return false;
     if(scope==="year") return true;
+    if(scope==="half1") return mm>=1 && mm<=6;    /* 전반기 */
+    if(scope==="half2") return mm>=7 && mm<=12;   /* 후반기 */
     if(mm!==mo) return false;
     if(scope==="day") return dd===state.evDay;
     return true;
@@ -10329,6 +10331,19 @@ function eventCardsHtml(){
       h+='<div style="font-size:13px;color:var(--sub);padding:8px 2px">'+(evs.length?'이 기간에 해당하는 행사가 없습니다.':'아직 등록된 행사가 없습니다. <b>[+ 새 행사]</b>로 시작하세요.')+'</div>';
     }
   }
+  else if(scope==="year"||scope==="half1"||scope==="half2"){
+    /* 여러 달을 볼 때: 월별로 묶어 소제목과 함께 표시 (shown은 날짜 오름차순 정렬됨) */
+    var mc={}; shown.forEach(function(ev){ var m=Number(ev.date.slice(5,7)); mc[m]=(mc[m]||0)+1; });
+    var curM=null;
+    shown.forEach(function(ev){
+      var m=Number(ev.date.slice(5,7));
+      if(m!==curM){ curM=m;
+        h+='<div style="display:flex;align-items:center;gap:7px;margin:12px 2px 6px"><b style="font-size:12.5px;color:var(--blue)">'+m+'월</b>'+
+           '<span style="font-size:11px;color:var(--sub)">'+mc[m]+'건</span><span style="flex:1;border-top:1.5px solid #E8EEF7"></span></div>';
+      }
+      h+=card(ev);
+    });
+  }
   else shown.forEach(function(ev){ h+=card(ev); });
   if(noDate.length){
     h+='<div style="font-size:11.5px;font-weight:800;color:#B45309;margin:6px 2px 6px">🗓 날짜 미정 '+noDate.length+'건</div>';
@@ -10342,14 +10357,29 @@ function eventCardsHtml(){
   }
   return h;
 }
+/* 목록 상단: 기간 정렬 요약 라벨 */
+function evScopeLabel(){
+  var y=state.evYear, mo=state.evMonth, scope=state.evScope||"month";
+  return scope==="day" ? (y+"년 "+mo+"월 "+state.evDay+"일")
+    : scope==="year" ? (y+"년 전체")
+    : scope==="half1" ? (y+"년 전반기 · 1~6월")
+    : scope==="half2" ? (y+"년 후반기 · 7~12월")
+    : (y+"년 "+mo+"월");
+}
 function renderEventList(evs, byDate){
   var y=state.evYear, mo=state.evMonth, scope=state.evScope||"month";
   var typeF=state.evType||"전체", ef=state.eventFilter||"전체";
-  var scopeLabel = scope==="day" ? (y+"년 "+mo+"월 "+state.evDay+"일") : scope==="year" ? (y+"년 전체") : (y+"년 "+mo+"월");
   var types=eventTypes();
+  /* 기간 정렬 버튼 (월별·전반기·후반기·연간) */
+  var periodBtn=function(sc,label){ var on=(scope===sc)||(sc==="month"&&scope==="day"); return '<button class="chip sm'+(on?" on":"")+'" onclick="setEvScope(\''+sc+'\')">'+label+'</button>'; };
   var h='<div class="card">'+
-    '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px"><b style="font-size:15px">📋 '+scopeLabel+'</b>'+
+    '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px"><b style="font-size:15px">📋 '+evScopeLabel()+'</b>'+
       '<span style="font-size:11.5px;color:var(--sub)">'+(scope==="day"?'<button class="chip sm" style="margin-left:4px" onclick="setEvScope(\'month\')">이 달 전체 보기</button>':'')+'</span></div>'+
+    /* 기간 정렬 */
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:7px">'+
+      '<span style="font-size:11px;font-weight:800;color:var(--sub)">기간</span>'+
+      periodBtn('month', mo+'월')+periodBtn('half1','전반기')+periodBtn('half2','후반기')+periodBtn('year','연간')+
+    '</div>'+
     /* 종류 필터 */
     '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:7px">'+
       '<span style="font-size:11px;font-weight:800;color:var(--sub)">종류</span>'+
