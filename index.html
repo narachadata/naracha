@@ -3634,6 +3634,52 @@ function renderAnnualBriefTab(){
     });
     h+='</div>';
   }
+
+  /* ══════════ 회계 지표 보강: 환불 반영 순매출 · 객단가 · 분기별 ══════════ */
+  /* 환불(선택 연도 · 음수 결제 절대값 합). yTot은 이미 환불이 차감된 순매출임 */
+  var refundTot=0, refundCnt=0;
+  (state.payments||[]).forEach(function(pm){
+    if(Number(pm.date.slice(0,4))!==Y) return;
+    if((pm.amount||0)<0){ refundTot+=(-pm.amount); refundCnt++; }
+  });
+  var grossY=yTot+refundTot;
+  /* 평균 재원 (12개월 말 평균) */
+  var encSum=0; for(var qe=1;qe<=12;qe++){ encSum+=enrolledAt(Y+"-"+p2(qe)+"-28"); }
+  var avgEnr=Math.max(1, Math.round(encSum/12));
+  var arpu=Math.round(yTot/avgEnr);
+  /* 분기별 */
+  var Q=[0,0,0,0];
+  for(var qm=1;qm<=12;qm++){ Q[Math.floor((qm-1)/3)]+=(monthly[Y+"-"+p2(qm)]||{}).총||0; }
+
+  h+='<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px">'+
+    /* 순매출(환불 반영) */
+    '<div class="card" style="margin:0">'+
+      '<span class="label">💸 순매출 (환불 반영)</span>'+
+      '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)"><span style="color:var(--sub);font-size:13px">총매출 (환불 전)</span><b style="font-variant-numeric:tabular-nums">'+won(grossY)+'</b></div>'+
+      '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)"><span style="color:var(--sub);font-size:13px">환불'+(refundCnt?' ('+refundCnt+'건)':'')+'</span><b style="color:#B23A48;font-variant-numeric:tabular-nums">'+(refundTot?'- '+won(refundTot):won(0))+'</b></div>'+
+      '<div style="display:flex;justify-content:space-between;padding:8px 0 0"><span style="font-weight:800">순매출</span><b style="font-size:17px;color:var(--blue);font-variant-numeric:tabular-nums">'+won(yTot)+'</b></div>'+
+    '</div>'+
+    /* 객단가 */
+    '<div class="card" style="margin:0">'+
+      '<span class="label">🧍 원생 1인당 매출 (객단가)</span>'+
+      '<div style="font-size:24px;font-weight:900;color:var(--blue);margin:8px 0 2px;font-variant-numeric:tabular-nums">'+won(arpu)+'</div>'+
+      '<div style="font-size:11.5px;color:var(--sub);line-height:1.5">순매출 '+won(yTot)+'<br>÷ 평균 재원 '+avgEnr+'명'+(months.length<12?' · 올해 누적 기준':'')+'</div>'+
+    '</div>'+
+  '</div>';
+  /* 분기별 매출 */
+  h+='<div class="card"><span class="label">'+Y+'년 분기별 매출</span>';
+  var qLabels=['1분기 (1~3월)','2분기 (4~6월)','3분기 (7~9월)','4분기 (10~12월)'];
+  var qMax=Math.max.apply(null, Q.concat([1]));
+  Q.forEach(function(v,i){
+    var pc=yTot?Math.round(v/yTot*100):0, bar=Math.round(Math.max(0,v)/qMax*100);
+    h+='<div style="display:grid;grid-template-columns:96px 1fr 132px 48px;gap:0 10px;align-items:center;padding:7px 2px;border-bottom:1px solid var(--line)">'+
+       '<b style="font-size:13px">'+qLabels[i]+'</b>'+
+       '<div style="background:#EEF2F7;border-radius:5px;height:14px;overflow:hidden"><div style="width:'+bar+'%;height:100%;background:'+(i%2?'#9DB4D6':'var(--blue)')+';border-radius:5px"></div></div>'+
+       '<b style="text-align:right;font-variant-numeric:tabular-nums">'+won(v)+'</b>'+
+       '<span style="text-align:right;color:var(--sub);font-size:11.5px">'+pc+'%</span></div>';
+  });
+  h+='</div>';
+
   return h;
 }
 function pct2(part,total){ return total?Math.round(part/total*100)+'%':'0%'; }
@@ -10910,26 +10956,30 @@ function render(){
        '<div style="font-size:13.5px;color:var(--sub);margin-bottom:12px">진행 중 <b>'+actCnt+'건</b> · 쿠폰 미발행 <b style="color:var(--red)">'+noIssue+'건</b>'+
        '<br>· 입력 탭에서 6·12개월 수련비를 저장하면 여기에 자동 추가됩니다'+
        '<br>· 결석 예정을 회계 납부내역에서 [홀딩 승인]하면 등록 기간이 연장됩니다</div>'+
-       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:5px">'+
-       ["진행중","만료","전체"].map(function(f){
-         return '<button class="chip'+(lf===f?' on':'')+'" onclick="setLongFilter(\''+f+'\')">'+f+'</button>';
+       /* 1차: 진행 상태 — 세그먼트 컨트롤(크고 뚜렷) */
+       '<div style="display:inline-flex;border:1.5px solid #C7D2E5;border-radius:12px;overflow:hidden;margin-bottom:10px">'+
+       ["진행중","만료","전체"].map(function(f,i){
+         var on=(lf===f);
+         return '<button onclick="setLongFilter(\''+f+'\')" style="border:none;'+(i?'border-left:1px solid #E3E8F0;':'')+'background:'+(on?'var(--blue)':'#fff')+';color:'+(on?'#fff':'var(--sub)')+';font-size:13.5px;font-weight:'+(on?'800':'600')+';padding:9px 20px;cursor:pointer;font-family:inherit">'+f+'</button>';
        }).join('')+'</div>'+
-       '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
-       '<span style="font-size:11.5px;font-weight:700;color:var(--sub)">쿠폰:</span>'+
+       /* 2차: 쿠폰 — 작은 칩(보조) */
+       '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'+
+       '<span style="font-size:11.5px;font-weight:800;color:var(--sub);margin-right:2px">쿠폰</span>'+
        ["쿠폰 전체","미발행","발행·미사용","사용완료"].map(function(f){
-         return '<button class="chip'+((state.longCoupon||"쿠폰 전체")===f?' on':'')+'" onclick="setLongCoupon(\''+f+'\')">'+f+'</button>';
+         return '<button class="chip sm'+((state.longCoupon||"쿠폰 전체")===f?' on':'')+'" onclick="setLongCoupon(\''+f+'\')">'+f+'</button>';
        }).join('')+'</div></div>';
-    /* 직접 추가 */
+    /* 직접 추가 — 컴팩트 한 줄 정렬 (높이 통일) */
+    var LRIN='padding:0 11px;height:40px;font-size:13px;border-radius:9px;box-sizing:border-box';
     h+='<div class="card"><div style="font-size:13.5px;font-weight:800;margin-bottom:10px">+ 직접 추가</div>'+
-       '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-       '<input class="input" list="lrNames" placeholder="이름" style="flex:2;min-width:110px" value="'+esc(state.longName||"")+'" oninput="setLongName(this.value)">'+
+       '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'+
+       '<input class="input" list="lrNames" placeholder="이름" style="flex:1.6 1 120px;min-width:100px;'+LRIN+'" value="'+esc(state.longName||"")+'" oninput="setLongName(this.value)">'+
        '<datalist id="lrNames">'+STUDENTS.filter(function(s){return !state.closedMap[s.n]&&!isQuit(s.n);}).map(function(s){return '<option value="'+esc(s.n)+'">';}).join('')+'</datalist>'+
-       '<select class="input" style="flex:1;min-width:90px" onchange="setLongMonths(this.value)">'+
+       '<select class="input" style="flex:0 0 96px;'+LRIN+'" onchange="setLongMonths(this.value)">'+
        '<option value="6"'+((state.longMonths||6)===6?' selected':'')+'>6개월</option>'+
        '<option value="12"'+(state.longMonths===12?' selected':'')+'>12개월</option></select>'+
-       '<input class="input" type="month" style="flex:1.5;min-width:130px" value="'+esc(state.longStart||nowYm2)+'" onchange="setLongStart(this.value)">'+
-       '<input class="input" placeholder="횟수 (예: 2회)" style="flex:1;min-width:90px" value="'+esc(state.longFreq||"")+'" oninput="setLongFreq(this.value)">'+
-       '<button class="chip on" style="flex:0 0 auto" onclick="addLongReg()">추가</button>'+
+       '<input class="input" type="month" style="flex:0 0 152px;'+LRIN+'" value="'+esc(state.longStart||nowYm2)+'" onchange="setLongStart(this.value)">'+
+       '<input class="input" placeholder="횟수(예: 2회)" style="flex:0 0 108px;'+LRIN+'" value="'+esc(state.longFreq||"")+'" oninput="setLongFreq(this.value)">'+
+       '<button onclick="addLongReg()" style="flex:0 0 auto;height:40px;padding:0 20px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">추가</button>'+
        '</div><div style="font-size:11.5px;color:var(--sub);margin-top:8px">쿠폰은 자동 지정: 6개월 → 티셔츠 · 12개월 → 도복</div></div>';
     /* 목록 */
     if(!state.longStart) state.longStart=nowYm2;
