@@ -3072,11 +3072,14 @@ function renderAcctKpi(recs, yearNet, paidTo){
 function renderYearBars(recs, curY){
   var byY={};
   (recs||[]).forEach(function(r){ byY[r.y]=(byY[r.y]||0)+(r.amount||0); });
-  var ys=Object.keys(byY).map(Number).sort(function(a,b){return a-b;});
-  if(ys.length<2) return "";
+  var allYs=Object.keys(byY).map(Number).sort(function(a,b){return a-b;});
+  if(allYs.length<2) return "";
+  var ys=allYs.slice(-6);                                  /* 최근 6개 연도만 표시 */
+  if(ys.indexOf(curY)<0 && byY[curY]!=null){ ys=ys.slice(1); ys.push(curY); ys.sort(function(a,b){return a-b;}); }
+  var more=allYs.length-ys.length;
   var max=Math.max.apply(null, ys.map(function(y){return Math.abs(byY[y]);}))||1;
   return '<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:14px">'+
-    '<div style="font-size:13px;font-weight:800;margin-bottom:8px;color:var(--ink)">📊 연도별 납부액 비교 <span style="font-size:11px;color:var(--sub);font-weight:600">(연도를 누르면 이동)</span></div>'+
+    '<div style="font-size:13px;font-weight:800;margin-bottom:8px;color:var(--ink)">📊 연도별 납부액 비교 <span style="font-size:11px;color:var(--sub);font-weight:600">(연도를 누르면 이동'+(more>0?' · 최근 '+ys.length+'개 연도':'')+')</span></div>'+
     ys.map(function(y){
       var v=byY[y], pct=Math.max(2,Math.round(Math.abs(v)/max*100)), on=(y===curY);
       return '<div style="display:flex;align-items:center;gap:8px;margin:5px 0">'+
@@ -9695,10 +9698,24 @@ function render(){
       var struckSum=0; for(var _m in struckY) struckSum+=struckY[_m];
       var movedSum=0; for(var _m2 in movedY) movedSum+=movedY[_m2];
       var ytuDisp = ytu - struckSum + movedSum;
-      /* 연도 선택 */
-      h+='<div class="chips" style="margin-bottom:10px">'+years.map(function(y){
-        return '<button class="chip'+(y===Y?' on':'')+'" onclick="setDetailYear('+y+')">'+y+'년</button>';
-      }).join('')+'</div>';
+      /* 연도 선택 — ◀ 드롭다운 ▶ (연도가 늘어나도 자리를 차지하지 않음) */
+      (function(){
+        var yi=years.indexOf(Y);
+        var prevY=(yi>0)?years[yi-1]:null;                          /* 더 과거 */
+        var nextY=(yi>=0&&yi<years.length-1)?years[yi+1]:null;       /* 더 최근 */
+        function navBtn(y,label,title){
+          if(y==null) return '<button disabled title="'+title+'" style="border:1px solid var(--line);background:#F5F5F7;color:#C4C4CC;border-radius:10px;padding:7px 12px;font-size:15px;font-weight:800;cursor:default;font-family:inherit">'+label+'</button>';
+          return '<button onclick="setDetailYear('+y+')" title="'+title+' ('+y+'년)" style="border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:7px 12px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">'+label+'</button>';
+        }
+        h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">'+
+          navBtn(prevY,'◀','이전 연도')+
+          '<select onchange="setDetailYear(this.value)" style="min-width:118px;border:1.5px solid var(--blue);background:#fff;color:var(--blue);border-radius:10px;padding:8px 12px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit">'+
+            years.map(function(y){ return '<option value="'+y+'"'+(y===Y?' selected':'')+'>'+y+'년</option>'; }).join('')+
+          '</select>'+
+          navBtn(nextY,'▶','다음 연도')+
+          (years.length>1?'<span style="font-size:11.5px;color:var(--sub)">기록 '+years.length+'개 연도</span>':'')+
+          '</div>';
+      })();
       /* ── 상단: 연간 납부총금액 (수련비 + 기타) ── */
       h+='<div style="background:linear-gradient(135deg,var(--blue) 0%,#0a5fc0 100%);border-radius:16px;padding:16px 18px;margin-bottom:14px;color:#fff">'+
          '<div style="font-size:11.5px;font-weight:700;opacity:.85;letter-spacing:.3px">'+Y+'년 연간 납부총금액</div>'+
