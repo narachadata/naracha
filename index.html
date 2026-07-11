@@ -3322,9 +3322,9 @@ window.printCert=function(){
 };
 
 /* ---------- 백업(자기복제 HTML) ---------- */
-window.backup=function(){
+/* 전체 백업 HTML 문자열 생성 (프로그램+전체데이터) — 다운로드·드라이브·로컬폴더에서 공용 */
+function buildFullBackupHtml(){
   persist();
-  /* 전체 데이터(명단·출석·심사·회계·업무·사진)를 파일 안에 함께 담는다 → 더블클릭 한 번으로 전체 복원 */
   try{
     var full=JSON.parse(document.getElementById("app-data").textContent||"{}");
     full.att=attState();
@@ -3339,8 +3339,12 @@ window.backup=function(){
   root.innerHTML="";                              /* 화면은 비우고 코드+기록만 저장 */
   var html="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
   root.innerHTML=saved;
-  /* 다운로드 후엔 실행 중인 페이지의 #app-data를 다시 가볍게 되돌린다 (평소 프로그램은 무거워지지 않도록) */
+  /* 실행 중인 페이지의 #app-data는 다시 가볍게 되돌린다 (평소 프로그램은 무거워지지 않도록) */
   try{ var lean=JSON.parse(document.getElementById("app-data").textContent||"{}"); delete lean.backupStores; delete lean.att; document.getElementById("app-data").textContent=JSON.stringify(lean); }catch(e){}
+  return html;
+}
+window.backup=function(){
+  var html=buildFullBackupHtml();
   var blob=new Blob([html],{type:"text/html;charset=utf-8"});
   var a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
@@ -10293,15 +10297,25 @@ function driveFindOrCreateBackupFolder(token, cb){
         .then(function(r){return r.json();}).then(function(res2){ cb(res2&&res2.id||null); }).catch(function(){ cb(null); });
     }).catch(function(){ cb(null); });
 }
+/* 드라이브에 파일 1개 업로드 */
+function driveUploadOne(token, fid, name, mime, content, cb){
+  var meta={ name:name, mimeType:mime }; if(fid) meta.parents=[fid];
+  var boundary='nbk'+Date.now()+Math.floor(content.length%99991);
+  var body='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+
+    '\r\n--'+boundary+'\r\nContent-Type: '+mime+'; charset=UTF-8\r\n\r\n'+content+'\r\n--'+boundary+'--';
+  fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',{
+    method:'POST', headers:{ 'Authorization':'Bearer '+token, 'Content-Type':'multipart/related; boundary='+boundary }, body:body
+  }).then(function(r){return r.json();}).then(function(res){ cb(!!(res&&res.id)); }).catch(function(){ cb(false); });
+}
+/* 드라이브에 JSON + 전체백업 HTML 두 파일을 함께 업로드 */
 function driveUploadBackup(token, cb){
   driveFindOrCreateBackupFolder(token, function(fid){
-    var meta={ name:backupFileName(), mimeType:'application/json' }; if(fid) meta.parents=[fid];
-    var boundary='nbk'+Date.now();
-    var body='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+
-      '\r\n--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+collectBackup()+'\r\n--'+boundary+'--';
-    fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',{
-      method:'POST', headers:{ 'Authorization':'Bearer '+token, 'Content-Type':'multipart/related; boundary='+boundary }, body:body
-    }).then(function(r){return r.json();}).then(function(res){ cb(!!(res&&res.id)); }).catch(function(){ cb(false); });
+    var jsonC=collectBackup(); var htmlC=buildFullBackupHtml();
+    driveUploadOne(token, fid, backupFileName(), 'application/json', jsonC, function(ok1){
+      driveUploadOne(token, fid, "나라차_전체백업_"+today()+".html", 'text/html', htmlC, function(ok2){
+        cb(ok1||ok2);
+      });
+    });
   });
 }
 window.backupToDrive=function(silent){
@@ -10312,11 +10326,67 @@ window.backupToDrive=function(silent){
       return;
     }
     driveUploadBackup(token, function(ok){
-      if(ok){ markBackedUp(); toast("☁ 드라이브 백업 완료 — [나라차 자동백업] 폴더 · "+backupFileName()); try{ render(); }catch(e){} }
+      if(ok){ markBackedUp(); toast("☁ 드라이브 백업 완료 (JSON+전체백업 HTML) — [나라차 자동백업] 폴더"); try{ render(); }catch(e){} }
       else if(!silent) alert("백업 업로드에 실패했습니다. 인터넷/권한을 확인해 주세요.");
       else { state.backupDue=true; try{ render(); }catch(e){} }
     });
   });
+};
+
+/* ══════════ 로컬 PC 백업 (지정한 PC에서만) ══════════
+   · 이 PC를 '백업 담당 PC'로 지정하면 이 컴퓨터에서만 로컬 파일 백업이 동작
+   · 크롬/엣지: 폴더를 한 번 지정하면 그 폴더에 자동 저장(파일 시스템 접근 권한)
+   · 그 외/권한없음: 버튼 한 번으로 HTML+JSON을 함께 내려받기 */
+function isBackupPC(){ try{ return localStorage.getItem("naracha_backup_pc")==="1"; }catch(e){ return false; } }
+window.toggleBackupPC=function(){
+  var on=!isBackupPC();
+  try{ localStorage.setItem("naracha_backup_pc", on?"1":""); }catch(e){}
+  if(on && fsApiOK() && !state.__bkDir){ if(confirm("이 컴퓨터를 백업 PC로 지정했습니다.\n\n자동으로 저장할 폴더를 지금 지정할까요?\n(크롬/엣지에서 폴더를 한 번 지정하면 이후 자동 저장됩니다)")) pickBackupFolder(true); else render(); }
+  else render();
+};
+function fsApiOK(){ return (typeof window.showDirectoryPicker==="function"); }
+/* IndexedDB에 폴더 핸들 보관 (JSON으로 저장 안 되므로) */
+function bkIdb(cb){ try{ var r=indexedDB.open("naracha_bk",1); r.onupgradeneeded=function(){ r.result.createObjectStore("h"); }; r.onsuccess=function(){ cb(r.result); }; r.onerror=function(){ cb(null); }; }catch(e){ cb(null); } }
+function saveBkDirHandle(h,cb){ bkIdb(function(db){ if(!db){cb&&cb(false);return;} try{ var tx=db.transaction("h","readwrite"); tx.objectStore("h").put(h,"dir"); tx.oncomplete=function(){ cb&&cb(true); }; tx.onerror=function(){ cb&&cb(false); }; }catch(e){ cb&&cb(false); } }); }
+function loadBkDirHandle(cb){ bkIdb(function(db){ if(!db){cb(null);return;} try{ var tx=db.transaction("h","readonly"); var g=tx.objectStore("h").get("dir"); g.onsuccess=function(){ cb(g.result||null); }; g.onerror=function(){ cb(null); }; }catch(e){ cb(null); } }); }
+window.pickBackupFolder=function(fromToggle){
+  if(!fsApiOK()){ alert("이 브라우저는 폴더 자동 저장을 지원하지 않습니다.\n크롬 또는 엣지에서 사용하시거나, [이 PC에 백업 저장] 버튼으로 내려받으세요."); return; }
+  window.showDirectoryPicker({mode:"readwrite"}).then(function(h){
+    saveBkDirHandle(h, function(){ state.__bkDir=h; state.__bkDirName=h.name; toast("📁 백업 폴더 지정: "+h.name+" — 이제 자동 저장됩니다"); writeLocalBackup(false); });
+  }).catch(function(){ if(fromToggle) render(); });
+};
+window.forgetBackupFolder=function(){ saveBkDirHandle(null,function(){}); state.__bkDir=null; state.__bkDirName=null; toast("폴더 지정을 해제했습니다"); render(); };
+function fsWrite(dir, name, content, type, cb){
+  try{
+    dir.getFileHandle(name,{create:true}).then(function(fh){
+      fh.createWritable().then(function(w){ w.write(new Blob([content],{type:type})); return w.close ? w : w; }).then(function(w){ try{ w.close&&w.close(); }catch(e){} cb(true); }).catch(function(){ cb(false); });
+    }).catch(function(){ cb(false); });
+  }catch(e){ cb(false); }
+}
+/* 로컬 백업 실행: 폴더가 지정돼 있으면 그 폴더에 자동 저장, 아니면(비자동) 내려받기 */
+window.writeLocalBackup=function(silent){
+  if(!isBackupPC()){ if(!silent) alert("먼저 [이 컴퓨터를 백업 PC로 지정]을 켜주세요."); return; }
+  var html=buildFullBackupHtml(), json=collectBackup(), day=today();
+  function doDownload(){
+    if(silent) return;   /* 자동(무클릭) 다운로드는 브라우저가 막으므로 조용한 모드에선 생략 */
+    [["나라차_전체백업_"+day+".html",html,"text/html"],["나라차백업_"+day+".json",json,"application/json"]].forEach(function(f){
+      var b=new Blob([f[1]],{type:f[2]+";charset=utf-8"}); var a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=f[0];
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function(){ try{URL.revokeObjectURL(a.href);}catch(e){} },3000);
+    });
+    markBackedUp(); toast("💾 이 PC에 백업 저장(HTML+JSON)"); render();
+  }
+  function withDir(dir){
+    dir.requestPermission ? dir.requestPermission({mode:"readwrite"}).then(function(perm){
+      if(perm!=="granted"){ if(!silent) doDownload(); else { state.__bkNeedGrant=true; render(); } return; }
+      fsWrite(dir,"나라차_전체백업_"+day+".html",html,"text/html",function(o1){ fsWrite(dir,"나라차백업_"+day+".json",json,"application/json",function(o2){
+        if(o1||o2){ markBackedUp(); state.__bkNeedGrant=false; toast("📁 "+(dir.name||"폴더")+"에 자동 백업 완료"); render(); } else if(!silent) doDownload();
+      }); });
+    }).catch(function(){ if(!silent) doDownload(); }) : doDownload();
+  }
+  if(fsApiOK()){
+    if(state.__bkDir){ withDir(state.__bkDir); }
+    else loadBkDirHandle(function(h){ if(h){ state.__bkDir=h; state.__bkDirName=h.name; withDir(h); } else doDownload(); });
+  } else doDownload();
 };
 /* 파일로 내려받기 (드라이브가 안 될 때 대비) */
 window.downloadBackup=function(){
@@ -10357,12 +10427,14 @@ window.restoreBackupFile=function(input){
 function checkAutoBackup(){
   if(!state.unlocked) return;
   if(myRole()!=="admin") return;                        /* 관장(회계키) 기기에서만 */
-  if(!gdriveClientId()) return;
   if(backupAgeDays() < BACKUP_INTERVAL_DAYS) return;
   if(state.__backupTried){ state.backupDue=true; return; }
   state.__backupTried=true;
-  backupToDrive(true);                                  /* 조용히 시도 → 실패 시 배너 */
+  if(gdriveClientId()) backupToDrive(true);             /* ① 온라인: 드라이브에 JSON+HTML 자동 백업 */
+  if(isBackupPC()){ try{ writeLocalBackup(true); }catch(e){} }   /* ② 지정 PC: 로컬 폴더에 자동 백업 */
 }
+/* 시작 시: 지정 백업 PC면 저장해 둔 폴더 핸들을 미리 불러온다 */
+try{ if(isBackupPC() && fsApiOK()){ loadBkDirHandle(function(h){ if(h){ state.__bkDir=h; state.__bkDirName=h.name; } }); } }catch(e){}
 window.openBackupM=function(){ state.backupM=true; render(); };
 window.closeBackupM=function(){ state.backupM=null; render(); };
 function renderBackupModal(){
@@ -10392,10 +10464,27 @@ function renderBackupModal(){
       '<button class="big" onclick="backup()">전체 백업 파일 다운로드 (HTML)</button>',
       '명단·출석·심사·회계·업무·사진 <b>전체</b>가 담긴 한 파일. 새 컴퓨터에서 이 파일을 더블클릭하면 그 데이터로 바로 이어서 작업할 수 있습니다.')+
     sec('☁ 구글 드라이브 백업 · 파일 백업/복구',
-      '<button class="big" style="margin-bottom:8px" onclick="backupToDrive(false)">☁ 지금 드라이브에 백업</button>'+
+      '<button class="big" style="margin-bottom:8px" onclick="backupToDrive(false)">☁ 지금 드라이브에 백업 (HTML+JSON)</button>'+
       '<button class="big" style="background:#fff;color:var(--ink);border:1.5px solid var(--line);margin-bottom:8px" onclick="downloadBackup()">💾 JSON 파일로 내려받기 (USB·메일 보관용)</button>'+
       '<label class="big" style="display:flex;align-items:center;justify-content:center;background:#FFF7ED;color:#B45309;border:1.5px solid #F0C36D;cursor:pointer;margin:0">📂 파일에서 복구 (JSON·HTML 둘 다)<input type="file" accept=".json,.html,application/json,text/html" onchange="restoreBackupFile(this)" style="display:none"></label>',
-      '드라이브 백업은 [나라차 자동백업] 폴더에 날짜별로 쌓입니다. 복구는 JSON 백업과 전체백업 HTML 파일을 모두 받습니다.')+
+      '자동/수동 모두 [나라차 자동백업] 폴더에 <b>전체백업 HTML + JSON 두 파일</b>이 날짜별로 함께 쌓입니다. 복구는 두 형식 모두 받습니다.')+
+    /* 이 PC를 백업 담당 PC로 지정 (오프라인·로컬 백업) */
+    (function(){
+      var on=isBackupPC(); var dirName=state.__bkDirName||"";
+      return sec('🖥 이 컴퓨터를 백업 PC로 지정 <span style="font-size:11px;color:var(--sub);font-weight:600">(오프라인·로컬 백업)</span>',
+        '<label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13.5px;font-weight:700;margin-bottom:'+(on?'9px':'0')+'"><input type="checkbox" '+(on?'checked':'')+' onchange="toggleBackupPC()" style="width:18px;height:18px;accent-color:#0b1d3a"> 이 컴퓨터에서 로컬 백업을 실행합니다</label>'+
+        (on
+          ? ( ( fsApiOK()
+                ? ( state.__bkDirName
+                    ? '<div style="font-size:12.5px;color:#1E7B3C;font-weight:700;margin-bottom:8px">📁 자동 저장 폴더: '+esc(state.__bkDirName)+' <button class="chip sm" style="margin-left:4px" onclick="forgetBackupFolder()">해제</button></div>'
+                    : '<button class="big" style="margin-bottom:8px" onclick="pickBackupFolder()">📁 자동 저장 폴더 지정 (크롬·엣지)</button>' )
+                : '' )
+              + '<button class="big" style="background:#fff;color:var(--ink);border:1.5px solid var(--line);margin:0" onclick="writeLocalBackup(false)">💾 지금 이 PC에 백업 저장 (HTML+JSON)</button>' )
+          : ''),
+        on
+          ? '지정된 PC에서만 로컬 백업이 실행됩니다. 폴더를 지정하면 주간 백업 시 그 폴더에 <b>자동 저장</b>되고, 폴더가 없으면 버튼으로 내려받습니다.'
+          : '관장님·행정 PC 등 <b>원하는 컴퓨터에서만</b> 켜세요. 켜지 않은 PC는 로컬 백업도, 백업 알림도 하지 않습니다.');
+    })()+
     sec('💾 데이터 용량 점검',
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><b style="font-size:12.5px">전체 사용량</b><span style="flex:1"></span><b style="font-size:12.5px;color:'+barCol+'">'+fmtBytes(R.total)+' / 5 MB ('+pctTotal+'%)</b></div>'+
       '<div style="background:#F0F0F3;border-radius:9px;height:12px;overflow:hidden;margin-bottom:5px"><div style="width:'+pctTotal+'%;height:100%;background:'+barCol+'"></div></div>'+
