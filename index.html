@@ -1382,6 +1382,7 @@ function closeTopModal(){
   if(state.dupModal){ closeDupModal(); return true; }
   if(state.baseCntModal){ closeBaseCntModal(); return true; }
   if(state.examPipe){ closeExamPipe(); return true; }
+  if(state.recoveryM){ closeRecovery(); return true; }
   if(state.backupM){ closeBackupM(); return true; }
   if(state.bulkM){ closeBulkM(); return true; }
   if(state.holdEdit){ closeHold(); return true; }
@@ -3323,10 +3324,14 @@ window.printCert=function(){
 /* ---------- 백업(자기복제 HTML) ---------- */
 window.backup=function(){
   persist();
-  /* 출석 데이터(주간표·누적·심사일)도 파일에 함께 담는다 */
+  /* 전체 데이터(명단·출석·심사·회계·업무·사진)를 파일 안에 함께 담는다 → 더블클릭 한 번으로 전체 복원 */
   try{
     var full=JSON.parse(document.getElementById("app-data").textContent||"{}");
     full.att=attState();
+    var stores={}, coreKeys=(typeof BACKUP_CORE_KEYS!=="undefined"?BACKUP_CORE_KEYS:["naracha-att","najacha-html","naracha-work","naracha-exam","naracha-photo"]);
+    coreKeys.forEach(function(k){ try{ var v=localStorage.getItem(k); if(v!=null) stores[k]=v; }catch(e){} });
+    try{ for(var i=0;i<localStorage.length;i++){ var lk=localStorage.key(i); if(!(lk in stores) && /^(naracha|najacha)-/.test(lk)){ var lv=localStorage.getItem(lk); if(lv!=null) stores[lk]=lv; } } }catch(e){}
+    full.backupStores=stores;
     document.getElementById("app-data").textContent=JSON.stringify(full);
   }catch(e){}
   var root=document.getElementById("root");
@@ -3334,13 +3339,16 @@ window.backup=function(){
   root.innerHTML="";                              /* 화면은 비우고 코드+기록만 저장 */
   var html="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
   root.innerHTML=saved;
+  /* 다운로드 후엔 실행 중인 페이지의 #app-data를 다시 가볍게 되돌린다 (평소 프로그램은 무거워지지 않도록) */
+  try{ var lean=JSON.parse(document.getElementById("app-data").textContent||"{}"); delete lean.backupStores; delete lean.att; document.getElementById("app-data").textContent=JSON.stringify(lean); }catch(e){}
   var blob=new Blob([html],{type:"text/html;charset=utf-8"});
   var a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
-  a.download="N분당회계입력분_백업_"+today()+".html";
+  a.download="나라차_전체백업_"+today()+".html";
   a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); },3000);
   localStorage.setItem("naracha_last_backup_day", Date.now());
+  markBackedUp(); try{ render(); }catch(e){}
 };
 
 /* ---------- 엑셀 내보내기 ---------- */
@@ -8859,6 +8867,19 @@ function avatarHtml(name, gender, size, radius, photo){
     : '<div style="width:100%;height:100%;border-radius:'+radius+';background:'+genderBg(gender)+';display:flex;align-items:center;justify-content:center">'+genderIcon(gender, Math.round(size*0.62))+'</div>';
   return '<div style="position:relative;width:'+size+'px;height:'+size+'px;flex:0 0 auto">'+inner+badge+'</div>';
 }
+/* ── [전체 백업 파일] 복원: 백업 HTML을 새 PC에서 열면, 파일에 담긴 전체 데이터를
+   이 기기 저장소가 '비어 있을 때만' 채워 넣는다. (기존 데이터는 절대 건드리지 않음 → 무해)
+   이 블록은 아래 모든 로더(사진·심사·업무·loadAll)보다 먼저 실행되어야 함. */
+(function restoreEmbeddedBackup(){
+  try{
+    var emb=JSON.parse(document.getElementById("app-data").textContent||"{}");
+    if(emb && emb.backupStores){
+      for(var k in emb.backupStores){
+        try{ if(localStorage.getItem(k)==null && emb.backupStores[k]!=null) localStorage.setItem(k, emb.backupStores[k]); }catch(e){}
+      }
+    }
+  }catch(e){}
+})();
 /* 로컬에 저장된 사진 먼저 로드 (오프라인 대비) */
 (function loadLocalPhoto(){
   try{
@@ -10222,10 +10243,26 @@ function uploadEventToDrive(ev, folderId, token){
    · 백업 내용: 명단·출석·회계·업무·심사·사진 전체 (localStorage 창고 스냅샷)
    · 저장 위치: 드라이브 [나라차 자동백업] 폴더 (자동 생성) · 날짜별 파일로 누적 */
 var BACKUP_INTERVAL_DAYS = 7;
+/* 백업 대상 = 모든 데이터 저장소. 핵심 5종은 반드시 포함하고,
+   그 외 naracha-/najacha- 로 시작하는 데이터 키도 자동 수집(향후 추가 기능 자동 대비).
+   보안 키(_로 구분: 비밀번호·접속키 등)는 백업에 넣지 않음(파일 공유 시 안전). */
+var BACKUP_CORE_KEYS=["naracha-att","najacha-html","naracha-work","naracha-exam","naracha-photo"];
 function collectBackup(){
-  var stores={}, keys=["naracha-att","najacha-html","naracha-work","naracha-exam","naracha-photo"];
-  keys.forEach(function(k){ try{ var v=localStorage.getItem(k); if(v!=null) stores[k]=v; }catch(e){} });
-  return JSON.stringify({ narachaBackup:1, savedAt:new Date().toISOString(), device:(state.device||""), appVer:(typeof APP_VER!=="undefined"?APP_VER:""), stores:stores });
+  var stores={}, seen={};
+  BACKUP_CORE_KEYS.forEach(function(k){ seen[k]=1; try{ var v=localStorage.getItem(k); if(v!=null) stores[k]=v; }catch(e){} });
+  try{
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      if(seen[k]) continue;
+      if(/^(naracha|najacha)-/.test(k)){ seen[k]=1; try{ var v2=localStorage.getItem(k); if(v2!=null) stores[k]=v2; }catch(e){} }   /* 하이픈 키=데이터/설정 */
+    }
+  }catch(e){}
+  var counts={}; try{
+    var att=JSON.parse(stores["naracha-att"]||"{}"); counts.roster=((att.roster&&att.roster.list)||[]).length;
+    var work=JSON.parse(stores["naracha-work"]||"{}"); counts.events=Object.keys(work.events||{}).length;
+    var exam=JSON.parse(stores["naracha-exam"]||"{}"); counts.exam=Object.keys((exam.examData&&exam.examData.students)||exam.students||{}).length;
+  }catch(e){}
+  return JSON.stringify({ narachaBackup:2, savedAt:new Date().toISOString(), device:(state.device||""), appVer:(typeof APP_VER!=="undefined"?APP_VER:""), counts:counts, storeKeys:Object.keys(stores), stores:stores });
 }
 function backupFileName(){ return "나라차백업_"+today()+".json"; }
 function lastBackupT(){ try{ return Number(localStorage.getItem("naracha_last_backup"))||0; }catch(e){ return 0; } }
@@ -10291,20 +10328,28 @@ window.downloadBackup=function(){
     markBackedUp(); toast("💾 백업 파일을 내려받았습니다"); render();
   }catch(e){ alert("백업 파일 생성 실패: "+(e&&e.message||e)); }
 };
-/* 백업 파일 복구 */
+/* 백업 파일 복구 — JSON 백업(데이터만) 과 HTML 전체백업(프로그램+데이터) 둘 다 지원 */
 window.restoreBackupFile=function(input){
   var f=input.files&&input.files[0]; if(!f) return;
   var reader=new FileReader();
   reader.onload=function(e){
+    var txt=e.target.result, stores=null, when="", dev="", counts=null;
     try{
-      var data=JSON.parse(e.target.result);
-      if(!data || data.narachaBackup!==1 || !data.stores){ alert("나라차 백업 파일이 아닙니다."); return; }
-      var when=(data.savedAt||"").slice(0,10);
-      if(!confirm("⚠️ 복구 확인\n\n백업 시점: "+when+" ("+(data.device||"기기 미상")+")\n\n이 기기의 현재 데이터를 백업 시점의 데이터로 덮어씁니다.\n복구 후 프로그램이 새로고침되며, 클라우드 동기화 시 다른 기기와 다시 병합됩니다.\n\n진행할까요?")) return;
-      for(var k in data.stores){ try{ localStorage.setItem(k, data.stores[k]); }catch(err){ alert("복구 중 저장 실패("+k+"): 공간 부족일 수 있습니다."); return; } }
-      alert("✅ 복구 완료. 프로그램을 다시 불러옵니다.");
-      location.reload();
-    }catch(err){ alert("복구 파일을 읽지 못했습니다: "+(err&&err.message||err)); }
+      var data=JSON.parse(txt);   /* ① JSON 백업 */
+      if(data && data.narachaBackup && data.stores){ stores=data.stores; when=(data.savedAt||"").slice(0,10); dev=data.device||""; counts=data.counts; }
+    }catch(e1){}
+    if(!stores){   /* ② HTML 전체백업: #app-data 안의 backupStores 추출 */
+      try{
+        var m=txt.match(/id="app-data"[^>]*>([\s\S]*?)<\/script>/);
+        if(m){ var emb=JSON.parse(m[1]); if(emb && emb.backupStores){ stores=emb.backupStores; when=(f.name.match(/\d{4}-\d{2}-\d{2}/)||[""])[0]; } }
+      }catch(e2){}
+    }
+    if(!stores){ alert("나라차 백업 파일이 아닙니다. (JSON 백업 또는 전체백업 HTML 파일을 선택하세요)"); return; }
+    var cTx=""; if(counts){ var c=counts; cTx=(c.roster!=null?("명단 "+c.roster+"명"):"")+(c.exam!=null?(" · 심사 "+c.exam+"명"):"")+(c.events!=null?(" · 행사 "+c.events+"건"):""); }
+    if(!confirm("⚠️ 복구 확인\n\n백업 시점: "+(when||"미상")+(dev?" ("+dev+")":"")+"\n"+(cTx?("담긴 내용: "+cTx+"\n"):"")+"\n이 기기의 현재 데이터를 백업 시점의 데이터로 덮어씁니다.\n복구 후 프로그램이 다시 불러와지며, 클라우드 동기화 시 다른 기기와 병합됩니다.\n\n진행할까요?")) return;
+    for(var k in stores){ try{ localStorage.setItem(k, stores[k]); }catch(err){ alert("복구 중 저장 실패("+k+"): 공간 부족일 수 있습니다."); return; } }
+    alert("✅ 복구 완료. 프로그램을 다시 불러옵니다.");
+    location.reload();
   };
   reader.readAsText(f);
 };
@@ -10323,18 +10368,122 @@ window.closeBackupM=function(){ state.backupM=null; render(); };
 function renderBackupModal(){
   var t=lastBackupT(); var ago=t? Math.floor((Date.now()-t)/86400000) : null;
   var lastTx=t? (new Date(t).toISOString().slice(0,10)+" ("+(ago===0?"오늘":ago+"일 전")+")") : "아직 없음";
-  return '<div style="position:fixed;inset:0;background:rgba(26,28,32,0.55);z-index:10001;display:flex;align-items:center;justify-content:center;padding:14px" onclick="closeBackupM()">'+
-    '<div style="background:#fff;border-radius:16px;max-width:460px;width:100%;padding:20px 22px" onclick="event.stopPropagation()">'+
-    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><b style="font-size:17px">🗄 전체 데이터 백업</b><span style="flex:1"></span><b style="cursor:pointer;font-size:21px;color:var(--sub)" onclick="closeBackupM()">×</b></div>'+
-    '<div style="font-size:12px;color:var(--sub);margin-bottom:14px">명단·출석·회계·업무·심사·사진 전체를 한 파일로 보관합니다.</div>'+
-    '<div style="background:#F6F8FB;border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-bottom:14px;font-size:13px">마지막 백업: <b>'+lastTx+'</b>'+
-      '<div style="font-size:11.5px;color:var(--sub);margin-top:3px">'+BACKUP_INTERVAL_DAYS+'일이 지나면 프로그램을 열 때 자동으로 백업을 시도하고, 안 되면 상단에 안내가 뜹니다.</div></div>'+
-    '<button class="big" style="margin-bottom:8px" onclick="backupToDrive(false)">☁ 지금 드라이브에 백업</button>'+
-    '<button class="big" style="background:#fff;color:var(--ink);border:1.5px solid var(--line);margin-bottom:8px" onclick="downloadBackup()">💾 파일로 내려받기</button>'+
-    '<label class="big" style="display:flex;align-items:center;justify-content:center;background:#FFF7ED;color:#B45309;border:1.5px solid #F0C36D;cursor:pointer;margin-bottom:2px">📂 백업 파일에서 복구<input type="file" accept=".json,application/json" onchange="restoreBackupFile(this)" style="display:none"></label>'+
-    '<div style="font-size:10.5px;color:var(--sub);margin-top:10px;line-height:1.6">· 드라이브 백업은 [나라차 자동백업] 폴더에 날짜별로 쌓입니다.<br>· 복구는 이 기기 데이터를 백업 시점으로 되돌립니다 (동기화로 다른 기기와 다시 병합됨).</div>'+
+  var overdue=backupAgeDays()>=BACKUP_INTERVAL_DAYS;
+  /* 용량 점검 */
+  var R=storageReport();
+  var pctTotal=Math.min(100, Math.round(R.total/R.limit*100));
+  var barCol = pctTotal>=80?'var(--red)':pctTotal>=55?'#F59E0B':'var(--green)';
+  function capLine(lbl,bytes,extra){ var p=Math.min(100,Math.round(bytes/R.limit*100)); return '<div style="margin:6px 0"><div style="display:flex;font-size:12px;margin-bottom:2px"><span style="font-weight:700">'+lbl+'</span><span style="flex:1"></span><span style="color:var(--sub)">'+fmtBytes(bytes)+(extra?' · '+extra:'')+'</span></div><div style="background:#F0F0F3;border-radius:5px;height:8px;overflow:hidden"><div style="width:'+p+'%;height:100%;background:'+(p>=80?'var(--red)':p>=55?'#F59E0B':'#8FA9D8')+'"></div></div></div>'; }
+  /* 아카이브 */
+  var cands=(typeof archiveCandidates==="function")?archiveCandidates():[];
+  var archived=Object.keys(state.archivedYears||{}).sort();
+  function sec(title, inner, note){ return '<div style="border:1px solid var(--line);border-radius:13px;padding:13px 15px;margin-bottom:12px"><div style="font-size:13.5px;font-weight:900;margin-bottom:'+(note?'2px':'8px')+'">'+title+'</div>'+(note?'<div style="font-size:11px;color:var(--sub);line-height:1.6;margin-bottom:9px">'+note+'</div>':'')+inner+'</div>'; }
+  var body=
+    /* 개념 설명 — 관장님 질문에 대한 답 */
+    '<div style="background:#EEF4FF;border:1px solid #C9DBF5;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#22364F;line-height:1.75">'+
+      '💡 <b>평소에는 프로그램과 데이터가 분리되어 있습니다.</b> 프로그램(코드)은 그대로이고, 데이터는 이 컴퓨터 저장소와 구글 클라우드에 쌓입니다. 그래서 <b>프로그램 자체는 무거워지지 않습니다.</b><br>'+
+      '📦 <b>백업 파일에만</b> 프로그램과 데이터가 <b>합쳐집니다.</b> 두 가지 방식이 있어요:<br>'+
+      '&nbsp;&nbsp;① <b>전체백업 HTML</b> — <u>더블클릭</u>하면 그 데이터로 바로 열립니다 (새 컴퓨터용, 가장 쉬움)<br>'+
+      '&nbsp;&nbsp;② <b>JSON 백업</b> — 프로그램을 켠 뒤 <u>[파일에서 복구]</u>로 불러옵니다 (자동 백업·클라우드용)'+
+    '</div>'+
+    '<div style="background:'+(overdue?'#FFF7E8':'#F6F8FB')+';border:1px solid '+(overdue?'#F0DCA8':'var(--line)')+';border-radius:11px;padding:10px 13px;margin-bottom:14px;font-size:13px">마지막 백업: <b>'+lastTx+'</b>'+(overdue?' <span style="color:#B45309;font-weight:800">— 백업할 시간입니다</span>':'')+
+      '<div style="font-size:11px;color:var(--sub);margin-top:3px">'+BACKUP_INTERVAL_DAYS+'일이 지나면 프로그램을 열 때 자동으로 드라이브 백업을 시도합니다.</div></div>'+
+    sec('📦 전체 백업 파일 (프로그램+데이터 · 더블클릭용)',
+      '<button class="big" onclick="backup()">전체 백업 파일 다운로드 (HTML)</button>',
+      '명단·출석·심사·회계·업무·사진 <b>전체</b>가 담긴 한 파일. 새 컴퓨터에서 이 파일을 더블클릭하면 그 데이터로 바로 이어서 작업할 수 있습니다.')+
+    sec('☁ 구글 드라이브 백업 · 파일 백업/복구',
+      '<button class="big" style="margin-bottom:8px" onclick="backupToDrive(false)">☁ 지금 드라이브에 백업</button>'+
+      '<button class="big" style="background:#fff;color:var(--ink);border:1.5px solid var(--line);margin-bottom:8px" onclick="downloadBackup()">💾 JSON 파일로 내려받기 (USB·메일 보관용)</button>'+
+      '<label class="big" style="display:flex;align-items:center;justify-content:center;background:#FFF7ED;color:#B45309;border:1.5px solid #F0C36D;cursor:pointer;margin:0">📂 파일에서 복구 (JSON·HTML 둘 다)<input type="file" accept=".json,.html,application/json,text/html" onchange="restoreBackupFile(this)" style="display:none"></label>',
+      '드라이브 백업은 [나라차 자동백업] 폴더에 날짜별로 쌓입니다. 복구는 JSON 백업과 전체백업 HTML 파일을 모두 받습니다.')+
+    sec('💾 데이터 용량 점검',
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><b style="font-size:12.5px">전체 사용량</b><span style="flex:1"></span><b style="font-size:12.5px;color:'+barCol+'">'+fmtBytes(R.total)+' / 5 MB ('+pctTotal+'%)</b></div>'+
+      '<div style="background:#F0F0F3;border-radius:9px;height:12px;overflow:hidden;margin-bottom:5px"><div style="width:'+pctTotal+'%;height:100%;background:'+barCol+'"></div></div>'+
+      capLine('회계 (관리자 전용)', R.acct, R.payments+'건')+
+      capLine('출석·명단·심사', R.att, R.students+'명 · '+R.weeks+'주')+
+      capLine('사진', R.photo),
+      '이 컴퓨터 임시 보관함(약 5MB) 기준입니다. 클라우드에는 항상 전체가 보존됩니다. 노란색(55%)을 넘으면 아래 연도별 아카이브로 정리하세요.')+
+    sec('🗄 연도별 아카이브',
+      (cands.length
+        ? '<div style="background:#FFF7ED;border:1px solid #FDBA74;border-radius:10px;padding:8px 11px;margin-bottom:8px;font-size:12.5px">정리 가능한 연도: <b>'+cands.join(", ")+'</b></div><button class="big" '+(state.archiveBusy?'disabled':'')+' style="background:#B45309" onclick="archiveOldData()">'+(state.archiveBusy?'정리 중…':('오래된 기록 아카이브 ('+cands.length+'개 연도)'))+'</button>'
+        : '<div style="font-size:12.5px;color:var(--sub)">지금은 정리할 오래된 기록이 없습니다.</div>')+
+      (archived.length?'<div style="border-top:1px solid var(--line);margin-top:10px;padding-top:9px"><div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">보관된 연도 (눌러서 다시 불러오기)</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+archived.map(function(y){ var on=(state.loadedArchives||{})[y]; return '<button class="chip" onclick="loadArchiveYear(\''+y+'\')" style="'+(on?'background:#E7F3FF;border-color:#1B5FAF;color:#1B5FAF;font-weight:800':'')+'">'+esc(y)+'년'+(on?' ✓':'')+'</button>'; }).join('')+'</div></div>':''),
+      '오래된 출석·결제를 연도별 저장소로 옮겨 라이브를 가볍게 유지합니다. 옮긴 기록은 삭제되지 않고 클라우드·백업에 보존되며 언제든 다시 불러옵니다.')+
+    '<button onclick="openRecovery()" style="width:100%;background:#0b1d3a;color:#fff;border:none;border-radius:11px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">🧭 최악의 상황 복구 안내 (구글 안 될 때 포함)</button>';
+  return '<div style="position:fixed;inset:0;background:rgba(26,28,32,0.55);z-index:10001;display:flex;align-items:flex-start;justify-content:center;padding:3vh 14px;overflow:auto" onclick="closeBackupM()">'+
+    '<div style="background:#fff;border-radius:16px;max-width:540px;width:100%;max-height:94vh;display:flex;flex-direction:column;overflow:hidden" onclick="event.stopPropagation()">'+
+    '<div style="padding:15px 20px;border-bottom:2px solid var(--line);display:flex;align-items:center;gap:8px"><b style="font-size:17px">🗄 전체 데이터 백업 · 복구</b><span style="font-size:11px;color:var(--sub)">명단·심사·회계·업무·사진 전부</span><span style="flex:1"></span><b style="cursor:pointer;font-size:22px;color:var(--sub)" onclick="closeBackupM()">×</b></div>'+
+    '<div style="overflow-y:auto;padding:16px 20px">'+body+'</div>'+
     '</div></div>';
 }
+
+/* ══════════ 복구 시나리오 안내 (최악의 상황 대비) ══════════ */
+window.openRecovery=function(){ state.recoveryM=true; render(); };
+window.closeRecovery=function(){ state.recoveryM=null; render(); };
+function renderRecoveryModal(){
+  function step(n,t,b){ return '<div style="display:flex;gap:10px;margin-bottom:11px"><div style="flex:0 0 24px;height:24px;border-radius:50%;background:#0b1d3a;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">'+n+'</div><div style="flex:1"><b style="font-size:13px">'+t+'</b><div style="font-size:12px;color:var(--sub);line-height:1.6;margin-top:2px">'+b+'</div></div></div>'; }
+  function box(color,icon,title,inner){ return '<div style="border:1px solid '+color+'44;background:'+color+'0d;border-left:4px solid '+color+';border-radius:0 11px 11px 0;padding:12px 14px;margin-bottom:14px"><div style="font-size:13.5px;font-weight:900;color:'+color+';margin-bottom:9px">'+icon+' '+title+'</div>'+inner+'</div>'; }
+  var body=
+    '<div style="font-size:12.5px;color:var(--ink);background:#F6F8FB;border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-bottom:16px;line-height:1.7">이 프로그램의 데이터는 <b>4겹</b>으로 보관됩니다. 하나가 사라져도 다른 층에서 복구할 수 있습니다.<br>'+
+      '① 각 PC 안(자동) · ② <b>구글 클라우드 동기화</b>(항상 최신 · 자동) · ③ 드라이브 주간 백업 폴더 · ④ 내려받은 백업 파일(USB·메일)</div>'+
+    box('#1E7B3C','①','가장 흔한 경우 — PC를 새로 깔거나 바꿨을 때',
+      step(1,'프로그램(index.html) 파일을 새 PC에 넣고 엽니다','깃허브 주소(narachadata.github.io/naracha)로 접속해도 됩니다.')+
+      step(2,'비밀번호와 접속키(NARACHA-…)를 입력합니다','접속키만 맞으면 <b>구글 클라우드에 있던 명단·출석·심사·회계가 자동으로 다시 내려받아집니다.</b> 별도 복구가 필요 없습니다.')+
+      '<div style="font-size:11.5px;color:#1E7B3C;font-weight:700;margin-top:4px">→ 대부분 이 방법으로 끝납니다. 평소 동기화가 진짜 백업입니다.</div>')+
+    box('#B45309','②','드라이브 백업 파일에서 되돌릴 때 — 실수로 지웠거나 꼬였을 때',
+      step(1,'구글 드라이브 → [나라차 자동백업] 폴더를 엽니다','"나라차백업_날짜.json" 파일들이 날짜별로 있습니다. 되돌리고 싶은 시점의 파일을 <b>내려받습니다.</b>')+
+      step(2,'프로그램 상단 [백업] → [📂 백업 파일에서 복구]','내려받은 json 파일을 고르면 그 시점으로 복구됩니다.'))+
+    box('#B23A48','③','최악의 경우 — 구글이 아예 안 될 때 / 인터넷이 없을 때',
+      '<div style="font-size:12px;color:var(--ink);line-height:1.7;margin-bottom:9px">구글 로그인·드라이브·동기화가 모두 막혀도, <b>[💾 파일로 내려받기]로 만들어 둔 json 파일 하나만 있으면</b> 인터넷 없이 복구됩니다. (복구 기능은 파일만 읽으며 인터넷을 쓰지 않습니다.)</div>'+
+      step(1,'백업 json 파일을 USB나 이 PC에 준비합니다','평소에 한 달에 한 번 [파일로 내려받기]를 눌러 USB나 관장님 메일에 보관해 두는 것이 이 상황의 유일한 보험입니다.')+
+      step(2,'프로그램을 열고 [백업] → [📂 백업 파일에서 복구]로 그 파일을 엽니다','인터넷 연결 없이도 이 PC에 모든 데이터가 되살아납니다.')+
+      '<div style="font-size:11.5px;color:#B23A48;font-weight:700;margin-top:4px">→ 이 파일이 없고 + 모든 PC가 고장 나고 + 구글도 접속 불가라면, 그때만 데이터를 잃습니다. 그래서 월 1회 파일 보관을 권합니다.</div>')+
+    '<div style="font-size:11.5px;color:var(--sub);line-height:1.7;background:#FFFDF5;border:1px solid #F0E4C0;border-radius:10px;padding:10px 12px">💡 <b>관장님을 위한 3줄 요약</b><br>1. 평소 동기화(접속키)만 잘 되면 PC가 죽어도 새 PC에서 자동 복구됩니다.<br>2. 실수·꼬임은 [나라차 자동백업] 폴더의 날짜 파일로 되돌립니다.<br>3. 진짜 최악(구글 불통)에 대비해 <b>월 1회 [파일로 내려받기]</b>를 USB/메일에 보관하세요.</div>';
+  return '<div style="position:fixed;inset:0;background:rgba(26,28,32,0.6);z-index:10002;display:flex;align-items:center;justify-content:center;padding:14px" onclick="closeRecovery()">'+
+    '<div style="background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden" onclick="event.stopPropagation()">'+
+    '<div style="padding:15px 18px;border-bottom:2px solid var(--line);display:flex;align-items:center;gap:8px">'+
+      '<b style="font-size:16px">🧭 데이터 복구 안내</b><span style="font-size:11px;color:var(--sub)">최악의 상황까지 대비한 단계별 안내</span>'+
+      '<span style="flex:1"></span><b style="cursor:pointer;font-size:21px;color:var(--sub)" onclick="closeRecovery()">×</b></div>'+
+    '<div style="overflow-y:auto;padding:16px 18px">'+body+'</div>'+
+    '<div style="padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px">'+
+      '<button onclick="downloadRecoveryGuide()" style="flex:1;background:#0b1d3a;color:#fff;border:none;border-radius:10px;padding:11px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">📄 이 안내서 파일로 저장(인쇄용)</button>'+
+      '<button onclick="closeRecovery()" style="flex:0 0 auto;background:#f1f5f9;border:none;border-radius:10px;padding:11px 18px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">닫기</button>'+
+    '</div></div></div>';
+}
+window.downloadRecoveryGuide=function(){
+  var css='body{font-family:"맑은 고딕",sans-serif;color:#1E232B;max-width:720px;margin:24px auto;padding:0 20px;line-height:1.7}h1{color:#0b1d3a;border-bottom:3px solid #0b1d3a;padding-bottom:8px}h2{color:#0b1d3a;margin-top:26px;border-left:5px solid #0b1d3a;padding-left:10px}ol{padding-left:22px}li{margin:6px 0}.box{border:1px solid #ccc;border-radius:8px;padding:12px 16px;margin:10px 0;background:#fafafa}.warn{background:#fff5f5;border-color:#f0c0c0}.ok{background:#f0faf3;border-color:#bfe5cc}b{color:#0b1d3a}';
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>나라차 데이터 복구 안내서</title><style>'+css+'</style></head><body>'+
+    '<h1>나라차태권도 프로그램 — 데이터 복구 안내서</h1>'+
+    '<p>발행일 '+today()+' · 이 문서를 인쇄해 도장 서류함과 관장님 메일에 보관하세요.</p>'+
+    '<div class="box ok"><b>데이터는 4겹으로 보관됩니다:</b><br>① 각 PC 안(자동) &nbsp; ② 구글 클라우드 동기화(항상 최신·자동) &nbsp; ③ 드라이브 [나라차 자동백업] 폴더(주간) &nbsp; ④ 내려받은 백업 파일(USB·메일)<br>담기는 데이터: 수련생 명단·출석·심사자료·회계·업무·사진 <b>전체</b></div>'+
+    '<h2>상황 ① PC를 새로 깔거나 바꿨을 때 (가장 흔함)</h2><ol>'+
+    '<li>새 PC에서 프로그램(narachadata.github.io/naracha 또는 index.html)을 엽니다.</li>'+
+    '<li>비밀번호와 접속키(NARACHA-…)를 입력합니다.</li>'+
+    '<li>접속키가 맞으면 구글 클라우드의 명단·출석·심사·회계가 <b>자동으로 다시 내려받아집니다.</b> 별도 복구 불필요.</li></ol>'+
+    '<div class="box">평소의 클라우드 동기화가 곧 실시간 백업입니다. 접속키를 안전히 보관하세요.</div>'+
+    '<h2>상황 ② 실수로 지웠거나 데이터가 꼬였을 때</h2><ol>'+
+    '<li>구글 드라이브 → <b>[나라차 자동백업]</b> 폴더를 엽니다.</li>'+
+    '<li>되돌릴 시점의 "나라차백업_날짜.json" 파일을 내려받습니다.</li>'+
+    '<li>프로그램 상단 <b>[백업]</b> → <b>[📂 백업 파일에서 복구]</b>에서 그 파일을 선택합니다.</li></ol>'+
+    '<h2>상황 ③ 최악 — 구글이 안 되거나 인터넷이 없을 때</h2>'+
+    '<div class="box warn">구글 로그인·드라이브·동기화가 모두 막혀도, 미리 내려받아 둔 <b>백업 json 파일 하나</b>면 인터넷 없이 복구됩니다. 복구 기능은 파일만 읽고 인터넷을 쓰지 않습니다.</div><ol>'+
+    '<li>USB나 메일에 보관해 둔 백업 json 파일을 이 PC에 준비합니다.</li>'+
+    '<li>프로그램 [백업] → [📂 백업 파일에서 복구]로 그 파일을 엽니다.</li>'+
+    '<li>인터넷 없이 이 PC에 전체 데이터가 되살아납니다.</li></ol>'+
+    '<div class="box warn"><b>주의:</b> 이 파일이 없고 + 모든 PC가 고장 + 구글도 불통이면 그때만 데이터가 사라집니다. 그래서 <b>월 1회 [파일로 내려받기]</b>를 USB·메일에 보관하는 것이 마지막 보험입니다.</div>'+
+    '<h2>관장님 3줄 요약</h2><ol>'+
+    '<li>동기화(접속키)만 되면 PC가 죽어도 새 PC에서 자동 복구.</li>'+
+    '<li>실수·꼬임은 드라이브 [나라차 자동백업] 날짜 파일로 되돌림.</li>'+
+    '<li>최악(구글 불통) 대비 <b>월 1회 파일 내려받기</b>를 USB/메일에 보관.</li></ol>'+
+    '</body></html>';
+  try{
+    var blob=new Blob(['﻿'+html],{type:"text/html;charset=utf-8"});
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download="나라차_데이터복구안내서_"+today()+".html";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ try{ URL.revokeObjectURL(a.href); }catch(e){} },2000);
+    toast("📄 복구 안내서를 저장했습니다 — 인쇄해 보관하세요");
+  }catch(e){ alert("안내서 저장 실패: "+(e&&e.message||e)); }
+};
 
 function renderWorkEvents(){
   var w=workData();
@@ -10944,6 +11093,7 @@ function render(){
   if(state.dupTool){ h+=renderDupTool(); }
   if(state.baseCntModal){ h+=renderBaseCntModal(); }
   if(state.backupM){ h+=renderBackupModal(); }
+  if(state.recoveryM){ h+=renderRecoveryModal(); }
   if(state.examPipe){ h+=renderExamPipeModal(); }
   if(state.refundM){ h+=renderRefundModal(); }
   if(state.addBox){ h+=renderAddModal(); }
@@ -11223,7 +11373,6 @@ function render(){
        '<button class="util-primary" onclick="pullNow()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v5h-5"></path></svg>새로고침</button>'+
        '<button onclick="pickDevice()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>'+(state.device?esc(state.device):'기기 선택')+'</button>'+
        '<span style="width:1px;height:22px;background:rgba(255,255,255,.15);margin:0 2px"></span>'+
-       (myRole()==="admin"?'<button onclick="openBackupM()" title="전체 데이터 백업·복구'+(backupAgeDays()>=BACKUP_INTERVAL_DAYS?' — 백업한 지 '+(lastBackupT()?Math.floor(backupAgeDays())+'일':'오래')+' 지남':'')+'"'+(backupAgeDays()>=BACKUP_INTERVAL_DAYS?' style="border-color:#F0C36D;color:#FBBF24"':'')+'><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>백업'+(backupAgeDays()>=BACKUP_INTERVAL_DAYS?' ⚠':'')+'</button>':'')+
        '<button onclick="showChangePw()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"></circle><path d="M10.85 12.15 19 4l2 2-2 2 2 2"></path></svg>비번변경</button>'+
        '<button onclick="lockNow()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>잠금</button>'+
        '<button onclick="toggleHeader()" title="상단 메뉴 접기 — 아래 내용을 화면 가득 보기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"></path></svg>접기</button>'+
@@ -11246,6 +11395,7 @@ function render(){
           catBtn('업무', icWork, '업무관리', false)+
           '<button onclick="openStuM()" class="regBtn" style="cursor:pointer;font-family:inherit">'+icPlus+'원생 등록</button>'+
           '<span style="flex:1"></span>'+
+          (myRole()==="admin"?'<button onclick="openBackupM()" class="catOff" title="전체 데이터 백업·복구" style="cursor:pointer;font-family:inherit'+(backupAgeDays()>=BACKUP_INTERVAL_DAYS?';border-color:#F0C36D;color:#B45309;background:#FFF9EC':'')+'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>백업'+(backupAgeDays()>=BACKUP_INTERVAL_DAYS?' ⚠':'')+'</button>':'')+
           catBtn('회계', icAcct, '회계관리'+(myRole()!=="admin"?' 🔒':''), myRole()!=="admin");
       })()+
       (state.topCat==="출석"&&state.attStatus?
@@ -13012,63 +13162,15 @@ function render(){
     });
     if(tr.length>15) h+='<div style="font-size:11.5px;color:var(--sub);margin-top:6px">외 '+(tr.length-15)+'건</div>';
     h+='</div>';
-    h+='<div class="card"><div style="font-size:17px;font-weight:900;margin-bottom:6px">백업 파일 다운로드</div>'+
-       '<div style="font-size:13.5px;color:var(--sub);line-height:1.6;margin-bottom:8px">'+
-       '백업 파일은 <b>프로그램과 기록이 합쳐진 파일</b>입니다. 집이나 다른 컴퓨터에서 이 파일을 더블클릭하면 그대로 이어서 작업할 수 있고, 서로 다른 컴퓨터의 기록은 자동으로 합쳐집니다. 작업을 마칠 때마다 한 번씩 받아두세요.</div>'+
-       '<button class="big" onclick="backup()">백업 파일 다운로드</button></div>';
-    h+='<div class="card"><div style="font-size:17px;font-weight:900;margin-bottom:6px">엑셀로 내보내기</div>'+
+    h+='<div class="card"><div style="font-size:17px;font-weight:900;margin-bottom:6px">엑셀로 내보내기 <span style="font-size:12px;color:var(--sub);font-weight:600">(회계 전용)</span></div>'+
        '<div style="font-size:13.5px;color:var(--sub);line-height:1.6;margin-bottom:8px">'+
        '입력한 '+state.payments.length+'건을 정본 엑셀과 같은 열 구조로 내려받아, 정본(구글 시트) 장부 아래에 붙여 넣으세요.</div>'+
        '<button class="big" style="background:var(--green)" onclick="exportExcel()">엑셀 파일 다운로드 ('+state.payments.length+'건)</button></div>';
     h+='<div class="card"><span class="label">기록 현황</span><div style="font-size:15px;line-height:2">'+
        '입력된 결제: <b>'+state.payments.length+'건</b> / 합계 <b>'+won(state.payments.reduce(function(a,pm){return a+pm.amount;},0))+'</b><br>'+
        '자동 저장: '+(state.storageOk?'<b style="color:var(--green)">작동 중 — 이 컴퓨터에 저장됩니다</b>':(accessKey()?'<b style="color:var(--green)">구글 클라우드에 저장 중</b> (이 기기 임시 보관함만 가득 참)':'<b style="color:var(--red)">사용 불가 — 백업 다운로드 필수</b>'))+'</div></div>';
-    /* ── 💾 데이터 용량 점검 (10년 안정화 모니터) ── */
-    (function(){
-      var R=storageReport();
-      var pctTotal=Math.min(100, Math.round(R.total/R.limit*100));
-      var barCol = pctTotal>=80?'var(--red)':pctTotal>=55?'#F59E0B':'var(--green)';
-      function line(lbl, bytes, extra){
-        var p=Math.min(100, Math.round(bytes/R.limit*100));
-        return '<div style="margin:7px 0">'+
-          '<div style="display:flex;font-size:13.5px;margin-bottom:3px"><span style="font-weight:700">'+lbl+'</span><span style="flex:1"></span><span style="color:var(--sub)">'+fmtBytes(bytes)+(extra?' · '+extra:'')+'</span></div>'+
-          '<div style="background:#F0F0F3;border-radius:5px;height:9px;overflow:hidden"><div style="width:'+p+'%;height:100%;background:'+(p>=80?'var(--red)':p>=55?'#F59E0B':'#8FA9D8')+'"></div></div></div>';
-      }
-      h+='<div class="card"><div style="font-size:17px;font-weight:900;margin-bottom:2px">💾 데이터 용량 점검</div>'+
-         '<div style="font-size:13.5px;color:var(--sub);line-height:1.55;margin-bottom:10px">이 기기 임시 보관함(약 5MB) 기준입니다. 클라우드에는 항상 전체가 보존됩니다. 아래 막대가 노란색(55%)을 넘기 시작하면 연도별 아카이브 분리를 진행할 시점입니다.</div>'+
-         '<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><b style="font-size:13.5px">전체 사용량</b><span style="flex:1"></span><b style="font-size:13.5px;color:'+barCol+'">'+fmtBytes(R.total)+' / 5 MB ('+pctTotal+'%)</b></div>'+
-         '<div style="background:#F0F0F3;border-radius:10px;height:14px;overflow:hidden;margin-bottom:6px"><div style="width:'+pctTotal+'%;height:100%;background:'+barCol+'"></div></div>'+
-         line('회계 (관리자 전용)', R.acct, R.payments+'건')+
-         line('출석·명단·심사', R.att, R.students+'명 · '+R.weeks+'주 · 심사 '+R.exam+'명')+
-         line('사진', R.photo)+
-         '<div style="border-top:1px solid var(--line);margin-top:10px;padding-top:9px;font-size:13.5px;color:var(--sub);line-height:1.6">'+
-           '고유번호(sid) 부여: <b style="color:'+(R.sid>=R.students?'var(--green)':'#F59E0B')+'">'+R.sid+' / '+R.students+'명</b> · 구조 버전 v'+SCHEMA_VER+
-           (R.sid<R.students ? '<div style="margin-top:7px"><button class="chip" style="background:#EAF1FB;border-color:#C3D4EE;color:#2B5FB8;font-weight:800" onclick="fixSids()">고유번호 일괄 정비 ('+(R.students-R.sid)+'명)</button></div>' : ' <span style="color:var(--green)">✓ 완료</span>')+
-         '</div></div>';
-    })();
-    /* ── 🗄️ 연도별 아카이브 (10년 안정화) ── */
-    (function(){
-      var cands=archiveCandidates();
-      var archived=Object.keys(state.archivedYears||{}).sort();
-      var loaded=state.loadedArchives||{};
-      h+='<div class="card"><div style="font-size:17px;font-weight:900;margin-bottom:2px">🗄️ 연도별 아카이브</div>'+
-         '<div style="font-size:13.5px;color:var(--sub);line-height:1.55;margin-bottom:8px">오래된 출석·결제를 연도별 저장소(att_YYYY·acct_YYYY)로 옮겨 라이브를 가볍게 유지합니다. 옮긴 기록은 삭제되지 않고 <b>클라우드+로컬 파일</b>에 보존되며 언제든 다시 불러올 수 있습니다.</div>'+
-         '<label style="display:flex;align-items:center;gap:7px;font-size:13.5px;cursor:pointer;margin-bottom:10px"><input type="checkbox" '+(state.archIncludePrev?'checked':'')+' onchange="state.archIncludePrev=this.checked;render()"> <b>작년까지 아카이브</b> <span style="color:var(--sub)">(체크하면 올해만 라이브 보관 — 용량 절반 절감)</span></label>';
-      if(cands.length){
-        h+='<div style="background:#FFF7ED;border:1px solid #FDBA74;border-radius:10px;padding:9px 11px;margin-bottom:8px;font-size:13.5px">정리 가능한 연도: <b>'+cands.join(", ")+'</b></div>'+
-           '<button class="big" '+(state.archiveBusy?'disabled':'')+' onclick="archiveOldData()" style="background:#B45309">'+(state.archiveBusy?'정리 중…':('오래된 기록 아카이브 ('+cands.length+'개 연도)'))+'</button>';
-      } else {
-        h+='<div style="font-size:13.5px;color:var(--sub)">지금은 아카이브할 오래된 기록이 없습니다. (올해·작년만 있거나 이미 정리됨)</div>';
-      }
-      if(archived.length){
-        h+='<div style="border-top:1px solid var(--line);margin-top:10px;padding-top:9px"><div style="font-size:13.5px;font-weight:800;color:var(--sub);margin-bottom:6px">보관된 연도 <span style="font-weight:400">(눌러서 화면에 다시 불러오기)</span></div>'+
-           '<div style="display:flex;flex-wrap:wrap;gap:6px">'+archived.map(function(y){
-             var on=!!loaded[y]; var busy=(state.archiveLoading===y);
-             return '<button class="chip" onclick="loadArchiveYear(\''+y+'\')" style="'+(on?'background:#E7F3FF;border-color:#1B5FAF;color:#1B5FAF;font-weight:800':'')+'">'+(busy?'불러오는 중…':(esc(y)+'년'+(on?' ✓ 불러옴':'')))+'</button>';
-           }).join('')+'</div></div>';
-      }
-      h+='</div>';
-    })();
+    h+='<div class="card" style="background:#F6F8FB"><div style="font-size:13.5px;color:var(--ink);line-height:1.7">🗄 <b>전체 데이터 백업</b>(명단·심사·회계·업무 전부) · <b>데이터 용량 점검</b> · <b>연도별 아카이브</b>는 상단 오른쪽 <b>[백업]</b> 버튼으로 옮겼습니다.'+
+       (myRole()==="admin"?' <button class="chip" style="color:var(--blue);border-color:var(--blue);margin-left:4px" onclick="openBackupM()">🗄 백업 열기</button>':'')+'</div></div>';
   }
 
   h+='</div>';
