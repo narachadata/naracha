@@ -1329,6 +1329,8 @@ window.setTopCat=function(c){
   render();
 };
 window.setAttTab=function(t){ state.attTab=t; render(); };
+/* 상단 로고·도장명 클릭 → 수련시간표로 바로 이동 */
+window.goTimetable=function(){ state.topCat="출석"; state.attTab="수련시간표"; state.editHistKey=null; state.editPayId=null; render(); };
 window.setTab=function(t){
   if(state.topCat==="심사") state.topCat="회계";
   state.tab=t;
@@ -2743,6 +2745,39 @@ window.confirmReopen=function(){
 };
 window.cancelReopen=function(){ state.reopenDialog=null; render(); };
 
+/* ── 원생 상태 (재원/휴관/퇴관) — 학적부 배지·수정화면 버튼 공용 ── */
+function stuStatusOf(name){
+  if(isQuit(name)) return "퇴관";
+  if(state.closedMap && state.closedMap[name]) return "휴관";
+  return "재원";
+}
+/* 학적부 헤더(남색 배경)용 상태 배지: 재원=은은 · 휴관=주황 · 퇴관=빨강(흰글씨) */
+function stuStatusBadgeChart(name){
+  var st=stuStatusOf(name);
+  if(st==="휴관"){
+    var cm=(state.closedMap||{})[name]||{};
+    var tip="휴관"+(cm.start?" · "+cm.start+" 시작":"")+(cm.reason?" · "+cm.reason:"");
+    return '<span title="'+esc(tip)+'" style="font-size:12px;font-weight:900;color:#fff;background:#F59E0B;border-radius:999px;padding:2px 9px;letter-spacing:.5px;box-shadow:0 1px 2px rgba(0,0,0,.25)">휴</span>';
+  }
+  if(st==="퇴관"){
+    var qm=(state.quitMap||{})[name]||{};
+    var tip2="퇴관"+(qm.start?" · "+qm.start:"");
+    return '<span title="'+esc(tip2)+'" style="font-size:12px;font-weight:900;color:#fff;background:#D0332A;border-radius:999px;padding:2px 9px;letter-spacing:.5px;box-shadow:0 1px 2px rgba(0,0,0,.25)">퇴</span>';
+  }
+  /* 재원 — 은은하게 (남색 위 반투명 흰 알약) */
+  return '<span title="재원생" style="font-size:11px;font-weight:800;color:rgba(255,255,255,.92);background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:1px 8px;letter-spacing:1px">재</span>';
+}
+/* 수정화면 상태 변경 — 현재 편집 중인 원생(state.stuM.orig) 기준 · 기존 처리 함수 재사용 */
+window.stuMStatus=function(action){
+  var m=state.stuM; if(!m || !m.orig) return;
+  var nm=m.orig;
+  if(action==="close")  return setClosed(nm);       /* 재원→휴관 (시작일·사유 입력창) */
+  if(action==="quit")   return markQuit(nm);         /* →퇴관 (확인 후) */
+  if(action==="reopen") return reopenClosed(nm);     /* 휴관→재원 (복관일 입력창) */
+  if(action==="unquit") return unQuit(nm);           /* 퇴관→재원 (확인 후) */
+  if(action==="delete") return deleteStudent(nm);    /* 퇴관생 완전 삭제 (이름 입력 확인) */
+};
+
 /* ---------- 원생별 납부내역 ---------- */
 function getRecords(name){
   var recs=[];
@@ -3188,6 +3223,7 @@ window.deleteStudent=function(name){
   /* 신입 명단에서도 제거 */
   state.newStudents=state.newStudents.filter(function(s){ return s.n!==name; });
   state.detail=null;
+  if(state.stuM) state.stuM=null;   /* 수정화면에서 삭제했으면 학적부 창도 닫음 (유령 참조 방지) */
   persist(); render();
   alert(name+" 원생 정보가 삭제되었습니다. 결제 기록은 매출 집계에 유지됩니다.");
 };
@@ -7092,7 +7128,7 @@ function renderStuChart(m){
         (m.demo && typeof DEMO_BADGE!=="undefined" ? '<img src="'+DEMO_BADGE+'" alt="시범단" style="position:absolute;right:-6px;bottom:-5px;width:38px;height:auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));pointer-events:none">' : '')+
         '</div>'+
         '<div style="flex:1;min-width:0">'+
-          '<div style="font-size:24px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1.1;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(m.n||"")+(typeof longAbsBadge==="function"?longAbsBadge(m.n):'')+'</div>'+
+          '<div style="font-size:24px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1.1;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(m.n||"")+(typeof stuStatusBadgeChart==="function"?stuStatusBadgeChart(m.n):'')+(typeof longAbsBadge==="function"?longAbsBadge(m.n):'')+'</div>'+
           '<div style="font-size:13.5px;color:rgba(255,255,255,.8);margin-top:4px">'+
             [esc(m.g||""), ageStr, esc(banShort.trim())].filter(Boolean).join(' · ')+
           '</div>'+
@@ -7390,11 +7426,11 @@ function renderStuModal(){
      (m.mode==="edit"?'<button type="button" class="chip" onclick="stuMToView()" style="font-size:11.5px">← 보기로</button>':'')+
    '</div>'+
    /* ── 사진 섹션 (출석 단말기용) ── */
-   '<div style="display:flex;gap:12px;align-items:center;margin-bottom:10px;padding:10px;background:#F5F5F7;border-radius:10px">'+
+   '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px;padding:10px;background:#F5F5F7;border-radius:10px">'+
      '<div style="width:76px;height:76px;border-radius:16px;overflow:hidden;background:'+(m.photo?'#E5E5EA':genderBg(m.g))+';flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid var(--line)">'+
        (m.photo ? '<img src="'+m.photo+'" style="width:100%;height:100%;object-fit:cover">' : genderIcon(m.g, 40))+
      '</div>'+
-     '<div style="flex:1">'+
+     '<div style="flex:1;min-width:150px">'+
        '<div style="font-size:13.5px;font-weight:700;margin-bottom:5px">📷 출석 단말기용 사진</div>'+
        '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
          '<label class="chip" style="cursor:pointer;background:var(--blue);color:#fff;border-color:var(--blue);font-weight:700">'+
@@ -7405,6 +7441,26 @@ function renderStuModal(){
        '</div>'+
        '<div style="font-size:11.5px;color:var(--sub);margin-top:4px">얼굴이 잘 보이게 · 자동으로 작게 저장돼요</div>'+
      '</div>'+
+     /* ── 상태 변경 (재원/휴관/퇴관) — 박스 오른쪽 하단 · 기존 원생 수정 시에만 ── */
+     (m.mode==="edit"&&m.orig ? (function(){
+       var st=stuStatusOf(m.orig);
+       var lbl = st==="휴관"?'<span style="color:#B45309">● 휴관</span>' : st==="퇴관"?'<span style="color:var(--red)">● 퇴관</span>' : '<span style="color:#1E8E3E">● 재원</span>';
+       var B='font-size:11.5px;font-weight:800;border-radius:9px;padding:5px 11px;cursor:pointer;font-family:inherit;border:1.5px solid ';
+       var bts;
+       if(st==="재원"){
+         bts='<button style="'+B+'#E7C9A9;background:#fff;color:#B45309" onclick="stuMStatus(\'close\')">휴관</button>'+
+             '<button style="'+B+'#F3B4B4;background:#fff;color:var(--red)" onclick="stuMStatus(\'quit\')">퇴관</button>';
+       } else if(st==="휴관"){
+         bts='<button style="'+B+'#9BD9B4;background:#fff;color:#1E7B3C" onclick="stuMStatus(\'reopen\')">복관</button>'+
+             '<button style="'+B+'#F3B4B4;background:#fff;color:var(--red)" onclick="stuMStatus(\'quit\')">퇴관</button>';
+       } else {
+         bts='<button style="'+B+'#9BD9B4;background:#fff;color:#1E7B3C" onclick="stuMStatus(\'unquit\')">복관</button>'+
+             '<button style="'+B+'var(--red);background:var(--red);color:#fff" onclick="stuMStatus(\'delete\')">삭제</button>';
+       }
+       return '<div style="align-self:flex-end;margin-left:auto;display:flex;align-items:center;gap:6px;flex-shrink:0">'+
+         '<span style="font-size:11px;font-weight:800;color:var(--sub)">상태</span>'+
+         '<span style="font-size:11.5px;font-weight:800;margin-right:2px">'+lbl+'</span>'+bts+'</div>';
+     })() : '')+
    '</div>'+
    '<div style="display:flex;gap:8px">'+
    '<div style="flex:1.3"><span class="label" style="font-size:11.5px">이름</span><input class="input" value="'+esc(m.n)+'" oninput="stuMN(this.value)"></div>'+
@@ -8733,7 +8789,7 @@ function render(){
   h+='<div class="header">'+
      /* ── 다크 상단 바 (확정 디자인) ── */
      '<div class="dbar" style="display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:18px 24px;background:#0F172A">'+
-       '<div style="display:flex;align-items:center;gap:12px"><img src="'+LOGO_SYM+'" alt="" style="height:44px;width:auto"><div><div style="font-size:20px;font-weight:800;letter-spacing:-.4px;color:#fff">나라차태권도 분당도장</div>'+
+       '<div style="display:flex;align-items:center;gap:12px"><img src="'+LOGO_SYM+'" alt="" onclick="goTimetable()" title="수련시간표로 이동" style="height:44px;width:auto;cursor:pointer"><div><div onclick="goTimetable()" title="수련시간표로 이동" style="font-size:20px;font-weight:800;letter-spacing:-.4px;color:#fff;cursor:pointer;display:inline-block">나라차태권도 분당도장</div>'+
        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px">'+
        '<span style="font-size:13.5px;color:#94A3B8">수련생 관리 · 재원생 '+activeCount+'명'+(function(){ var hc=Object.keys(state.closedMap).filter(function(n){return !isQuit(n);}).length; return hc?' · 휴관 '+hc+'명':''; })()+' · <span style="color:#64748B;font-weight:700">'+APP_VER+'</span></span>'+
        (state.syncStatus?'<span id="syncBadge" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#86EFAC;background:rgba(34,197,94,.12);padding:2px 9px;border-radius:16px"><span style="width:6px;height:6px;border-radius:50%;background:#22C55E"></span>'+esc(state.syncStatus)+'</span>':'<span id="syncBadge"></span>')+
