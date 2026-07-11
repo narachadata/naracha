@@ -9468,7 +9468,9 @@ window.exportEventDoc=function(id){
 /* ══════════ 구글 드라이브 폴더에 '구글 문서'로 바로 저장 (OAuth) ══════════
    · 클라이언트 ID는 이 기기(localStorage)에 저장 → 프로그램 새 버전으로 바꿔도 유지
    · 저장 계정은 데이터 동기화 계정과 무관 — 로그인한 계정이 그 폴더에 '편집 권한'만 있으면 됨 */
-function gdriveClientId(){ try{ return localStorage.getItem("naracha_gdrive_client")||""; }catch(e){ return ""; } }
+/* 구글 OAuth 클라이언트 ID (공개돼도 안전한 값 · 원본주소·테스트사용자로 보호됨) → 파일에 내장하면 모든 PC에서 바로 동작 */
+var GDRIVE_CLIENT_ID = "299837559641-4ha9abens4vv1rd7in49bifmgge5hhcn.apps.googleusercontent.com";
+function gdriveClientId(){ try{ return (localStorage.getItem("naracha_gdrive_client")||GDRIVE_CLIENT_ID||""); }catch(e){ return GDRIVE_CLIENT_ID||""; } }
 window.setGdriveClientId=function(){
   var cur=gdriveClientId();
   var v=prompt("구글 OAuth 클라이언트 ID를 붙여넣으세요.\n(구글 클라우드 콘솔에서 만든 값 · ...apps.googleusercontent.com 로 끝남)\n\n지우려면 빈칸으로 두고 확인.", cur);
@@ -9531,9 +9533,10 @@ function uploadEventToDrive(ev, folderId, token){
         var link=res.webViewLink||('https://docs.google.com/document/d/'+res.id+'/edit');
         if(!ev.media)ev.media=[];
         ev.media.push({id:"m"+Date.now(), label:'📄 행사 문서(구글 문서)', url:link, dev:workDev(), _t:Date.now()});
-        ev._t=Date.now(); workPersist();
-        alert("✅ 구글 드라이브에 '구글 문서'로 저장되었습니다.\n행사 [자료] 탭에 문서 링크가 추가되었어요. (링크를 눌러 바로 편집)");
-        render();
+        ev._t=Date.now(); workPersist(); render();
+        if(confirm("✅ 구글 드라이브에 '구글 문서'로 저장됐습니다.\n행사 [자료] 탭에도 문서 링크가 추가됐어요.\n\n지금 이 문서를 열어볼까요?")){
+          try{ window.open(link, "_blank"); }catch(e){}
+        }
       } else {
         alert("저장 실패: "+((res&&res.error&&res.error.message)||"권한 또는 폴더를 확인하세요.")+"\n(로그인한 계정이 그 폴더에 편집 권한이 있어야 합니다)");
       }
