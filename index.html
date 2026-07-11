@@ -8893,9 +8893,15 @@ function workData(){
   if(!state.work || !state.work.workV){ state.work={ workV:1, manage:{}, flags:{}, events:{}, logs:{}, t:0 }; }
   if(!state.work.manage) state.work.manage={};
   if(!state.work.flags) state.work.flags={};
+  if(!state.work.tombEvents) state.work.tombEvents={};   /* 삭제 표식(툼스톤): 삭제가 동기화에 반영되게 */
+  if(!state.work.tombFlags) state.work.tombFlags={};
   return state.work;
 }
 (function loadLocalWork(){ try{ var raw=localStorage.getItem("naracha-work"); if(raw){ var p=JSON.parse(raw); if(p&&p.workV){ state.work=p; } } }catch(e){} })();
+function applyWorkTomb(w, coll, tk){
+  var items=w[coll]||{}, tomb=w[tk]||{};
+  for(var k in tomb){ var it=items[k]; if(it && (tomb[k] >= (it._t||0))) delete items[k]; }   /* 삭제가 항목 수정보다 최신이면 제거 */
+}
 function mergeWork(local, remote){
   if(!remote||!remote.workV) return local;
   var out=JSON.parse(JSON.stringify(local));
@@ -8903,6 +8909,14 @@ function mergeWork(local, remote){
     var rc=remote[coll]||{}, oc=out[coll]||(out[coll]={});
     for(var k in rc){ if(!oc[k] || (rc[k]._t||0)>(oc[k]._t||0)) oc[k]=rc[k]; }
   });
+  /* 삭제 표식 병합 (양쪽 최신 시각 유지) */
+  ["tombEvents","tombFlags"].forEach(function(tk){
+    var rt=remote[tk]||{}, ot=out[tk]||(out[tk]={});
+    for(var k in rt){ if(!ot[k] || rt[k]>ot[k]) ot[k]=rt[k]; }
+  });
+  /* 표식 적용: 지워진 항목이 다시 살아나지 않게 */
+  applyWorkTomb(out, "events", "tombEvents");
+  applyWorkTomb(out, "flags", "tombFlags");
   out.t=Math.max(local.t||0, remote.t||0);
   return out;
 }
@@ -8987,7 +9001,7 @@ window.commitGwan=function(name){ var w=workData(); if(!w.manage[name]) w.manage
 window.setWorkFlagInput=function(v){ state.workFlagInput=v; };
 window.setWorkFlagReason=function(v){ state.workFlagReason=v; };
 window.addWorkFlag=function(){ var v=(state.workFlagInput||"").trim(); if(!v){ alert("관리대상으로 추가할 수련생 이름을 입력하세요."); return; } var w=workData(); w.flags[v]={ reason:(state.workFlagReason||""), dev:workDev(), _t:Date.now() }; state.workFlagInput=""; state.workFlagReason=""; workPersist(); render(); };
-window.removeWorkFlag=function(name){ if(!confirm(name+" 님을 수동 관리대상에서 뺄까요? (기존 관리 메모는 남습니다)")) return; var w=workData(); delete w.flags[name]; workPersist(); render(); };
+window.removeWorkFlag=function(name){ if(!confirm(name+" 님을 수동 관리대상에서 뺄까요? (기존 관리 메모는 남습니다)")) return; var w=workData(); if(!w.tombFlags)w.tombFlags={}; w.tombFlags[name]=Date.now(); delete w.flags[name]; workPersist(); render(); };
 
 /* ══════════ 업무관리 화면 ══════════ */
 function wEsn(n){ return esc(n).replace(/\\/g,"\\\\").replace(/'/g,"\\'"); }   /* onclick JS 문자열 안전 이스케이프 */
@@ -9178,7 +9192,7 @@ window.closeEvent=function(){ state.eventSel=null; render(); };
 window.newEvent=function(){ var w=workData(); var id="e"+Date.now(); w.events[id]={ id:id, title:"", type:"", date:"", time:"", place:"", target:"", desc:"", prep:[], cue:[], cautions:[], dayof:{checks:{},manual:[]}, review:{}, status:"준비중", dev:workDev(), _t:Date.now() }; workPersist(); state.workTab="행사"; state.eventSel=id; state.eventTab="기본"; render(); };
 window.newEventOn=function(dateStr){ var w=workData(); var id="e"+Date.now(); w.events[id]={ id:id, title:"", type:"", date:dateStr||"", time:"", place:"", target:"", desc:"", prep:[], cue:[], cautions:[], dayof:{checks:{},manual:[]}, review:{}, status:"준비중", dev:workDev(), _t:Date.now() }; workPersist(); state.workTab="행사"; state.eventSel=id; state.eventTab="기본"; render(); };
 window.evToday=function(){ var t=today(); state.evYear=Number(t.slice(0,4)); state.evMonth=Number(t.slice(5,7)); state.evDay=Number(t.slice(8,10)); state.evScope="day"; render(); };
-window.deleteEvent=function(id){ if(!confirm("이 행사를 삭제할까요? 준비·큐시트·평가 기록이 함께 지워집니다. 되돌릴 수 없습니다.")) return; var w=workData(); delete w.events[id]; state.eventSel=null; workPersist(); render(); };
+window.deleteEvent=function(id){ if(!confirm("이 행사를 삭제할까요? 준비·큐시트·평가 기록이 함께 지워집니다. 되돌릴 수 없습니다.")) return; var w=workData(); if(!w.tombEvents)w.tombEvents={}; w.tombEvents[id]=Date.now(); delete w.events[id]; state.eventSel=null; workPersist(); render(); };
 window.setEventField=function(id,k,v){ var w=workData(); if(!w.events[id])return; w.events[id][k]=v; workSaveDebounced(); };
 window.commitEvent=function(id){ var w=workData(); if(!w.events[id])return; w.events[id].dev=workDev(); w.events[id]._t=Date.now(); workPersist(); render(); };
 window.setEventStatus=function(id,v){ var w=workData(); if(!w.events[id])return; w.events[id].status=v; w.events[id].dev=workDev(); w.events[id]._t=Date.now(); workPersist(); render(); };
@@ -9491,7 +9505,7 @@ window.exportEventToDrive=function(id){
     try{
       var tc=google.accounts.oauth2.initTokenClient({
         client_id: cid,
-        scope: 'https://www.googleapis.com/auth/drive',
+        scope: 'https://www.googleapis.com/auth/drive.file',
         callback: function(resp){
           if(resp && resp.access_token){ uploadEventToDrive(ev, folderId, resp.access_token); }
           else { alert("구글 로그인이 취소되었거나 실패했습니다."); }
