@@ -356,10 +356,29 @@ function hideExam(){
 window.addEventListener('resize', function(){
   if(state.topCat === "심사") showExam();
 });
+/* 심사결과/급수별결과 → 원생 학적부로 되돌아가기 (뒤로가기로 프로그램이 종료되지 않게) */
+window.examBackToStu = function(){
+  var n = state.examBackStu;
+  state.examBackStu = null;
+  if(state.examBackCat){ state.topCat = state.examBackCat; state.examBackCat = null; }
+  else if(state.topCat === "심사"){ state.topCat = "출석"; }
+  if(typeof hideExam === "function") hideExam();
+  if(n && typeof openStuM === "function"){ openStuM(n); }
+  else { render(); }
+};
+/* 브라우저(또는 기기) 뒤로가기: 심사 화면이면 학적부로 복귀, 학적부 모달이면 닫기 */
+window.addEventListener('popstate', function(){
+  if(state.examBackStu){ examBackToStu(); }
+  else if(state.stuM){ state.stuM=null; render(); }
+});
 /* 원생 수정창의 [승급심사결과] → 심사관리 열고 해당 원생 프로필 표시 */
 window.openExamHistory = function(name){
   name = (name||'').trim();
   if(!name){ return; }
+  /* ← 학적부로 돌아가기: 어디서 왔는지 기억 (원생 이름 + 직전 카테고리) */
+  state.examBackStu = name;
+  if(state.topCat !== "심사") state.examBackCat = state.topCat;
+  try{ history.pushState({nrExam:1}, ""); }catch(e){}
   if(state.stuM){ state.stuM=null; }   /* 원생 수정창 닫기 */
   state.topCat = "심사";
   render();   /* 심사관리로 전환 (iframe 생성·표시) */
@@ -7251,6 +7270,10 @@ function cleanHealth(h){ h=h||{}; var o={}; ["al","hi","inj","em"].forEach(funct
 window.openResultsByGrade=function(name){
   var s=STUDENTS.find(function(x){return x.n===name;});
   var grade=(s&&s.grade)||(state.stuM&&state.stuM.grade)||"";
+  /* ← 학적부로 돌아가기: 어디서 왔는지 기억 */
+  state.examBackStu = name;
+  if(state.topCat !== "심사") state.examBackCat = state.topCat;
+  try{ history.pushState({nrExam:1}, ""); }catch(e){}
   if(state.stuM) state.stuM=null;
   state.topCat="심사"; render();
   var tries=0;
@@ -7377,7 +7400,7 @@ function renderStuChart(m){
         '<span style="font-size:11.5px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.7)">원생 학적부</span>'+
         '<span style="flex:1"></span>'+
         '<button onclick="stuMToEdit()" style="background:#fff;border:none;color:'+NAVY+';border-radius:10px;padding:7px 13px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;box-shadow:0 1px 3px rgba(0,0,0,.18)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>수정</button>'+
-        '<button onclick="exportStuPdf(\''+esafe+'\')" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:7px 13px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>출력</button>'+
+        '<button onclick="printStuRecord(\''+esafe+'\')" title="현재 학적부를 A4 세로로 인쇄/PDF 저장" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:7px 13px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="9" width="12" height="7" rx="1"></rect><path d="M6 9V4h12v5"></path><path d="M6 16H4v-3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3h-2"></path></svg>출력</button>'+
         '<button onclick="closeStuM()" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:7px 13px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>닫기</button>'+
       '</div>'+
       '<div style="display:flex;gap:14px;align-items:center">'+
@@ -7581,21 +7604,180 @@ window.exportStuPdf=function(name){
   });
 };
 
+/* ══════════ 학적부 출력 (A4 세로) — 항상 현재 원생의 최신 내용을 인쇄 ══════════ */
+function buildStuRecordPrint(name){
+  var s=STUDENTS.find(function(x){return x.n===name;});
+  if(!s) return null;
+  var NAVY="#1F3A5F", INK="#1E232B", SUB="#6B6B6B", LINE="#D9D5CC", SOFT="#F3F5F9";
+  var photo=(typeof getPhoto==="function")?getPhoto(name):"";
+  var grade=s.grade||"";
+  var bc=(typeof gradeColor==="function")?gradeColor(grade):"#E8E6DF";
+  var lightBelt=(bc==="#E8E6DF"||bc==="#F3C614"||String(bc).toLowerCase()==="#ffffff"||String(bc).toLowerCase()==="#fff");
+  var beltTx=lightBelt?"#2B2B2B":"#FFFFFF";
+  var age=(typeof ageFromBirth==="function")?ageFromBirth(s.by):null;
+  var ageStr=(age!=null)?(age+"세"):"";
+  var banShort=(s.b||"").replace(/\d/g,"").replace(/[()]/g,function(c){return c==="("?" (":")";}).trim();
+  var stt={label:"",c:SUB}; try{ stt=status(effExpiry(name))||stt; }catch(e){}
+  var logo=(typeof LOGO_FULL!=="undefined"&&LOGO_FULL)?LOGO_FULL:((typeof LOGO_SYM!=="undefined")?LOGO_SYM:"");
+  var att={}; try{ att=stuAttendSummary(name)||{}; }catch(e){}
+  var tl=[]; try{ tl=stuTimeline(s)||[]; }catch(e){}
+  var counsel=[]; try{ counsel=stuCounselLines(s.note)||[]; }catch(e){}
+  var qs=[]; try{ qs=sigListFor(name)||[]; }catch(e){}
+  var ti=null; try{ ti=kkwTermInfo(name); }catch(e){}
+  var sibs=[]; try{ sibs=stuSiblings(name)||[]; }catch(e){}
+  var comps=(s.comps||[]).slice().sort(function(a,b){return String(b.d||"").localeCompare(String(a.d||""));});
+  var H=s.health||{};
+  var td=(typeof today==="function")?today():"";
+
+  function sec(t,inner){ return '<section class="sec"><h2>'+t+'</h2>'+inner+'</section>'; }
+  function kv(k,v){ return '<div class="kv"><span class="k">'+k+'</span><span class="v">'+((v!=null&&v!=="")?v:'<span class="dim">—</span>')+'</span></div>'; }
+
+  /* 인적사항 */
+  var infoInner=kv('생년월일', s.by?(esc(s.by)+(ageStr?' ('+ageStr+')':'')):'')+
+    kv('반', esc(s.b||''))+kv('등록일(입관)', esc(s.joinDate||''))+
+    kv('성별', esc(s.g||''))+
+    kv('납부 상태', '<b style="color:'+stt.c+'">'+esc(stt.label||'')+'</b>');
+  /* 보호자 */
+  var gd=(s.gd||[]).filter(function(g){return (g.p||"").trim()||(g.n||"").trim();});
+  var guardInner=gd.length?gd.map(function(g){
+    return '<div class="kv"><span class="k">'+esc(g.r||'보호자')+' '+esc(g.n||'')+'</span><span class="v">'+esc(g.p||'')+'</span></div>';
+  }).join(''):'<div class="dim">등록된 보호자 연락처가 없습니다.</div>';
+  if(s.sp) guardInner+='<div class="kv"><span class="k">본인 연락처</span><span class="v">'+esc(s.sp)+'</span></div>';
+  /* 가족 */
+  var famInner='';
+  if(s.family) famInner+='<div class="para">'+esc(s.family)+'</div>';
+  if(sibs.length) famInner+='<div class="dim" style="margin-top:4px">같은 연락처 원생: '+sibs.map(function(n){return esc(n);}).join(', ')+'</div>';
+  if(!famInner) famInner='<div class="dim">가족 정보 없음</div>';
+  /* 건강 */
+  function hrow(l,v){ return '<div class="kv"><span class="k">'+l+'</span><span class="v">'+(v?esc(v):'<span class="dim">미입력</span>')+'</span></div>'; }
+  var healthInner=hrow('알러지',H.al)+hrow('병력',H.hi)+hrow('부상 이력',H.inj)+hrow('응급 시 주의',H.em);
+  /* 출석 */
+  var attInner='<div class="boxes">'+
+    '<div class="box"><b>'+(att.tm!=null?att.tm:'—')+'</b><span>이번달</span></div>'+
+    '<div class="box"><b>'+(att.lm!=null?att.lm:'—')+'</b><span>지난달</span></div>'+
+    '<div class="box"><b>'+(att.lastDate?esc(String(att.lastDate).slice(5)):'—')+'</b><span>최근 출석</span></div>'+
+    '</div>'+(att.longAbs?'<div class="warn">🚫 장기결석 (4주+ 무출석)</div>':'');
+  /* 국기원·단증 */
+  var kkwInner='';
+  if(ti){ kkwInner+=kv('단증 취득', esc(ti.from||'—'))+kv('다음 응시 연한', esc(ti.due||'—')+(ti.ok?' (응시가능)':'')); }
+  if(!kkwInner) kkwInner='<div class="dim">해당 정보 없음</div>';
+  /* 학적 연혁 */
+  var tlInner=tl.length?tl.map(function(e){
+    return '<div class="li"><span class="lid">'+esc(e.d||'')+'</span> <span>'+esc(e.t||'')+'</span></div>';
+  }).join(''):'<div class="dim">연혁 정보 없음</div>';
+  /* 상담·특이사항 */
+  var counInner=counsel.length?counsel.map(function(c){
+    return '<div class="li">'+(c.d?'<span class="lid">'+esc(c.d)+'</span> ':'')+'<span>'+esc(c.txt||'')+'</span></div>';
+  }).join(''):'<div class="dim">기록 없음</div>';
+  /* 질문&대답 */
+  var qaInner=qs.length?qs.map(function(e){
+    return '<div class="li"><span class="lid">'+esc((typeof weekLabel==="function")?weekLabel(e.wk):(e.wk||''))+'</span><div>Q. '+esc(e.q||'질문')+'<br>A. '+esc(e.a||'')+'</div></div>';
+  }).join(''):'<div class="dim">기록된 질문&대답이 없습니다.</div>';
+  /* 대회이력 */
+  var compInner=comps.length?comps.map(function(c){
+    var line=[esc(c.d||''),esc(c.nm||''),esc(c.r||'')].filter(Boolean).join(' · ');
+    return '<div class="li"><span>'+(line||'(내용 없음)')+'</span>'+(c.c?'<div class="dim">'+esc(c.c)+'</div>':'')+'</div>';
+  }).join(''):'<div class="dim">기록된 대회이력이 없습니다.</div>';
+
+  var CSS='<style>'+
+    '@page{size:A4 portrait;margin:12mm}'+
+    '*{box-sizing:border-box}'+
+    'html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+    'body{font-family:"Malgun Gothic","맑은 고딕",Pretendard,sans-serif;color:'+INK+';margin:0;background:#fff;font-size:12px;line-height:1.5}'+
+    '.wrap{max-width:186mm;margin:0 auto}'+
+    '.hd{display:flex;align-items:center;gap:14px;border-bottom:2.5px solid '+NAVY+';padding-bottom:10px;margin-bottom:14px}'+
+    '.hd img{height:52px;width:auto}'+
+    '.hd .t1{font-size:20px;font-weight:800;color:'+NAVY+';letter-spacing:-.3px}'+
+    '.hd .t2{font-size:11px;color:'+SUB+';margin-top:2px}'+
+    '.hd .date{margin-left:auto;text-align:right;font-size:11px;color:'+SUB+'}'+
+    '.prof{display:flex;align-items:center;gap:14px;margin-bottom:14px}'+
+    '.prof .ph{width:74px;height:74px;border-radius:10px;overflow:hidden;border:1px solid '+LINE+';flex:0 0 auto;background:'+SOFT+';display:flex;align-items:center;justify-content:center}'+
+    '.prof .ph img{width:100%;height:100%;object-fit:cover}'+
+    '.prof .nm{font-size:24px;font-weight:800;letter-spacing:-.5px}'+
+    '.prof .meta{font-size:12px;color:'+SUB+';margin-top:3px}'+
+    '.belt{margin-left:auto;text-align:center;border-radius:8px;padding:8px 16px;min-width:76px;background:'+bc+';color:'+beltTx+'}'+
+    '.belt small{display:block;font-size:9px;letter-spacing:1px;opacity:.8}'+
+    '.belt b{font-size:16px}'+
+    '.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}'+
+    '.sec{break-inside:avoid;border:1px solid '+LINE+';border-radius:8px;padding:8px 11px;background:#fff}'+
+    '.sec h2{font-size:12px;font-weight:800;color:'+NAVY+';margin:0 0 6px;padding-left:8px;border-left:3px solid '+NAVY+'}'+
+    '.kv{display:flex;justify-content:space-between;gap:8px;padding:2.5px 0;border-bottom:1px dotted '+LINE+'}'+
+    '.kv:last-child{border-bottom:none}'+
+    '.kv .k{color:'+SUB+';font-weight:700;flex:0 0 auto}'+
+    '.kv .v{text-align:right}'+
+    '.dim{color:#9A968C}'+
+    '.para{white-space:pre-wrap}'+
+    '.boxes{display:flex;gap:6px}'+
+    '.box{flex:1;text-align:center;background:'+SOFT+';border-radius:8px;padding:6px 2px}'+
+    '.box b{display:block;font-size:16px;color:'+NAVY+'}'+
+    '.box span{font-size:10px;color:'+SUB+'}'+
+    '.warn{margin-top:6px;text-align:center;color:#B23A48;font-weight:800;background:#FBE9E7;border-radius:6px;padding:3px}'+
+    '.li{padding:3px 0;border-bottom:1px dotted '+LINE+'}'+
+    '.li:last-child{border-bottom:none}'+
+    '.lid{color:'+SUB+';font-weight:700;margin-right:5px}'+
+    '.full{grid-column:1/-1}'+
+    '.pbtn{position:fixed;top:10px;right:10px;display:flex;gap:8px;z-index:100}'+
+    '.pbtn button{padding:11px 18px;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);font-family:inherit}'+
+    '.pbtn .p1{background:'+NAVY+'}.pbtn .p2{background:#777}'+
+    '@media print{.pbtn{display:none}}'+
+    '</style>';
+
+  var body='<div class="pbtn"><button class="p1" onclick="window.print()">🖨 인쇄 / PDF 저장</button><button class="p2" onclick="window.close()">닫기</button></div>'+
+    '<div class="wrap">'+
+    '<div class="hd">'+(logo?'<img src="'+logo+'" alt="나라차태권도">':'')+
+      '<div><div class="t1">원생 학적부</div><div class="t2">나라차태권도 분당도장</div></div>'+
+      '<div class="date">발급일 '+esc(td)+'</div></div>'+
+    '<div class="prof">'+
+      '<div class="ph">'+(photo?'<img src="'+photo+'">':((typeof genderIcon==="function")?genderIcon(s.g,40):''))+'</div>'+
+      '<div><div class="nm">'+esc(s.n||'')+'</div><div class="meta">'+[esc(s.g||''),ageStr,esc(banShort)].filter(Boolean).join(' · ')+'</div></div>'+
+      '<div class="belt"><small>급수</small><b>'+(grade?esc(grade):'미입력')+'</b></div>'+
+    '</div>'+
+    '<div class="grid">'+
+      sec('📋 인적사항', infoInner)+
+      sec('📞 보호자 연락처', guardInner)+
+      sec('👪 가족·형제', famInner)+
+      sec('🩺 건강·안전', healthInner)+
+      sec('📅 출석 요약', attInner)+
+      sec('🏛 국기원·단증', kkwInner)+
+      '<div class="full">'+sec('🧭 학적 연혁', tlInner)+'</div>'+
+      '<div class="full">'+sec('🗒 상담·특이사항', counInner)+'</div>'+
+      '<div class="full">'+sec('💬 질문&대답', qaInner)+'</div>'+
+      '<div class="full">'+sec('🏆 대회이력'+(comps.length?' ('+comps.length+'건)':''), compInner)+'</div>'+
+    '</div></div>';
+
+  return '<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>학적부_'+esc(s.n||'원생')+'_'+esc(td)+'</title>'+CSS+'</head><body onload="setTimeout(function(){try{window.print()}catch(e){}},350)">'+body+'</body></html>';
+}
+
+window.printStuRecord=function(name){
+  name=(name||"").trim();
+  var s=STUDENTS.find(function(x){return x.n===name;});
+  if(!s && state.stuM) name=state.stuM.n, s=STUDENTS.find(function(x){return x.n===name;});
+  if(!s){ alert("학적부 정보를 찾을 수 없습니다."); return; }
+  var html=buildStuRecordPrint(name);
+  if(!html){ alert("학적부 정보를 찾을 수 없습니다."); return; }
+  var win=window.open("","_blank");
+  if(!win){ alert("팝업이 차단되었습니다. 브라우저에서 팝업을 허용해 주세요."); return; }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+};
+
 function renderStuModal(){
   var m=state.stuM;
   var GDR=["부","모","조부","조모","외조부","외조모","친척","돌봄"];
   if(m.view && m.mode==="edit"){ return renderStuChart(m); }
-  var x='<div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:10px" onclick="closeStuM()">'+
-   '<div class="stuMBox" style="background:#fff;border-radius:16px;padding:14px 16px;max-width:480px;width:100%;max-height:94vh;overflow:auto" onclick="event.stopPropagation()">'+
-   '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+
-     '<div style="font-size:17px;font-weight:900">'+(m.mode==="new"?"＋ 원생 등록":"원생 정보")+'</div>'+
-     (m.mode==="edit"?'<span style="font-size:11.5px;color:var(--sub);font-weight:700">수정 중</span>':'')+
+  var x='<div style="position:fixed;inset:0;background:rgba(26,28,32,0.55);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:2vh 10px;overflow:auto" onclick="closeStuM()">'+
+   '<div class="stuMBox stuMEdit" style="background:#FBFAF6;border-radius:16px;padding:0;max-width:720px;width:100%;max-height:96vh;overflow:auto;box-shadow:0 24px 60px rgba(26,28,32,.32)" onclick="event.stopPropagation()">'+
+   /* 학적부와 동일한 남색 헤더 밴드 — 같은 화면을 편집하는 느낌 */
+   '<div style="position:sticky;top:0;z-index:3;background:linear-gradient(135deg,#2B4C7E 0%,#22406C 100%);padding:13px 18px;border-radius:16px 16px 0 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+     '<span style="font-size:11.5px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.72)">'+(m.mode==="new"?"원생 등록":"원생 학적부")+'</span>'+
+     (m.mode!=="new"?'<span style="font-size:11px;font-weight:800;color:#fff;background:rgba(255,255,255,.2);border-radius:8px;padding:2px 9px">✎ 수정 중</span>':'')+
      '<span style="flex:1"></span>'+
-     /* 상단 저장/취소 (수정·등록 모드 · 저장은 강조색) */
-     '<button type="button" onclick="closeStuM()" style="background:#F1F1F4;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:7px 13px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit">취소</button>'+
-     '<button type="button" onclick="saveStuM()" style="background:var(--blue);border:1px solid var(--blue);color:#fff;border-radius:10px;padding:7px 15px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 1px 3px rgba(37,99,235,.35)">'+(m.mode==="new"?"등록":"저장")+'</button>'+
-     (m.mode==="edit"?'<button type="button" class="chip" onclick="stuMToView()" style="font-size:11.5px">← 보기로</button>':'')+
+     (m.mode==="edit"?'<button type="button" onclick="stuMToView()" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:10px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">← 보기로</button>':'')+
+     '<button type="button" onclick="closeStuM()" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:10px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">취소</button>'+
+     '<button type="button" onclick="saveStuM()" style="background:#fff;color:#2B4C7E;border:none;border-radius:10px;padding:7px 16px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,.2)">'+(m.mode==="new"?"등록":"저장")+'</button>'+
    '</div>'+
+   '<div class="stuMEditBody" style="padding:13px 16px 4px">'+
    /* ── 사진 섹션 (출석 단말기용) ── */
    '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px;padding:10px;background:#F5F5F7;border-radius:10px">'+
      '<div style="width:76px;height:76px;border-radius:16px;overflow:hidden;background:'+(m.photo?'#E5E5EA':genderBg(m.g))+';flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid var(--line)">'+
@@ -7720,7 +7902,7 @@ function renderStuModal(){
   x+='<div style="display:flex;gap:8px;margin-top:16px">'+
    '<button class="big" style="flex:1;background:#eee;color:var(--ink)" onclick="closeStuM()">취소</button>'+
    '<button class="big" style="flex:2" onclick="saveStuM()">'+(m.mode==="new"?"등록":"저장")+'</button></div>'+
-   '</div></div>';
+   '</div></div></div>';
   return x;
 }
 
@@ -9025,6 +9207,9 @@ function render(){
   /* ── 심사관리: 격리된 평가 시스템(iframe) 표시 ── */
   if(state.topCat==="심사"){
     h+='</div>';
+    if(state.examBackStu){
+      h+='<button onclick="examBackToStu()" title="원생 학적부로 돌아갑니다" style="position:fixed;left:14px;bottom:18px;z-index:80;background:linear-gradient(135deg,#2B4C7E 0%,#22406C 100%);color:#fff;border:none;border-radius:12px;padding:12px 18px;font-size:14px;font-weight:800;box-shadow:0 5px 16px rgba(0,0,0,.28);cursor:pointer;font-family:inherit">← '+esc(state.examBackStu)+' 학적부로</button>';
+    }
     document.getElementById("root").innerHTML=h;
     showExam();
     return;
