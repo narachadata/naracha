@@ -8943,6 +8943,8 @@ function workData(){
   /* ── 차량관리(차계부): 날짜별 계기판 주행거리 기록 ── */
   if(!state.work.car) state.work.car={};
   if(!state.work.tombCar) state.work.tombCar={};
+  /* ── 차량 정보(단일 객체): 번호·연식·이름·사진 ── */
+  if(!state.work.carInfo) state.work.carInfo={};
   /* ── 정비 관리: 경유차 소모품 교체 주기(중요도 순) ── */
   if(!state.work.carMaint) state.work.carMaint={};
   if(!state.work.tombCarMaint) state.work.tombCarMaint={};
@@ -9007,6 +9009,8 @@ function mergeWork(local, remote){
   applyWorkTomb(out, "routines", "tombRoutines");
   applyWorkTomb(out, "car", "tombCar");
   applyWorkTomb(out, "carMaint", "tombCarMaint");
+  /* 차량 정보(단일 객체): 최신본 우선 */
+  if(remote.carInfo && (remote.carInfo._t||0) > ((out.carInfo&&out.carInfo._t)||0)) out.carInfo=remote.carInfo;
   out.t=Math.max(local.t||0, remote.t||0);
   return out;
 }
@@ -9258,6 +9262,74 @@ window.addCarLog=function(){
   workPersist(); render();
 };
 window.delCarLog=function(id){ var w=workData(); if(!w.car[id]) return; if(!confirm(id+" 기록을 삭제할까요?")) return; if(!w.tombCar)w.tombCar={}; w.tombCar[id]=Date.now(); delete w.car[id]; workPersist(); render(); };
+
+/* ── 차량 정보: 번호·연식·이름·사진(썸네일 압축 저장) ── */
+window.setCarInfo=function(k,v){ var w=workData(); if(!w.carInfo)w.carInfo={}; w.carInfo[k]=v; workSaveDebounced(); };
+window.commitCarInfo=function(){ var w=workData(); if(!w.carInfo)w.carInfo={}; w.carInfo.dev=workDev(); w.carInfo._t=Date.now(); workPersist(); };
+window.pickCarImage=function(input){
+  var f=input.files&&input.files[0]; if(!f) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var maxW=240;                                   /* 픽셀 수 축소 = 썸네일화 → 저장·동기화 경량 */
+      var scale=Math.min(1, maxW/(img.width||maxW));
+      var cw=Math.max(1,Math.round((img.width||maxW)*scale)), ch=Math.max(1,Math.round((img.height||maxW)*scale));
+      var cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
+      var ctx=cv.getContext('2d'); try{ ctx.drawImage(img,0,0,cw,ch); }catch(err){ alert('이미지를 읽지 못했습니다. 다른 사진으로 시도해 주세요.'); return; }
+      var data; try{ data=cv.toDataURL('image/jpeg',0.72); }catch(err){ alert('이미지 저장에 실패했습니다.'); return; }
+      var w=workData(); if(!w.carInfo)w.carInfo={}; w.carInfo.img=data; w.carInfo.dev=workDev(); w.carInfo._t=Date.now(); workPersist(); render();
+    };
+    img.onerror=function(){ alert('이미지 형식을 인식하지 못했습니다.'); };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(f);
+};
+window.clearCarImage=function(){ if(!confirm('차량 사진을 삭제할까요?')) return; var w=workData(); if(!w.carInfo)w.carInfo={}; w.carInfo.img=''; w.carInfo._t=Date.now(); workPersist(); render(); };
+function renderCarInfo(){
+  var w=workData(); var ci=w.carInfo||{}; var img=ci.img||'';
+  var inp=function(lbl,k,ph,val,flex){ return '<div style="flex:'+(flex||'1 1 auto')+';min-width:0"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">'+lbl+'</div>'+
+    '<input class="input" placeholder="'+ph+'" style="width:100%;height:38px;font-size:13px" value="'+esc(val||'')+'" oninput="setCarInfo(\''+k+'\',this.value)" onchange="commitCarInfo()"></div>'; };
+  var h='<div class="card">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:11px"><b style="font-size:15px">🚗 차량 정보</b><span style="font-size:11.5px;color:var(--sub)">도장 차량의 기본 정보와 사진을 등록해 두세요</span></div>'+
+    '<div style="display:flex;gap:15px;flex-wrap:wrap;align-items:flex-start">'+
+      '<div style="flex:0 0 auto">'+
+        '<label style="display:block;width:158px;height:108px;border-radius:13px;border:'+(img?'1px solid var(--line)':'1.5px dashed #C7D0DB')+';background:'+(img?"#111 center/cover no-repeat url('"+img+"')":'#F6F8FB')+';cursor:pointer;position:relative;overflow:hidden" title="클릭해서 차량 사진 등록/변경">'+
+          '<input type="file" accept="image/*" onchange="pickCarImage(this)" style="display:none">'+
+          (img?'<span style="position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;border-radius:6px;padding:1px 6px">📷 변경</span>':'<span style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--sub);font-size:12.5px;gap:4px"><span style="font-size:22px">📷</span>사진 넣기</span>')+
+        '</label>'+
+        (img?'<div style="text-align:center;margin-top:5px"><button class="chip sm" style="color:var(--red)" onclick="clearCarImage()">사진 삭제</button></div>':'')+
+      '</div>'+
+      '<div style="flex:1 1 250px;min-width:230px;display:flex;flex-direction:column;gap:9px">'+
+        inp('차량 이름','name','예: 스타렉스 (도장 승합차)',ci.name,'1 1 auto')+
+        '<div style="display:flex;gap:9px;flex-wrap:wrap">'+inp('차량 번호','plate','예: 12가 3456',ci.plate,'1 1 130px')+inp('연식','year','예: 2019',ci.year,'0 0 96px')+'</div>'+
+      '</div>'+
+    '</div>'+
+    '<div style="font-size:10.5px;color:var(--sub);margin-top:9px">※ 사진은 자동으로 작게(썸네일) 압축해 저장되어 동기화가 가볍습니다.</div>'+
+    '</div>';
+  return h;
+}
+/* 정비 항목 아이콘 (이름 키워드로 자동 매칭 · 기존 데이터에도 적용) */
+function maintIcon(name){
+  var n=name||'';
+  if(/흡기/.test(n)) return '🌀';
+  if(/엔진\s*오일|엔진오일|오일\s*필터|오일필터/.test(n)) return '🛢️';
+  if(/연료|퓨얼/.test(n)) return '⛽';
+  if(/에어컨|실내\s*필터|캐빈/.test(n)) return '❄️';
+  if(/에어\s*필터|에어필터|에어클리너/.test(n)) return '💨';
+  if(/브레이크.*오일/.test(n)) return '🧴';
+  if(/브레이크/.test(n)) return '🛑';
+  if(/타이어|휠/.test(n)) return '🛞';
+  if(/미션|변속/.test(n)) return '⚙️';
+  if(/냉각|부동액|라디에이터/.test(n)) return '💧';
+  if(/타이밍|벨트|체인/.test(n)) return '🔗';
+  if(/dpf|매연|후처리/i.test(n)) return '🌫️';
+  if(/예열|글로우|점화|플러그/.test(n)) return '🔥';
+  if(/배터리/.test(n)) return '🔋';
+  if(/와이퍼/.test(n)) return '🌧️';
+  if(/등|램프|전구/.test(n)) return '💡';
+  return '🔧';
+}
 function renderCarLog(){
   var rows=carRows();                     /* 날짜 오름차순 */
   var withDiff=rows.map(function(r,i){ var prev=i>0?rows[i-1]:null; return { r:r, diff:prev?(r.odo-prev.odo):null }; });
@@ -9268,7 +9340,7 @@ function renderCarLog(){
   var d0=state.car_date||today();
   var h='<div class="card">'+
     '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">'+
-      '<b style="font-size:15px">🚗 차량관리 <span style="font-size:12px;color:var(--sub);font-weight:600">차계부</span></b>'+
+      '<b style="font-size:15px">📒 운행 기록 <span style="font-size:12px;color:var(--sub);font-weight:600">차계부</span></b>'+
       '<span style="font-size:11.5px;color:var(--sub)">업무 종료 시 계기판 주행거리를 적으면 당일 운행거리가 자동 계산됩니다</span>'+
       '<span style="flex:1"></span>'+
       (latest?'<span style="font-size:11.5px;color:var(--sub)">최근 기록 '+esc(latest.date.slice(5))+' · <b style="color:var(--ink)">'+latest.odo.toLocaleString()+'km</b></span>':'')+
@@ -9382,23 +9454,28 @@ function renderCarMaint(){
     var remTxt='';
     if(c.remKm!=null) remTxt += (c.remKm<0?('★ '+Math.abs(c.remKm).toLocaleString()+'km 초과'):(c.remKm.toLocaleString()+'km 남음'));
     if(c.remDays!=null){ var dpart=(c.remDays<0?('D+'+(-c.remDays)):('D-'+c.remDays)); remTxt += (remTxt?' · ':'')+dpart; }
-    h+='<div style="border-top:1px solid var(--line);padding:10px 0">'+
-      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
-        '<span style="width:8px;height:8px;border-radius:50%;background:'+col+';flex:0 0 auto"></span>'+
-        '<b style="font-size:13.5px">'+esc(it.name)+'</b>'+
-        '<span style="font-size:11px;color:var(--sub)">주기 '+(it.intervalKm?it.intervalKm.toLocaleString()+'km':'')+(it.intervalMonths?(it.intervalKm?' · ':'')+it.intervalMonths+'개월':'')+'</span>'+
-        '<span style="flex:1"></span>'+
-        '<span style="background:'+col+'1a;color:'+col+';border-radius:8px;padding:2px 9px;font-size:11.5px;font-weight:800;white-space:nowrap">'+c.status+(remTxt?' · '+remTxt:'')+'</span>'+
+    var ic=maintIcon(it.name);
+    h+='<div style="display:flex;gap:11px;border-top:1px solid var(--line);padding:11px 2px">'+
+      '<div style="flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:'+col+'14;border:1px solid '+col+'33;display:flex;align-items:center;justify-content:center;font-size:19px;position:relative">'+ic+
+        '<span style="position:absolute;right:-2px;bottom:-2px;width:9px;height:9px;border-radius:50%;background:'+col+';border:1.5px solid #fff"></span>'+
       '</div>'+
-      (it.note?'<div style="font-size:11px;color:var(--sub);margin:3px 0 0 16px">'+esc(it.note)+'</div>':'')+
-      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 0 16px;font-size:11.5px;color:var(--ink)">'+
-        '<span>마지막 교체: <b>'+lastTxt+'</b></span>'+
-        (nextParts.length?'<span style="color:var(--sub)">→ 다음: '+esc(nextParts.join(' / '))+'</span>':'')+
-        '<span style="flex:1"></span>'+
-        '<button class="chip sm" style="color:#1E7B3C" onclick="logMaint(\''+it.id+'\')">교체 기록</button>'+
-        '<button class="chip sm" title="주기 수정" onclick="editMaintInterval(\''+it.id+'\')">✎ 주기</button>'+
-        '<button class="chip sm" title="마지막 교체 이력 직접입력" onclick="editMaintLast(\''+it.id+'\')">✎ 이력</button>'+
-        '<b style="color:var(--red);cursor:pointer;font-size:14px;padding:0 3px" onclick="delMaintItem(\''+it.id+'\')">×</b>'+
+      '<div style="flex:1 1 auto;min-width:0">'+
+        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+          '<b style="font-size:13.5px">'+esc(it.name)+'</b>'+
+          '<span style="font-size:11px;color:var(--sub)">주기 '+(it.intervalKm?it.intervalKm.toLocaleString()+'km':'')+(it.intervalMonths?(it.intervalKm?' · ':'')+it.intervalMonths+'개월':'')+'</span>'+
+          '<span style="flex:1"></span>'+
+          '<span style="background:'+col+'1a;color:'+col+';border-radius:8px;padding:2px 9px;font-size:11.5px;font-weight:800;white-space:nowrap">'+c.status+(remTxt?' · '+remTxt:'')+'</span>'+
+        '</div>'+
+        (it.note?'<div style="font-size:11px;color:var(--sub);margin:3px 0 0">'+esc(it.note)+'</div>':'')+
+        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 0;font-size:11.5px;color:var(--ink)">'+
+          '<span>마지막 교체: <b>'+lastTxt+'</b></span>'+
+          (nextParts.length?'<span style="color:var(--sub)">→ 다음: '+esc(nextParts.join(' / '))+'</span>':'')+
+          '<span style="flex:1"></span>'+
+          '<button class="chip sm" style="color:#1E7B3C" onclick="logMaint(\''+it.id+'\')">교체 기록</button>'+
+          '<button class="chip sm" title="주기 수정" onclick="editMaintInterval(\''+it.id+'\')">✎ 주기</button>'+
+          '<button class="chip sm" title="마지막 교체 이력 직접입력" onclick="editMaintLast(\''+it.id+'\')">✎ 이력</button>'+
+          '<b style="color:var(--red);cursor:pointer;font-size:14px;padding:0 3px" onclick="delMaintItem(\''+it.id+'\')">×</b>'+
+        '</div>'+
       '</div>'+
       '</div>';
   });
@@ -9571,8 +9648,9 @@ function renderWorkJournal(){
   h+='<div style="height:8px"></div>';
   h+=taskRows(longT,'중장기 업무','중장기');
   h+='</div>';
-  h+=renderCarLog();               /* 가장 하단: 차량관리(차계부) */
-  h+=renderCarMaint();             /* 차계부 아래: 정비 관리(소모품 교체주기) */
+  h+=renderCarInfo();              /* 가장 하단: 차량 정보 */
+  h+=renderCarLog();               /* 운행 기록(차계부) */
+  h+=renderCarMaint();             /* 정비 관리(소모품 교체주기) */
   return h;
 }
 
