@@ -3514,6 +3514,8 @@ window.setStuView=function(v){ state.stuView=v; render(); };
 window.setStuType=function(t){ state.stuType=t; render(); };
 window.setBillFilter=function(f){ state.billFilter=f; render(); };
 window.setStuStatYear=function(y){ state.stuStatYear=y; render(); };
+window.setStuStatPeriod=function(p){ state.stuStatPeriod=p; render(); };
+window.shiftStuStatYear=function(d, listJson){ try{ var list=JSON.parse(listJson); var i=list.indexOf(String(state.stuStatYear)); if(i<0)i=list.length-1; i=Math.max(0,Math.min(list.length-1,i+d)); state.stuStatYear=list[i]; render(); }catch(e){} };
 window.setSnapYear=function(y){ state.snapYear=y; render(); };
 window.setSnapMonth=function(m){ state.snapMonth=m; render(); };
 window.setBanFilter=function(b){ state.banFilter=b; render(); };
@@ -12364,35 +12366,80 @@ function render(){
     if(!yearList.length) yearList=[String(new Date().getFullYear())];
     if(state.stuStatYear==null || allYearSet[state.stuStatYear]==null) state.stuStatYear=yearList[yearList.length-1];
 
-    h+='<div class="card span2"><span class="label">연도·월별 신규+복관 · 휴관 통계</span>'+
-       '<div class="chips" style="margin-bottom:10px">'+yearList.map(function(y){
-         return '<button class="chip'+(state.stuStatYear===y?" on":"")+'" onclick="setStuStatYear(\''+y+'\')">'+y+'년</button>';
-       }).join('')+'</div>';
     var jArr=joinYears[state.stuStatYear]||[0,0,0,0,0,0,0,0,0,0,0,0,0];
     var rArr=reopenYears[state.stuStatYear]||[0,0,0,0,0,0,0,0,0,0,0,0,0];
     var cArr=closeYears[state.stuStatYear]||[0,0,0,0,0,0,0,0,0,0,0,0,0];
     var joinPlusReopen=[0,0,0,0,0,0,0,0,0,0,0,0,0];
     for(var _i=0;_i<=12;_i++) joinPlusReopen[_i]=jArr[_i]+rArr[_i];
-    var maxV=Math.max(1, Math.max.apply(null,joinPlusReopen), Math.max.apply(null,cArr));
-    var jTot=joinPlusReopen.reduce(function(a,b){return a+b;},0);
-    var rTot=rArr.reduce(function(a,b){return a+b;},0);
-    var cTot=cArr.reduce(function(a,b){return a+b;},0);
-    h+='<div style="display:flex;gap:12px;margin-bottom:12px;font-size:13.5px;font-weight:800">'+
-       '<span style="color:var(--green)">신규+복관 '+jTot+'명'+(rTot?' (복관 '+rTot+'명 포함)':'')+'</span>'+
-       '<span style="color:var(--sub)">휴관 '+cTot+'명</span></div>';
-    for(var mn=1;mn<=12;mn++){
-      var jv=joinPlusReopen[mn], cv=cArr[mn], rv=rArr[mn];
+    var period=state.stuStatPeriod||"year";
+    var yListJson=JSON.stringify(yearList).replace(/"/g,"&quot;");
+    var yi=yearList.indexOf(String(state.stuStatYear));
+    /* 연도 드롭다운 + 좌우 이동 + 기간 정렬(연간·전반기·후반기·분기별) */
+    var SELS='padding:6px 30px 6px 12px;font-size:14px;font-weight:800;border:1.5px solid var(--blue);border-radius:9px;background:#fff;color:var(--blue);cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none';
+    h+='<div class="card span2"><span class="label">연도·월별 신규+복관 · 휴관 통계</span>'+
+       '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 12px">'+
+         '<button onclick="shiftStuStatYear(-1,\''+yListJson+'\')" '+(yi<=0?'disabled ':'')+'style="border:1px solid var(--line);background:#fff;border-radius:9px;width:32px;height:34px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:800;'+(yi<=0?'opacity:.35;cursor:default':'')+'">◀</button>'+
+         '<select onchange="setStuStatYear(this.value)" style="'+SELS+'">'+yearList.map(function(y){return '<option value="'+y+'"'+(String(state.stuStatYear)===String(y)?' selected':'')+'>'+y+'년</option>';}).join('')+'</select>'+
+         '<button onclick="shiftStuStatYear(1,\''+yListJson+'\')" '+(yi>=yearList.length-1?'disabled ':'')+'style="border:1px solid var(--line);background:#fff;border-radius:9px;width:32px;height:34px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:800;'+(yi>=yearList.length-1?'opacity:.35;cursor:default':'')+'">▶</button>'+
+         '<span style="width:8px"></span>'+
+         [["year","연간"],["h1","전반기"],["h2","후반기"],["q","분기별"]].map(function(o){ return '<button class="chip sm'+(period===o[0]?" on":"")+'" onclick="setStuStatPeriod(\''+o[0]+'\')">'+o[1]+'</button>'; }).join('')+
+       '</div>';
+    /* 선택 기간 범위 */
+    var mFrom=1, mTo=12;
+    if(period==="h1"){ mFrom=1; mTo=6; } else if(period==="h2"){ mFrom=7; mTo=12; }
+    /* 기간 합계 */
+    var pJoin=0,pReopen=0,pClose=0;
+    for(var pm2=mFrom;pm2<=mTo;pm2++){ pJoin+=joinPlusReopen[pm2]; pReopen+=rArr[pm2]; pClose+=cArr[pm2]; }
+    var pNet=pJoin-pClose;
+    var maxV=Math.max(1, Math.max.apply(null,joinPlusReopen.slice(mFrom,mTo+1).concat([0])), Math.max.apply(null,cArr.slice(mFrom,mTo+1).concat([0])));
+    var periodLbl=period==="h1"?"전반기(1~6월)":period==="h2"?"후반기(7~12월)":period==="q"?"분기별":"연간(1~12월)";
+    h+='<div style="display:flex;gap:14px;margin-bottom:12px;font-size:13.5px;font-weight:800;flex-wrap:wrap">'+
+       '<span style="color:var(--sub);font-weight:700">'+esc(state.stuStatYear)+'년 '+periodLbl+'</span>'+
+       '<span style="color:var(--green)">신규+복관 '+pJoin+'명'+(pReopen?' (복관 '+pReopen+'명)':'')+'</span>'+
+       '<span style="color:var(--sub)">휴관 '+pClose+'명</span>'+
+       '<span style="color:'+(pNet>=0?'#1E7B3C':'#B23A48')+'">순증감 '+(pNet>=0?'+':'')+pNet+'명</span></div>';
+    /* 막대 행 헬퍼 */
+    function statRow(label, jv, cv, rv){
       var newTag=(rv>0)?'신규+복관 '+jv+' (복관 '+rv+')':'신규+복관 '+jv;
-      h+='<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:13.5px">'+
-         '<div style="display:flex;gap:14px;align-items:baseline;margin-bottom:3px">'+
-         '<span style="font-weight:700;flex:0 0 34px">'+mn+'월</span>'+
-         '<span style="color:var(--sub)">'+newTag+' · 휴관 '+cv+'</span></div>'+
-         '<div style="display:flex;height:12px;background:#F1F0EA;border-radius:4px;overflow:hidden">'+
-         (jv?'<div style="width:'+(jv/maxV*50)+'%;background:var(--green)"></div>':'')+
-         '<div style="width:'+((1-(jv+cv)/maxV/2)*100)+'%"></div>'+
-         (cv?'<div style="width:'+(cv/maxV*50)+'%;background:var(--sub)"></div>':'')+
-         '</div></div>';
+      return '<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:13.5px">'+
+        '<div style="display:flex;gap:14px;align-items:baseline;margin-bottom:3px">'+
+        '<span style="font-weight:700;flex:0 0 46px">'+label+'</span>'+
+        '<span style="color:var(--sub)">'+newTag+' · 휴관 '+cv+'</span></div>'+
+        '<div style="display:flex;height:12px;background:#F1F0EA;border-radius:4px;overflow:hidden">'+
+        (jv?'<div style="width:'+(jv/maxV*50)+'%;background:var(--green)"></div>':'')+
+        '<div style="width:'+((1-(jv+cv)/maxV/2)*100)+'%"></div>'+
+        (cv?'<div style="width:'+(cv/maxV*50)+'%;background:var(--sub)"></div>':'')+
+        '</div></div>';
     }
+    if(period==="q"){
+      /* 분기별: Q1~Q4 합산 막대 */
+      var quarters=[["1분기 (1~3월)",1,3],["2분기 (4~6월)",4,6],["3분기 (7~9월)",7,9],["4분기 (10~12월)",10,12]];
+      var qMax=1; quarters.forEach(function(q){ var qj=0,qc=0; for(var m=q[1];m<=q[2];m++){qj+=joinPlusReopen[m];qc+=cArr[m];} qMax=Math.max(qMax,qj,qc); });
+      quarters.forEach(function(q){ var qj=0,qc=0,qr=0; for(var m=q[1];m<=q[2];m++){qj+=joinPlusReopen[m];qc+=cArr[m];qr+=rArr[m];}
+        maxV=qMax; h+=statRow(q[0].split(" ")[0], qj, qc, qr).replace('flex:0 0 46px','flex:0 0 62px');
+      });
+    } else {
+      for(var mn=mFrom;mn<=mTo;mn++){ h+=statRow(mn+'월', joinPlusReopen[mn], cArr[mn], rArr[mn]); }
+    }
+    /* ── 보기와 분석 ── */
+    var monthsWithData=[]; for(var am=mFrom;am<=mTo;am++){ monthsWithData.push(am); }
+    var peakJoinM=0,peakJoinV=-1,peakCloseM=0,peakCloseV=-1;
+    monthsWithData.forEach(function(m){ if(joinPlusReopen[m]>peakJoinV){peakJoinV=joinPlusReopen[m];peakJoinM=m;} if(cArr[m]>peakCloseV){peakCloseV=cArr[m];peakCloseM=m;} });
+    var nMonths=(mTo-mFrom+1);
+    var avgJoin=(pJoin/nMonths), avgClose=(pClose/nMonths);
+    /* 전반기 vs 후반기 비교 (연간·분기별일 때) */
+    var h1j=0,h1c=0,h2j=0,h2c=0; for(var cm=1;cm<=6;cm++){h1j+=joinPlusReopen[cm];h1c+=cArr[cm];} for(var cm2=7;cm2<=12;cm2++){h2j+=joinPlusReopen[cm2];h2c+=cArr[cm2];}
+    var retention = pClose>0 ? Math.round(pJoin/(pJoin+pClose)*100) : (pJoin>0?100:0);
+    var analysis=[];
+    analysis.push('순증감 <b style="color:'+(pNet>=0?'#1E7B3C':'#B23A48')+'">'+(pNet>=0?'+':'')+pNet+'명</b> (신규+복관 '+pJoin+' − 휴관 '+pClose+')');
+    analysis.push('월평균 신규+복관 <b>'+avgJoin.toFixed(1)+'명</b> · 월평균 휴관 <b>'+avgClose.toFixed(1)+'명</b>');
+    if(peakJoinV>0) analysis.push('최다 신규+복관: <b style="color:#1E7B3C">'+peakJoinM+'월 ('+peakJoinV+'명)</b>');
+    if(peakCloseV>0) analysis.push('최다 휴관: <b style="color:#B23A48">'+peakCloseM+'월 ('+peakCloseV+'명)</b>');
+    if(pReopen>0) analysis.push('복관 <b>'+pReopen+'명</b> — 이탈 후 돌아온 수련생');
+    if(period==="year"||period==="q"){ analysis.push('전반기 순증감 <b>'+((h1j-h1c)>=0?'+':'')+(h1j-h1c)+'</b> · 후반기 순증감 <b>'+((h2j-h2c)>=0?'+':'')+(h2j-h2c)+'</b>'); }
+    h+='<div style="margin-top:14px;padding:12px 14px;background:#F6F8FB;border:1px solid var(--line);border-radius:12px">'+
+       '<div style="font-size:12.5px;font-weight:800;color:var(--blue);margin-bottom:7px">📊 보기와 분석</div>'+
+       '<ul style="margin:0;padding-left:17px;font-size:12.5px;color:var(--ink);line-height:1.85">'+analysis.map(function(a){return '<li>'+a+'</li>';}).join('')+'</ul></div>';
     h+='<div style="margin-top:10px;font-size:11.5px;color:var(--sub)">등록일·휴관일 기준. 원생 정보에 등록일을 입력하면 자동 반영됩니다.</div></div>';
     h+='</div>';   /* statGrid 닫기 */
   }
