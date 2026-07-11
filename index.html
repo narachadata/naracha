@@ -1836,6 +1836,93 @@ window.removePay=function(id){
   setTimeout(function(){ persist(); }, 0);
 };
 
+/* ══════════ 수련비 환불 (음수 결제 기록으로 저장 · 월별·연간 총액에서 자동 차감) ══════════ */
+window.openRefund=function(id){
+  var pm=null;
+  for(var i=0;i<state.payments.length;i++){ if(state.payments[i].id===id){ pm=state.payments[i]; break; } }
+  if(!pm){ alert("결제 기록을 찾을 수 없습니다. (환불은 이 앱에서 입력한 결제만 가능)"); return; }
+  if(pm.refund || (pm.amount||0)<0){ alert("이미 환불 기록입니다. 필요하면 삭제해 주세요."); return; }
+  state.refundM={
+    id: pm.id, name: pm.name, ban: pm.ban||"", cat: pm.cat||"수련비",
+    date: pm.date, origAmount: Math.abs(pm.amount||0), method: pm.method||"",
+    gross: String(Math.abs(pm.amount||0)), useFee: true, feePct: 10,
+    rdate: today(), memo: ""
+  };
+  render();
+};
+function refundNet(rm){
+  var g=Number(rm.gross)||0;
+  var fee=rm.useFee?Math.round(g*(rm.feePct||10)/100):0;
+  return { gross:g, fee:fee, net:g-fee };
+}
+function updateRefundPreview(){
+  var rm=state.refundM; if(!rm) return;
+  var c=refundNet(rm);
+  var g=document.getElementById("rfGross"), f=document.getElementById("rfFee"), n=document.getElementById("rfNet");
+  if(g) g.textContent=won(c.gross);
+  if(f) f.textContent=(c.fee?'- '+won(c.fee):won(0));
+  if(n) n.textContent=won(c.net);
+}
+window.setRefundGross=function(v){ if(state.refundM){ state.refundM.gross=String(v).replace(/[^0-9]/g,""); updateRefundPreview(); } };
+window.setRefundFee=function(on){ if(state.refundM){ state.refundM.useFee=!!on; render(); } };
+window.setRefundMethod=function(m){ if(state.refundM){ state.refundM.method=m; } };
+window.setRefundDate=function(v){ if(state.refundM){ state.refundM.rdate=v; } };
+window.setRefundMemo=function(v){ if(state.refundM){ state.refundM.memo=v; } };
+window.closeRefund=function(){ state.refundM=null; render(); };
+window.saveRefund=function(){
+  var rm=state.refundM; if(!rm) return;
+  var c=refundNet(rm);
+  if(c.net<=0){ alert("환불 금액을 입력해 주세요."); return; }
+  if(c.net>rm.origAmount){
+    if(!confirm("환불액("+won(c.net)+")이 원결제 금액("+won(rm.origAmount)+")보다 큽니다.\n그래도 저장할까요?")) return;
+  }
+  var refId=Date.now();
+  state.payments.unshift({
+    id: refId, date: rm.rdate||today(), name: rm.name, ban: rm.ban,
+    cat: rm.cat||"수련비", method: rm.method||"", amount: -c.net,
+    w: null, expiry: null, device: state.device||"미지정",
+    paid: true, paidDate: rm.rdate||today(),
+    refund: true, refundOf: rm.id, refundGross: c.gross, refundFee: c.fee,
+    memo: ("환불"+(c.fee?" (수수료 "+won(c.fee)+" 제외)":" (전액)")+" · 원결제 "+rm.date+(rm.memo.trim()?" / "+rm.memo.trim():""))
+  });
+  state.refundM=null;
+  render();
+  setTimeout(function(){ persist(); }, 0);
+};
+
+function renderRefundModal(){
+  var rm=state.refundM; if(!rm) return "";
+  var c=refundNet(rm);
+  return '<div style="position:fixed;inset:0;background:rgba(26,28,32,0.55);z-index:10001;display:flex;align-items:center;justify-content:center;padding:14px" onclick="closeRefund()">'+
+   '<div style="background:#fff;border-radius:16px;padding:18px 18px 16px;max-width:430px;width:100%;max-height:94vh;overflow:auto;box-shadow:0 24px 60px rgba(26,28,32,.32)" onclick="event.stopPropagation()">'+
+   '<div style="font-size:17px;font-weight:900;margin-bottom:3px">💸 수련비 환불 — '+esc(rm.name)+'</div>'+
+   '<div style="font-size:12px;color:var(--sub);margin-bottom:13px">원결제 '+esc(rm.date)+' · '+won(rm.origAmount)+' · '+esc(rm.method||"수단 미지정")+'</div>'+
+   '<span class="label" style="font-size:11.5px">환불 총액 <span style="color:var(--sub);font-weight:400">(수수료 빼기 전 · 기본값은 원결제 전액)</span></span>'+
+   '<input class="input" inputmode="numeric" value="'+esc(rm.gross)+'" oninput="setRefundGross(this.value)" style="margin-bottom:9px">'+
+   '<label style="display:flex;align-items:center;gap:8px;padding:10px 11px;border:1.5px solid '+(rm.useFee?'#2B5FB8':'var(--line)')+';border-radius:10px;background:'+(rm.useFee?'#EAF1FB':'#fff')+';cursor:pointer;margin-bottom:11px">'+
+     '<input type="checkbox" '+(rm.useFee?'checked':'')+' onchange="setRefundFee(this.checked)" style="accent-color:#2B5FB8;width:17px;height:17px">'+
+     '<span style="font-size:13.5px;font-weight:700">결제 수수료 10% 제외하고 환불</span>'+
+   '</label>'+
+   '<div style="background:#F7F8FA;border-radius:10px;padding:11px 13px;margin-bottom:13px;font-size:13px">'+
+     '<div style="display:flex;justify-content:space-between;padding:2px 0"><span style="color:var(--sub)">환불 총액</span><b id="rfGross">'+won(c.gross)+'</b></div>'+
+     '<div style="display:flex;justify-content:space-between;padding:2px 0"><span style="color:var(--sub)">수수료</span><b id="rfFee" style="color:var(--red)">'+(c.fee?'- '+won(c.fee):won(0))+'</b></div>'+
+     '<div style="display:flex;justify-content:space-between;padding:6px 0 0;margin-top:4px;border-top:1px solid var(--line)"><span style="font-weight:800">실제 환불액</span><b id="rfNet" style="font-size:16px;color:#1E8E3E">'+won(c.net)+'</b></div>'+
+   '</div>'+
+   '<div style="display:flex;gap:8px;margin-bottom:9px">'+
+     '<div style="flex:1"><span class="label" style="font-size:11.5px">환불일</span><input type="date" class="input" value="'+esc(rm.rdate)+'" onchange="setRefundDate(this.value)"></div>'+
+     '<div style="flex:1"><span class="label" style="font-size:11.5px">환불 수단</span><select class="input" onchange="setRefundMethod(this.value)">'+
+       ['<option value="">미지정</option>'].concat(PAYS.map(function(m){return '<option'+(rm.method===m?' selected':'')+'>'+m+'</option>';})).join('')+'</select></div>'+
+   '</div>'+
+   '<span class="label" style="font-size:11.5px">메모 <span style="color:var(--sub);font-weight:400">(선택)</span></span>'+
+   '<input class="input" placeholder="예: 부상으로 3월분 환불" value="'+esc(rm.memo)+'" oninput="setRefundMemo(this.value)" style="margin-bottom:14px">'+
+   '<div style="display:flex;gap:8px">'+
+     '<button class="big" style="flex:1;background:#eee;color:var(--ink)" onclick="closeRefund()">취소</button>'+
+     '<button class="big" style="flex:1.6;background:#B23A48" onclick="saveRefund()">환불 기록 저장</button>'+
+   '</div>'+
+   '<div style="font-size:11px;color:var(--sub);margin-top:9px;line-height:1.5">환불은 음수(−) 결제로 저장되어 월별·연간 합계에서 자동으로 빠집니다. 삭제 대신 기록으로 남아 나중에 확인할 수 있어요.</div>'+
+   '</div></div>';
+}
+
 /* 납부 완료 체크 */
 window.togglePaid=function(id){
   for(var i=0;i<state.payments.length;i++){
@@ -2939,7 +3026,8 @@ function getRecords(name){
       recs.push({ id:pm.id, y:Number(pm.date.slice(0,4)), m:Number(pm.date.slice(5,7)),
                   d:Number(pm.date.slice(8,10)), amount:pm.amount, method:pm.method,
                   long:false, cat:pm.cat, note:pm.memo||"", src:"신규", device:pm.device||"미지정",
-                  paid:pm.paid, paidDate:pm.paidDate });
+                  paid:pm.paid, paidDate:pm.paidDate,
+                  refund:pm.refund, refundGross:pm.refundGross, refundFee:pm.refundFee, refundOf:pm.refundOf });
   });
   recs.sort(function(a,b){ return (a.y-b.y)||(a.m-b.m)||(a.d-b.d); });
   return recs;
@@ -2952,6 +3040,112 @@ window.showDetail=function(name){
 };
 window.closeDetail=function(){ state.detail=null; state.payDetailOpen=false; render(); };
 window.togglePayDetail=function(){ state.payDetailOpen=!state.payDetailOpen; render(); };
+window.toggleAcctTimeline=function(){ state.acctTimelineOpen=!state.acctTimelineOpen; render(); };
+
+/* ══════════ 회계 학적부 보기 헬퍼 (핵심지표·연도비교·환불이력·통장타임라인) ══════════ */
+function acctSummary(recs){
+  var s={ totalNet:0, refundSum:0, refundCnt:0, dueCnt:0, dueSum:0 };
+  (recs||[]).forEach(function(r){
+    var a=r.amount||0;
+    s.totalNet+=a;
+    if(a<0){ s.refundSum+=(-a); s.refundCnt++; }
+    if(r.src==="신규" && r.paid===false && a>0){ s.dueCnt++; s.dueSum+=a; }
+  });
+  return s;
+}
+function renderAcctKpi(recs, yearNet, paidTo){
+  var s=acctSummary(recs);
+  function tile(label,val,color,sub){
+    return '<div style="flex:1 1 120px;min-width:104px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 12px">'+
+      '<div style="font-size:11px;color:var(--sub);font-weight:700">'+label+'</div>'+
+      '<div style="font-size:15px;font-weight:900;margin-top:3px;color:'+(color||'var(--ink)')+';font-variant-numeric:tabular-nums">'+val+'</div>'+
+      (sub?'<div style="font-size:10.5px;color:var(--sub);margin-top:1px">'+sub+'</div>':'')+'</div>';
+  }
+  return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+
+    tile('누적 순납부', won(s.totalNet), 'var(--blue)', '전 기간')+
+    tile('올해 납부', won(yearNet), 'var(--ink)', '')+
+    tile('환불 총액', (s.refundSum?'-'+won(s.refundSum):won(0)), (s.refundSum?'#B23A48':'var(--sub)'), s.refundCnt?(s.refundCnt+'건'):'없음')+
+    tile('미납(청구)', (s.dueSum?won(s.dueSum):'없음'), (s.dueSum?'#B45309':'#1E8E3E'), s.dueCnt?(s.dueCnt+'건'):'다 완료')+
+    tile('수강 만료', (paidTo?esc(paidTo):'—'), 'var(--ink)', '')+
+    '</div>';
+}
+function renderYearBars(recs, curY){
+  var byY={};
+  (recs||[]).forEach(function(r){ byY[r.y]=(byY[r.y]||0)+(r.amount||0); });
+  var ys=Object.keys(byY).map(Number).sort(function(a,b){return a-b;});
+  if(ys.length<2) return "";
+  var max=Math.max.apply(null, ys.map(function(y){return Math.abs(byY[y]);}))||1;
+  return '<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:14px">'+
+    '<div style="font-size:13px;font-weight:800;margin-bottom:8px;color:var(--ink)">📊 연도별 납부액 비교 <span style="font-size:11px;color:var(--sub);font-weight:600">(연도를 누르면 이동)</span></div>'+
+    ys.map(function(y){
+      var v=byY[y], pct=Math.max(2,Math.round(Math.abs(v)/max*100)), on=(y===curY);
+      return '<div style="display:flex;align-items:center;gap:8px;margin:5px 0">'+
+        '<button onclick="setDetailYear('+y+')" style="flex:0 0 46px;text-align:right;font-size:11.5px;font-weight:'+(on?'900':'700')+';color:'+(on?'var(--blue)':'var(--sub)')+';background:none;border:none;cursor:pointer;font-family:inherit">'+y+'년</button>'+
+        '<div style="flex:1;background:#EEF2F7;border-radius:6px;overflow:hidden;height:18px">'+
+          '<div style="width:'+pct+'%;height:100%;background:'+(on?'var(--blue)':'#9DB4D6')+';border-radius:6px"></div></div>'+
+        '<span style="flex:0 0 auto;font-size:11.5px;font-weight:800;color:'+(v<0?'#B23A48':'var(--ink)')+';min-width:76px;text-align:right;font-variant-numeric:tabular-nums">'+won(v)+'</span>'+
+        '</div>';
+    }).join('')+'</div>';
+}
+function renderRefundHistory(recs){
+  var refs=(recs||[]).filter(function(r){return (r.amount||0)<0;})
+    .sort(function(a,b){return (b.y-a.y)||(b.m-a.m)||(b.d-a.d);});
+  if(!refs.length) return "";
+  var totFee=0, totNet=0;
+  refs.forEach(function(r){ totNet+=(-(r.amount||0)); totFee+=(r.refundFee!=null?r.refundFee:0); });
+  return '<div style="margin-top:16px">'+
+    '<div style="display:flex;align-items:baseline;justify-content:space-between;margin:2px 2px 8px">'+
+      '<span style="font-size:15px;font-weight:900;color:var(--ink)">↩ 환불 이력 <span style="font-size:12px;color:var(--sub);font-weight:700">'+refs.length+'건</span></span>'+
+      '<span style="font-size:13px;font-weight:800;color:#B23A48">-'+won(totNet)+(totFee?' <span style="font-size:11px;color:var(--sub);font-weight:600">(수수료 '+won(totFee)+')</span>':'')+'</span></div>'+
+    '<div style="border:1px solid var(--line);border-radius:10px;overflow:hidden">'+
+      refs.map(function(r,ix){
+        var net=-(r.amount||0), fee=(r.refundFee!=null?r.refundFee:0);
+        return '<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;'+(ix?'border-top:1px solid var(--line)':'')+'">'+
+          '<span style="flex:0 0 auto;font-size:11.5px;color:var(--sub);min-width:74px">'+r.y+'-'+p2(r.m)+'-'+p2(r.d)+'</span>'+
+          '<span style="flex:1;min-width:0;font-size:11.5px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.note||'')+'</span>'+
+          (r.method?'<span style="flex:0 0 auto;font-size:11px;color:var(--sub)">'+esc(r.method)+'</span>':'')+
+          (fee?'<span style="flex:0 0 auto;font-size:11px;color:var(--sub)">수수료 '+won(fee)+'</span>':'')+
+          '<span style="flex:0 0 auto;font-weight:800;font-size:13px;color:#B23A48;min-width:82px;text-align:right;font-variant-numeric:tabular-nums">-'+won(net)+'</span>'+
+          '</div>';
+      }).join('')+'</div></div>';
+}
+function renderAcctTimeline(nm, recs){
+  var fin=(recs||[]).slice();
+  if(!fin.length) return "";
+  var evts=[];
+  fin.forEach(function(r){
+    evts.push({ y:r.y,m:r.m,dd:r.d, kind:((r.amount||0)<0?'환불':(r.cat||'기타')), amount:(r.amount||0), method:r.method||'', note:r.note||'' });
+  });
+  var ah=(state.acctHold||{})[nm];
+  if(ah&&ah.startYm){
+    evts.push({ y:+ah.startYm.slice(0,4), m:+ah.startYm.slice(5,7), dd:0, kind:'🔒 홀딩', amount:null, note:ah.reason||'', method:'' });
+    if(ah.endYm) evts.push({ y:+ah.endYm.slice(0,4), m:+ah.endYm.slice(5,7), dd:0, kind:'↩ 복관', amount:null, note:'', method:'' });
+  }
+  evts.sort(function(a,b){ return (a.y-b.y)||(a.m-b.m)||(a.dd-b.dd); });
+  var bal=0; evts.forEach(function(e){ if(e.amount!=null){ bal+=e.amount; e.bal=bal; } });
+  var open=!!state.acctTimelineOpen, finN=fin.length;
+  var out='<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">'+
+    '<button onclick="toggleAcctTimeline()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:#F1F0EA;border:1px solid var(--line);border-radius:10px;padding:11px 14px;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:800;color:var(--ink)">'+
+    '<span>📖 통장식 거래 타임라인 <span style="color:var(--sub);font-weight:600">('+finN+'건 · 전 기간, 최신순)</span></span>'+
+    '<span style="font-size:11.5px;color:var(--sub)">'+(open?'▲ 접기':'▼ 펼치기')+'</span></button>';
+  if(open){
+    var disp=evts.slice().reverse();
+    out+='<div style="margin-top:8px;border:1px solid var(--line);border-radius:10px;overflow:hidden">'+
+      disp.map(function(e,ix){
+        var amtStr = (e.amount==null) ? '<span style="color:var(--sub)">—</span>'
+          : '<span style="font-weight:800;color:'+(e.amount<0?'#B23A48':'var(--ink)')+'">'+(e.amount>0?'+':'')+won(e.amount)+'</span>';
+        var kc = (e.amount==null)?'#B45309':(e.amount<0?'#B23A48':(e.kind==='수련비'?'var(--blue)':'var(--amber)'));
+        return '<div style="display:grid;grid-template-columns:66px 1fr 90px 96px;gap:6px;align-items:center;padding:9px 12px;'+(ix?'border-top:1px solid var(--line)':'')+'">'+
+          '<span style="font-size:11px;color:var(--sub)">'+e.y+'-'+p2(e.m)+(e.dd?'-'+p2(e.dd):'')+'</span>'+
+          '<span style="min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis"><span class="pill" style="background:#fff;border:1px solid var(--line);color:'+kc+';font-size:10.5px;font-weight:800">'+esc(e.kind)+'</span>'+(e.note?' <span style="font-size:11px;color:var(--sub)">'+esc(e.note)+'</span>':'')+(e.method?' <span style="font-size:10.5px;color:var(--sub)">·'+esc(e.method)+'</span>':'')+'</span>'+
+          '<span style="font-size:12.5px;text-align:right">'+amtStr+'</span>'+
+          '<span style="font-size:10.5px;color:var(--sub);text-align:right">'+(e.bal!=null?'잔액 '+won(e.bal):'')+'</span>'+
+          '</div>';
+      }).join('')+'</div>'+
+      '<div style="font-size:10.5px;color:var(--sub);margin:6px 2px 0">· 잔액 = 그 시점까지 누적 순납부(환불 반영) · 홀딩/복관은 금액 없이 흐름만 표시</div>';
+  }
+  return out+'</div>';
+}
 window.editRefCnt=function(name, ym, v){
   var clean=String(v).replace(/[^0-9]/g,"");
   if(!state.refCntMap) state.refCntMap={};
@@ -8889,6 +9083,7 @@ function render(){
   if(state.nameCleanup){ h+=renderNameCleanup(); }
   if(state.dupTool){ h+=renderDupTool(); }
   if(state.baseCntModal){ h+=renderBaseCntModal(); }
+  if(state.refundM){ h+=renderRefundModal(); }
   if(state.addBox){ h+=renderAddModal(); }
   /* 출석: 임시(체험) 등록 창 */
   if(state.tempM){ h+=renderTempModal(); }
@@ -9510,6 +9705,9 @@ function render(){
          '<div style="font-size:28px;font-weight:900;letter-spacing:-.5px;margin-top:2px">'+won(ytuDisp+yet)+'</div>'+
          '<div style="font-size:13.5px;opacity:.9;margin-top:5px">수련비 '+won(ytuDisp)+'  +  기타납부 '+won(yet)+'</div>'+
          '</div>';
+      /* ── 회계 학적부: 핵심 지표 요약 + 연도별 비교 그래프 ── */
+      h+=renderAcctKpi(recs, ytuDisp+yet, paidTo);
+      h+=renderYearBars(recs, Y);
       /* ── 회계 수동 홀딩 배너 ── */
       if(ah && ah.startYm){
         var hb = ah.endYm
@@ -9553,7 +9751,7 @@ function render(){
         var refOverride=(cc&&cc.src==="입력")?cc.n:null;
         var act=attendCnt(nm, ymStr);
         var isHeld=!!heldSet[mo], isStruck=(struckY[mo]!=null), mv=movedY[mo]||0;
-        var hasData=(amt>0)||(act>0)||(refOverride!=null)||isHeld||(mv>0);
+        var hasData=(amt!==0)||(act>0)||(refOverride!=null)||isHeld||(mv>0);
         var actColor="var(--sub)";
         if(refEff!=null && (amt>0||act>0)){ actColor = (act>=refEff)?"var(--green)":"var(--red)"; }
         var amtCell;
@@ -9566,7 +9764,7 @@ function render(){
         } else if(isHeld){
           amtCell='<span style="color:#B45309;font-size:10px;font-weight:800">🔒 홀딩</span>';
         } else {
-          amtCell = amt>0 ? '<span style="font-weight:800;color:var(--ink)">'+Number(amt).toLocaleString("ko-KR")+'</span>' : '<span style="color:var(--sub)">–</span>';
+          amtCell = amt!==0 ? '<span style="font-weight:800;color:'+(amt<0?'#B23A48':'var(--ink)')+'">'+Number(amt).toLocaleString("ko-KR")+'</span>' : '<span style="color:var(--sub)">–</span>';
         }
         var moLabel = isHeld
           ? '<span title="홀딩 중" style="color:#B45309">'+mo+' 🔒</span>'
@@ -9606,6 +9804,8 @@ function render(){
               '</div>';
           }).join('')+'</div>';
       }
+      /* ── 회계 학적부: 환불 이력 전용 섹션 ── */
+      h+=renderRefundHistory(recs);
       /* ── 접이식 상세 결제내역 (수정·삭제·납부체크) ── */
       h+='<div style="margin-top:18px;border-top:1px solid var(--line);padding-top:12px">'+
          '<button onclick="togglePayDetail()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:#F1F0EA;border:1px solid var(--line);border-radius:10px;padding:11px 14px;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:800;color:var(--ink)">'+
@@ -9617,14 +9817,22 @@ function render(){
           var tag = r.cat==="수련비" ? "" :
             ' <span class="pill" style="background:var(--amberSoft);color:var(--amber);font-size:11.5px">'+esc(r.cat)+'</span>';
           var paidTag = "", checkBtn = "", actions = "";
+          var isRef = (r.amount||0)<0;
           if(r.src==="신규" && r.id){
-            if(r.paid){ paidTag = ' <span class="pill" style="background:var(--greenSoft);color:var(--green);font-size:11.5px">✓ 납부 '+esc(r.paidDate||"")+'</span>'; }
-            else { paidTag = ' <span class="pill" style="background:var(--redSoft);color:var(--red);font-size:11.5px">청구됨</span>'; }
-            checkBtn = '<button onclick="event.stopPropagation();togglePaid('+r.id+')" style="border:1px solid '+(r.paid?"var(--sub)":"var(--green)")+';background:'+(r.paid?"#fff":"var(--green)")+';color:'+(r.paid?"var(--sub)":"#fff")+';border-radius:5px;padding:3px 8px;font-size:11.5px;cursor:pointer;font-family:inherit">'+(r.paid?"납부 취소":"납부 체크")+'</button>';
-            actions = '<div style="display:flex;gap:4px">'+checkBtn+
-              '<button onclick="event.stopPropagation();editPay('+r.id+')" style="border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:5px;padding:3px 8px;font-size:11.5px;cursor:pointer;font-family:inherit">수정</button>'+
-              '<button onclick="event.stopPropagation();removePay('+r.id+')" style="border:1px solid var(--red);background:#fff;color:var(--red);border-radius:5px;padding:3px 8px;font-size:11.5px;cursor:pointer;font-family:inherit">삭제</button>'+
-              '</div>';
+            if(isRef){
+              paidTag = ' <span class="pill" style="background:#FBE9E7;color:#B23A48;font-size:11.5px;font-weight:800">↩ 환불</span>';
+              actions = '<div style="display:flex;gap:4px;justify-content:flex-end">'+
+                '<button onclick="event.stopPropagation();removePay('+r.id+')" style="border:1px solid var(--red);background:#fff;color:var(--red);border-radius:5px;padding:3px 8px;font-size:11.5px;cursor:pointer;font-family:inherit">삭제</button></div>';
+            } else {
+              if(r.paid){ paidTag = ' <span class="pill" style="background:var(--greenSoft);color:var(--green);font-size:11.5px">✓ 납부 '+esc(r.paidDate||"")+'</span>'; }
+              else { paidTag = ' <span class="pill" style="background:var(--redSoft);color:var(--red);font-size:11.5px">청구됨</span>'; }
+              checkBtn = '<button onclick="event.stopPropagation();togglePaid('+r.id+')" style="border:1px solid '+(r.paid?"var(--sub)":"var(--green)")+';background:'+(r.paid?"#fff":"var(--green)")+';color:'+(r.paid?"var(--sub)":"#fff")+';border-radius:5px;padding:3px 8px;font-size:11.5px;cursor:pointer;font-family:inherit">'+(r.paid?"납부 취소":"납부 체크")+'</button>';
+              var refundBtn = (r.cat==="수련비") ? '<button onclick="event.stopPropagation();openRefund('+r.id+')" title="수수료 제외하고 환불 기록" style="border:1px solid #B23A48;background:#fff;color:#B23A48;border-radius:5px;padding:3px 8px;font-size:11.5px;cursor:pointer;font-family:inherit">환불</button>' : '';
+              actions = '<div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">'+checkBtn+refundBtn+
+                '<button onclick="event.stopPropagation();editPay('+r.id+')" style="border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:5px;padding:3px 8px;font-size:11.5px;cursor:pointer;font-family:inherit">수정</button>'+
+                '<button onclick="event.stopPropagation();removePay('+r.id+')" style="border:1px solid var(--red);background:#fff;color:var(--red);border-radius:5px;padding:3px 8px;font-size:11.5px;cursor:pointer;font-family:inherit">삭제</button>'+
+                '</div>';
+            }
           } else if(r.src==="장부" && r.histKey){
             actions = '<div style="display:flex;gap:4px">'+
               '<button onclick="event.stopPropagation();editHist(\''+r.histKey+'\')" style="border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:5px;padding:3px 8px;font-size:11.5px;cursor:pointer;font-family:inherit">수정</button>'+
@@ -9635,11 +9843,13 @@ function render(){
              (r.d?Y+'-'+p2(r.m)+'-'+p2(r.d):(r.m?'월 귀속':''))+(r.long?' · 장기등록 분할':'')+
              (r.note?' · '+esc(r.note):'')+(r.src==="신규"?' · 💻'+esc(r.device||"미지정"):'')+'</span></span>'+
              '<span>'+actions+'</span>'+
-             '<span style="font-weight:800;text-align:right;font-variant-numeric:tabular-nums">'+won(r.amount)+'<span style="color:var(--sub);font-weight:500;font-size:11.5px"> '+esc(r.method||'')+'</span></span></div>';
+             '<span style="font-weight:800;text-align:right;font-variant-numeric:tabular-nums;color:'+(isRef?'#B23A48':'var(--ink)')+'">'+won(r.amount)+'<span style="color:var(--sub);font-weight:500;font-size:11.5px"> '+esc(r.method||'')+'</span></span></div>';
         });
         h+='</div>';
       }
       h+='</div>';
+      /* ── 회계 학적부: 통장식 전체 타임라인 ── */
+      h+=renderAcctTimeline(nm, recs);
       h+='<button class="big" style="margin-top:16px" onclick="printCert()">연말정산용 납입증명서 저장 (PDF)</button>'+
          '<div style="margin-top:8px;font-size:11.5px;color:var(--sub)">버튼을 누르면 인쇄 창이 열립니다. 프린터 대신 <b>"PDF로 저장"</b>을 선택하세요. 증명서에는 세법상 교육비인 <b>수련비만</b> 포함됩니다.</div>';
       h+='</div>';
