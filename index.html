@@ -434,7 +434,7 @@ var PERIODS = [["월 단위",0],["2개월",2],["6개월",6],["12개월",12]];
 var LONGREG_SEED = [];  /* 씨앗은 클라우드로 이관 완료 */
 
 
-var state = { tab:"회계입력", payments:[], expiryMap:{}, deletedIds:[], holdMap:{}, closedMap:{}, longRegs:[], deletedLongIds:[], trash:[], dupDismissed:{}, regTypeMap:{}, refCntMap:{}, refBaseMap:{},
+var state = { tab:"회계입력", payments:[], expiryMap:{}, deletedIds:[], holdMap:{}, closedMap:{}, acctHold:{}, longRegs:[], deletedLongIds:[], trash:[], dupDismissed:{}, regTypeMap:{}, refCntMap:{}, refBaseMap:{},
               topCat:"출석", attTab:"수련시간표", role:null,
               schedule:null, scheduleT:0, tempStudents:[],
               attPulledOnce:false, attSyncing:false, attStatus:"", stuM:null, tempM:null,
@@ -2035,7 +2035,10 @@ function effExpiryDate(name){
   /* 홀딩 적용: 현재 등록 만료일에 실제로 걸치는 홀딩만 연장
      (예전에 끝나 이미 반영된 과거 홀딩이 계속 더해지는 과연장 방지) */
   var ext=0;
-  if(typeof liveHolds==="function"){
+  var ah=(state.acctHold||{})[name];
+  if(ah && ah.startYm){
+    ext = acctHoldDays(name);                  /* 회계 수동 홀딩이 있으면 이것을 기준으로 연장 (중복 방지) */
+  } else if(typeof liveHolds==="function"){
     var regEnd=base;
     liveHolds(name).forEach(function(e){
       if(!e.ext) return;                       /* 회계관리자가 [연장 승인]한 건만 반영 (승인제) */
@@ -2059,6 +2062,45 @@ window.setHoldStart=function(v){ state.holdEdit.start=v; render(); };
 window.setHoldPeriod=function(p){ state.holdEdit.period=p; render(); };
 window.setHoldReason=function(r){ state.holdEdit.reason=r; render(); };
 window.setHoldMemo=function(v){ state.holdEdit.memo=v; };
+
+/* ── 회계 수동 홀딩 (납부내역 월별 표에서 '그 달부터') ── */
+function ymEndDate(ym){ var y=Number(ym.slice(0,4)), m=Number(ym.slice(5,7)); var ld=new Date(y,m,0).getDate(); return ym+"-"+p2(ld); }
+/* 홀딩 기간(일): 시작월 1일 ~ (복관월 말일 | 오늘) */
+function acctHoldDays(name){
+  var ah=(state.acctHold||{})[name]; if(!ah||!ah.startYm) return 0;
+  /* 복관월(endYm)은 활동 재개월 → 홀딩 기간은 그 직전 달까지 */
+  var to=ah.endYm? ymEndDate(addMonths(ah.endYm,-1)) : today();
+  return _holdDays(ah.startYm+"-01", to);
+}
+window.acctHoldMonth=function(name, ym){
+  var reason=prompt(name+" · "+ym+"부터 홀딩 처리\n\n· 이 달부터 현재까지 홀딩으로 표시되고 메모가 붙습니다\n· 낸 수련비는 취소선(합계 제외)되고, 복관 시 뒤로 밀려 표기됩니다\n· 만료일도 홀딩 기간만큼 자동 연장됩니다\n\n홀딩 사유:", "부상 휴관");
+  if(reason===null) return;
+  if(!state.acctHold) state.acctHold={};
+  state.acctHold[name]={ startYm:ym, reason:(reason||"").trim()||"홀딩", endYm:null, t:Date.now() };
+  state.rosterT=Date.now(); persistAtt(); if(myRole()==="admin") persist(); render();
+};
+window.editAcctHoldReason=function(name){
+  var ah=(state.acctHold||{})[name]; if(!ah) return;
+  var r=prompt(name+" 홀딩 사유 수정:", ah.reason||"");
+  if(r===null) return;
+  ah.reason=(r||"").trim()||"홀딩"; ah.t=Date.now();
+  persistAtt(); if(myRole()==="admin") persist(); render();
+};
+window.acctHoldReturn=function(name){
+  var ah=(state.acctHold||{})[name]; if(!ah) return;
+  var v=prompt(name+" 복관(홀딩 종료)\n\n다시 나온 '월'을 입력하세요 (YYYY-MM).\n홀딩된 수련비가 이 달부터 뒤로 밀려 표기되고, 만료일도 확정 연장됩니다.", today().slice(0,7));
+  if(v===null) return;
+  v=(v||"").trim();
+  if(!/^\d{4}-\d{2}$/.test(v)){ alert("YYYY-MM 형식으로 입력해 주세요. (예: 2026-08)"); return; }
+  if(v<ah.startYm){ alert("복관월이 홀딩 시작월보다 빠를 수 없습니다."); return; }
+  ah.endYm=v; ah.t=Date.now();
+  state.rosterT=Date.now(); persistAtt(); if(myRole()==="admin") persist(); render();
+};
+window.acctUnhold=function(name){
+  if(!confirm(name+" 홀딩을 완전히 취소할까요?\n(메모·취소선·만료 연장이 모두 사라지고 원래대로 돌아갑니다)")) return;
+  if(state.acctHold) delete state.acctHold[name];
+  state.rosterT=Date.now(); persistAtt(); if(myRole()==="admin") persist(); render();
+};
 
 /* ---------- 장기등록 탭 ---------- */
 function longExtDays(r){
@@ -2430,7 +2472,7 @@ function analyzeHonorific(){
 }
 /* 이름을 쓰는 모든 데이터의 키/필드를 새 이름으로 이동 */
 function _moveNameKeys(oldN, newN, overwrite){
-  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences','laManual','contactLog','dunLog','kkwInfo','danDateMap'].forEach(function(mk){
+  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences','laManual','contactLog','dunLog','kkwInfo','danDateMap','acctHold'].forEach(function(mk){
     var m=state[mk]; if(m && m[oldN]!==undefined){ if(overwrite || m[newN]===undefined) m[newN]=m[oldN]; delete m[oldN]; }
   });
   if(state.refCntMap){ for(var k in state.refCntMap){ if(k.indexOf(oldN+"|")===0){ var nk=newN+k.slice(oldN.length); if(overwrite||state.refCntMap[nk]===undefined) state.refCntMap[nk]=state.refCntMap[k]; delete state.refCntMap[k]; } } }
@@ -2468,7 +2510,7 @@ function mergeDupInto(dupN, baseN){
     if(state.quitMap && state.quitMap[baseN] && !state.quitMap[baseN].del) state.quitMap[baseN]={del:true,t:Date.now()};
   }
   /* dup의 잔여 키 제거 */
-  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences','laManual','contactLog','dunLog','kkwInfo','danDateMap'].forEach(function(mk){ if(state[mk]) delete state[mk][dupN]; });
+  ['closedMap','holdMap','quitMap','accMap','accTMap','accBaseMap','accBaseRef','accBaseTMap','refBaseMap','expiryMap','regTypeMap','reopenLog','lastExamMap','photoMap','absences','laManual','contactLog','dunLog','kkwInfo','danDateMap','acctHold'].forEach(function(mk){ if(state[mk]) delete state[mk][dupN]; });
   /* 대표(base) 학적 정보 보강: 대표에 비어있는 값은 dup에서 채우고, 보호자·대회이력은 합쳐 보존 */
   var _b=null,_d=null;
   for(var bi=0;bi<STUDENTS.length;bi++){ if(STUDENTS[bi].n===baseN)_b=STUDENTS[bi]; if(STUDENTS[bi].n===dupN)_d=STUDENTS[bi]; }
@@ -7805,6 +7847,7 @@ function attState(){
     absences: state.absences || {},
     contactLog: state.contactLog || {},
     dunLog: state.dunLog || {},   /* 미납 독촉 이력 */
+    acctHold: state.acctHold || {},   /* 회계 수동 홀딩 (시작월·사유·복관월) */
     laManual: state.laManual || {},
     roster:{ list:STUDENTS, t:state.rosterT||0 },
     schedule: state.schedule || null,
@@ -8049,6 +8092,7 @@ function applyAtt(m){
   if(m.absences) state.absences = m.absences;
   if(m.contactLog) state.contactLog = m.contactLog;
   if(m.dunLog) state.dunLog = m.dunLog;
+  if(m.acctHold) state.acctHold = m.acctHold;
   if(m.laManual) state.laManual = m.laManual;
   if(m.roster && m.roster.list && m.roster.list.length && (m.roster.t||0)>=(state.rosterT||0)){
     STUDENTS = m.roster.list;
@@ -9246,6 +9290,31 @@ function render(){
       h+='<div style="color:var(--sub);font-size:15px;padding:8px 0">납부 기록이 없습니다.</div></div>';
     } else {
       var Y=state.detailYear, nm=state.detail;
+      var esn=esc(nm).replace(/'/g,"\\'");
+      /* 수련비: 연·월별 금액 맵 (홀딩 이월 계산용) */
+      var moByYm={};
+      recs.forEach(function(r){ if(r.cat==="수련비"){ var kk=r.y+"-"+p2(r.m); moByYm[kk]=(moByYm[kk]||0)+r.amount; } });
+      /* ── 회계 수동 홀딩 변환: 홀딩달=취소선(합계 제외), 복관 시 뒤 달로 이월(합계 포함) ── */
+      var ah=(state.acctHold||{})[nm];
+      var heldSet={}, struckY={}, movedY={};
+      if(ah && ah.startYm){
+        /* 복관월(endYm)은 활동 재개월 → 홀딩달은 그 직전까지 */
+        var endHold = ah.endYm ? addMonths(ah.endYm,-1) : today().slice(0,7);
+        var pool=[], cy=ah.startYm, guard=0;
+        while(cy<=endHold && guard++<240){
+          if(cy.slice(0,4)===String(Y)) heldSet[Number(cy.slice(5,7))]=true;
+          var amtYm=moByYm[cy]||0;
+          if(amtYm>0){ if(cy.slice(0,4)===String(Y)) struckY[Number(cy.slice(5,7))]=amtYm; pool.push(amtYm); }
+          cy=addMonths(cy,1);
+        }
+        if(ah.endYm){
+          var tgt=ah.endYm;
+          pool.forEach(function(amt){ if(tgt.slice(0,4)===String(Y)) movedY[Number(tgt.slice(5,7))]=(movedY[Number(tgt.slice(5,7))]||0)+amt; tgt=addMonths(tgt,1); });
+        }
+      }
+      var struckSum=0; for(var _m in struckY) struckSum+=struckY[_m];
+      var movedSum=0; for(var _m2 in movedY) movedSum+=movedY[_m2];
+      var ytuDisp = ytu - struckSum + movedSum;
       /* 연도 선택 */
       h+='<div class="chips" style="margin-bottom:10px">'+years.map(function(y){
         return '<button class="chip'+(y===Y?' on':'')+'" onclick="setDetailYear('+y+')">'+y+'년</button>';
@@ -9253,9 +9322,29 @@ function render(){
       /* ── 상단: 연간 납부총금액 (수련비 + 기타) ── */
       h+='<div style="background:linear-gradient(135deg,var(--blue) 0%,#0a5fc0 100%);border-radius:16px;padding:16px 18px;margin-bottom:14px;color:#fff">'+
          '<div style="font-size:11.5px;font-weight:700;opacity:.85;letter-spacing:.3px">'+Y+'년 연간 납부총금액</div>'+
-         '<div style="font-size:28px;font-weight:900;letter-spacing:-.5px;margin-top:2px">'+won(ytu+yet)+'</div>'+
-         '<div style="font-size:13.5px;opacity:.9;margin-top:5px">수련비 '+won(ytu)+'  +  기타납부 '+won(yet)+'</div>'+
+         '<div style="font-size:28px;font-weight:900;letter-spacing:-.5px;margin-top:2px">'+won(ytuDisp+yet)+'</div>'+
+         '<div style="font-size:13.5px;opacity:.9;margin-top:5px">수련비 '+won(ytuDisp)+'  +  기타납부 '+won(yet)+'</div>'+
          '</div>';
+      /* ── 회계 수동 홀딩 배너 ── */
+      if(ah && ah.startYm){
+        var hb = ah.endYm
+          ? '복관 '+esc(ah.endYm)+' · 홀딩 종료됨 (홀딩 수련비 → '+esc(ah.endYm)+'부터 이월)'
+          : '홀딩 중 · '+esc(ah.startYm)+'부터 (진행 중)';
+        h+='<div style="background:#FFF7ED;border:1.5px solid #F0C36D;border-radius:12px;padding:11px 14px;margin-bottom:12px">'+
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+            '<span style="font-size:13.5px;font-weight:900;color:#B45309">🔒 '+hb+'</span>'+
+            '<span style="flex:1"></span>'+
+            (ah.endYm? '<button onclick="acctHoldReturn(\''+esn+'\')" style="background:#fff;border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:4px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit">복관월 수정</button>'
+                     : '<button onclick="acctHoldReturn(\''+esn+'\')" style="background:var(--green);border:none;color:#fff;border-radius:9px;padding:4px 11px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:inherit">복관(홀딩 종료)</button>')+
+            '<button onclick="acctUnhold(\''+esn+'\')" style="background:#fff;border:1px solid var(--line);color:var(--sub);border-radius:9px;padding:4px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit">홀딩 취소</button>'+
+          '</div>'+
+          '<div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px;color:#8A5A00;flex-wrap:wrap">'+
+            '<b>사유</b><span>'+esc(ah.reason||"")+'</span>'+
+            '<button onclick="editAcctHoldReason(\''+esn+'\')" title="사유 수정" style="background:none;border:none;color:var(--blue);cursor:pointer;font-family:inherit;font-size:11.5px;text-decoration:underline;padding:0">수정</button>'+
+            '<span style="flex:1;min-width:10px"></span><span style="color:#B8A16A">만료일이 홀딩 기간만큼 자동 연장됩니다</span>'+
+          '</div>'+
+          '</div>';
+      }
       /* ── 수련비 납부 상황 (월별 금액 / 기준수련횟수 / 실제 출석) ── */
       var monAmt={}, etcList=[];
       yr.forEach(function(r){
@@ -9264,8 +9353,7 @@ function render(){
       });
       h+='<div style="display:flex;align-items:baseline;justify-content:space-between;margin:2px 2px 8px">'+
          '<span style="font-size:15px;font-weight:900;color:var(--ink)">수련비 납부 상황</span>'+
-         '<span style="font-size:13.5px;font-weight:800;color:var(--blue)">연간 '+won(ytu)+'</span></div>';
-      var esn=esc(nm).replace(/'/g,"\\'");
+         '<span style="font-size:13.5px;font-weight:800;color:var(--blue)">연간 '+won(ytuDisp)+'</span></div>';
       var moHead='<div style="display:flex;background:#EEF2F7;font-size:11.5px;font-weight:800;color:var(--sub);letter-spacing:-.2px">'+
           '<div style="flex:0 0 34px;padding:7px 2px 7px 10px">월</div>'+
           '<div style="flex:1;padding:7px 2px;text-align:right">금액</div>'+
@@ -9276,16 +9364,32 @@ function render(){
         var ymStr=Y+"-"+p2(mo);
         var amt=monAmt[mo]||0;
         var cc=contractCnt(nm, ymStr);
-        var refEff=(cc&&cc.n!=null)?cc.n:null;            /* 표시용: 기준월·자동 포함한 실효 기준수련횟수 */
-        var refOverride=(cc&&cc.src==="입력")?cc.n:null;  /* 이 달만 직접 입력한 값 (있으면 파랑·진하게) */
+        var refEff=(cc&&cc.n!=null)?cc.n:null;
+        var refOverride=(cc&&cc.src==="입력")?cc.n:null;
         var act=attendCnt(nm, ymStr);
-        var hasData=(amt>0)||(act>0)||(refOverride!=null);   /* 기준(기본/자동)만 있는 빈 달은 흐리게 유지 */
+        var isHeld=!!heldSet[mo], isStruck=(struckY[mo]!=null), mv=movedY[mo]||0;
+        var hasData=(amt>0)||(act>0)||(refOverride!=null)||isHeld||(mv>0);
         var actColor="var(--sub)";
         if(refEff!=null && (amt>0||act>0)){ actColor = (act>=refEff)?"var(--green)":"var(--red)"; }
-        var amtTxt = amt>0 ? Number(amt).toLocaleString("ko-KR") : '–';
-        return '<div style="display:flex;align-items:center;border-top:1px solid var(--line);'+(hasData?'':'opacity:.5')+'">'+
-          '<div style="flex:0 0 34px;padding:7px 2px 7px 10px;font-weight:800;color:var(--ink);font-size:13.5px">'+mo+'</div>'+
-          '<div style="flex:1;padding:7px 2px;text-align:right;font-weight:'+(amt>0?'800':'400')+';color:'+(amt>0?'var(--ink)':'var(--sub)')+';font-size:11.5px;white-space:nowrap;overflow:hidden">'+amtTxt+'</div>'+
+        var amtCell;
+        if(isStruck){
+          amtCell='<s style="color:var(--sub)">'+Number(amt).toLocaleString("ko-KR")+'</s>'+
+            '<span title="홀딩: '+esc((ah&&ah.reason)||"")+' ('+esc((ah&&ah.startYm)||"")+'~)" style="color:#B45309;font-weight:800;margin-left:3px">🔒</span>';
+        } else if(mv>0){
+          amtCell='<b style="color:#1E7B3C">'+Number(mv).toLocaleString("ko-KR")+'</b>'+
+            '<span title="홀딩분 이월(복관)" style="color:#1E7B3C;font-size:9px;font-weight:800;margin-left:2px">이월</span>';
+        } else if(isHeld){
+          amtCell='<span style="color:#B45309;font-size:10px;font-weight:800">🔒 홀딩</span>';
+        } else {
+          amtCell = amt>0 ? '<span style="font-weight:800;color:var(--ink)">'+Number(amt).toLocaleString("ko-KR")+'</span>' : '<span style="color:var(--sub)">–</span>';
+        }
+        var moLabel = isHeld
+          ? '<span title="홀딩 중" style="color:#B45309">'+mo+' 🔒</span>'
+          : ((ah&&ah.startYm) ? String(mo)
+             : '<span onclick="acctHoldMonth(\''+esn+'\',\''+ymStr+'\')" title="이 달부터 홀딩 처리" style="cursor:pointer;border-bottom:1px dotted var(--blue)">'+mo+'</span>');
+        return '<div style="display:flex;align-items:center;border-top:1px solid var(--line);'+(hasData?'':'opacity:.5')+(isHeld?';background:#FFFBF2':'')+'">'+
+          '<div style="flex:0 0 34px;padding:7px 2px 7px 10px;font-weight:800;color:var(--ink);font-size:13.5px">'+moLabel+'</div>'+
+          '<div style="flex:1;padding:7px 2px;text-align:right;font-size:11.5px;white-space:nowrap;overflow:hidden">'+amtCell+'</div>'+
           '<div style="flex:0 0 44px;padding:4px 3px;text-align:center">'+
             '<input inputmode="numeric" value="'+(refEff!=null?refEff:'')+'" placeholder="–" onchange="editRefCnt(\''+esn+'\',\''+ymStr+'\',this.value)" title="'+(refOverride!=null?'이 달 직접 입력값':'기준수련횟수 자동 적용값 — 고치면 이 달만 별도 적용')+'" style="width:34px;text-align:center;font-size:11.5px;font-weight:'+(refOverride!=null?'800':'600')+';color:'+(refOverride!=null?'var(--blue)':'var(--sub)')+';border:1px solid var(--line);border-radius:10px;padding:4px 0;background:#fff;font-family:inherit;font-variant-numeric:tabular-nums">'+
           '</div>'+
@@ -9298,7 +9402,7 @@ function render(){
         return '<div style="flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;overflow:hidden">'+s+'</div>';
       };
       h+='<div style="display:flex;gap:10px;align-items:flex-start">'+moCol(1,6)+moCol(7,12)+'</div>';
-      h+='<div style="font-size:11.5px;color:var(--sub);margin:6px 2px 16px;line-height:1.5">· <b>기준</b>=기준수련횟수 (<span style="color:var(--sub);font-weight:700">회색</span>=자동 적용값 · <span style="color:var(--blue);font-weight:700">파랑</span>=이 달 직접 입력 · 칸을 고치면 그 달만 별도 적용) · <b>실제</b>=수련생출석 체크 횟수 · 금액 단위: 원 · <span style="color:var(--green);font-weight:700">초록</span>=충족, <span style="color:var(--red);font-weight:700">빨강</span>=미달</div>';
+      h+='<div style="font-size:11.5px;color:var(--sub);margin:6px 2px 16px;line-height:1.6">· <b>월 숫자</b>를 누르면 <b>그 달부터 홀딩</b> · <span style="color:#B45309;font-weight:700">🔒</span>=홀딩달(<s>취소선</s>=합계 제외) · <span style="color:#1E7B3C;font-weight:700">이월</span>=복관 후 밀린 수련비(합계 포함) · <b>기준</b>=기준수련횟수(<span style="color:var(--sub);font-weight:700">회색</span>=자동·<span style="color:var(--blue);font-weight:700">파랑</span>=직접입력) · <b>실제</b>=출석 체크(<span style="color:var(--green);font-weight:700">초록</span>=충족·<span style="color:var(--red);font-weight:700">빨강</span>=미달)</div>';
       /* ── 기타 납부 상황 (용품·대회·기타 · 낸 순서 리스트) ── */
       h+='<div style="display:flex;align-items:baseline;justify-content:space-between;margin:2px 2px 8px">'+
          '<span style="font-size:15px;font-weight:900;color:var(--ink)">기타 납부 상황</span>'+
