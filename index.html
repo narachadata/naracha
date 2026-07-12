@@ -572,7 +572,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.29";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.30";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -10770,7 +10770,7 @@ var GDRIVE_CLIENT_ID = "299837559641-4ha9abens4vv1rd7in49bifmgge5hhcn.apps.googl
 var GDRIVE_ACCT_DEFAULT = "narachatkd@gmail.com";   /* 주 저장 계정 기본값 (PC마다 [기기 선택] 옆에서 바꿀 수 있음) */
 function gdriveClientId(){ try{ return (localStorage.getItem("naracha_gdrive_client")||GDRIVE_CLIENT_ID||""); }catch(e){ return GDRIVE_CLIENT_ID||""; } }
 function gdriveAcct(){ try{ return (localStorage.getItem("naracha_gdrive_acct")||GDRIVE_ACCT_DEFAULT||""); }catch(e){ return GDRIVE_ACCT_DEFAULT||""; } }
-window.setGdriveAcct=function(){ var cur=gdriveAcct(); var v=prompt("드라이브 저장에 주로 쓸 구글 계정 이메일을 입력하세요.\n(이 계정으로 바로 저장됩니다 · 이 PC에만 적용)", cur); if(v===null) return; v=v.trim(); try{ if(v) localStorage.setItem("naracha_gdrive_acct", v); else localStorage.removeItem("naracha_gdrive_acct"); }catch(e){} alert(v?("주 저장 계정: "+v):"주 저장 계정을 기본값으로 되돌렸습니다."); };
+window.setGdriveAcct=function(){ var cur=gdriveAcct(); var v=prompt("드라이브 저장에 주로 쓸 구글 계정 이메일을 입력하세요.\n(이 계정으로 바로 저장됩니다 · 이 PC에만 적용)", cur); if(v===null) return; v=v.trim(); try{ if(v) localStorage.setItem("naracha_gdrive_acct", v); else localStorage.removeItem("naracha_gdrive_acct"); }catch(e){} try{ render(); }catch(e){} alert(v?("주 저장 계정: "+v+"\n\n※ 이 계정으로 처음 백업할 때 구글 로그인·권한 허용 창이 한 번 뜹니다."):"주 저장 계정을 기본값으로 되돌렸습니다."); };
 window.setGdriveClientId=function(){
   var cur=gdriveClientId();
   var v=prompt("구글 OAuth 클라이언트 ID를 붙여넣으세요.\n(구글 클라우드 콘솔에서 만든 값 · ...apps.googleusercontent.com 로 끝남)\n\n지우려면 빈칸으로 두고 확인.", cur);
@@ -11117,6 +11117,9 @@ function renderBackupModal(){
       '<button class="big" onclick="backup()">전체 백업 파일 다운로드 (HTML)</button>',
       '명단·출석·심사·회계·업무·사진 <b>전체</b>가 담긴 한 파일. 새 컴퓨터에서 이 파일을 더블클릭하면 그 데이터로 바로 이어서 작업할 수 있습니다.')+
     sec('☁ 구글 드라이브 백업 · 파일 백업/복구',
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#F6F8FB;border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:10px">'+
+        '<span style="font-size:12.5px;color:var(--sub)">☁ 저장 계정:</span><b style="font-size:12.5px">'+esc(gdriveAcct()||"미지정")+'</b><span style="flex:1"></span>'+
+        '<button class="chip sm" onclick="setGdriveAcct()">계정 변경</button></div>'+
       '<button class="big" style="margin-bottom:8px" onclick="backupToDrive(false)">☁ 지금 드라이브에 백업 (HTML+JSON)</button>'+
       '<button class="big" style="background:#fff;color:var(--ink);border:1.5px solid var(--line);margin-bottom:8px" onclick="downloadBackup()">💾 JSON 파일로 내려받기 (USB·메일 보관용)</button>'+
       '<label class="big" style="display:flex;align-items:center;justify-content:center;background:#FFF7ED;color:#B45309;border:1.5px solid #F0C36D;cursor:pointer;margin:0">📂 파일에서 복구 (JSON·HTML 둘 다)<input type="file" accept=".json,.html,application/json,text/html" onchange="restoreBackupFile(this)" style="display:none"></label>',
