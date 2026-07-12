@@ -370,6 +370,7 @@ window.examBackToStu = function(){
    저장이 필요한 편집(수련생 수정 등)은 경고, 자동저장·안전한 화면은 바로 이전 단계로. */
 function nrBackClose(){
   try{
+    var _suOv=document.getElementById("signupSetupOv"); if(_suOv){ _suOv.remove(); return true; }
     if(state.timePicker){ tpClose(); return true; }
     if(state.cropM){ state.cropM=null; render(); return true; }
     if(state.typeMgr){ closeTypeMgr(); return true; }
@@ -455,17 +456,59 @@ function seedSchoolsOnce(){ try{ if(localStorage.getItem("naracha_school_seed_v1
 window.setStuSchool=function(v){ if(state.stuM) state.stuM.school=v; };
 window.setStuGrade=function(v){ if(!state.stuM) return; if(v==="__auto"){ state.stuM.schoolGrade=""; state.stuM.schoolGradeY=""; } else { state.stuM.schoolGrade=v; state.stuM.schoolGradeY=schoolYearNow(); } render(); };
 /* ── 구글폼 신규 등록 자동 연동 ── */
-function signupUrl(){ try{ return localStorage.getItem("naracha_signup_url")||""; }catch(e){ return ""; } }
-window.setSignupUrl=function(){ var v=prompt("구글폼 신규등록 연동 URL을 붙여넣으세요.\n(폼 응답 시트 → 확장 프로그램 → Apps Script → 웹앱 배포 URL)", signupUrl()); if(v===null) return; v=v.trim(); try{ localStorage.setItem("naracha_signup_url", v); }catch(e){} if(v){ toast("연동 URL 저장 — 신규 신청을 불러옵니다"); pullSignups(); } else { state.newSignups=[]; render(); } };
+function signupForms(){
+  try{ var raw=localStorage.getItem("naracha_signup_forms"); if(raw){ var a=JSON.parse(raw); if(Array.isArray(a)) return a.filter(function(x){return x&&x.url;}); } }catch(e){}
+  var one=""; try{ one=localStorage.getItem("naracha_signup_url")||""; }catch(e){}
+  return one?[{name:"폼1",url:one}]:[];
+}
+function saveSignupForms(list){ try{ localStorage.setItem("naracha_signup_forms", JSON.stringify(list||[])); }catch(e){} try{ localStorage.setItem("naracha_signup_url", (list&&list[0]&&list[0].url)||""); }catch(e){} }
+function signupUrl(){ var f=signupForms(); return f[0]?f[0].url:""; }
+window.setSignupUrl=function(){ openSignupSetup(); };
+window.openSignupSetup=function(){ var ex=document.getElementById("signupSetupOv"); if(ex) ex.remove();
+  var ov=document.createElement("div"); ov.id="signupSetupOv";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px";
+  ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML=renderSignupSetupBody(); document.body.appendChild(ov);
+};
+function renderSignupSetupBody(){
+  var forms=signupForms();
+  var rows=forms.map(function(f,i){
+    return '<div style="display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:7px">'+
+      '<b style="font-size:13px;white-space:nowrap">'+esc(f.name||("폼"+(i+1)))+'</b>'+
+      '<span style="flex:1;font-size:10px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f.url)+'</span>'+
+      '<button class="chip sm" style="color:var(--red)" onclick="removeSignupForm('+i+')">삭제</button></div>';
+  }).join('') || '<div style="font-size:12px;color:var(--sub);margin-bottom:8px">아직 연동된 폼이 없습니다.</div>';
+  return '<div style="background:#fff;border-radius:16px;padding:18px;max-width:430px;width:100%;box-shadow:0 12px 44px rgba(0,0,0,.22)">'+
+    '<div style="display:flex;align-items:center;margin-bottom:12px"><b style="font-size:15.5px">📝 구글폼 신규등록 연동</b><span style="flex:1"></span><button class="chip sm" onclick="document.getElementById(\'signupSetupOv\').remove()">닫기</button></div>'+
+    rows+
+    '<div style="border-top:1px solid var(--line);margin:12px 0 10px"></div>'+
+    '<div style="font-size:12.5px;font-weight:700;margin-bottom:6px">＋ 새 폼 추가</div>'+
+    '<input id="suName" placeholder="이름 (예: 성인용)" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-bottom:6px;font-size:13px">'+
+    '<input id="suUrl" placeholder="웹앱 URL ( …/exec 로 끝나는 주소 )" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-bottom:9px;font-size:12px">'+
+    '<button class="chip" style="background:var(--blue);border-color:var(--blue);color:#fff;font-weight:800;width:100%;justify-content:center" onclick="addSignupForm()">추가하고 불러오기</button>'+
+  '</div>';
+}
+window.addSignupForm=function(){
+  var nm=((document.getElementById("suName")||{}).value||"").trim();
+  var u=((document.getElementById("suUrl")||{}).value||"").trim();
+  if(!u){ toast("URL을 입력하세요"); return; }
+  if(!/\/exec\b/.test(u) && !confirm("이 주소는 …/exec 로 끝나지 않아요.\n그래도 추가할까요?")) return;
+  var forms=signupForms(); forms.push({name:nm||("폼"+(forms.length+1)), url:u}); saveSignupForms(forms);
+  toast("추가됨 — 신규 신청을 불러옵니다"); openSignupSetup(); pullSignups();
+};
+window.removeSignupForm=function(i){ var forms=signupForms(); if(!forms[i]) return; if(!confirm((forms[i].name||"이 폼")+" 연동을 삭제할까요?")) return; forms.splice(i,1); saveSignupForms(forms); openSignupSetup(); pullSignups(); };
 function normBy(v){ v=String(v||"").trim(); var m; if(m=v.match(/^(\d{4})[-.\/](\d{1,2})[-.\/](\d{1,2})/)) return m[1]+"-"+("0"+m[2]).slice(-2)+"-"+("0"+m[3]).slice(-2); if(m=v.match(/^(\d{1,2})[-.\/](\d{1,2})[-.\/](\d{4})/)) return m[3]+"-"+("0"+m[1]).slice(-2)+"-"+("0"+m[2]).slice(-2); return v; }
 function parseGradeKo(v){ v=String(v||""); var m; if(m=v.match(/초[^0-9]*(\d)\s*학년/)) return "초"+m[1]; if(m=v.match(/중[^0-9]*(\d)\s*학년/)) return "중"+m[1]; if(m=v.match(/고[^0-9]*(\d)\s*학년/)) return "고"+m[1]; if(/7세/.test(v)) return "7세"; return ""; }
 function signupKey(o){ return (o.name||"")+"|"+(o.ts||""); }
 window.pullSignups=function(cb){
-  var url=signupUrl(); if(!url){ if(cb)cb(); return; }
-  fetch(url).then(function(r){return r.json();}).then(function(rows){
-    var w=workData(), done=w.signupDone||{};
-    var have={}; (STUDENTS||[]).forEach(function(s){ have[s.n]=1; });
-    state.newSignups=(rows||[]).filter(function(o){ return o&&o.name&&!done[signupKey(o)]&&!have[o.name]; });
+  var forms=signupForms(); if(!forms.length){ state.newSignups=[]; try{render();}catch(e){} if(cb)cb(); return; }
+  var w=workData(), done=w.signupDone||{};
+  var have={}; (STUDENTS||[]).forEach(function(s){ have[s.n]=1; });
+  Promise.all(forms.map(function(f){
+    return fetch(f.url).then(function(r){return r.json();}).then(function(rows){ return (rows||[]).map(function(o){ if(o) o.__form=f.name; return o; }); }).catch(function(){ return []; });
+  })).then(function(lists){
+    var all=[], seen={}; lists.forEach(function(a){ all=all.concat(a||[]); });
+    state.newSignups=all.filter(function(o){ if(!o||!o.name) return false; var k=signupKey(o); if(done[k]||have[o.name]||seen[k]) return false; seen[k]=1; return true; });
     try{ render(); }catch(e){}
     if(cb)cb();
   }).catch(function(){ if(cb)cb(); });
@@ -499,6 +542,7 @@ function renderSignupBanner(){
     arr.map(function(o,i){ var by=normBy(o.by), g=parseGradeKo(o.grade)||(by?studentGrade({by:by}):"");
       return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 12px;margin-bottom:6px">'+
         '<b style="font-size:14.5px">'+esc(o.name||"")+'</b>'+
+        (o.__form?'<span style="font-size:10px;background:#F0ECFB;color:#7C3AED;border-radius:6px;padding:1px 6px;font-weight:700">'+esc(o.__form)+'</span>':'')+
         (by?'<span style="font-size:11.5px;color:var(--sub)">'+esc(by)+'</span>':'')+
         (o.school?'<span style="font-size:11.5px;color:#2B5FB8;font-weight:700">'+esc(o.school)+'</span>':'')+
         (g?'<span style="font-size:11px;background:#EEF4FF;color:#2B5FB8;border-radius:7px;padding:1px 7px;font-weight:700">'+esc(g)+'</span>':'')+
@@ -528,7 +572,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.27";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.28";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
