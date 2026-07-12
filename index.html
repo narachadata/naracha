@@ -421,7 +421,7 @@ var STUDENTS = [];  /* 명단은 클라우드에서 불러옴 (개인정보 보�
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.14";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.15";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -852,6 +852,8 @@ function loadAll(){
     if(!state.unlocked) return;
     /* 입력 중이면 스킵 (사용자 데이터 손실 방지) */
     if(state.picked || state.editStuEdit || state.newStuEdit || state.closeDialog || state.reopenDialog) return;
+    if(window.__composing) return;                                   /* 한글 조합 중 스킵 */
+    try{ var __ae=document.activeElement; if(__ae && (__ae.tagName==="INPUT"||__ae.tagName==="TEXTAREA")) return; }catch(e){}  /* 모바일 포함: 입력칸 포커스 중 스킵 */
     if(state.syncing) return;
     cloudPull();
   }, 30000);
@@ -13419,10 +13421,53 @@ function __applyRestore(){
 }
 
 /* ══ 나라차 DS 1.0: 모바일 조회 전용 (≤768px) — 입력 UI는 렌더링하지 않음 ══ */
-var __mqRO = window.matchMedia ? window.matchMedia("(max-width:768px)") : null;
-function isMobileRO(){ return !!(__mqRO && __mqRO.matches); }
-function renderMobileRO(){
-  var root=document.getElementById("root");
+/* 기기 종류로 '휴대폰' 판별 (화면 너비 아님 → 갤럭시 Z Fold7은 펼쳐도 휴대폰).
+   태블릿(아이패드 포함)·데스크톱은 false → PC 전체기능. */
+function isPhoneDevice(){
+  if(typeof navigator==="undefined") return false;
+  var ua=navigator.userAgent||"", plat=navigator.platform||"";
+  var maxTouch=(typeof navigator.maxTouchPoints==="number")?navigator.maxTouchPoints:0;
+  var uaData=navigator.userAgentData||null;
+  /* A. 아이패드(위장 포함) → 태블릿. 맥은 터치 없음(maxTouchPoints 0)으로 구분 */
+  if(/iPad/i.test(ua)) return false;
+  if(/MacIntel|Mac OS X|Macintosh/i.test(plat+" "+ua) && maxTouch>1) return false;
+  /* B. 아이폰/아이팟 → 휴대폰 */
+  if(/iPhone|iPod/i.test(ua)) return true;
+  /* C. 안드로이드: 'Mobile' 있으면 폰(폴더블 포함), 없으면 태블릿 */
+  if(/Android/i.test(ua)) return /Mobile/i.test(ua);
+  /* D. 기타 모바일 브라우저 */
+  if(/Mobi/i.test(ua)) return true;
+  /* E. UA-CH 보조 (크로미움 계열) */
+  if(uaData && typeof uaData.mobile==="boolean") return uaData.mobile;
+  return false;
+}
+var NARACHA_VIEW_KEY="naracha_view_mode";   /* "auto"|"phone"|"pc" — 수동값이 자동판별보다 우선 */
+function viewMode(){
+  var saved=null; try{ saved=localStorage.getItem(NARACHA_VIEW_KEY); }catch(e){}
+  if(saved==="phone") return "phone";
+  if(saved==="pc") return "pc";
+  return isPhoneDevice()?"phone":"pc";
+}
+function isPhoneView(){ return viewMode()==="phone"; }
+function setViewModeStore(mode){ if(mode!=="auto"&&mode!=="phone"&&mode!=="pc") mode="auto"; try{ localStorage.setItem(NARACHA_VIEW_KEY, mode); }catch(e){} return mode; }
+window.setViewMode=function(mode){ setViewModeStore(mode); render(); };
+function isMobileRO(){ return isPhoneView(); }   /* 하위호환 별칭 */
+/* 휴대폰인데 PC 모드로 본 경우, 휴대폰 화면으로 돌아가는 떠 있는 버튼 */
+function _syncPhoneFab(){
+  try{
+    var ex=document.getElementById("moFab");
+    var show=isPhoneDevice() && viewMode()==="pc" && state && state.unlocked;
+    if(!show){ if(ex&&ex.parentNode) ex.parentNode.removeChild(ex); return; }
+    if(!ex){
+      ex=document.createElement("button"); ex.id="moFab";
+      ex.setAttribute("style","position:fixed;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:99999;background:#0b1d3a;color:#fff;border:none;border-radius:999px;padding:11px 16px;font-size:13px;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.28);font-family:inherit;cursor:pointer");
+      ex.textContent="📱 휴대폰 화면으로";
+      ex.onclick=function(){ setViewModeStore("phone"); render(); };
+      document.body.appendChild(ex);
+    }
+  }catch(e){}
+}
+function phoneTimetableBody(){
   var todayStr=today();
   var codes=["sun","mon","tue","wed","thu","fri","sat"];
   var todayCode=codes[new Date(todayStr+"T00:00:00").getDay()];
@@ -13434,16 +13479,7 @@ function renderMobileRO(){
   var sch=(state.schedule&&state.schedule.cells)||{};
   var dayNm=(W_DAYS.find(function(x){return x[0]===day;})||["","",0])[1];
 
-  var h='<div style="min-height:100vh;background:var(--bg)">'+
-    '<div style="background:var(--brand);padding:16px 18px 12px;display:flex;align-items:center;gap:8px">'+
-      '<span style="width:22px;height:22px;border-radius:6px;background:var(--brandRed);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:11.5px">나</span>'+
-      '<span style="color:#fff;font-weight:700;font-size:13.5px">나라차태권도 · 수련생 출석</span>'+
-      '<span style="flex:1"></span>'+
-      '<span style="background:rgba(255,255,255,.12);color:#C4D1E4;border-radius:999px;font-size:10px;font-weight:700;padding:3px 10px">조회 전용</span>'+
-    '</div>'+
-    '<div style="height:3px;display:flex"><span style="flex:1;background:#F3C614"></span><span style="flex:1;background:#1E8E3E"></span><span style="flex:1;background:#2B5FB8"></span><span style="flex:1;background:#C8342A"></span><span style="flex:1;background:#111111"></span></div>';
-
-  h+='<div style="padding:14px 14px 28px;max-width:520px;margin:0 auto">';
+  var h='';
 
   h+='<div style="display:flex;gap:6px;margin-bottom:12px">';
   W_DAYS.forEach(function(d){
@@ -13497,9 +13533,8 @@ function renderMobileRO(){
     if(!any) h+='<div style="background:#fff;border-radius:14px;padding:20px;text-align:center;color:var(--sub);font-size:13.5px">이 날은 예정된 수업이 없습니다</div>';
   }
 
-  h+='<div style="text-align:center;font-size:10px;color:#8A8F98;margin-top:14px">입력·수정은 도장 PC에서만 가능합니다</div>';
-  h+='</div></div>';
-  root.innerHTML=h;
+  h+='<div style="text-align:center;font-size:10px;color:#8A8F98;margin-top:14px">이 화면은 조회 전용입니다</div>';
+  return h;
 }
 function moChip(name, c){
   var mk=(c&&c.marks&&c.marks[name])||{};
@@ -13514,18 +13549,241 @@ function moChip(name, c){
   else style=base+'background:#fff;color:var(--ink);border:1px solid var(--line);border-left:5px solid '+col+';';
   return '<span style="'+style+'">'+esc(name)+((kind!=="정규"&&!absent)?' <i style="font-size:9px;opacity:.85;font-style:normal">'+esc(kindLabel(kind))+'</i>':'')+'</span>';
 }
+/* ══════════ 휴대폰 전용 화면 (뷰어 + 업무일지 간편입력) ══════════ */
+window.setMoTab=function(t){ state.moTab=t; state.moStu=null; state.moEv=null; render(); };
+window.openMoStu=function(name){ state.moStu=name; render(); };
+window.closeMoStu=function(){ state.moStu=null; render(); };
+window.openMoEv=function(id){ state.moEv=id; render(); };
+window.closeMoEv=function(){ state.moEv=null; render(); };
+window.setMoRosterQ=function(v){ state.moRosterQ=v; var el=document.getElementById("moRosterList"); if(el) el.innerHTML=phoneRosterListHtml(); };
+window.setMoRosterF=function(f){ state.moRosterF=f; render(); };
+
+function phoneTopbar(){
+  var editTab=(state.moTab==="journal");
+  return '<div style="background:var(--brand);padding:14px 16px 11px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:50">'+
+    '<span style="width:22px;height:22px;border-radius:6px;background:var(--brandRed);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:11.5px">나</span>'+
+    '<span style="color:#fff;font-weight:700;font-size:13.5px">나라차태권도</span>'+
+    '<span style="background:'+(editTab?'rgba(74,222,128,.22)':'rgba(255,255,255,.12)')+';color:'+(editTab?'#BBF7D0':'#C4D1E4')+';border-radius:999px;font-size:10px;font-weight:800;padding:3px 9px">'+(editTab?'✏ 입력 가능':'조회 전용')+'</span>'+
+    '<span style="flex:1"></span>'+
+    '<button onclick="setViewMode(\'pc\')" style="background:rgba(255,255,255,.14);color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;padding:5px 9px;cursor:pointer;font-family:inherit">🖥 PC 화면</button>'+
+  '</div>'+
+  '<div style="height:3px;display:flex"><span style="flex:1;background:#F3C614"></span><span style="flex:1;background:#1E8E3E"></span><span style="flex:1;background:#2B5FB8"></span><span style="flex:1;background:#C8342A"></span><span style="flex:1;background:#111111"></span></div>';
+}
+function phoneNav(){
+  var tab=state.moTab||"time";
+  var items=[["time","🗓","시간표"],["roster","👤","명단"],["manage","📌","관리"],["event","🎪","행사"],["journal","📔","일지"]];
+  return '<div style="position:fixed;left:0;right:0;bottom:0;z-index:60;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(0,0,0,.05)">'+
+    items.map(function(it){ var on=(tab===it[0]);
+      return '<button onclick="setMoTab(\''+it[0]+'\')" style="flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 0;cursor:pointer;font-family:inherit;color:'+(on?'var(--blue)':'#8A9099')+'">'+
+        '<span style="font-size:19px;line-height:1;filter:'+(on?'none':'grayscale(1)')+';opacity:'+(on?'1':'.75')+'">'+it[1]+'</span>'+
+        '<span style="font-size:10.5px;font-weight:'+(on?'800':'600')+'">'+it[2]+'</span></button>';
+    }).join('')+'</div>';
+}
+function renderPhone(){
+  var root=document.getElementById("root");
+  var tab=state.moTab||"time";
+  var body="";
+  try{
+    if(tab==="roster") body=phoneRosterBody();
+    else if(tab==="manage") body=phoneManageBody();
+    else if(tab==="event") body=phoneEventBody();
+    else if(tab==="journal") body=phoneJournalBody();
+    else body=phoneTimetableBody();
+  }catch(e){ body='<div style="padding:30px 16px;text-align:center;color:var(--sub);font-size:13px">이 화면을 불러오지 못했습니다.<br>새로고침하거나 다른 메뉴를 눌러보세요.</div>'; try{ console.error("phone tab fail", e); }catch(_){} }
+  var overlay="";
+  if(state.moStu) overlay=phoneStuOverlay(state.moStu);
+  var h='<div style="min-height:100vh;background:var(--bg)">'+
+    phoneTopbar()+
+    '<div id="moScroll" style="padding:14px 14px calc(84px + env(safe-area-inset-bottom));max-width:560px;margin:0 auto">'+body+'</div>'+
+    phoneNav()+ overlay +
+  '</div>';
+  root.innerHTML=h;
+  try{ if(typeof __applyRestore==="function") __applyRestore(); }catch(e){}
+}
+
+/* ── 수련생 명단 (검색 + 학적부 조회, 수정 불가) ── */
+function phoneStatusOf(s){
+  if(isQuit(s.n)) return {t:"퇴관",bg:"#3F3F46",fg:"#fff"};
+  if(s.st==="휴관"||(state.closedMap&&state.closedMap[s.n])) return {t:"휴관",bg:"#EEE",fg:"#666"};
+  return {t:"재원",bg:"#E7F3EC",fg:"#1E7B3C"};
+}
+function phoneRosterListHtml(){
+  var q=(state.moRosterQ||"").trim();
+  var f=state.moRosterF||"재원";
+  var list=(STUDENTS||[]).filter(function(s){
+    var quit=isQuit(s.n), closed=(s.st==="휴관"||(state.closedMap&&state.closedMap[s.n]))&&!quit;
+    if(f==="재원" && (quit||closed)) return false;
+    if(f==="휴관" && !closed) return false;
+    if(f==="퇴관" && !quit) return false;
+    if(q && s.n.indexOf(q)===-1) return false;
+    return true;
+  });
+  list.sort(function(a,b){ return a.n.localeCompare(b.n); });
+  var x='<div style="font-size:12.5px;color:var(--sub);margin:2px 0 8px">'+f+' '+list.length+'명'+(q?' · "'+esc(q)+'" 검색':'')+'</div>';
+  if(!list.length) return x+'<div style="text-align:center;color:var(--sub);font-size:13px;padding:24px 0">해당하는 수련생이 없습니다.</div>';
+  list.slice(0,300).forEach(function(s){
+    var st=phoneStatusOf(s);
+    var gd=(s.gd||[]); var g1=gd.find(function(g){ return (g.p||"").trim(); });
+    var tel=g1?((g1.p||"").replace(/[^0-9+]/g,"")):"";
+    x+='<div onclick="openMoStu(\''+wEsn(s.n)+'\')" style="background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px 13px;margin-bottom:8px;display:flex;align-items:center;gap:9px;cursor:pointer">'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><b style="font-size:15px">'+esc(s.n)+'</b>'+
+          '<span style="background:'+st.bg+';color:'+st.fg+';border-radius:9px;padding:1px 8px;font-size:10.5px;font-weight:800">'+st.t+'</span>'+
+          (s.b?'<span style="font-size:11px;color:var(--sub)">'+esc(String(s.b).replace(/\(.*\)/,""))+'</span>':'')+
+        '</div>'+
+        '<div style="margin-top:4px">'+beltChip(s)+'</div>'+
+      '</div>'+
+      (tel?'<a href="tel:'+tel+'" onclick="event.stopPropagation()" style="flex:0 0 auto;background:#EEF4FF;color:var(--blue);border-radius:10px;padding:8px 11px;font-size:12px;font-weight:800;text-decoration:none">📞 전화</a>':'')+
+      '<span style="color:#C7CDD6;font-size:18px">›</span>'+
+    '</div>';
+  });
+  return x;
+}
+function phoneRosterBody(){
+  var f=state.moRosterF||"재원";
+  var h='<div style="display:flex;gap:7px;margin-bottom:9px"><input class="input" id="moRosterSearch" placeholder="🔍 이름 검색" value="'+esc(state.moRosterQ||"")+'" oninput="setMoRosterQ(this.value)" style="flex:1;height:42px;font-size:14px"></div>'+
+    '<div style="display:flex;gap:6px;margin-bottom:10px">'+
+    ["재원","휴관","퇴관","전체"].map(function(k){ return '<button onclick="setMoRosterF(\''+k+'\')" class="chip'+(f===k?' on':'')+'" style="flex:1;padding:8px 0;font-size:12.5px">'+k+'</button>'; }).join('')+'</div>'+
+    '<div id="moRosterList">'+phoneRosterListHtml()+'</div>';
+  return h;
+}
+/* 학적부 조회(수정·회계 없음) */
+function phoneStuOverlay(name){
+  var s=(STUDENTS||[]).find(function(x){ return x.n===name; });
+  if(!s) return "";
+  var st=phoneStatusOf(s);
+  var e=(typeof effExpiry==="function")?effExpiry(name):null;
+  var stt=(e&&typeof status==="function")?status(e):null;
+  var att=(typeof stuAttendSummary==="function")?stuAttendSummary(name):null;
+  function row(lbl,val){ return val?'<div style="display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line)"><span style="flex:0 0 78px;font-size:12.5px;color:var(--sub);font-weight:700">'+lbl+'</span><span style="flex:1;font-size:13.5px;color:var(--ink)">'+val+'</span></div>':''; }
+  var guards=(s.gd||[]).filter(function(g){ return (g.p||"").trim()||(g.n||"").trim(); }).map(function(g){
+    var tel=(g.p||"").replace(/[^0-9+]/g,"");
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0"><span style="font-size:13px">'+esc((g.r?g.r+" ":"")+(g.n||""))+'</span><span style="flex:1"></span>'+(g.p?'<a href="tel:'+tel+'" style="background:#EEF4FF;color:var(--blue);border-radius:9px;padding:6px 12px;font-size:12.5px;font-weight:800;text-decoration:none">📞 '+esc(g.p)+'</a>':'')+'</div>';
+  }).join('');
+  var body=
+    '<div style="display:flex;align-items:center;gap:9px;margin-bottom:6px"><b style="font-size:20px">'+esc(s.n)+'</b>'+
+      '<span style="background:'+st.bg+';color:'+st.fg+';border-radius:10px;padding:2px 9px;font-size:11.5px;font-weight:800">'+st.t+'</span></div>'+
+    '<div style="margin-bottom:10px">'+beltChip(s)+'</div>'+
+    row("반", s.b?esc(String(s.b)):"")+
+    row("급수", s.grade?esc(s.grade):"")+
+    row("등록상태", stt?('<b style="color:'+(stt.col||"var(--ink)")+'">'+esc(stt.label||stt.t||"")+'</b>'+(e?' <span style="color:var(--sub);font-size:12px">(만료 '+esc(String(e).slice(0,10))+')</span>':'')):"")+
+    row("최근출석", (att&&att.lastDate)?(esc(String(att.lastDate).slice(0,10))+(att.daysAgo!=null?' · '+att.daysAgo+'일 전':'')):"")+
+    (guards?'<div style="margin-top:12px"><div style="font-size:12.5px;color:var(--sub);font-weight:800;margin-bottom:2px">보호자 연락처</div>'+guards+'</div>':'')+
+    '<div style="text-align:center;font-size:10.5px;color:#9AA0A8;margin-top:16px">정보 수정은 도장 PC에서만 가능합니다</div>';
+  return '<div onclick="closeMoStu()" style="position:fixed;inset:0;background:rgba(20,22,26,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center">'+
+    '<div onclick="event.stopPropagation()" style="background:#fff;width:100%;max-width:560px;border-radius:18px 18px 0 0;max-height:88vh;overflow:auto;padding:16px 18px calc(22px + env(safe-area-inset-bottom))">'+
+      '<div style="display:flex;justify-content:flex-end"><button onclick="closeMoStu()" style="background:none;border:none;font-size:24px;color:var(--sub);cursor:pointer">×</button></div>'+
+      body+'</div></div>';
+}
+
+/* ── 관리수련생 현황 (조회 전용) ── */
+function phoneManageBody(){
+  var w=workData(); var rows={};
+  function addTag(n,t,c){ if(!rows[n]) rows[n]=[]; if(!rows[n].some(function(x){return x.t===t;})) rows[n].push({t:t,c:c}); }
+  (STUDENTS||[]).forEach(function(s){ if(isQuit(s.n)) return; var stt=(typeof stuStatusOf==="function")?stuStatusOf(s.n):''; if(stt==='휴관') return; if(typeof isLongAbsent==="function"&&isLongAbsent(s.n)) addTag(s.n,'장기결석','#B23A48'); });
+  for(var fn in (w.flags||{})){ if(isQuit(fn)) continue; addTag(fn,'관리대상','#2B5FB8'); }
+  var names=Object.keys(rows).sort(function(a,b){ var da=(w.manage[a]&&w.manage[a].done)?1:0, db=(w.manage[b]&&w.manage[b].done)?1:0; return (da-db)||a.localeCompare(b); });
+  var h='<div style="font-size:15px;font-weight:900;margin:2px 0 4px">📌 관리수련생 <span style="font-size:12px;color:var(--sub);font-weight:600">'+names.length+'명</span></div>'+
+    '<div style="font-size:11.5px;color:var(--sub);margin-bottom:11px">장기결석(자동)·수동 분류 수련생. 이름을 누르면 학적부가 열립니다. (입력은 PC)</div>';
+  if(!names.length) return h+'<div style="text-align:center;color:var(--sub);font-size:13px;padding:22px 0">현재 관리 대상 수련생이 없습니다. 👍</div>';
+  names.forEach(function(n){
+    var m=w.manage[n]||{}; var flag=(w.flags||{})[n];
+    var badges=(rows[n]||[]).map(function(b){ return '<span style="background:'+b.c+'22;color:'+b.c+';border-radius:8px;padding:2px 8px;font-size:10.5px;font-weight:800">'+b.t+'</span>'; }).join(' ');
+    var att=(typeof stuAttendSummary==="function")?stuAttendSummary(n):null;
+    h+='<div style="background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px 13px;margin-bottom:8px;'+(m.done?'opacity:.6':'')+'">'+
+      '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+(m.done?'<span style="color:#1E7B3C;font-weight:800;font-size:12px">✔ 완료</span>':'')+
+        '<b style="font-size:15px;color:var(--blue)" onclick="openMoStu(\''+wEsn(n)+'\')">'+esc(n)+'</b>'+badges+
+        '<span style="flex:1"></span>'+(att&&att.lastDate?'<span style="font-size:10.5px;color:var(--sub)">최근 '+esc(String(att.lastDate).slice(5))+'</span>':'')+'</div>'+
+      (flag&&flag.reason?'<div style="font-size:12px;color:#2B5FB8;margin-top:5px">사유: '+esc(flag.reason)+'</div>':'')+
+      (m.memo?'<div style="font-size:12.5px;color:var(--ink);margin-top:6px;line-height:1.55;background:#F7F9FC;border-radius:9px;padding:8px 10px">'+workHi(m.memo)+'</div>':'')+
+      (m.gwan?'<div style="font-size:12.5px;color:#5B4708;margin-top:6px;background:#FFFDF5;border:1px solid #F0E4C0;border-radius:9px;padding:7px 10px">👑 '+esc(m.gwan)+'</div>':'')+
+    '</div>';
+  });
+  return h;
+}
+
+/* ── 행사 관리 (조회 전용) ── */
+function phoneEventBody(){
+  var w=workData(); var evs=Object.keys(w.events||{}).map(function(id){return w.events[id];}).filter(function(e){return e&&e.title;});
+  if(state.moEv && w.events[state.moEv]) return phoneEventDetail(w.events[state.moEv]);
+  var td=today();
+  evs.sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
+  var up=evs.filter(function(e){ return (e.date||"")>=td; }).sort(function(a,b){ return (a.date||"").localeCompare(b.date||""); });
+  var past=evs.filter(function(e){ return (e.date||"")<td; });
+  function card(e){
+    var d=e.date||""; var isUp=d>=td;
+    return '<div onclick="openMoEv(\''+e.id+'\')" style="background:#fff;border:1px solid var(--line);border-radius:13px;padding:12px 14px;margin-bottom:8px;cursor:pointer">'+
+      '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+
+        (d?'<span style="background:'+(isUp?'#EEF4FF':'#F3F4F6')+';color:'+(isUp?'var(--blue)':'#8A9099')+';border-radius:8px;padding:2px 8px;font-size:11.5px;font-weight:800">'+esc(d.slice(5))+'</span>':'')+
+        '<b style="font-size:14.5px">'+esc(e.title)+'</b>'+
+        (e.type?'<span style="font-size:11px;color:var(--sub)">'+esc(e.type)+'</span>':'')+'</div>'+
+      (e.place||e.time?'<div style="font-size:12px;color:var(--sub);margin-top:5px">'+esc([e.time,e.place].filter(Boolean).join(" · "))+'</div>':'')+
+    '</div>';
+  }
+  var h='<div style="font-size:15px;font-weight:900;margin:2px 0 11px">🎪 행사 <span style="font-size:12px;color:var(--sub);font-weight:600">'+evs.length+'건</span></div>';
+  if(!evs.length) return h+'<div style="text-align:center;color:var(--sub);font-size:13px;padding:22px 0">등록된 행사가 없습니다.</div>';
+  if(up.length){ h+='<div style="font-size:12px;font-weight:800;color:#1E7B3C;margin:2px 0 7px">다가오는 행사</div>'+up.map(card).join(''); }
+  if(past.length){ h+='<div style="font-size:12px;font-weight:800;color:var(--sub);margin:14px 0 7px">지난 행사</div>'+past.slice(0,30).map(card).join(''); }
+  return h;
+}
+function phoneEventDetail(e){
+  function sec(t,inner){ return inner?'<div style="margin-top:12px"><div style="font-size:12px;font-weight:800;color:var(--sub);margin-bottom:5px">'+t+'</div>'+inner+'</div>':''; }
+  var info=[["📅 일시",[e.date,e.time].filter(Boolean).join(" ")],["📍 장소",e.place],["🎯 대상",e.target],["상태",e.status]].filter(function(r){return r[1];})
+    .map(function(r){ return '<div style="display:flex;gap:10px;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:0 0 66px;font-size:12px;color:var(--sub);font-weight:700">'+r[0]+'</span><span style="flex:1;font-size:13.5px">'+esc(r[1])+'</span></div>'; }).join('');
+  var prep=(e.prep||[]).map(function(p){ return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px"><span>'+(p.done?'✅':'⬜')+'</span><span style="flex:1;'+(p.done?'color:var(--sub);text-decoration:line-through':'')+'">'+esc(p.item||"")+'</span>'+(p.owner?'<span style="font-size:11px;color:#2B5FB8">'+esc(p.owner)+'</span>':'')+'</div>'; }).join('');
+  var cautions=(e.cautions||[]).map(function(c){ return '<div style="font-size:13px;padding:4px 0">'+(c.done?'✅':'⚠️')+' '+esc(c.text||"")+'</div>'; }).join('');
+  return '<button onclick="closeMoEv()" style="background:none;border:none;color:var(--blue);font-size:14px;font-weight:800;padding:2px 0 10px;cursor:pointer;font-family:inherit">‹ 행사 목록</button>'+
+    '<div style="font-size:19px;font-weight:900;margin-bottom:4px">'+esc(e.title||"행사")+'</div>'+
+    (e.type?'<div style="font-size:12.5px;color:var(--sub);margin-bottom:8px">'+esc(e.type)+'</div>':'')+
+    info+
+    sec("행사 내용", e.desc?'<div style="font-size:13px;line-height:1.7;white-space:pre-wrap">'+esc(e.desc)+'</div>':"")+
+    sec("준비물·할일", prep)+
+    sec("주의사항", cautions)+
+    '<div style="text-align:center;font-size:10.5px;color:#9AA0A8;margin-top:18px">수정은 도장 PC에서만 가능합니다</div>';
+}
+
+/* ── 업무일지 간편입력 (휴대폰에서 입력 가능) ── */
+function phoneJournalBody(){
+  var w=workData(); var td=today();
+  var h='<div style="font-size:15px;font-weight:900;margin:2px 0 2px">📔 오늘 업무일지</div>'+
+    '<div style="font-size:12px;color:var(--sub);margin-bottom:12px">'+esc(td)+' · 현장에서 바로 기록하세요. 자동 저장됩니다.</div>';
+  ["행정","교육"].forEach(function(team){
+    var staff=(typeof journalStaff==="function")?journalStaff(team):team;
+    var routs=Object.keys(w.routines||{}).map(function(id){return w.routines[id];}).filter(function(r){return r&&r.team===team;});
+    var logKey=td+"|"+team; var lg=(w.logs||{})[logKey]||{};
+    h+='<div style="background:#fff;border:1px solid var(--line);border-radius:15px;padding:13px 14px;margin-bottom:13px">'+
+      '<div style="display:flex;align-items:center;gap:7px;margin-bottom:10px"><span style="background:'+(team==="행정"?'#EEF4FF':'#EAF7EE')+';color:'+(team==="행정"?'#2B5FB8':'#1E7B3C')+';border-radius:9px;padding:3px 10px;font-size:12.5px;font-weight:800">'+team+'</span>'+
+        '<b style="font-size:13.5px">'+esc(staff)+'</b></div>';
+    /* 루틴 체크 (큰 탭 버튼) */
+    if(routs.length){
+      h+='<div style="font-size:11.5px;color:var(--sub);font-weight:800;margin-bottom:6px">오늘 루틴 체크</div>';
+      routs.forEach(function(r){
+        var c=(w.rchecks||{})[td+"|"+r.id]; var done=!!(c&&c.done);
+        h+='<button onclick="toggleRoutine(\''+r.id+'\')" style="width:100%;text-align:left;display:flex;align-items:center;gap:9px;background:'+(done?'#EAF7EE':'#F7F9FC')+';border:1px solid '+(done?'#B8E6C6':'var(--line)')+';border-radius:11px;padding:11px 12px;margin-bottom:6px;cursor:pointer;font-family:inherit">'+
+          '<span style="font-size:18px">'+(done?'✅':'⬜')+'</span>'+
+          '<span style="flex:1;font-size:13px;'+(done?'color:#1E7B3C;font-weight:700':'color:var(--ink)')+'">'+esc(r.text)+'</span></button>';
+      });
+    }
+    /* 오늘 메모 */
+    h+='<div style="font-size:11.5px;color:var(--sub);font-weight:800;margin:10px 0 5px">오늘 메모 · 특이사항</div>'+
+      '<textarea id="molog_'+team+'" class="input" placeholder="오늘 있었던 일, 특이사항을 적으세요. @담당 #기한 사용 가능" style="width:100%;min-height:74px;resize:vertical;font-family:inherit;font-size:14px" oninput="setTeamLog(\''+team+'\',this.value)" onchange="commitTeamLog(\''+team+'\')">'+esc(lg.text||"")+'</textarea>'+
+      (lg.dev?'<div style="font-size:10.5px;color:var(--sub);margin-top:4px">저장됨 · '+workStamp(lg.dev,lg._t)+'</div>':'')+
+    '</div>';
+  });
+  h+='<div style="text-align:center;font-size:10.5px;color:#9AA0A8;margin-top:2px">루틴·업무 전체 관리는 도장 PC의 업무일지에서</div>';
+  return h;
+}
+
 (function(){
-  if(!__mqRO) return;
   var _renderDesk = render;
   render = function(){
-    if(isMobileRO() && state && state.unlocked){
-      try{ renderMobileRO(); return; }catch(e){ /* 계산 실패 시 데스크톱 화면으로 */ }
+    if(isPhoneView() && state && state.unlocked){
+      try{ renderPhone(); _syncPhoneFab(); return; }catch(e){ try{ console.error("renderPhone fail", e); }catch(_){} }
     }
     _renderDesk();
+    _syncPhoneFab();
   };
   window.render = render;
-  var onCh=function(){ try{ render(); }catch(e){} };
-  __mqRO.addEventListener ? __mqRO.addEventListener("change", onCh) : __mqRO.addListener(onCh);
 })();
 
 loadAll();
