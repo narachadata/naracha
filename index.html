@@ -572,7 +572,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.30";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.31";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -3520,7 +3520,12 @@ window.backup=function(){
 /* ══════════ 백업 암호화 (브라우저 내장 Web Crypto · AES-256-GCM) ══════════
    비밀번호는 이 기기에만 저장되고, 백업 파일 안에는 암호문만 들어갑니다.
    파일이 유출돼도 비밀번호 없이는 절대 열 수 없습니다. (비밀번호 분실 시 그 백업은 복구 불가) */
-function backupPw(){ try{ return localStorage.getItem("naracha_backup_pw")||""; }catch(e){ return ""; } }
+function backupPw(){
+  try{ var w=state.work; if(w && w.workV && w.backupPwSync && typeof w.backupPwSync.pw==="string"){ var v=w.backupPwSync.pw;
+    try{ if(localStorage.getItem("naracha_backup_pw")!==v){ if(v) localStorage.setItem("naracha_backup_pw",v); else localStorage.removeItem("naracha_backup_pw"); } }catch(e){}
+    return v; } }catch(e){}
+  try{ return localStorage.getItem("naracha_backup_pw")||""; }catch(e){ return ""; }
+}
 function _b64(u8){ var s=""; for(var i=0;i<u8.length;i++) s+=String.fromCharCode(u8[i]); return btoa(s); }
 function _ub64(str){ var bin=atob(str); var u8=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i); return u8; }
 function _deriveKey(pw, salt){ return crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]).then(function(km){ return crypto.subtle.deriveKey({name:"PBKDF2", salt:salt, iterations:150000, hash:"SHA-256"}, km, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]); }); }
@@ -3545,7 +3550,8 @@ window.setBackupPassword=function(){
   if(p2==null) return;
   if(p1!==(p2||"").trim()){ alert("두 번 입력한 비밀번호가 다릅니다. 다시 시도해 주세요."); return; }
   try{ localStorage.setItem("naracha_backup_pw", p1); }catch(e){}
-  alert("✅ 백업 비밀번호가 저장되었습니다.\n이제부터 만드는 백업 파일(HTML·JSON)은 이 비밀번호로 잠깁니다.\n\n비밀번호는 이 기기에만 저장되며 백업 파일 안에는 암호문만 들어갑니다.");
+  try{ var w=workData(); w.backupPwSync={ pw:p1, _t:Date.now() }; workPersist(); }catch(e){}
+  alert("✅ 백업 비밀번호가 저장되었습니다.\n이제부터 만드는 백업 파일(HTML·JSON)은 이 비밀번호로 잠깁니다.\n\n☁ 이 비밀번호는 모든 PC에 자동으로 동기화됩니다.\n(백업 파일 안에는 암호문만 들어갑니다)");
   render();
 };
 window.clearBackupPassword=function(){
@@ -3553,7 +3559,8 @@ window.clearBackupPassword=function(){
   if(!backupPw()){ return; }
   if(!confirm("백업 비밀번호 잠금을 해제할까요?\n\n해제하면 이후 만드는 백업 파일은 비밀번호 없이 열립니다.\n(이미 만들어 둔 잠긴 파일은 여전히 기존 비밀번호가 필요합니다)")) return;
   try{ localStorage.removeItem("naracha_backup_pw"); }catch(e){}
-  alert("백업 비밀번호 잠금을 해제했습니다.");
+  try{ var w=workData(); w.backupPwSync={ pw:"", _t:Date.now() }; workPersist(); }catch(e){}
+  alert("백업 비밀번호 잠금을 해제했습니다.\n☁ 모든 PC에서도 해제됩니다.");
   render();
 };
 
@@ -9447,6 +9454,8 @@ function mergeWork(local, remote){
   applyWorkTomb(out, "carMaint", "tombCarMaint");
   /* 차량 정보(단일 객체): 최신본 우선 */
   if(remote.carInfo && (remote.carInfo._t||0) > ((out.carInfo&&out.carInfo._t)||0)) out.carInfo=remote.carInfo;
+  /* 백업 비밀번호(단일 객체): 최신본 우선 → 모든 PC 자동 동기화 */
+  if(remote.backupPwSync && (remote.backupPwSync._t||0) > ((out.backupPwSync&&out.backupPwSync._t)||0)) out.backupPwSync=remote.backupPwSync;
   out.t=Math.max(local.t||0, remote.t||0);
   return out;
 }
