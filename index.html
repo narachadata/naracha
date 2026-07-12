@@ -421,7 +421,7 @@ var STUDENTS = [];  /* 명단은 클라우드에서 불러옴 (개인정보 보�
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.15";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.17";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -13557,9 +13557,23 @@ window.openMoEv=function(id){ state.moEv=id; render(); };
 window.closeMoEv=function(){ state.moEv=null; render(); };
 window.setMoRosterQ=function(v){ state.moRosterQ=v; var el=document.getElementById("moRosterList"); if(el) el.innerHTML=phoneRosterListHtml(); };
 window.setMoRosterF=function(f){ state.moRosterF=f; render(); };
+/* 휴대폰 업무일지: 자동 저장 없음 — 메모리에만 반영하고 [저장하기]로 확정 */
+window.moToggleRoutine=function(id){ var w=workData(); var k=today()+"|"+id; var c=w.rchecks[k]; w.rchecks[k]={done:!(c&&c.done),dev:workDev(),_t:Date.now()}; state.moDirty=true; render(); };
+window.moSetLog=function(team,v){ var w=workData(); var k=today()+"|"+team; if(!w.logs[k])w.logs[k]={}; w.logs[k].text=v; state.moDirty=true; };  /* 입력 중엔 저장·렌더 안 함(튕김 방지) */
+window.moCommitLog=function(team){ var w=workData(); var k=today()+"|"+team; if(!w.logs[k])w.logs[k]={}; state.moDirty=true; };  /* 렌더 안 함(저장 버튼 교체 방지) · 확정은 [저장하기]에서 */
+window.moSaveJournal=function(){
+  var w=workData(), td=today(), t=Date.now();
+  try{ ["행정","교육"].forEach(function(team){ var lk=td+"|"+team; if(w.logs[lk] && (w.logs[lk].text||"").length){ w.logs[lk].dev=workDev(); w.logs[lk]._t=t; } }); }catch(e){}
+  try{ if(typeof workPersist==="function") workPersist(); }catch(e){}   /* 로컬 + 클라우드 저장 */
+  state.moDirty=false;
+  try{ toast("💾 저장했습니다 — 클라우드에 반영됩니다"); }catch(e){}
+  render();
+};
+/* 저장 안 하고 나가려 하면 경고 (휴대폰 미저장 보호) */
+try{ window.addEventListener("beforeunload", function(e){ if(state && state.moDirty){ e.preventDefault(); e.returnValue=""; return ""; } }); }catch(e){}
 
 function phoneTopbar(){
-  var editTab=(state.moTab==="journal");
+  var editTab=(state.moTab==="journal"||state.moTab==="car");
   return '<div style="background:var(--brand);padding:14px 16px 11px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:50">'+
     '<span style="width:22px;height:22px;border-radius:6px;background:var(--brandRed);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:11.5px">나</span>'+
     '<span style="color:#fff;font-weight:700;font-size:13.5px">나라차태권도</span>'+
@@ -13569,14 +13583,36 @@ function phoneTopbar(){
   '</div>'+
   '<div style="height:3px;display:flex"><span style="flex:1;background:#F3C614"></span><span style="flex:1;background:#1E8E3E"></span><span style="flex:1;background:#2B5FB8"></span><span style="flex:1;background:#C8342A"></span><span style="flex:1;background:#111111"></span></div>';
 }
+/* iOS(SF Symbols) 스타일 라인 아이콘 — 선택 시 채움(filled), 평소 외곽선 */
+function moIcon(name, on){
+  var sw=on?0:1.9;
+  var stroke=on?'none':'currentColor';
+  var fill=on?'currentColor':'none';
+  var A='width="25" height="25" viewBox="0 0 24 24" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round"';
+  var paths={
+    /* 시간표: 달력 */
+    time:'<rect x="3" y="4.5" width="18" height="16.5" rx="3.4"/>'+(on?'<rect x="3" y="4.5" width="18" height="4.6" rx="3.4" fill="#fff" opacity=".0"/><path d="M3 9.3h18" stroke="#fff" stroke-width="1.4" fill="none"/><path d="M7.5 3v3M16.5 3v3" stroke="#fff" stroke-width="1.6" fill="none"/><circle cx="8" cy="13" r="1.1" fill="#fff"/><circle cx="12" cy="13" r="1.1" fill="#fff"/><circle cx="16" cy="13" r="1.1" fill="#fff"/><circle cx="8" cy="17" r="1.1" fill="#fff"/><circle cx="12" cy="17" r="1.1" fill="#fff"/>':'<path d="M3 9.3h18"/><path d="M7.5 3v3M16.5 3v3"/>'),
+    /* 명단: 사람 */
+    roster:'<circle cx="12" cy="8" r="3.7"/><path d="M5 20c0-3.7 3.1-5.9 7-5.9s7 2.2 7 5.9z"/>',
+    /* 관리: 깃발 */
+    manage:'<path d="M6 21.5V3.5" stroke="currentColor" stroke-width="1.9" fill="none"/><path d="M6 4h11.5l-2.3 4L17.5 12H6z"/>',
+    /* 행사: 별 */
+    event:'<path d="M12 3.1l2.6 5.4 5.9.85-4.3 4.1 1.02 5.85L12 16.6 6.87 19.35 7.9 13.5 3.6 9.4l5.9-.85z"/>',
+    /* 일지: 메모+펜 */
+    journal:'<path d="M13 4.5H6.4A2.4 2.4 0 0 0 4 6.9v10.7a2.4 2.4 0 0 0 2.4 2.4h10.7a2.4 2.4 0 0 0 2.4-2.4V11" stroke="currentColor" stroke-width="1.9" fill="none"/><path d="M17.6 3.4l3 3-7 7-3.6.6.6-3.6z"/>',
+    /* 차계부: 자동차 */
+    car:'<path d="M4.6 12l1.7-4.6A2.2 2.2 0 0 1 8.4 6h7.2a2.2 2.2 0 0 1 2.1 1.4L19.4 12" stroke="currentColor" stroke-width="1.9" fill="none"/><rect x="3.2" y="11.4" width="17.6" height="6.2" rx="2.2"/><circle cx="7.6" cy="19.2" r="1.7"/><circle cx="16.4" cy="19.2" r="1.7"/>'+(on?'<circle cx="7.3" cy="14.4" r="1" fill="#fff"/><circle cx="16.7" cy="14.4" r="1" fill="#fff"/>':'')
+  };
+  return '<svg '+A+'>'+(paths[name]||'')+'</svg>';
+}
 function phoneNav(){
   var tab=state.moTab||"time";
-  var items=[["time","🗓","시간표"],["roster","👤","명단"],["manage","📌","관리"],["event","🎪","행사"],["journal","📔","일지"]];
-  return '<div style="position:fixed;left:0;right:0;bottom:0;z-index:60;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(0,0,0,.05)">'+
+  var items=[["time","시간표"],["roster","명단"],["manage","관리"],["event","행사"],["journal","일지"],["car","차계부"]];
+  return '<div style="position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.94);backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);border-top:.5px solid rgba(0,0,0,.12);display:flex;padding:7px 2px calc(7px + env(safe-area-inset-bottom))">'+
     items.map(function(it){ var on=(tab===it[0]);
-      return '<button onclick="setMoTab(\''+it[0]+'\')" style="flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 0;cursor:pointer;font-family:inherit;color:'+(on?'var(--blue)':'#8A9099')+'">'+
-        '<span style="font-size:19px;line-height:1;filter:'+(on?'none':'grayscale(1)')+';opacity:'+(on?'1':'.75')+'">'+it[1]+'</span>'+
-        '<span style="font-size:10.5px;font-weight:'+(on?'800':'600')+'">'+it[2]+'</span></button>';
+      return '<button onclick="setMoTab(\''+it[0]+'\')" style="flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:3px 0;cursor:pointer;font-family:inherit;color:'+(on?'var(--blue)':'#8E8E93')+'">'+
+        '<span style="display:flex;align-items:center;justify-content:center;height:26px">'+moIcon(it[0],on)+'</span>'+
+        '<span style="font-size:10px;font-weight:'+(on?'700':'500')+';letter-spacing:-.2px">'+it[1]+'</span></button>';
     }).join('')+'</div>';
 }
 function renderPhone(){
@@ -13588,6 +13624,7 @@ function renderPhone(){
     else if(tab==="manage") body=phoneManageBody();
     else if(tab==="event") body=phoneEventBody();
     else if(tab==="journal") body=phoneJournalBody();
+    else if(tab==="car") body=phoneCarBody();
     else body=phoneTimetableBody();
   }catch(e){ body='<div style="padding:30px 16px;text-align:center;color:var(--sub);font-size:13px">이 화면을 불러오지 못했습니다.<br>새로고침하거나 다른 메뉴를 눌러보세요.</div>'; try{ console.error("phone tab fail", e); }catch(_){} }
   var overlay="";
@@ -13745,8 +13782,15 @@ function phoneEventDetail(e){
 /* ── 업무일지 간편입력 (휴대폰에서 입력 가능) ── */
 function phoneJournalBody(){
   var w=workData(); var td=today();
+  var dirty=!!state.moDirty;
   var h='<div style="font-size:15px;font-weight:900;margin:2px 0 2px">📔 오늘 업무일지</div>'+
-    '<div style="font-size:12px;color:var(--sub);margin-bottom:12px">'+esc(td)+' · 현장에서 바로 기록하세요. 자동 저장됩니다.</div>';
+    '<div style="font-size:12px;color:var(--sub);margin-bottom:10px">'+esc(td)+' · 휴대폰에서는 <b>자동 저장이 되지 않습니다.</b> 다 적은 뒤 <b>[저장하기]</b>를 눌러 주세요.</div>'+
+    /* 저장 상태 바 (스티키) */
+    '<div style="position:sticky;top:56px;z-index:40;background:'+(dirty?'#FFF7E8':'#F0FBF3')+';border:1px solid '+(dirty?'#F0C36D':'#B8E6C6')+';border-radius:12px;padding:9px 12px;margin-bottom:13px;display:flex;align-items:center;gap:9px">'+
+      '<span style="font-size:12.5px;font-weight:800;color:'+(dirty?'#B45309':'#1E7B3C')+'">'+(dirty?'⚠ 저장 안 된 변경사항':'✅ 저장됨')+'</span>'+
+      '<span style="flex:1"></span>'+
+      '<button onclick="moSaveJournal()" style="background:#1E7B3C;color:#fff;border:none;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">💾 저장하기</button>'+
+    '</div>';
   ["행정","교육"].forEach(function(team){
     var staff=(typeof journalStaff==="function")?journalStaff(team):team;
     var routs=Object.keys(w.routines||{}).map(function(id){return w.routines[id];}).filter(function(r){return r&&r.team===team;});
@@ -13754,23 +13798,74 @@ function phoneJournalBody(){
     h+='<div style="background:#fff;border:1px solid var(--line);border-radius:15px;padding:13px 14px;margin-bottom:13px">'+
       '<div style="display:flex;align-items:center;gap:7px;margin-bottom:10px"><span style="background:'+(team==="행정"?'#EEF4FF':'#EAF7EE')+';color:'+(team==="행정"?'#2B5FB8':'#1E7B3C')+';border-radius:9px;padding:3px 10px;font-size:12.5px;font-weight:800">'+team+'</span>'+
         '<b style="font-size:13.5px">'+esc(staff)+'</b></div>';
-    /* 루틴 체크 (큰 탭 버튼) */
+    /* 루틴 체크 (큰 탭 버튼) — 저장은 [저장하기]로 */
     if(routs.length){
       h+='<div style="font-size:11.5px;color:var(--sub);font-weight:800;margin-bottom:6px">오늘 루틴 체크</div>';
       routs.forEach(function(r){
         var c=(w.rchecks||{})[td+"|"+r.id]; var done=!!(c&&c.done);
-        h+='<button onclick="toggleRoutine(\''+r.id+'\')" style="width:100%;text-align:left;display:flex;align-items:center;gap:9px;background:'+(done?'#EAF7EE':'#F7F9FC')+';border:1px solid '+(done?'#B8E6C6':'var(--line)')+';border-radius:11px;padding:11px 12px;margin-bottom:6px;cursor:pointer;font-family:inherit">'+
+        h+='<button onclick="moToggleRoutine(\''+r.id+'\')" style="width:100%;text-align:left;display:flex;align-items:center;gap:9px;background:'+(done?'#EAF7EE':'#F7F9FC')+';border:1px solid '+(done?'#B8E6C6':'var(--line)')+';border-radius:11px;padding:11px 12px;margin-bottom:6px;cursor:pointer;font-family:inherit">'+
           '<span style="font-size:18px">'+(done?'✅':'⬜')+'</span>'+
           '<span style="flex:1;font-size:13px;'+(done?'color:#1E7B3C;font-weight:700':'color:var(--ink)')+'">'+esc(r.text)+'</span></button>';
       });
     }
     /* 오늘 메모 */
     h+='<div style="font-size:11.5px;color:var(--sub);font-weight:800;margin:10px 0 5px">오늘 메모 · 특이사항</div>'+
-      '<textarea id="molog_'+team+'" class="input" placeholder="오늘 있었던 일, 특이사항을 적으세요. @담당 #기한 사용 가능" style="width:100%;min-height:74px;resize:vertical;font-family:inherit;font-size:14px" oninput="setTeamLog(\''+team+'\',this.value)" onchange="commitTeamLog(\''+team+'\')">'+esc(lg.text||"")+'</textarea>'+
-      (lg.dev?'<div style="font-size:10.5px;color:var(--sub);margin-top:4px">저장됨 · '+workStamp(lg.dev,lg._t)+'</div>':'')+
+      '<textarea id="molog_'+team+'" class="input" placeholder="오늘 있었던 일, 특이사항을 적으세요. @담당 #기한 사용 가능" style="width:100%;min-height:74px;resize:vertical;font-family:inherit;font-size:14px" oninput="moSetLog(\''+team+'\',this.value)" onchange="moCommitLog(\''+team+'\')">'+esc(lg.text||"")+'</textarea>'+
+      (lg.dev?'<div style="font-size:10.5px;color:var(--sub);margin-top:4px">마지막 저장 · '+workStamp(lg.dev,lg._t)+'</div>':'')+
     '</div>';
   });
   h+='<div style="text-align:center;font-size:10.5px;color:#9AA0A8;margin-top:2px">루틴·업무 전체 관리는 도장 PC의 업무일지에서</div>';
+  return h;
+}
+
+/* ── 차계부 (휴대폰에서 운행 기록 입력) ── */
+function phoneCarBody(){
+  var w=workData(); var ci=w.carInfo||{};
+  var rows=(typeof carRows==="function")?carRows():[];
+  var withDiff=rows.map(function(r,i){ return {r:r, diff:i>0?(r.odo-rows[i-1].odo):null}; });
+  var ym0=today().slice(0,7), monKm=0, monWon=0, monFuel=0;
+  withDiff.forEach(function(x){ if(x.r.date.slice(0,7)===ym0){ if(x.diff!=null&&x.diff>0) monKm+=x.diff; monWon+=x.r.fuelWon||0; monFuel+=x.r.fuelL||0; } });
+  var latest=rows.length?rows[rows.length-1]:null;
+  var recent=withDiff.slice().reverse().slice(0,12);
+  var d0=state.car_date||today();
+  function card(v,unit,lbl,col){ return '<div style="flex:1;background:#fff;border:1px solid var(--line);border-radius:13px;padding:9px 6px;text-align:center"><div style="font-size:18px;font-weight:900;color:'+col+'">'+v+'<span style="font-size:11px;font-weight:700">'+unit+'</span></div><div style="font-size:10.5px;color:var(--sub);margin-top:1px">'+lbl+'</div></div>'; }
+  var h='<div style="font-size:15px;font-weight:900;margin:2px 0 2px">🚗 차계부</div>'+
+    '<div style="font-size:12px;color:var(--sub);margin-bottom:12px">'+esc(ci.name||"도장 차량")+(ci.plate?' · '+esc(ci.plate):'')+' · 업무 종료 시 계기판 주행거리를 기록하세요.</div>'+
+    '<div style="display:flex;gap:7px;margin-bottom:13px">'+card(monKm.toLocaleString(),"km","이번 달 운행","var(--blue)")+card(monFuel.toLocaleString(),"L","주유량","#1E7B3C")+card(monWon.toLocaleString(),"원","주유비","#B45309")+'</div>';
+  /* 입력 카드 */
+  h+='<div style="background:#fff;border:1px solid var(--line);border-radius:15px;padding:14px;margin-bottom:14px">'+
+    '<div style="font-size:13.5px;font-weight:900;margin-bottom:10px">오늘 운행 기록 추가</div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:9px">'+
+      '<div style="flex:1"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">날짜</div>'+
+        '<input type="date" class="input" value="'+esc(d0)+'" onchange="setCarField(\'date\',this.value)" style="width:100%;height:44px;font-size:14px"></div>'+
+      '<div style="flex:1.2"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">계기판 주행거리 (km) <span style="color:var(--red)">*</span></div>'+
+        '<input inputmode="numeric" class="input" placeholder="예: 84500" value="'+esc(state.car_odo||"")+'" oninput="setCarField(\'odo\',this.value)" style="width:100%;height:44px;font-size:15px;font-weight:700"></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:9px">'+
+      '<div style="flex:1"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">주유량 (L)</div>'+
+        '<input inputmode="decimal" class="input" placeholder="선택" value="'+esc(state.car_fuelL||"")+'" oninput="setCarField(\'fuelL\',this.value)" style="width:100%;height:44px;font-size:14px"></div>'+
+      '<div style="flex:1"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">주유비 (원)</div>'+
+        '<input inputmode="numeric" class="input" placeholder="선택" value="'+esc(state.car_fuelWon||"")+'" oninput="setCarField(\'fuelWon\',this.value)" style="width:100%;height:44px;font-size:14px"></div>'+
+    '</div>'+
+    '<div style="margin-bottom:11px"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">메모</div>'+
+      '<input class="input" placeholder="예: 엔진오일 교체, 시합 인솔 등" value="'+esc(state.car_memo||"")+'" oninput="setCarField(\'memo\',this.value)" style="width:100%;height:44px;font-size:14px"></div>'+
+    '<button onclick="addCarLog()" style="width:100%;background:#1E7B3C;color:#fff;border:none;border-radius:11px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit">＋ 기록 추가</button>'+
+    (latest?'<div style="font-size:11px;color:var(--sub);text-align:center;margin-top:8px">최근 기록 '+esc(latest.date.slice(5))+' · <b style="color:var(--ink)">'+latest.odo.toLocaleString()+'km</b></div>':'')+
+  '</div>';
+  /* 최근 기록 */
+  h+='<div style="font-size:13px;font-weight:900;margin:4px 0 8px">최근 운행 기록</div>';
+  if(!recent.length){ h+='<div style="text-align:center;color:var(--sub);font-size:13px;padding:16px 0">아직 기록이 없습니다. 위에서 첫 기록을 추가하세요.</div>'; }
+  recent.forEach(function(x){
+    var r=x.r;
+    h+='<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 13px;margin-bottom:7px;display:flex;align-items:center;gap:9px">'+
+      '<div style="flex:0 0 auto;text-align:center"><div style="font-size:13px;font-weight:800">'+esc(r.date.slice(5))+'</div></div>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800">'+r.odo.toLocaleString()+'<span style="font-size:11px;color:var(--sub);font-weight:600">km</span></div>'+
+        (r.memo?'<div style="font-size:11.5px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.memo)+'</div>':'')+'</div>'+
+      (x.diff!=null&&x.diff>=0?'<span style="flex:0 0 auto;background:#EEF4FF;color:var(--blue);border-radius:9px;padding:3px 9px;font-size:11.5px;font-weight:800">+'+x.diff.toLocaleString()+'km</span>':'')+
+      (r.fuelL?'<span style="flex:0 0 auto;background:#EAF7EE;color:#1E7B3C;border-radius:9px;padding:3px 8px;font-size:11px;font-weight:800">'+r.fuelL+'L</span>':'')+
+    '</div>';
+  });
+  h+='<div style="text-align:center;font-size:10.5px;color:#9AA0A8;margin-top:6px">기록 수정·삭제, 정비 관리는 도장 PC에서</div>';
   return h;
 }
 
