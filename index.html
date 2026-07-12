@@ -421,7 +421,7 @@ var STUDENTS = [];  /* 명단은 클라우드에서 불러옴 (개인정보 보�
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.18";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.19";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -5535,12 +5535,44 @@ function briefScanMulti(months){
   }
   return r;
 }
+/* ── 과거 시점 재구성: 선택한 기간의 '끝 시점(T)' 기준 재원/휴관 상태 ──
+   저장된 시간 정보(등록일·퇴관일·휴관/복관 기록)로 그 시점의 인원을 되살린다.
+   (급수·반 정보는 시점별 이력이 없어 현재값을 사용 — 화면에 '현재 기준'으로 명시) */
+function ymEndDate(ym){ var y=Number(ym.slice(0,4)), m=Number(ym.slice(5,7)); var d=new Date(y,m,0).getDate(); return ym+"-"+(d<10?"0":"")+d; }
+function briefEndDate(P){ var ms=P.months; return ymEndDate(ms[ms.length-1]); }
+function briefIsPast(P){ var ms=P.months; return ms[ms.length-1] < today().slice(0,7); }
+function memberStateAt(s, T){
+  var jd=s.joinDate;
+  if(jd && jd>T) return null;                                   /* 그 시점엔 아직 입관 전 */
+  var q=(state.quitMap||{})[s.n];
+  if(q && !q.del && q.start && q.start<=T) return null;         /* 그 시점 이전에 퇴관 */
+  var cs=(state.closedMap||{})[s.n];
+  if(cs && cs.start && cs.start<=T){
+    var reop=((state.reopenLog||{})[s.n]||[]).some(function(rp){ return rp.reopenDate && rp.reopenDate>cs.start && rp.reopenDate<=T; });
+    if(!reop) return '휴관';                                     /* 그 시점에 휴관 중 */
+  }
+  var abs=(state.absences||{})[s.n]||[];
+  for(var i=0;i<abs.length;i++){ var e=abs[i]; if(e.del) continue; if(e.from && e.to && e.from<=T && T<=e.to) return '휴관'; }
+  return '재원';
+}
+function briefEnrollAt(T){
+  var pc={재원:0,휴관:0}, banCnt={};
+  (STUDENTS||[]).forEach(function(s){
+    var st=memberStateAt(s,T);
+    if(st===null) return;
+    if(st==='휴관'){ pc.휴관++; return; }
+    pc.재원++; var b=s.b||"미지정"; banCnt[b]=(banCnt[b]||0)+1;
+  });
+  return { pc:pc, banCnt:banCnt };
+}
 function renderBriefTab(){
   if(!state.schedule) state.schedule=seedSchedule();  /* 반 그룹 집계에 필요 */
   if(!state.briefYm) state.briefYm=today().slice(0,7);
   if(!state.briefYear) state.briefYear=Number(today().slice(0,4));
   var mode=state.briefMode||"월간";
   var P=briefMonths();
+  var isPast=briefIsPast(P), briefT=briefEndDate(P);
+  var onThisMonth=(mode==="월간" && (state.briefYm||today().slice(0,7))===today().slice(0,7));
   var cur=briefScanMulti(P.months), prev=briefScanMulti(P.prevMonths);
   var diff=cur.total-prev.total;
   var absRate = cur.placed ? Math.round(cur.absent/cur.placed*100) : 0;
@@ -5574,8 +5606,11 @@ function renderBriefTab(){
 
   function card(inner,extra){ return '<div class="card" style="flex:1;min-width:270px;'+(extra||'')+'">'+inner+'</div>'; }
   var x='<div class="card"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
-    '<button class="chip" style="padding:6px 9px" onclick="moveBrief(-1)">◀</button><b style="font-size:15px;white-space:nowrap">'+esc(P.label)+' 브리핑</b><button class="chip" style="padding:6px 9px" onclick="moveBrief(1)">▶</button>'+
-    ["월간","상반기","하반기","연간"].map(function(k){
+    '<button class="chip" style="padding:6px 9px" onclick="moveBrief(-1)">◀</button><b style="font-size:15px;white-space:nowrap">'+esc(P.label)+' 브리핑</b>'+
+    (isPast?'<span style="background:#8A5A20;color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:800;white-space:nowrap">🕰 과거</span>':'')+
+    '<button class="chip" style="padding:6px 9px" onclick="moveBrief(1)">▶</button>'+
+    '<button class="chip'+(onThisMonth?' on':'')+'" style="padding:5px 9px;font-size:13.5px'+(!onThisMonth?';border-color:var(--blue);color:var(--blue);font-weight:800':'')+'" onclick="briefThisMonth()" title="이번 달 월간 브리핑으로 이동">이번달</button>'+
+    ["상반기","하반기","연간"].map(function(k){
       return '<button class="chip'+(mode===k?' on':'')+'" style="padding:5px 9px;font-size:13.5px" onclick="setBriefMode(\''+k+'\')">'+k+'</button>';
     }).join('')+
     '<span style="flex:1;min-width:2px"></span>'+
@@ -5584,6 +5619,14 @@ function renderBriefTab(){
       '<button class="chip" style="padding:5px 9px;font-size:11.5px" onclick="briefPpt()">📑 PPT</button>'+
     '</span>'+
     '</div></div>';
+
+  if(isPast){
+    x+='<div style="background:linear-gradient(135deg,#FBF4E7,#F6EAD4);border:1px solid #E4C79A;border-radius:12px;padding:11px 15px;margin-bottom:2px;display:flex;align-items:center;gap:10px">'+
+      '<span style="font-size:20px">🕰</span>'+
+      '<div style="flex:1;font-size:12.5px;color:#6B4A1A;line-height:1.6"><b>과거 시점 브리핑 — '+esc(P.label)+' 기준</b><br>재원·휴관·반별 인원은 <b>그 시점('+esc(briefT)+')</b>의 상태로 재구성해 보여줍니다. 급수 분포·심사 파이프라인은 이력이 없어 <b>현재 기준</b>입니다.</div>'+
+      '<button class="chip" style="flex:0 0 auto;background:#8A5A20;color:#fff;border-color:#8A5A20;font-weight:800;padding:6px 11px" onclick="briefThisMonth()">이번달로</button>'+
+    '</div>';
+  }
 
   x+='<div class="briefRow">'+
     card('<div style="font-size:11.5px;color:var(--sub)">'+esc(P.label)+' 총 출석</div><div style="font-size:28px;font-weight:900">'+cur.total+'<span style="font-size:13.5px">회</span></div>'+
@@ -5704,15 +5747,19 @@ function renderBriefTab(){
     "1단":BLACK,"2단":BLACK,"3단":BLACK,"4단":BLACK,"5단":BLACK,"6단":BLACK,"7단":BLACK,"8단":BLACK,"9단":BLACK};
 
   /* ══ 👥 인원 브리핑 ══ */
-  var pc={재원:0, 휴관:0};
-  var banCnt={};
-  STUDENTS.forEach(function(s){
-    if(isQuit(s.n)) return;                    /* 퇴관은 재원·휴관 어디에도 안 셈 */
-    if(s.st==="휴관" || state.closedMap[s.n]){ pc.휴관++; return; }
-    pc.재원++;
-    var b=s.b||"미지정";
-    banCnt[b]=(banCnt[b]||0)+1;
-  });
+  var pc, banCnt;
+  if(isPast){                                  /* 과거 시점: 그 시점 기준으로 재구성 */
+    var _en=briefEnrollAt(briefT); pc=_en.pc; banCnt=_en.banCnt;
+  } else {
+    pc={재원:0, 휴관:0}; banCnt={};
+    STUDENTS.forEach(function(s){
+      if(isQuit(s.n)) return;                  /* 퇴관은 재원·휴관 어디에도 안 셈 */
+      if(s.st==="휴관" || state.closedMap[s.n]){ pc.휴관++; return; }
+      pc.재원++;
+      var b=s.b||"미지정";
+      banCnt[b]=(banCnt[b]||0)+1;
+    });
+  }
   var tempN=(state.tempStudents||[]).length;
   var BANS6=["1킨더(7이하)","2초주니어(8~10)","3초시니어(11~13)","4청소년(14-19)","5성인1(20-39)","6성인2(40이상)"];
   var banMax=Math.max.apply(null, BANS6.map(function(b){return banCnt[b]||0;}).concat([1]));
@@ -5724,10 +5771,10 @@ function renderBriefTab(){
   for(var rn in rlog){ (rlog[rn]||[]).forEach(function(e){ if(e.reopenDate && mset[(e.reopenDate||"").slice(0,7)] && reopenedAll.indexOf(rn)===-1) reopenedAll.push(rn); }); }
   var reopened=reopenedAll.filter(function(n){ return STUDENTS.some(function(s){return s.n===n;}) && !isQuit(n) && !state.closedMap[n]; });
   var reopenActive=reopened;
-  x+='<div class="card" style="padding:10px 16px"><b class="sectionMark" style="font-size:15px">👥 인원 브리핑</b> <span style="font-size:11.5px;color:var(--sub)">자세한 표는 [인원현황] 탭</span></div>';
+  x+='<div class="card" style="padding:10px 16px"><b class="sectionMark" style="font-size:15px">👥 인원 브리핑</b> '+(isPast?'<span style="background:#F3E3C7;color:#6B4A1A;border-radius:7px;padding:2px 8px;font-size:11px;font-weight:800">'+esc(P.label)+' 시점 기준</span>':'<span style="font-size:11.5px;color:var(--sub)">자세한 표는 [인원현황] 탭</span>')+'</div>';
   x+='<div class="briefRow">'+
-    card('<div style="font-size:11.5px;color:var(--sub)">재원생</div><div style="font-size:28px;font-weight:900">'+pc.재원+'<span style="font-size:13.5px">명</span></div>'+
-      '<div style="font-size:11.5px;color:var(--sub)">휴관 '+pc.휴관+'명 · 임시(체험) '+tempN+'명</div>')+
+    card('<div style="font-size:11.5px;color:var(--sub)">재원생'+(isPast?' <span style="color:#8A5A20;font-weight:800">· '+esc(briefT)+' 시점</span>':'')+'</div><div style="font-size:28px;font-weight:900">'+pc.재원+'<span style="font-size:13.5px">명</span></div>'+
+      '<div style="font-size:11.5px;color:var(--sub)">휴관 '+pc.휴관+'명 · 임시(체험) '+tempN+'명'+(isPast?'':'')+'</div>')+
     card('<div style="font-size:11.5px;color:var(--sub)">'+esc(P.label)+' 신규 등록</div><div style="font-size:28px;font-weight:900">'+newbies.length+'<span style="font-size:13.5px">명</span></div>'+
       '<div style="font-size:11.5px;color:var(--sub)">현재 재원 유지 '+newActive+'명'+(newbies.length?' — '+newbies.slice(0,4).map(function(s){return snLink(s.n);}).join(", ")+(newbies.length>4?" 외":""):'')+'</div>')+
     card('<div style="font-size:11.5px;color:var(--sub)">'+esc(P.label)+' 복관 <span style="color:#B8BCC6">(현재 재원만)</span></div><div style="font-size:28px;font-weight:900">'+reopened.length+'<span style="font-size:13.5px">명</span></div>'+
@@ -5748,12 +5795,13 @@ function renderBriefTab(){
     card('<b style="font-size:13.5px">'+esc(P.label)+' 응심 완료 <span style="color:var(--red)">'+done.length+'명</span></b>'+
       '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">'+
       (done.length?done.slice(0,12).map(function(o){return '<span class="chip sm" style="white-space:nowrap;cursor:pointer" title="클릭하면 학적부가 열립니다" onclick="openStuM(\''+esc(o.n).replace(/'/g,"\\'")+'\')">'+demoTag(o.n,13)+esc(o.n)+' <i style="font-size:10px;color:var(--sub)">'+esc(o.d.slice(5))+'</i></span>';}).join('')+(done.length>12?'<span style="align-self:center;font-size:11.5px;color:var(--sub)">외 '+(done.length-12)+'명</span>':''):'<span style="color:var(--sub)">기록 없음</span>')+'</div>')+
-    card('<b style="font-size:13.5px">급수 분포 (재원생)</b><div style="margin-top:8px">'+
+    card('<b style="font-size:13.5px">급수 분포 (재원생)'+(isPast?' <span style="font-size:11px;color:#8A5A20;font-weight:700">· 현재 기준</span>':'')+'</b><div style="margin-top:8px">'+
       Object.keys(dist).map(function(k){ return barRow(k, dist[k], dMax, DIST_COLOR[k], (k.indexOf("흰")===0)?"2px solid #A8A492":""); }).join('')+'</div>'+
       '<div style="font-size:11.5px;color:var(--sub);margin-top:6px">급수 미입력 '+noGrade+'명 — 명단에서 입력하면 분석이 더 정확해집니다</div>'+
       '<div style="font-size:13.5px;margin-top:8px;border-top:1px solid var(--line);padding-top:8px">🐢 정체 인원(마지막 심사 6개월↑·24회 미달): <b>'+stale.length+'명</b>'+
       (stale.length?'<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">'+stale.map(function(s){return '<span class="chip sm" style="white-space:nowrap;cursor:pointer" title="클릭하면 학적부가 열립니다" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+demoTag(s.n,13)+esc(s.n)+' <i style="font-size:10px;color:var(--sub)">'+(state.accMap[s.n]||0)+'회</i></span>';}).join('')+'</div>':'')+'</div>')+
     '</div>';
+  if(isPast){ return '<div style="background:repeating-linear-gradient(45deg,#FBF6EC,#FBF6EC 14px,#F8F1E2 14px,#F8F1E2 28px);border:1.5px dashed #D9B681;border-radius:16px;padding:10px 10px 4px">'+x+'</div>'; }
   return x;
 }
 function briefExportData(){
@@ -5884,6 +5932,7 @@ window.briefPpt=function(){
   document.head.appendChild(sc);
 };
 window.setBriefMode=function(v){ state.briefMode=v; render(); };
+window.briefThisMonth=function(){ state.briefMode="월간"; state.briefYm=today().slice(0,7); state.briefYear=Number(today().slice(0,4)); render(); };
 window.moveBrief=function(n){
   if((state.briefMode||"월간")==="월간"){ state.briefYm=ymAdd(state.briefYm||today().slice(0,7), n); }
   else { state.briefYear=(state.briefYear||Number(today().slice(0,4)))+n; }
