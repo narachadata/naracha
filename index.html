@@ -572,7 +572,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.33";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.34";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -11311,7 +11311,7 @@ function renderEventCalendar(byDate, years){
     var lanes=[];
     segs.forEach(function(sg){ var L=0; for(;;){ if(!lanes[L])lanes[L]=[]; var ok=true; for(var c=sg.start;c<=sg.end;c++){ if(lanes[L][c]){ok=false;break;} } if(ok){ for(var c=sg.start;c<=sg.end;c++) lanes[L][c]=true; sg.lane=L; break; } L++; if(L>30){sg.lane=L;break;} } });
     var laneCount=segs.reduce(function(m,s){return Math.max(m,s.lane+1);},0);
-    var cellMinH=TOPPAD + laneCount*(LANE_H+2) + 5; if(cellMinH<62) cellMinH=62;
+    var cellMinH=TOPPAD + laneCount*(LANE_H+2) + 5; if(cellMinH<84) cellMinH=84;
     /* 날짜 셀 (배경 박스 + 숫자 + 휴일명) */
     var cellsHtml=week.map(function(d,ci){
       if(!d) return '<div style="min-height:'+cellMinH+'px;background:#FAFBFD;border:1px solid #F1F3F7;border-radius:9px"></div>';
