@@ -454,6 +454,57 @@ function studentSchoolLevel(s){ var gl=studentGrade(s); if(/^초/.test(gl)) retu
 function seedSchoolsOnce(){ try{ if(localStorage.getItem("naracha_school_seed_v1")) return; if(!STUDENTS||!STUDENTS.length) return; var ch=0; STUDENTS.forEach(function(s){ if(s&&!s.school&&NARACHA_SCHOOL_MAP[s.n]){ s.school=NARACHA_SCHOOL_MAP[s.n]; s._t=Date.now(); ch++; } }); localStorage.setItem("naracha_school_seed_v1","1"); if(ch){ state.rosterT=Date.now(); try{ rosterSave(); }catch(e){} try{ if(myRole()==="admin"&&typeof persist==="function") persist(); }catch(e){} } }catch(e){} }
 window.setStuSchool=function(v){ if(state.stuM) state.stuM.school=v; };
 window.setStuGrade=function(v){ if(!state.stuM) return; if(v==="__auto"){ state.stuM.schoolGrade=""; state.stuM.schoolGradeY=""; } else { state.stuM.schoolGrade=v; state.stuM.schoolGradeY=schoolYearNow(); } render(); };
+/* ── 구글폼 신규 등록 자동 연동 ── */
+function signupUrl(){ try{ return localStorage.getItem("naracha_signup_url")||""; }catch(e){ return ""; } }
+window.setSignupUrl=function(){ var v=prompt("구글폼 신규등록 연동 URL을 붙여넣으세요.\n(폼 응답 시트 → 확장 프로그램 → Apps Script → 웹앱 배포 URL)", signupUrl()); if(v===null) return; v=v.trim(); try{ localStorage.setItem("naracha_signup_url", v); }catch(e){} if(v){ toast("연동 URL 저장 — 신규 신청을 불러옵니다"); pullSignups(); } else { state.newSignups=[]; render(); } };
+function normBy(v){ v=String(v||"").trim(); var m; if(m=v.match(/^(\d{4})[-.\/](\d{1,2})[-.\/](\d{1,2})/)) return m[1]+"-"+("0"+m[2]).slice(-2)+"-"+("0"+m[3]).slice(-2); if(m=v.match(/^(\d{1,2})[-.\/](\d{1,2})[-.\/](\d{4})/)) return m[3]+"-"+("0"+m[1]).slice(-2)+"-"+("0"+m[2]).slice(-2); return v; }
+function parseGradeKo(v){ v=String(v||""); var m; if(m=v.match(/초[^0-9]*(\d)\s*학년/)) return "초"+m[1]; if(m=v.match(/중[^0-9]*(\d)\s*학년/)) return "중"+m[1]; if(m=v.match(/고[^0-9]*(\d)\s*학년/)) return "고"+m[1]; if(/7세/.test(v)) return "7세"; return ""; }
+function signupKey(o){ return (o.name||"")+"|"+(o.ts||""); }
+window.pullSignups=function(cb){
+  var url=signupUrl(); if(!url){ if(cb)cb(); return; }
+  fetch(url).then(function(r){return r.json();}).then(function(rows){
+    var w=workData(), done=w.signupDone||{};
+    var have={}; (STUDENTS||[]).forEach(function(s){ have[s.n]=1; });
+    state.newSignups=(rows||[]).filter(function(o){ return o&&o.name&&!done[signupKey(o)]&&!have[o.name]; });
+    try{ render(); }catch(e){}
+    if(cb)cb();
+  }).catch(function(){ if(cb)cb(); });
+};
+window.registerSignup=function(i){
+  var o=(state.newSignups||[])[i]; if(!o) return;
+  openStuM();  /* 신규 등록창 */
+  var m=state.stuM; if(!m) return;
+  m.n=(o.name||"").trim(); m.by=normBy(o.by); m.g=(/여/.test(o.gender||"")?"여":"남"); m.school=(o.school||"").trim();
+  var gl=parseGradeKo(o.grade); if(gl){ m.schoolGrade=gl; m.schoolGradeY=schoolYearNow(); }
+  m.gd=[]; if(o.g1p){ var rel=(String(o.g1||"").match(/(외조부|외조모|조부|조모|부|모|이모|고모|삼촌|친척|돌봄)/)||["모"])[0]; m.gd.push({r:rel, n:String(o.g1||"").replace(/\(.*\)/,"").trim(), p:String(o.g1p).trim()}); }
+  if(o.emg && o.emg!==o.g1p){ var rel2=(String(o.emg||"").match(/(외조부|외조모|조부|조모|부|모|이모|고모|삼촌|친척|돌봄)/)||["부"])[0]; m.gd.push({r:rel2, n:"", p:String(o.emg).replace(/[^0-9\-]/g,"")}); }
+  if(o.days){ var cnt=(String(o.days).match(/[월화수목금토]/g)||[]).length; m.t=cnt>=3?"주3":cnt===2?"주2":"주1"; }
+  var nb=[]; if(o.addr) nb.push("주소: "+o.addr); if(o.car && !/이용하지/.test(o.car)) nb.push("차량: "+o.car+(o.carLoc?(" ("+o.carLoc+")"):"")); if(nb.length) m.note="["+today()+"] "+nb.join(" · ");
+  m.__signupKey=signupKey(o);
+  render();
+};
+window.dismissSignup=function(i){ var o=(state.newSignups||[])[i]; if(!o) return; if(!confirm(o.name+" 신청을 목록에서 숨길까요? (등록은 안 됩니다)")) return; var w=workData(); if(!w.signupDone)w.signupDone={}; w.signupDone[signupKey(o)]=Date.now(); workPersist(); state.newSignups=(state.newSignups||[]).filter(function(x,j){return j!==i;}); render(); };
+function renderSignupBanner(){
+  var arr=state.newSignups||[]; if(!arr.length) return "";
+  return '<div style="background:linear-gradient(135deg,#EAF7EE,#DCF0E3);border:1px solid #A9DBB9;border-radius:14px;padding:12px 15px;margin-bottom:12px">'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px"><b style="font-size:14.5px;color:#1E7B3C">🎉 이번주 신규 수련생이 있습니다 · '+arr.length+'명</b>'+
+      '<span style="font-size:11px;color:var(--sub)">구글폼 등록 신청</span><span style="flex:1"></span>'+
+      '<button class="chip sm" onclick="pullSignups()">↻ 새로고침</button><button class="chip sm" style="color:var(--sub)" onclick="setSignupUrl()">연동설정</button></div>'+
+    arr.map(function(o,i){ var by=normBy(o.by), g=parseGradeKo(o.grade)||(by?studentGrade({by:by}):"");
+      return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 12px;margin-bottom:6px">'+
+        '<b style="font-size:14.5px">'+esc(o.name||"")+'</b>'+
+        (by?'<span style="font-size:11.5px;color:var(--sub)">'+esc(by)+'</span>':'')+
+        (o.school?'<span style="font-size:11.5px;color:#2B5FB8;font-weight:700">'+esc(o.school)+'</span>':'')+
+        (g?'<span style="font-size:11px;background:#EEF4FF;color:#2B5FB8;border-radius:7px;padding:1px 7px;font-weight:700">'+esc(g)+'</span>':'')+
+        (o.g1p?'<span style="font-size:11.5px;color:var(--sub)">📞 '+esc(o.g1p)+'</span>':'')+
+        '<span style="flex:1"></span>'+
+        '<button class="chip" style="background:var(--blue);border-color:var(--blue);color:#fff;font-weight:800" onclick="registerSignup('+i+')">＋ 등록</button>'+
+        '<button class="chip sm" style="color:var(--sub)" onclick="dismissSignup('+i+')">숨김</button>'+
+      '</div>';
+    }).join('')+
+    '<div style="font-size:10.5px;color:var(--sub);margin-top:2px">[＋ 등록]을 누르면 정보가 채워진 등록창이 열립니다. 확인 후 저장하세요.</div>'+
+  '</div>';
+}
 /* 12월 진학 조사: 7세·초6·중3·고3 재원생을 업무 관리대상에 자동 등록 (연 1회) */
 function checkGradeAdvance(){ try{
   var t=today(); if(t.slice(5,7)!=="12") return; var yr=t.slice(0,4);
@@ -471,7 +522,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.26";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.27";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -4778,7 +4829,7 @@ function renderAttContent(){
 function renderRosterTab(){
   var q=(state.rosterQ||"").trim();
   var f=state.rosterF||"재원"; if(f==="홀딩"){ f="재원"; state.rosterF="재원"; }
-  var x='<div class="card">'+
+  var x=renderSignupBanner()+'<div class="card">'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">'+
     '<input class="input" style="max-width:220px" placeholder="이름 검색" value="'+esc(q)+'" oninput="setRosterQ(this.value)">'+
     ["재원","장기결석","휴관","퇴관","임시","전체"].map(function(k){
@@ -7689,6 +7740,7 @@ window.saveStuM=function(){
     var stu={ n:name, b:m.b, g:m.g, t:m.t||"", by:m.by||"", e:null, p:[], sp:(m.sp||"").trim(), grade:(m.grade||"").trim(), bd:m.bd||"", note:m.note||"", joinDate:m.joinDate||"", reg:m.reg||"월별", health:cleanHealth(m.health), family:(m.family||"").trim(), gd:gd, comps:comps, evHist:evHist, school:(m.school||"").trim(), schoolGrade:m.schoolGrade||"", schoolGradeY:m.schoolGradeY||"", demo:!!m.demo, sid:newSid(), _t:Date.now() };
     if(state.deletedStudents) delete state.deletedStudents[name];   /* 같은 이름의 옛 묘비 해제 (신규 등록 보호) */
     STUDENTS.push(stu);
+    if(m.__signupKey){ try{ var _w=workData(); if(!_w.signupDone)_w.signupDone={}; _w.signupDone[m.__signupKey]=Date.now(); state.newSignups=(state.newSignups||[]).filter(function(o){ return signupKey(o)!==m.__signupKey; }); workPersist(); }catch(e){} }   /* 구글폼 신규생 등록 완료 표시 */
   } else {
     var s=STUDENTS.find(function(x){return x.n===m.orig;});
     if(!s) return;
@@ -9326,7 +9378,7 @@ function applyWorkTomb(w, coll, tk){
 function mergeWork(local, remote){
   if(!remote||!remote.workV) return local;
   var out=JSON.parse(JSON.stringify(local));
-  ["manage","flags","events","logs","tasks","routines","rchecks","staff","car","carMaint","typeColors","holidays","holHidden"].forEach(function(coll){
+  ["manage","flags","events","logs","tasks","routines","rchecks","staff","car","carMaint","typeColors","holidays","holHidden","signupDone"].forEach(function(coll){
     var rc=remote[coll]||{}, oc=out[coll]||(out[coll]={});
     for(var k in rc){ if(!oc[k] || (rc[k]._t||0)>(oc[k]._t||0)) oc[k]=rc[k]; }
   });
@@ -10075,6 +10127,7 @@ function renderWorkTab(){
     '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
       tabBtn('관리','관리수련생 현황')+tabBtn('행사','행사 관리')+tabBtn('일지','업무일지')+
     '</div></div>';
+  h+=renderSignupBanner();
   h+=renderWorkTodoBoard();
   h+=(wt==="행사")?renderWorkEvents():(wt==="일지")?renderWorkJournal():renderWorkManageBody();
   return h;
@@ -14477,6 +14530,7 @@ loadAll();
 render();
 setTimeout(function(){ if(state.unlocked) cloudPull(); }, 500);  /* 잠금 해제 후에만 자동 동기화 (로그인 화면 튕김 방지) */
 setTimeout(function(){ try{ seedSchoolsOnce(); }catch(e){} try{ checkGradeAdvance(); }catch(e){} }, 3000);   /* 학교 자동채움·12월 진학조사 (로컬 로스터 대비) */
+setTimeout(function(){ if(state.unlocked && typeof pullSignups==="function" && signupUrl()) try{ pullSignups(); }catch(e){} }, 3500);   /* 구글폼 신규 신청 자동 확인 */
 </script>
 </body>
 </html>
