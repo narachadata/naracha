@@ -440,10 +440,38 @@ function pushExamToFrame(){
    · 명단 변경 후엔 rosterSave() 로 저장한다.
    ══════════════════════════════════════════════════════════════ */
 var STUDENTS = [];  /* 명단은 클라우드에서 불러옴 (개인정보 보호) — 단일 소스 */
+var NARACHA_SCHOOL_MAP={"강다온":"늘푸른초등학교","강리안":"늘푸른초등학교","강민채":"늘푸른초등학교","강예준":"늘푸른초등학교","경은하":"프랜시스파커","고기은":"꿈터유치원","고기주":"꿈터유치원","고다윤":"낙생초등학교","구름":"푸르니어린이집","구지원":"늘푸른초등학교","권교림":"보평초등학교","권민규":"늘푸른초등학교","권하율":"미금초등학교","권환":"늘푸른초등학교","김가빈":"낙생초등학교","김건":"늘푸른초등학교","김건우C":"늘푸른초등학교","김규현":"늘푸른초등학교","김나연":"한울유치원","김도준":"늘푸른초등학교","김라온":"늘푸른초등학교","김래빈":"낙생초등학교","김리오":"한별유치원","김민주":"늘푸른초등학교","김민지":"늘푸른초등학교","김백현":"늘푸른초등학교","김범주":"늘푸른초등학교","김범준":"BIS","김서우B":"늘푸른중학교","김세은":"늘푸른초등학교","김소정":"늘푸른초등학교","김승연":"늘푸른초등학교","김우아":"언동초등학교","김유안":"늘푸른초등학교","김이팝":"늘푸른초등학교","김재인":"늘푸른초등학교","김정후":"늘푸른초등학교","김주희":"늘푸른초등학교","김지운":"성남정자초등학교","김지율B":"늘푸른초등학교","김택현":"늘푸른초등학교","김하린":"성남정자초등학교","김하진":"늘푸른초등학교","김한봄":"즐거운유치원","남연재":"늘푸른초등학교","남윤서":"늘푸른초등학교","남윤재":"한별유치원","노서현":"늘푸른초등학교","노승현":"늘푸른초등학교","노연준":"PSA","다니엘":"KIS","류송현":"Fis (프랑크푸르트)","문지성":"늘푸른초등학교","민지욱":"늘푸른초등학교","박서연":"늘푸른","박서준b":"늘푸른초등학교","박서후":"백현중학교","박설린":"늘푸른초등학교","박시은":"은혜유치원","박시현":"늘푸른초등학교","박시후":"늘푸른초등학교","박여름":"늘푸른중학교","박이건":"늘푸른초등학교","박이서":"프랜시스파커","박정연":"와이어트","박정후":"불곡초등학교","박주은":"늘푸른초등학교","박주환":"늘푸른초등학교","박태양":"PSA","박하윤":"늘푸른초등학교","박한빛":"안말초등학교","방시아":"늘푸른초등학교","방창우":"백현중학교","배윤서":"백현중학교","배정원":"늘푸른초등학교","백서영":"늘푸른중학교","변레오":"KIS","변주원":"대현초등학교","서우진":"고기초등학교","서윤우":"늘푸른초등학교","서채우":"KIS","설아윤":"서당초등학교","설하온":"리움에듀유치원","소리오":"페이스튼","신동욱":"꿈터유치원","신리예":"늘푸른초등학교","신주호":"늘푸른초등학교","안다빈":"늘푸른중학교","안서윤":"한별유치원","안준서":"늘푸른초등학교","연우주":"꿈터유치원","연지우":"늘푸른초등학교","오윤하":"늘푸른초등학교","오하은":"늘푸른초등학교","오현석":"늘푸른초등학교","위현":"운중초등학교","유하진":"늘푸른초등학교","윤서하":"늘푸른초등학교","윤서한":"늘푸른초등학교","윤승재":"프랜시스파커","윤재하":"늘푸른초등학교","윤지웅":"늘푸른초등학교","윤지호":"늘푸른초등학교","윤찬주":"불곡중학교","이가경":"늘푸른초등학교","이루아":"늘푸른중학교","이상후":"늘푸른초등학교","이서연":"늘푸른초등학교","이서윤":"늘푸른초등학교","이서진b":"늘푸른초등학교","이서하":"늘푸른초등학교","이소민":"늘푸른초등학교","이소윤":"늘푸른초등학교","이소율a":"늘푸른초등학교","이수빈":"늘푸른초등학교","이수현":"늘푸른초등학교","이유진":"늘푸른초등학교","이윤준":"늘푸른초등학교","이은율":"늘푸른초등학교","이재윤":"늘푸른초등학교","이준수":"늘푸른초등학교","이지안":"늘푸른초등학교","이지우":"늘푸른중학교","이진율":"늘푸른초등학교","이채연":"한별유치원","이하율":"하이키즈어린이집","이하준":"늘푸른초등학교","임성주":"늘푸른초등학교","임소미":"늘푸른초등학교","임체라":"백현중학교","장고은":"늘푸른초등학교","장시현":"늘푸른초등학교","장주원":"늘푸른초등학교","장채건":"한별유치원","장하진":"늘푸른초등학교","장현규":"늘푸른중학교","전동규":"늘푸른초등학교","정다온":"늘푸른초등학교","정서윤":"백현중학교","정시후":"늘푸른초등학교","정유안":"한별유치원","정유하":"늘푸른초등학교","정윤우":"늘푸른초등학교","정윤호":"늘푸른초등학교","정하솜":"늘푸른초등학교","정헌재":"늘푸른초등학교","조수민":"늘푸른초등학교","조연재":"늘푸른초등학교","조영권":"늘푸른초등학교","조은율":"늘푸른초등학교","조은재":"늘푸른초등학교","좌리한":"늘푸른초등학교","진서아":"늘푸른초등학교","차영도":"늘푸른초등학교","최누리":"늘푸른초등학교","최민지":"늘푸른초등학교","최산호":"BIS","최이안":"페이스튼","최정민":"늘푸른초등학교","최정안":"희언유치원","최지민":"프랜시스파커","최지유":"늘푸른중학교","최형태":"늘푸른초등학교","태라예":"백현중학교","하아린":"늘푸른초등학교","하헌우":"성남정자초등학교","한설":"즐거운유치원","한유건":"늘푸른초등학교","함이준":"늘푸른초등학교","허진우":"미금초등학교","홍다연":"늘푸른초등학교","홍서빈":"송림고등학교","홍성현":"한별유치원","홍지원":"KIS","황로한":"FIS","강승윤":"즐거운유치원","고강유":"늘푸른초등학교","고윤서":"초림초등학교","고은채":"늘푸른초등학교","곽유하":"꿈터유치원","권민성":"레드웨건","권정인":"내정초등학교","김강민":"성남정자초등학교","김건우A":"성남정자초등학교","김건우B":"아메리칸 스템프렙","김규리":"성남정자초등학교","김단우":"늘푸른초등학교","김담현":"당촌초등학교","김도겸":"FIS","김도경":"늘푸른초등학교","김도헌":"늘푸른초등학교","김라엘":"SALT","김라함":"SALT","김려원":"늘푸른초등학교","김로이":"내정초등학교","김리온":"BEK","김민규":"폴리어학원","김민서A":"BIS","김민표":"늘푸른중학교","김보미":"늘푸른초등학교","김보민":"늘푸른초등학교","김보우":"미카국제학교","김상준":"늘푸른초등학교","김서영":"성남정자초등학교","김서영B":"계원예중학교","김서우":"늘푸른초등학교","김서윤":"csis","김서율":"성남정자초등학교","김서율B":"내정초등학교","김서준":"늘푸른초등학교","김서진":"늘푸른초등학교","김선우A":"이솔유치원","김선우B":"스토리헤롯","김세연":"낙생초등학교","김세영":"성남정자초등학교","김아인":"파커유치원","김예나":"레드웨건","김유나":"늘푸른초등학교","김유비":"탄천초등학교","김유주":"일본유치원","김유준b":"초림초등학교","김유진":"일본유치원","김윤아":"늘푸른초등학교","김윤하":"성남정자초등학교","김은총":"월버포스","김이도":"늘푸른초등학교","김이든":"늘푸른초등학교","김이라":"내정초등학교","김이수":"초림초등학교","김재헌":"한별유치원","김정우":"탄천초등학교","김지민":"한국애니매이션고등학교","김지상":"늘푸른초등학교","김지수":"초림초등학교","김지율C":"한별유치원","김지후":"늘푸른초등학교","김찬호":"늘푸른초등학교","김태린":"라이즈","김태희":"늘푸른초등학교","김하임":"csis","나린":"늘푸른초등학교","나연서":"세인트폴 서울","나율":"늘푸른중학교","남지유":"늘푸른초등학교","노건희":"성남정자초등학교","문서연":"늘푸른초등학교","문서준":"레드웨건","문서찬":"이솔유치원","문서하":"늘푸른초등학교","문승재":"위즈","문승혁":"위즈","문정현":"늘푸른중학교","문종후":"늘푸른초등학교","문주하":"GVCS","민서하":"늘푸른초등학교","민소연":"늘푸른초등학교","박레나":"성남정자초등학교","박레미":"백현중학교","박린":"늘푸른초등학교","박서우":"스토리헤롯","박서윤":"늘푸른중학교","박서준":"늘푸른초등학교","박세연":"늘푸른초등학교","박시연":"위즈아일랜드","박시준":"위즈아일랜드","박연호":"BEK","박영인":"백현중학교","박예린":"덕장초등학교","박윤서":"늘푸른초등학교","박재원":"이솔유치원","박준석":"폴리어학원","박준호":"KIS","박태린":"낙생초등학교","박해안":"늘푸른초등학교","배서연A":"KIS","배서연B":"한솔초등학교","배서은":"KIS","배선우":"KIS","백승아":"페이스","백우준":"늘푸른중학교","백은재":"SALT","빈시은":"정자초등학교","서윤호":"폴리","서은우":"늘푸른초등학교","서진우":"늘푸른초등학교","선수빈":"한솔고등학교","선주원":"늘푸른중학교","손도윤":"하바놀이학교","손여원":"불곡고등학교","손유호":"늘푸른초등학교","손주찬":"늘푸른초등학교","손지유":"럭키어린이집","송현서":"분당초등학교","신서안":"프랜시스파커","신세연":"초림초등학교","신승우":"정자초등학교","신승호":"BIS","신예봄":"늘푸른초등학교","신유준":"늘푸른초등학교","신윤재":"늘푸른초등학교","신윤재B":"베스트키지어학원","신은규":"늘푸른초등학교","신중서":"BIS","신지수":"수내고등학교","신현우":"수내초등학교","안다온":"정자동 폴리어학원","안도하":"BEK","안이준":"BEK","양윤서":"BEK","여승은":"분당영덕여고등학교","오승현":"늘푸른중학교","오시형":"페이스튼","오연준":"늘푸른초등학교","오현주":"늘푸른초등학교","용석민":"성남정자초등학교","우지한":"이솔유치원","원아진":"성남정자초등학교","원지수":"늘푸른초등학교","유다현":"미금초등학교","유도연":"늘푸른초등학교","유소율":"늘","유아연":"늘푸른초등학교","유아연B":"신기초등학교","유이현":"소화초등학교","유준":"BEK","유하민":"수내초등학교","유효주":"BEK","윤혜린":"정자초등학교","이가현":"늘푸른초등학교","이나율":"스토리헤롯","이도경":"초림초등학교","이도현":"프랜시스파커","이로이":"사무엘학교","이서우":"라이즈","이서인":"교동초등학교","이서정":"성남정자초등학교","이서준A":"교동초등학교","이서준B":"늘푸른초등학교","이서후":"라이즈","이소율B":"늘푸른초등학교","이수민":"낙생고등학교","이수아":"성남정자초등학교","이수아B":"늘푸른초등학교","이슬우":"백현중학교","이승준":"내정초등학교","이시현":"늘푸른초등학교","이아린":"BIS","이연재":"늘푸른초등학교","이예담":"수내초등학교","이유진B":"미금초등학교","이윤주":"성남정자초등학교","이은재":"하탑초등학교","이인서":"늘푸른초등학교","이재민":"늘푸른초등학교","이재연":"백현중학교","이재이a":"미금초등학교","이재이b":"늘푸른초등학교","이재인":"BEK","이정후":"늘푸른초등학교","이조아":"희언유치원","이주안":"신기초등학교","이주원B":"성남정자초등학교","이지니":"KIS","이지윤":"성남정자초등학교","이지호":"이솔유치원","이지호B":"폴리","이지후":"늘푸른초등학교","이채윤":"늘푸른초등학교","이채율":"늘푸른초등학교","이태준":"늘푸른초등학교","이호수":"신기초등학교","이호연":"정자초등학교","이호정":"신기","이효린":"한솔고등학교","이효준":"라이즈","이후정":"스토리헤롯","이후준":"스토리헤롯","이희서":"KIS","이희찬":"늘푸른초등학교","임지윤":"늘푸른초등학교","임지효":"KIS","장서안":"스토리헤롯","장윤정":"늘푸른초등학교","장은선":"BEK","장주혁":"늘푸른초등학교","장준양":"늘푸른","장한솔":"청솔초등학교","장형우":"성남정자초등학교","전예서":"SALT","전예진":"과천초등학교","전하준":"중앙기독초등학교","정시완":"성남","정시후B":"중학교","정우진":"늘푸른고등학교","정유선":"늘푸른초등학교","정유준":"늘푸른초등학교","정이솜":"BEK","정조안":"독수리고등학교","정하윤A":"성남정자초등학교","정하윤B":"BEK","정하윤C":"BEK","조경은":"다음학교","조보미":"대현초등학교","조유진a":"성남신기초등학교","조윤수":"늘푸른","조은채":"늘푸른초등학교","조준혁":"백현중학교","조하은":"한별유치원","조하준":"성남정자초등학교","지쿄레나":"스토리헤롯","지쿄레이":"스토리헤롯","진선우":"푸르니수지","진시훈":"정자초등학교","차유주":"소화초등학교","채혜리":"늘푸른초등학교","최서준":"늘푸른초등학교","최서현":"늘푸른초등학교","최승요":"늘푸른중학교","최연서":"수내초등학교","최연서b":"정자초등학교","최우주B":"늘푸른초등학교","최우진":"늘푸른초등학교","최유준":"신기초등학교","최윤우":"성남정자초등학교","최윤채":"성남정자초등학교","최윤혁":"성남정자초등학교","최윤호":"프랜시스파커","최차윤":"BEK","최현유":"정자초등학교","최현준":"정자초등학교","표윤아":"한별유치원","한사랑":"늘푸른초등학교","한서윤":"마운틴피스가","한이진":"한별","허윤":"늘푸른초등학교","허준":"제이리","현지우":"레드웨건","현지율":"늘푸른초등학교","홍라희":"BIS","홍리아":"BIS","홍리안":"늘푸른초등학교","홍심현":"BEK","홍예지":"늘푸른초등학교","홍윤서":"늘푸른초등학교","홍은세":"늘푸른초등학교","홍은우":"제이리","황보승":"늘푸른초등학교","황준서":"성남정자초등학교","황지안":"KIS","황지한":"제이리어학원","황채민":"초림초등학교","황하람":"늘푸른초등학교","황하린":"불곡초등학교","강동원":"성남정자초등학교","강명서":"늘푸른중학교","강소현":"정자초등학교","고강민":"늘푸른초등학교","공우연":"스토리헤롯","권정현":"성남정자초등학교","김고호":"국제학교","김규연":"백현중학교","김규진":"백현중학교","김다율":"성남정자초등학교","김대운":"폴리어학원","김도형":"늘푸른초등학교","김무빈":"BEK","김부경":"고등학교","김선현":"하이키즈어린이집","김유미":"늘푸른초등학교","김은재":"성남정자초등학교","김준서":"늘푸른초등학교","김준성":"성남정자초등학교","김지효":"백현중학교","김태리":"한솔고등학교","김태중":"성남정자초등학교","김하은B":"csis","김현규":"성남정자초등학교","김호연":"BIS","박규원":"페이스튼","박서진":"소화초등학교","박서희":"한별유치원","박시아":"BEK","박재인":"BEK","박종하":"레드웨건","박주연":"스토리헤롯","손예리":"정자초등학교","심민준":"성남정자초등학교","이건영님":"서울시립대","이시원":"은혜유치원","이아민":"BEK","이우민":"BEK","이준후":"늘푸른초등학교","이하겸":"성남정자초등학교","이호수B":"늘푸른중학교","임지훈":"성남정자초등학교","전무준":"늘푸른초등학교","전하연":"늘푸른중학교","정솔지":"분당경영고등학교","정준우":"성남정자초등학교","조경하":"다","조승후":"스토리헤롯","조우현":"성남정자초등학교","조유찬":"성남정자초등학교","차하림":"희먼유치원","최정윤":"sis"};
+var NARACHA_SCHOOLS=["PSA","꿈터유치원","럭키어린이집","리움에듀유치원","사무엘학교","와이어트","은혜유치원","이솔유치원","일본유치원","즐거운유치원","파커유치원","푸르니어린이집","프랜시스파커","하이키즈어린이집","한별유치원","한울유치원","희먼유치원","희언유치원","BEK","BIS","FIS","Fis (프랑크푸르트)","SALT","고기초등학교","과천초등학교","교동초등학교","낙생초등학교","내정초등학교","늘","늘푸른초등학교","당촌초등학교","대현초등학교","덕장초등학교","라이즈","레드웨건","마운틴피스가","미금초등학교","미카국제학교","베스트키지어학원","보평초등학교","분당초등학교","불곡초등학교","서당초등학교","서울시립대","성남","성남신기초등학교","성남정자초등학교","소화초등학교","수내초등학교","스토리헤롯","신기","신기초등학교","아메리칸 스템프렙","안말초등학교","언동초등학교","운중초등학교","위즈","위즈아일랜드","정자동 폴리어학원","정자초등학교","제이리","제이리어학원","중앙기독초등학교","청솔초등학교","초림초등학교","탄천초등학교","페이스","페이스튼","폴리","폴리어학원","푸르니수지","하바놀이학교","하탑초등학교","한별","한솔초등학교","GVCS","csis","sis","계원예중학교","늘푸른","늘푸른중학교","다","백현중학교","불곡중학교","세인트폴 서울","월버포스","중학교","고등학교","국제학교","낙생고등학교","늘푸른고등학교","다음학교","독수리고등학교","분당경영고등학교","분당영덕여고등학교","불곡고등학교","송림고등학교","수내고등학교","한국애니매이션고등학교","한솔고등학교","KIS"];
+/* ── 학교·학년 (대한민국 학년나이 자동 · 3월 학년도 기준) ── */
+function schoolYearNow(){ var t=today(); var y=Number(t.slice(0,4)), m=Number(t.slice(5,7)); return (m>=3)?y:(y-1); }
+function birthYearOf(by){ var m=String(by||"").match(/^(\d{4})/); return m?Number(m[1]):null; }
+function gradeIdxFromBirth(by){ var yb=birthYearOf(by); if(!yb) return null; return schoolYearNow()-yb-6; }
+function gradeIdxToLabel(idx){ if(idx==null) return ""; if(idx>=1&&idx<=6) return "초"+idx; if(idx>=7&&idx<=9) return "중"+(idx-6); if(idx>=10&&idx<=12) return "고"+(idx-9); if(idx>=13) return "졸업"; if(idx===0) return "7세"; if(idx===-1) return "6세"; if(idx===-2) return "5세"; return "유아"; }
+function gradeLabelToIdx(lbl){ lbl=(lbl||"").trim(); if(!lbl) return null; var m; if(m=lbl.match(/^초\s*(\d)/)) return Number(m[1]); if(m=lbl.match(/^중\s*(\d)/)) return 6+Number(m[1]); if(m=lbl.match(/^고\s*(\d)/)) return 9+Number(m[1]); if(/졸업|성인/.test(lbl)) return 13; if(m=lbl.match(/^(\d)\s*세/)) return Number(m[1])-7; if(/유치|유아/.test(lbl)) return -1; return null; }
+function studentGrade(s){ if(s&&s.schoolGrade&&s.schoolGradeY){ var bi=gradeLabelToIdx(s.schoolGrade); if(bi!=null) return gradeIdxToLabel(bi+(schoolYearNow()-Number(s.schoolGradeY))); } if(s&&s.by) return gradeIdxToLabel(gradeIdxFromBirth(s.by)); return ""; }
+function studentSchoolLevel(s){ var gl=studentGrade(s); if(/^초/.test(gl)) return "초등학교"; if(/^중/.test(gl)) return "중학교"; if(/^고/.test(gl)) return "고등학교"; if(/세|유치|유아/.test(gl)) return "유치원"; if(/졸업/.test(gl)) return "졸업·성인"; var sc=(s&&s.school)||""; if(/유치원|어린이집/.test(sc)) return "유치원"; if(/초등/.test(sc)) return "초등학교"; if(/중학교/.test(sc)) return "중학교"; if(/고등학교/.test(sc)) return "고등학교"; return "기타"; }
+/* 엑셀 회원현황 → 학교 1회 자동 채움 (빈 학교만, 명단에 있는 원생만) */
+function seedSchoolsOnce(){ try{ if(localStorage.getItem("naracha_school_seed_v1")) return; if(!STUDENTS||!STUDENTS.length) return; var ch=0; STUDENTS.forEach(function(s){ if(s&&!s.school&&NARACHA_SCHOOL_MAP[s.n]){ s.school=NARACHA_SCHOOL_MAP[s.n]; s._t=Date.now(); ch++; } }); localStorage.setItem("naracha_school_seed_v1","1"); if(ch){ state.rosterT=Date.now(); try{ rosterSave(); }catch(e){} try{ if(myRole()==="admin"&&typeof persist==="function") persist(); }catch(e){} } }catch(e){} }
+window.setStuSchool=function(v){ if(state.stuM) state.stuM.school=v; };
+window.setStuGrade=function(v){ if(!state.stuM) return; if(v==="__auto"){ state.stuM.schoolGrade=""; state.stuM.schoolGradeY=""; } else { state.stuM.schoolGrade=v; state.stuM.schoolGradeY=schoolYearNow(); } render(); };
+/* 12월 진학 조사: 7세·초6·중3·고3 재원생을 업무 관리대상에 자동 등록 (연 1회) */
+function checkGradeAdvance(){ try{
+  var t=today(); if(t.slice(5,7)!=="12") return; var yr=t.slice(0,4);
+  if(localStorage.getItem("naracha_advance_"+yr)) return;
+  if(!STUDENTS||!STUDENTS.length) return; if(myRole()!=="admin") return;
+  var w=workData(), added=0;
+  STUDENTS.forEach(function(s){ if(isQuit(s.n)) return; if(state.closedMap&&state.closedMap[s.n]) return;
+    var g=studentGrade(s);
+    if(g==="7세"||g==="초6"||g==="중3"||g==="고3"){ if(!w.flags[s.n]){ w.flags[s.n]={reason:"🎓 진학 조사 대상 ("+g+" → 상급학교)", dev:workDev(), _t:Date.now()}; added++; } }
+  });
+  localStorage.setItem("naracha_advance_"+yr,"1");
+  if(added){ workPersist(); }
+}catch(e){} }
+
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.25";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.26";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -1264,6 +1292,8 @@ function cloudPull(){
         state.rosterFileV = merged.rosterFileV || state.rosterFileV;
         reinjectArchives();   /* [3단계] 불러온 아카이브 재주입 */
         syncStFromMaps();   /* 병합 후 꼬리표를 장부에 맞춰 정리 */
+        try{ seedSchoolsOnce(); }catch(e){}
+        try{ checkGradeAdvance(); }catch(e){}
         setTimeout(function(){ maybeApplyRosterFile(); }, 300);
         state.savedAt=merged.savedAt;
         try{ localStorage.setItem("najacha-html",JSON.stringify({
@@ -5811,6 +5841,23 @@ function renderBriefTab(){
         '<div style="font-size:11.5px;color:var(--sub);line-height:1.6">'+(bmon.length? bmon.slice(0,8).map(function(b){return snLink(b.n)+'('+b.mmdd.replace('-','/')+')';}).join(', ')+(bmon.length>8?' 외':'') : '이번 달 생일 없음 · 명단에 생년월일 입력 시 자동')+'</div>'); })()+
     '</div>';
 
+  /* 🏫 학교별 재원생 (유치원·초·중·고 큰 분류 → 학교별) */
+  if(!isPast){ (function(){
+    var act=(STUDENTS||[]).filter(function(s){ return !isQuit(s.n) && !(state.closedMap&&state.closedMap[s.n]); });
+    var ORDER=["유치원","초등학교","중학교","고등학교","기타"];
+    var COL={"유치원":"#B45309","초등학교":"#2B5FB8","중학교":"#1E7B3C","고등학교":"#7C3AED","기타":"#6B7280"};
+    var cats={}, noSchool=0;
+    ORDER.forEach(function(k){ cats[k]={n:0, sch:{}}; });
+    act.forEach(function(s){ var lvl=studentSchoolLevel(s); if(lvl==="졸업·성인") lvl="기타"; if(!cats[lvl]) lvl="기타"; cats[lvl].n++; var sc=(s.school||"").trim(); if(!sc){ noSchool++; return; } cats[lvl].sch[sc]=(cats[lvl].sch[sc]||0)+1; });
+    var inner=ORDER.filter(function(k){return cats[k].n>0;}).map(function(k){ var c=COL[k];
+      var list=Object.keys(cats[k].sch).map(function(nm){return {nm:nm,v:cats[k].sch[nm]};}).sort(function(a,b){return b.v-a.v;});
+      return '<div style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:7px;margin-bottom:5px"><span style="background:'+c+';color:#fff;border-radius:8px;padding:2px 10px;font-size:12.5px;font-weight:800">'+k+'</span><b style="font-size:14px">'+cats[k].n+'명</b></div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:5px">'+(list.length?list.map(function(o){return '<span style="background:'+c+'14;color:'+c+';border:1px solid '+c+'33;border-radius:8px;padding:2px 9px;font-size:11.5px;font-weight:700">'+esc(o.nm)+' <b>'+o.v+'</b></span>';}).join(''):'<span style="font-size:11.5px;color:var(--sub)">학교 미입력</span>')+'</div></div>';
+    }).join('');
+    x+='<div class="card" style="padding:10px 16px"><b class="sectionMark" style="font-size:15px">🏫 학교별 재원생</b> <span style="font-size:11.5px;color:var(--sub)">유치원·초·중·고 → 학교별'+(noSchool?' · 학교 미입력 '+noSchool+'명':'')+'</span></div>';
+    x+='<div class="card">'+(inner||'<div style="font-size:13px;color:var(--sub)">학교 정보가 아직 없습니다. 학적부 수정에서 학교를 입력하면 자동 집계됩니다.</div>')+'</div>';
+  })(); }
+
   x+='<div class="card" style="padding:10px 16px"><b class="sectionMark" style="font-size:15px">🥋 심사 브리핑</b></div>';
   x+='<div class="briefRow">'+
     card('<b style="font-size:13.5px">심사 파이프라인 (현재)</b> <span style="font-size:11px;color:var(--sub)">— 막대를 누르면 명단이 열립니다 👆</span><div style="margin-top:8px">'+
@@ -7376,10 +7423,10 @@ window.openStuM=function(name){
       grade:s.grade||"", gT:pg.t, gN:pg.n, gS:pg.s, bd:s.bd||"", note:s.note||"", sp:s.sp||"",
       joinDate:s.joinDate||"", lastPromo:s.lastPromo||"", reg:s.reg||(isAd?"횟수":"월별"),
       health:JSON.parse(JSON.stringify(s.health||{})), family:s.family||"",
-      gd:JSON.parse(JSON.stringify(s.gd||[])), comps:dedupComps(JSON.parse(JSON.stringify(s.comps||[]))), evHist:JSON.parse(JSON.stringify(s.evHist||[])), demo:!!s.demo, tempId:null, photo:getPhoto(name) };
+      gd:JSON.parse(JSON.stringify(s.gd||[])), comps:dedupComps(JSON.parse(JSON.stringify(s.comps||[]))), evHist:JSON.parse(JSON.stringify(s.evHist||[])), school:s.school||"", schoolGrade:s.schoolGrade||"", schoolGradeY:s.schoolGradeY||"", demo:!!s.demo, tempId:null, photo:getPhoto(name) };
   } else {
     state.stuM={ mode:"new", orig:null, n:"", b:"", g:"남", by:"", t:"주2",
-      grade:"", gT:"", gN:"", gS:"", bd:"", note:"", sp:"", joinDate:today(), reg:"월별", health:{}, family:"", gd:[], comps:[], evHist:[], tempId:null };
+      grade:"", gT:"", gN:"", gS:"", bd:"", note:"", sp:"", joinDate:today(), reg:"월별", health:{}, family:"", gd:[], comps:[], evHist:[], school:"", schoolGrade:"", schoolGradeY:"", tempId:null };
   }
   render();
 
@@ -7639,14 +7686,14 @@ window.saveStuM=function(){
   comps.forEach(function(c){ if(!c.id) c.id=newCompId(); });   /* 폭증 방지: 모든 대회이력에 고정 id 보장 */
   var evHist=(m.evHist||[]).filter(function(e){return (e.d||e.nm);}); evHist.forEach(function(e){ if(!e.id) e.id=newCompId(); });
   if(m.mode==="new"){
-    var stu={ n:name, b:m.b, g:m.g, t:m.t||"", by:m.by||"", e:null, p:[], sp:(m.sp||"").trim(), grade:(m.grade||"").trim(), bd:m.bd||"", note:m.note||"", joinDate:m.joinDate||"", reg:m.reg||"월별", health:cleanHealth(m.health), family:(m.family||"").trim(), gd:gd, comps:comps, evHist:evHist, demo:!!m.demo, sid:newSid(), _t:Date.now() };
+    var stu={ n:name, b:m.b, g:m.g, t:m.t||"", by:m.by||"", e:null, p:[], sp:(m.sp||"").trim(), grade:(m.grade||"").trim(), bd:m.bd||"", note:m.note||"", joinDate:m.joinDate||"", reg:m.reg||"월별", health:cleanHealth(m.health), family:(m.family||"").trim(), gd:gd, comps:comps, evHist:evHist, school:(m.school||"").trim(), schoolGrade:m.schoolGrade||"", schoolGradeY:m.schoolGradeY||"", demo:!!m.demo, sid:newSid(), _t:Date.now() };
     if(state.deletedStudents) delete state.deletedStudents[name];   /* 같은 이름의 옛 묘비 해제 (신규 등록 보호) */
     STUDENTS.push(stu);
   } else {
     var s=STUDENTS.find(function(x){return x.n===m.orig;});
     if(!s) return;
     s.n=name; s.b=m.b; s.g=m.g; s.by=m.by; s.t=m.t; s.grade=(m.grade||"").trim(); s.bd=m.bd||""; s.note=m.note||"";
-    s.sp=(m.sp||"").trim(); s.joinDate=m.joinDate||""; s.reg=m.reg||s.reg; s.gd=gd; s.comps=comps; s.evHist=evHist; s.demo=!!m.demo; s.health=cleanHealth(m.health); s.family=(m.family||"").trim(); s._t=Date.now();
+    s.sp=(m.sp||"").trim(); s.joinDate=m.joinDate||""; s.reg=m.reg||s.reg; s.gd=gd; s.comps=comps; s.evHist=evHist; s.school=(m.school||"").trim(); s.schoolGrade=m.schoolGrade||""; s.schoolGradeY=m.schoolGradeY||""; s.demo=!!m.demo; s.health=cleanHealth(m.health); s.family=(m.family||"").trim(); s._t=Date.now();
     /* 학적부에서 이름 변경 시: 결제·출석·심사·기준수련횟수·홀딩 등 모든 기록을 새 이름으로 이동 + 옛 이름 묘비 */
     if(name!==m.orig){
       _moveNameKeys(m.orig, name, false);
@@ -7806,9 +7853,11 @@ function renderStuChart(m){
   function kv(k,v){ return '<div style="display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid '+LINE+'"><span style="font-size:11px;color:'+SUB+';font-weight:700">'+k+'</span><span style="font-size:13px;color:'+INK+';font-weight:700;text-align:right">'+(v||'<span style="color:'+SUB+'">—</span>')+'</span></div>'; }
 
   /* 인적사항 */
+  var _sgrade=studentGrade(m);
   var infoInner=kv('생년월일', m.by?esc(m.by)+(ageStr?' <span style="color:'+SUB+';font-weight:400">('+ageStr+')</span>':''):'')+
     kv('반', esc(m.b||''))+kv('등록일(입관)', esc(m.joinDate||''))+
-    kv('납부 상태', '<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:'+stt.c+'"></span><span style="color:'+stt.c+'">'+stt.label+'</span></span>');
+    kv('학교', m.school?esc(m.school):'<span style="color:'+SUB+'">미입력</span>')+
+    kv('학년', _sgrade?('<b>'+esc(_sgrade)+'</b> <span style="color:'+SUB+';font-weight:400;font-size:11px">('+((m.schoolGrade&&m.schoolGradeY)?'수정':'생년월일 자동')+')</span>'):'<span style="color:'+SUB+'">-</span>');
 
   /* 보호자 */
   var guardInner=gdHtml+(m.sp?'<div style="display:flex;align-items:center;gap:8px;padding:6px 0 0;margin-top:6px;border-top:1px dashed '+LINE+'"><span style="flex:0 0 46px;font-size:11px;font-weight:700;color:'+NAVY+'">본인</span><a href="tel:'+esc((m.sp||"").replace(/[^0-9]/g,""))+'" style="margin-left:auto;font-size:13px;color:'+NAVY+';text-decoration:none;font-weight:700">'+esc(m.sp)+'</a></div>':'');
@@ -8128,7 +8177,8 @@ function buildStuRecordPrint(name){
   var infoInner=kv('생년월일', s.by?(esc(s.by)+(ageStr?' ('+ageStr+')':'')):'')+
     kv('반', esc(s.b||''))+kv('등록일(입관)', esc(s.joinDate||''))+
     kv('성별', esc(s.g||''))+
-    kv('납부 상태', '<b style="color:'+stt.c+'">'+esc(stt.label||'')+'</b>');
+    kv('학교', s.school?esc(s.school):'-')+
+    kv('학년', (function(){ var g=studentGrade(s); return g?('<b>'+esc(g)+'</b>'):'-'; })());
   /* 보호자 */
   var gd=(s.gd||[]).filter(function(g){return (g.p||"").trim()||(g.n||"").trim();});
   var guardInner=gd.length?gd.map(function(g){
@@ -8345,6 +8395,24 @@ function renderStuModal(){
      : '')+
    (m.grade?'<span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px"><span style="width:14px;height:14px;border-radius:4px;background:'+gradeColor(m.grade)+';border:1px solid rgba(0,0,0,.15)"></span><b>'+esc(m.grade)+'</b></span>':'')+
    '</div>'+
+      /* 🏫 학교 · 🎓 학년 (보호자 연락처 바로 위) */
+      '<div style="border-top:1px solid var(--line);margin:8px 0 6px;padding-top:7px;display:flex;gap:10px;flex-wrap:wrap">'+
+        '<div style="flex:2 1 220px;min-width:0">'+
+          '<b style="font-size:13.5px">🏫 학교</b> <span style="font-size:11px;color:var(--sub)">목록에서 선택하거나 입력</span>'+
+          '<input class="input" list="naSchoolList" placeholder="예: 늘푸른초등학교" value="'+esc(m.school||"")+'" oninput="setStuSchool(this.value)" style="margin-top:4px">'+
+          '<datalist id="naSchoolList">'+NARACHA_SCHOOLS.map(function(sc){return '<option value="'+esc(sc)+'">';}).join('')+'</datalist>'+
+        '</div>'+
+        '<div style="flex:1 1 160px;min-width:0">'+
+          '<b style="font-size:13.5px">🎓 학년</b>'+
+          (function(){ var cur=studentGrade(m), isM=!!(m.schoolGrade&&m.schoolGradeY), sel=isM?m.schoolGrade:'__auto';
+            var opts=['7세','초1','초2','초3','초4','초5','초6','중1','중2','중3','고1','고2','고3','졸업'];
+            return '<select onchange="setStuGrade(this.value)" style="width:100%;height:38px;margin-top:4px;padding:0 10px;font-size:13.5px;border:1px solid var(--line);border-radius:9px;font-family:inherit;background:#fff">'+
+              '<option value="__auto"'+(sel==='__auto'?' selected':'')+'>자동'+(cur?(' — '+cur):'')+'</option>'+
+              opts.map(function(o){return '<option value="'+o+'"'+(sel===o?' selected':'')+'>'+o+'</option>';}).join('')+
+            '</select>'+
+            '<div style="font-size:10.5px;color:var(--sub);margin-top:2px">현재 <b>'+(cur||'-')+'</b> '+(isM?'· 수정됨(매년 자동 진급)':'· 생년월일 자동')+'</div>'; })()+
+        '</div>'+
+      '</div>'+
       '<div style="border-top:1px solid var(--line);margin:8px 0 6px;padding-top:7px;display:flex;align-items:center"><b style="font-size:13.5px">📞 보호자 연락처</b><span style="flex:1"></span><button class="chip" onclick="stuMAddGd()">＋ 추가</button></div>';
   (m.gd||[]).forEach(function(g,i){
     var GDR2=["부","모","조부","조모","외조부","외조모","친척","돌봄","이모","고모","삼촌"];
@@ -9461,7 +9529,7 @@ function renderWorkTodoBoard(){
   return h;
 }
 function renderTodoGantt(todos){
-  var td=today(), LBL=250, OWN=58;
+  var td=today();
   /* 범위: 모든 시작일·기한·오늘 포함 */
   var allDates=[td];
   todos.forEach(function(t){ allDates.push(t.due); if(t.start) allDates.push(t.start); });
@@ -9474,42 +9542,43 @@ function renderTodoGantt(todos){
   var ticks='';
   for(var i=0;i<=6;i++){ var f=i/6; var ds=addDays(start, Math.round(total*f)); ticks+='<div style="position:absolute;left:'+(f*100)+'%;transform:translateX(-50%);font-size:9.5px;color:var(--sub);white-space:nowrap;top:0">'+ds.slice(5).replace('-','/')+'</div>'; }
   var todayLine='<div style="position:absolute;left:'+todayPct+'%;top:0;bottom:0;width:2px;background:#2B5FB8;opacity:.5;z-index:1"></div>';
-  var h='<div style="overflow-x:auto"><div style="min-width:560px">';
-  h+='<div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:3px">'+
-     '<div style="flex:0 0 '+LBL+'px"></div><div style="flex:1;position:relative;height:14px">'+ticks+'</div><div style="flex:0 0 92px"></div></div>';
-  h+='<div style="display:flex;gap:8px;margin-bottom:6px"><div style="flex:0 0 '+LBL+'px"></div>'+
-     '<div style="flex:1;position:relative;height:12px">'+todayLine+'<div style="position:absolute;left:'+todayPct+'%;transform:translateX(-50%);font-size:9.5px;font-weight:800;color:#2B5FB8;top:-1px">오늘</div></div><div style="flex:0 0 92px"></div></div>';
+  /* 제목은 위 줄에 전체 표시, 타임라인 막대는 아래 줄 → 제목이 잘리지 않음(길어져도 OK) */
+  var h='<div style="overflow-x:auto"><div style="min-width:420px">';
+  h+='<div style="position:relative;height:14px;margin-bottom:2px">'+ticks+'</div>';
+  h+='<div style="position:relative;height:13px;margin-bottom:5px">'+todayLine+'<div style="position:absolute;left:'+todayPct+'%;transform:translateX(-50%);font-size:9.5px;font-weight:800;color:#2B5FB8">오늘</div></div>';
   function ganttRow(t){
     var kc=todoColor(t);
     var dd=Math.round((new Date(t.due+"T00:00:00")-new Date(td+"T00:00:00"))/86400000);
     var overdue=(dd<0), barL, barR;
-    var leftDate = t.start ? t.start : (overdue? t.due : td);   /* 시작일 있으면 시작일, 없으면 오늘(지난건 기한) */
+    var leftDate = t.start ? t.start : (overdue? t.due : td);
     barL=pct(leftDate<t.due?leftDate:t.due); barR=pct(t.due);
     if(!t.done && overdue && !t.start){ barL=pct(t.due); barR=todayPct; }
     if(barR-barL<2){ barL=Math.max(0,Math.min(barL,98)); barR=Math.min(100,barL+2); }
-    var urg = t.done?'#9AA1AA':(overdue?'#B23A48':(dd<=3?'#B45309':'#1E7B3C'));   /* D-day 글자색=급함 */
+    var urg = t.done?'#9AA1AA':(overdue?'#B23A48':(dd<=3?'#B45309':'#1E7B3C'));
     var isEvent=(t.kind==='행사');
-    var barH=isEvent?16:10, barTop=isEvent?4:7, barOp=isEvent?1:0.7;               /* 행사=굵게 선명 · 업무/수련생=가늘게 연하게 */
+    var barH=isEvent?13:8, barTop=isEvent?2:4, barOp=isEvent?1:0.7;
     var ddLbl=t.done?'완료':(overdue?('D+'+(-dd)+' 지남'):(dd===0?'D-day':('D-'+dd)));
     var own=(t.mentions&&t.mentions.length)?t.mentions.join('·'):'';
     var badgeTxt=(t.kind==='업무'&&t.team)?t.team:t.kind;
-    return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;'+(t.done?'opacity:.75':'')+'">'+
-      '<div style="flex:0 0 '+LBL+'px;min-width:0;display:flex;align-items:center;gap:5px">'+
+    return '<div style="padding:6px 0;border-bottom:1px solid #F0F2F6;'+(t.done?'opacity:.72':'')+'">'+
+      /* ① 제목 줄 — 전체 폭, 잘리지 않음 */
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">'+
         '<button class="chip sm" style="color:'+(t.done?'var(--sub)':'#1E7B3C')+';flex:0 0 auto;padding:2px 7px" title="'+(t.done?'완료 되돌리기':'완료 처리')+'" onclick="'+t.doneFn+'">'+(t.done?'↩':'✓')+'</button>'+
-        '<span style="background:'+kc+'1f;color:'+kc+';border-radius:7px;padding:1px 6px;font-size:10px;font-weight:800;flex:0 0 auto">'+esc(badgeTxt)+'</span>'+
-        '<b style="flex:1 1 auto;font-size:12px;color:'+(t.done?'var(--sub)':'var(--blue)')+';cursor:pointer;'+(t.done?'text-decoration:line-through':'text-decoration:underline')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(t.label)+'" onclick="'+t.openFn+'">'+esc(t.label)+'</b>'+
-        '<span style="flex:0 0 '+OWN+'px;text-align:right;font-size:11px;font-weight:800;color:'+(own?kc:'#C3C8D0')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(own||'담당 미지정')+'">'+(own?esc(own):'—')+'</span>'+
+        '<span style="background:'+kc+'1f;color:'+kc+';border-radius:7px;padding:1px 7px;font-size:10.5px;font-weight:800;flex:0 0 auto">'+esc(badgeTxt)+'</span>'+
+        '<b style="flex:1 1 auto;min-width:0;font-size:12.5px;color:'+(t.done?'var(--sub)':'var(--blue)')+';cursor:pointer;'+(t.done?'text-decoration:line-through':'')+';line-height:1.35;word-break:break-word" onclick="'+t.openFn+'">'+esc(t.label)+'</b>'+
+        (own?'<span style="flex:0 0 auto;font-size:11px;font-weight:800;color:'+kc+';white-space:nowrap">@'+esc(own)+'</span>':'')+
+        '<span style="flex:0 0 auto;font-size:11px;font-weight:800;color:'+urg+';white-space:nowrap;text-align:right">'+esc(t.due.slice(5))+' · '+ddLbl+'</span>'+
       '</div>'+
-      '<div style="flex:1;position:relative;height:24px;background:#F4F6FA;border-radius:6px">'+todayLine+
-        '<div style="position:absolute;left:'+barL+'%;width:'+(barR-barL)+'%;top:'+barTop+'px;height:'+barH+'px;background:'+kc+';opacity:'+barOp+';border-radius:5px;'+(isEvent?'box-shadow:0 1px 2px rgba(0,0,0,.12);':'')+(overdue&&!t.done?'outline:2px solid #B23A48;outline-offset:0;':'')+(t.done?'background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.4) 0 4px,transparent 4px 8px);':'')+'"></div>'+
+      /* ② 타임라인 막대 줄 */
+      '<div style="position:relative;height:16px;background:#F4F6FA;border-radius:6px">'+todayLine+
+        '<div style="position:absolute;left:'+barL+'%;width:'+(barR-barL)+'%;top:'+barTop+'px;height:'+barH+'px;background:'+kc+';opacity:'+barOp+';border-radius:5px;'+(isEvent?'box-shadow:0 1px 2px rgba(0,0,0,.12);':'')+(overdue&&!t.done?'outline:2px solid #B23A48;':'')+(t.done?'background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.4) 0 4px,transparent 4px 8px);':'')+'"></div>'+
       '</div>'+
-      '<div style="flex:0 0 92px;text-align:right;font-size:11px;font-weight:800;color:'+urg+';white-space:nowrap">'+esc(t.due.slice(5))+'<br><span style="font-size:10px">'+ddLbl+'</span></div>'+
-      '</div>';
+    '</div>';
   }
   var active=todos.filter(function(t){return !t.done;}), done=todos.filter(function(t){return t.done;});
   active.forEach(function(t){ h+=ganttRow(t); });
   if(done.length){
-    h+='<div style="display:flex;gap:8px;align-items:center;margin:8px 0 3px"><div style="flex:0 0 '+LBL+'px;font-size:11px;font-weight:800;color:#1E7B3C">✅ 완료됨 '+done.length+'건</div><div style="flex:1;border-top:1px dashed var(--line)"></div><div style="flex:0 0 92px"></div></div>';
+    h+='<div style="font-size:11px;font-weight:800;color:#1E7B3C;margin:9px 0 3px">✅ 완료됨 '+done.length+'건</div>';
     done.forEach(function(t){ h+=ganttRow(t); });
   }
   h+='</div></div>';
@@ -14407,6 +14476,7 @@ function phoneCarBody(){
 loadAll();
 render();
 setTimeout(function(){ if(state.unlocked) cloudPull(); }, 500);  /* 잠금 해제 후에만 자동 동기화 (로그인 화면 튕김 방지) */
+setTimeout(function(){ try{ seedSchoolsOnce(); }catch(e){} try{ checkGradeAdvance(); }catch(e){} }, 3000);   /* 학교 자동채움·12월 진학조사 (로컬 로스터 대비) */
 </script>
 </body>
 </html>
