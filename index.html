@@ -572,7 +572,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.34";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.35";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -9442,7 +9442,7 @@ function mergeWork(local, remote){
     for(var k in rc){ if(!oc[k] || (rc[k]._t||0)>(oc[k]._t||0)) oc[k]=rc[k]; }
   });
   /* 삭제 표식 병합 (양쪽 최신 시각 유지) */
-  ["tombEvents","tombFlags","tombTasks","tombRoutines","tombCar","tombCarMaint"].forEach(function(tk){
+  ["tombEvents","tombFlags","tombTasks","tombRoutines","tombCar","tombCarMaint","tombTypes"].forEach(function(tk){
     var rt=remote[tk]||{}, ot=out[tk]||(out[tk]={});
     for(var k in rt){ if(!ot[k] || rt[k]>ot[k]) ot[k]=rt[k]; }
   });
@@ -10434,7 +10434,16 @@ function typeColorsMap(){ var w=workData(); if(!w.typeColors)w.typeColors={};
   if(Array.isArray(w.eventTypes)){ w.eventTypes.forEach(function(t){ if(t && !w.typeColors[t] && DEFAULT_TYPE_COLORS[t]===undefined) w.typeColors[t]={color:typeColorAuto(t),_t:1}; }); }  /* 옛 배열 → 색 맵 이관 */
   return w.typeColors;
 }
-function eventTypes(){ var base=["대회","시범공연"]; var tc=typeColorsMap(); return base.concat(Object.keys(tc).filter(function(t){return base.indexOf(t)<0;})); }
+function eventTypes(){
+  var w=workData(), tomb=w.tombTypes||{}, tc=typeColorsMap();
+  var out=[], seen={};
+  function add(t){ if(t && !seen[t] && !tomb[t]){ seen[t]=1; out.push(t); } }
+  ["대회","시범공연"].forEach(add);            /* 기본 종류 */
+  Object.keys(tc).forEach(add);                /* 색이 지정된 종류 */
+  var evs=w.events||{};                          /* 삭제됐어도 행사가 아직 쓰는 종류는 유지 */
+  Object.keys(evs).forEach(function(id){ var e=evs[id]; if(e && e.type) add(e.type); });
+  return out;
+}
 function typeColor(t){ var tc=(workData().typeColors||{}); if(tc[t]&&tc[t].color) return tc[t].color; if(DEFAULT_TYPE_COLORS[t]) return DEFAULT_TYPE_COLORS[t]; return t?typeColorAuto(t):'#B45309'; }
 window.addEventType=function(){ state.typeMgr=true; render(); };                 /* 색 지정 관리창 열기 */
 window.openTypeMgr=function(){ state.typeMgr=true; render(); };
@@ -10442,8 +10451,28 @@ window.closeTypeMgr=function(){ state.typeMgr=null; state.newTypeName=""; state.
 window.setNewTypeName=function(v){ state.newTypeName=v; };
 window.setNewTypeColor=function(v){ state.newTypeColor=v; };
 window.setTypeColor=function(name,color){ var w=workData(); if(!w.typeColors)w.typeColors={}; w.typeColors[name]={color:color,_t:Date.now()}; w.t=Date.now(); workPersist(); render(); };
-window.addTypeRow=function(){ var nm=(state.newTypeName||"").trim(); if(!nm){ alert("행사 종류 이름을 입력하세요."); return; } var w=workData(); if(!w.typeColors)w.typeColors={}; if(eventTypes().indexOf(nm)>-1){ alert("이미 있는 종류입니다."); return; } w.typeColors[nm]={color:(state.newTypeColor||typeColorAuto(nm)),_t:Date.now()}; state.newTypeName=""; state.newTypeColor=""; workPersist(); render(); };
-window.delEventType=function(t){ if(["대회","시범공연"].indexOf(t)>-1){ alert("기본 종류는 삭제할 수 없습니다. (색은 바꿀 수 있어요)"); return; } var w=workData(); if(!w.typeColors||!w.typeColors[t]){ if(w.eventTypes){ w.eventTypes=w.eventTypes.filter(function(x){return x!==t;}); } } else { if(!confirm('"'+t+'" 종류를 목록에서 뺄까요? (이미 이 종류로 지정된 행사는 그대로 유지됩니다)')) return; delete w.typeColors[t]; if(w.eventTypes) w.eventTypes=w.eventTypes.filter(function(x){return x!==t;}); } workPersist(); if(state.evType===t) state.evType="전체"; render(); };
+window.addTypeRow=function(){ var nm=(state.newTypeName||"").trim(); if(!nm){ alert("행사 종류 이름을 입력하세요."); return; } var w=workData(); if(!w.typeColors)w.typeColors={}; if(eventTypes().indexOf(nm)>-1){ alert("이미 있는 종류입니다."); return; } if(w.tombTypes) delete w.tombTypes[nm]; w.typeColors[nm]={color:(state.newTypeColor||typeColorAuto(nm)),_t:Date.now()}; state.newTypeName=""; state.newTypeColor=""; workPersist(); render(); };
+/* 종류 이름 변경 → 이 종류로 지정된 모든 행사도 함께 새 이름으로 (분류 유지) */
+window.renameEventType=function(oldName){
+  var w=workData();
+  var nn=prompt('"'+oldName+'" 종류의 새 이름을 입력하세요.\n\n이 종류로 지정된 모든 행사도 새 이름으로 함께 바뀝니다.', oldName);
+  if(nn===null) return; nn=nn.trim();
+  if(!nn){ alert("이름을 입력하세요."); return; }
+  if(nn===oldName) return;
+  var exists=(eventTypes().indexOf(nn)>-1);
+  if(exists && !confirm('"'+nn+'" 종류가 이미 있습니다.\n"'+oldName+'" 행사들을 "'+nn+'"으로 합칠까요?')) return;
+  var now=Date.now(), cnt=0, evs=w.events||{};
+  Object.keys(evs).forEach(function(id){ var e=evs[id]; if(e && e.type===oldName){ e.type=nn; e._t=now; cnt++; } });
+  if(!w.typeColors) w.typeColors={};
+  if(!exists) w.typeColors[nn]={ color:typeColor(oldName), _t:now };   /* 색 이관 */
+  delete w.typeColors[oldName];
+  if(!w.tombTypes) w.tombTypes={};
+  w.tombTypes[oldName]=now; delete w.tombTypes[nn];                     /* 옛 이름 되살아나지 않게, 새 이름은 톰 해제 */
+  if(state.evType===oldName) state.evType=nn;
+  w.t=now; workPersist(); render();
+  alert('"'+oldName+'" → "'+nn+'" 으로 변경했습니다.\n행사 '+cnt+'건의 종류가 함께 바뀌었습니다.');
+};
+window.delEventType=function(t){ if(["대회","시범공연"].indexOf(t)>-1){ alert("기본 종류는 삭제할 수 없습니다. (색은 바꿀 수 있어요)"); return; } var w=workData(); if(!w.typeColors||!w.typeColors[t]){ if(w.eventTypes){ w.eventTypes=w.eventTypes.filter(function(x){return x!==t;}); } } else { if(!confirm('"'+t+'" 종류의 지정 색을 지웁니다.\n이 종류로 지정된 행사는 그대로 유지되어 계속 분류·표시됩니다.\n\n진행할까요?')) return; delete w.typeColors[t]; if(w.eventTypes) w.eventTypes=w.eventTypes.filter(function(x){return x!==t;}); } workPersist(); if(state.evType===t) state.evType="전체"; render(); };
 function renderTypeMgr(){
   var types=eventTypes();
   var body='<div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:12px">행사 종류마다 <b>고유 색</b>을 정하면 캘린더의 막대와 목록 배지에 그 색으로 표시됩니다.</div>';
@@ -10453,6 +10482,7 @@ function renderTypeMgr(){
       '<input type="color" value="'+c+'" onchange="setTypeColor(\''+esc(t).replace(/'/g,"\\'")+'\',this.value)" style="width:40px;height:34px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;padding:2px">'+
       '<span style="flex:1;font-size:14px;font-weight:700">'+esc(t)+(base?' <span style="font-size:10.5px;color:var(--sub);font-weight:500">기본</span>':'')+'</span>'+
       '<span style="background:'+c+'22;color:'+c+';border-radius:8px;padding:3px 10px;font-size:11.5px;font-weight:800">'+esc(t)+'</span>'+
+      '<button class="chip sm" style="color:var(--blue)" onclick="renameEventType(\''+esc(t).replace(/'/g,"\\'")+'\')">이름변경</button>'+
       (base?'':'<button class="chip sm" style="color:var(--red)" onclick="delEventType(\''+esc(t).replace(/'/g,"\\'")+'\')">삭제</button>')+
     '</div>';
   });
