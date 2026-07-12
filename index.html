@@ -572,7 +572,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.35";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.36";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -10472,7 +10472,18 @@ window.renameEventType=function(oldName){
   w.t=now; workPersist(); render();
   alert('"'+oldName+'" → "'+nn+'" 으로 변경했습니다.\n행사 '+cnt+'건의 종류가 함께 바뀌었습니다.');
 };
-window.delEventType=function(t){ if(["대회","시범공연"].indexOf(t)>-1){ alert("기본 종류는 삭제할 수 없습니다. (색은 바꿀 수 있어요)"); return; } var w=workData(); if(!w.typeColors||!w.typeColors[t]){ if(w.eventTypes){ w.eventTypes=w.eventTypes.filter(function(x){return x!==t;}); } } else { if(!confirm('"'+t+'" 종류의 지정 색을 지웁니다.\n이 종류로 지정된 행사는 그대로 유지되어 계속 분류·표시됩니다.\n\n진행할까요?')) return; delete w.typeColors[t]; if(w.eventTypes) w.eventTypes=w.eventTypes.filter(function(x){return x!==t;}); } workPersist(); if(state.evType===t) state.evType="전체"; render(); };
+window.delEventType=function(t){
+  if(["대회","시범공연"].indexOf(t)>-1){ alert("기본 종류는 삭제할 수 없습니다. (이름변경은 가능해요)"); return; }
+  var w=workData();
+  var inUse=Object.keys(w.events||{}).filter(function(id){ return w.events[id]&&w.events[id].type===t; }).length;
+  if(!confirm('"'+t+'" 종류를 목록에서 삭제합니다.'+(inUse?('\n\n이미 이 종류로 지정된 행사 '+inUse+'건은 종류값이 그대로 남아 배지로는 계속 보이지만, 선택 목록에서는 사라집니다.'):'')+'\n\n진행할까요?')) return;
+  if(w.typeColors) delete w.typeColors[t];
+  if(w.eventTypes) w.eventTypes=w.eventTypes.filter(function(x){ return x!==t; });
+  if(!w.tombTypes) w.tombTypes={};
+  w.tombTypes[t]=Date.now();                 /* 삭제 표식 → 다시 살아나지 않게 (동기화됨) */
+  if(state.evType===t) state.evType="전체";
+  w.t=Date.now(); workPersist(); render();
+};
 function renderTypeMgr(){
   var types=eventTypes();
   var body='<div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:12px">행사 종류마다 <b>고유 색</b>을 정하면 캘린더의 막대와 목록 배지에 그 색으로 표시됩니다.</div>';
