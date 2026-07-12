@@ -572,7 +572,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.32";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.33";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -10517,6 +10517,9 @@ window.evMonthShift=function(d){ var m=(state.evMonth||1)+d, y=state.evYear; if(
 window.setEvDay=function(d){ state.evDay=d; state.evScope="day"; render(); };
 window.setEvScope=function(s){ state.evScope=s; if(s!=="day") state.evDay=null; render(); };
 window.setEvType=function(t){ state.evType=t; render(); };
+/* 세부내용 토글: 지정 안 하면 연간·반기는 간략(첫줄만), 월·일은 상세가 기본 */
+function evCompactOn(){ var sc=state.evScope||"month"; if(state.evCompact===true) return true; if(state.evCompact===false) return false; return (sc==="year"||sc==="half1"||sc==="half2"); }
+window.toggleEvCompact=function(){ state.evCompact = !evCompactOn(); render(); };
 
 /* ── 행사 예산 (수입/지출 단식부기 + 자동 합계) ── */
 function eventBudget(ev){ if(!ev.budget) ev.budget={income:[],expense:[]}; if(!ev.budget.income)ev.budget.income=[]; if(!ev.budget.expense)ev.budget.expense=[]; return ev.budget; }
@@ -11259,7 +11262,7 @@ function renderWorkEvents(){
     '<button onclick="newEvent()" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">+ 새 행사</button></div></div>';
 
   h+='<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">'+
-     '<div style="flex:2 1 520px;min-width:340px">'+renderEventCalendar(byDate, years)+'</div>'+
+     '<div style="flex:2 1 520px;min-width:340px;position:sticky;top:10px;align-self:flex-start">'+renderEventCalendar(byDate, years)+'</div>'+
      '<div style="flex:1 1 300px;min-width:280px">'+renderEventList(evs, byDate)+'</div>'+
      '</div>';
   if(state.typeMgr) h+=renderTypeMgr();
@@ -11400,17 +11403,18 @@ function eventCardsHtml(){
     var _att=(ev.attendees&&ev.attendees.length)?('👥 '+ev.attendees.length+'명'+(ev.target?' · '+esc(ev.target):'')):(ev.target?('👥 '+esc(ev.target)):'');
     var meta=[_drange?('🗓 '+_drange+(ev.time?' '+esc(ev.time):'')):'', ev.place?('📍 '+esc(ev.place)):'', _att].filter(Boolean).join('&nbsp;&nbsp;&nbsp;');
     var canceled=(ev.status==="취소");
-    return '<div style="border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px;cursor:pointer'+(canceled?';opacity:.6;background:#FAFAFB':'')+'" onclick="openEvent(\''+ev.id+'\')">'+
-      '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+
-        (ev.type?'<span style="background:'+tc+'1f;color:'+tc+';border-radius:8px;padding:2px 8px;font-size:11px;font-weight:800">'+esc(ev.type)+'</span>':'')+
-        '<b style="font-size:14.5px'+(canceled?';text-decoration:line-through;color:var(--sub)':'')+'">'+esc(ev.title||"(제목 없음)")+'</b>'+
-        '<span style="background:'+stCol+'1f;color:'+stCol+';border-radius:8px;padding:2px 8px;font-size:11px;font-weight:800">'+esc(ev.status||"준비중")+'</span>'+
+    var compact=evCompactOn();
+    return '<div style="border:1px solid var(--line);border-radius:12px;padding:'+(compact?'8px 12px':'11px 13px')+';margin-bottom:'+(compact?'5px':'8px')+';cursor:pointer'+(canceled?';opacity:.6;background:#FAFAFB':'')+'" onclick="openEvent(\''+ev.id+'\')">'+
+      '<div style="display:flex;align-items:center;gap:7px;'+(compact?'':'flex-wrap:wrap')+'">'+
+        (ev.type?'<span style="background:'+tc+'1f;color:'+tc+';border-radius:8px;padding:2px 8px;font-size:11px;font-weight:800;white-space:nowrap;flex:none">'+esc(ev.type)+'</span>':'')+
+        '<b style="font-size:14.5px'+(compact?';overflow:hidden;text-overflow:ellipsis;white-space:nowrap':'')+(canceled?';text-decoration:line-through;color:var(--sub)':'')+'">'+esc(ev.title||"(제목 없음)")+'</b>'+
+        '<span style="background:'+stCol+'1f;color:'+stCol+';border-radius:8px;padding:2px 8px;font-size:11px;font-weight:800;white-space:nowrap;flex:none">'+esc(ev.status||"준비중")+'</span>'+
         (ev.date?workDueBadge(ev.date):'')+
         '<span style="flex:1"></span>'+
-        (((ev.media&&ev.media.length)||ev.folderUrl)?'<span style="font-size:11px;color:#1E7B3C;font-weight:800">📎'+((ev.media&&ev.media.length)?ev.media.length:'')+'</span>':'')+
-        '<span style="font-size:11px;color:'+(prep.length&&pd===prep.length?'#1E7B3C':'var(--sub)')+';font-weight:700">준비 '+pd+'/'+prep.length+'</span>'+
+        (((ev.media&&ev.media.length)||ev.folderUrl)?'<span style="font-size:11px;color:#1E7B3C;font-weight:800;flex:none">📎'+((ev.media&&ev.media.length)?ev.media.length:'')+'</span>':'')+
+        '<span style="font-size:11px;color:'+(prep.length&&pd===prep.length?'#1E7B3C':'var(--sub)')+';font-weight:700;white-space:nowrap;flex:none">준비 '+pd+'/'+prep.length+'</span>'+
       '</div>'+
-      (meta?'<div style="font-size:12px;color:var(--sub);margin-top:5px">'+meta+'</div>':'')+
+      ((!compact&&meta)?'<div style="font-size:12px;color:var(--sub);margin-top:5px">'+meta+'</div>':'')+
       '</div>';
   }
 
@@ -11472,6 +11476,8 @@ function renderEventList(evs, byDate){
     '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:7px">'+
       '<span style="font-size:11px;font-weight:800;color:var(--sub)">기간</span>'+
       periodBtn('month', mo+'월')+periodBtn('half1','전반기')+periodBtn('half2','후반기')+periodBtn('year','연간')+
+      '<span style="flex:1"></span>'+
+      '<button class="chip sm'+(evCompactOn()?'':' on')+'" title="켜면 각 행사의 날짜·장소 등 세부내용이 함께 보입니다. 끄면 제목 한 줄로 간략히 봅니다." onclick="toggleEvCompact()">'+(evCompactOn()?'☰ 간략히':'📄 세부내용')+'</button>'+
     '</div>'+
     /* 종류 필터 */
     '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:7px">'+
