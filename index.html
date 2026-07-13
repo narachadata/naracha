@@ -574,7 +574,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.49";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.50";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -610,7 +610,7 @@ var state = { tab:"회계입력", payments:[], expiryMap:{}, deletedIds:[], hold
               topCat:"출석", attTab:"수련시간표", role:null,
               schedule:null, scheduleT:0, tempStudents:[],
               attPulledOnce:false, attSyncing:false, attStatus:"", stuM:null, tempM:null,
-              accMap:{}, accT:0, lastExamMap:{}, lastExamT:0, kkwPending:[], kkwT:0, kkwInfo:{}, danDateMap:{}, examConfirmMap:{}, examConfirmT:0,
+              accMap:{}, accT:0, lastExamMap:{}, lastExamT:0, kkwPending:[], kkwT:0, kkwInfo:{}, danDateMap:{}, examConfirmMap:{}, examConfirmT:0, measMap:{}, measT:0, measTomb:{},
               weeks:{}, weekSel:null, dayView:null, markM:null, addBox:null, newStudents:[], histEdits:{}, deletedStudents:{}, savedAt:0,
               device:"", syncStatus:"", syncing:false, lastSync:0,
               query:"", picked:null, date:today(), cat:"수련비", method:"카드",
@@ -1461,6 +1461,8 @@ window.pullNow=function(){
   try{ if(myRole()==="admin" && accessKey()) cloudPull(); }catch(e){}
   try{ if(typeof photoPull==="function") photoPull(); }catch(e){}   /* 사진도 함께 */
   try{ if(typeof workPull==="function") workPull(function(){ try{ render(); }catch(e){} }); }catch(e){}   /* 업무데이터(백업 비번 등)도 함께 */
+  try{ _migrateMeasFromWork(); }catch(e){}
+  try{ if(typeof measPull==="function") measPull(); }catch(e){}   /* 측정 전용 창고도 함께 */
 };
 
 window.migrateHistory=function(){
@@ -1509,7 +1511,7 @@ window.setTopCat=function(c){
   state.topCat=c;
   if(c==="출석"){ state.editHistKey=null; state.editPayId=null; }
   if(c==="업무" && typeof workPull==="function"){ workPull(); }   /* 진입 시 공유(구글 work 창고) 최신 데이터 받기 */
-  if(c==="측정" && typeof workPull==="function"){ workPull(function(){ if(state.topCat==="측정"){ try{ syncRender(); }catch(e){} } }); }   /* 측정도 work 창고 동기화 → 다른 PC 업로드분 즉시 반영 */
+  if(c==="측정"){ try{ if(typeof workPull==="function") workPull(function(){ _migrateMeasFromWork(); }); }catch(e){} try{ if(typeof measPull==="function") measPull(); }catch(e){} }   /* 측정 전용 창고(meas) + 옛 데이터(work) 함께 받아 다른 PC 업로드분 즉시 반영 */
   render();
 };
 window.setAttTab=function(t){ state.attTab=t; render(); };
@@ -9471,6 +9473,7 @@ function workData(){
   return state.work;
 }
 (function loadLocalWork(){ try{ var raw=localStorage.getItem("naracha-work"); if(raw){ var p=JSON.parse(raw); if(p&&p.workV){ state.work=p; } } }catch(e){} })();
+(function loadLocalMeas(){ try{ var raw=localStorage.getItem("naracha-meas"); if(raw){ var p=JSON.parse(raw); if(p&&p.measV){ state.measMap=p.map||{}; state.measTomb=p.tomb||{}; state.measT=p.t||0; } } }catch(e){} })();
 function applyWorkTomb(w, coll, tk){
   var items=w[coll]||{}, tomb=w[tk]||{};
   for(var k in tomb){ var it=items[k]; if(it && (tomb[k] >= (it._t||0))) delete items[k]; }   /* 삭제가 항목 수정보다 최신이면 제거 */
@@ -11920,7 +11923,72 @@ document.addEventListener("pointerdown", function(e){
 }, true);
 
 /* ══════════════════ 측정관리 (체력·체격·줄넘기) ══════════════════ */
-function measuresData(){ var w=workData(); if(!w.measures) w.measures={}; return w.measures; }
+/* 측정 데이터: 전용 클라우드 창고(store=meas)로 분리 저장·동기화 (사진과 동일 방식) */
+function measuresData(){ if(!state.measMap) state.measMap={}; return state.measMap; }
+function measState(){ return { measV:1, map:state.measMap||{}, tomb:state.measTomb||{}, t:state.measT||0, savedAt:Date.now() }; }
+function mergeMeas(a,b){
+  a=a||{map:{},tomb:{},t:0}; b=b||{map:{},tomb:{},t:0};
+  var out={}, tomb={}, am=a.map||{}, bm=b.map||{};
+  for(var k in am) out[k]=am[k];
+  for(var k2 in bm){ if(!out[k2] || (bm[k2]._t||0)>(out[k2]._t||0)) out[k2]=bm[k2]; }
+  var at=a.tomb||{}, bt=b.tomb||{};
+  for(var t1 in at) tomb[t1]=at[t1];
+  for(var t2 in bt){ if(!tomb[t2] || bt[t2]>tomb[t2]) tomb[t2]=bt[t2]; }
+  for(var id in tomb){ if(out[id] && tomb[id]>(out[id]._t||0)) delete out[id]; }   /* 삭제 표식 적용 */
+  return { measV:1, map:out, tomb:tomb, t:Math.max(a.t||0,b.t||0), savedAt:Math.max(a.savedAt||0,b.savedAt||0) };
+}
+/* 옛 위치(업무 창고 안)에 있던 측정 데이터를 전용 창고로 자동 이전 — 데이터 유실 방지 */
+function _migrateMeasFromWork(){
+  try{ var w=(state.work&&state.work.workV)?state.work:null; if(!w||!w.measures) return false;
+    if(!state.measMap) state.measMap={}; var moved=false;
+    for(var id in w.measures){ var s=w.measures[id]; var cur=state.measMap[id];
+      if(!cur || (s._t||0)>=(cur._t||0)){ state.measMap[id]=s; moved=true; } }
+    if(w.tombMeas){ if(!state.measTomb) state.measTomb={}; for(var t in w.tombMeas){ if(!state.measTomb[t]||w.tombMeas[t]>state.measTomb[t]) state.measTomb[t]=w.tombMeas[t]; } }
+    /* 이전 완료 후 옛 위치는 비워 이중 저장/충돌 방지 */
+    try{ delete state.work.measures; delete state.work.tombMeas; }catch(e){}
+    if(moved){ state.measT=Date.now(); }
+    return moved;
+  }catch(e){ return false; }
+}
+function measPull(cb){
+  if(!state.unlocked){ if(cb)cb(false); return; }
+  if(!accessKey()){ if(cb)cb(false); return; }
+  fetch(GSHEET_URL+"?key="+encodeURIComponent(accessKey())+"&store=meas")
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      if(rows && rows.error){ if(cb)cb(false); return; }
+      var joined="";
+      if(rows && rows.length>=2){ for(var i=0;i<rows.length;i++){ if(rows[i][0]==="JSON" && i+1<rows.length){ for(var j=i+1;j<rows.length;j++) joined+=(rows[j][0]!=null?String(rows[j][0]):""); break; } } }
+      var remote=null; try{ remote=JSON.parse(joined); }catch(e){}
+      _migrateMeasFromWork();
+      if(remote && remote.measV){ var merged=mergeMeas(measState(), remote); state.measMap=merged.map; state.measTomb=merged.tomb; state.measT=merged.t; }
+      state.measPulledOnce=true;
+      try{ if(state.topCat==="측정") syncRender(); }catch(e){}
+      if(cb)cb(true);
+    })
+    .catch(function(){ if(cb)cb(false); });
+}
+function measSync(){
+  if(!accessKey()){ return; }
+  if(state.measSyncing){ state.measPending=true; return; }
+  state.measSyncing=true;
+  fetch(GSHEET_URL+"?key="+encodeURIComponent(accessKey())+"&store=meas")
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      var joined="";
+      if(rows && rows.length>=2){ for(var i=0;i<rows.length;i++){ if(rows[i][0]==="JSON" && i+1<rows.length){ for(var j=i+1;j<rows.length;j++) joined+=(rows[j][0]!=null?String(rows[j][0]):""); break; } } }
+      var remote=null; try{ remote=JSON.parse(joined); }catch(e){}
+      _migrateMeasFromWork();
+      if(remote && remote.measV){ var merged=mergeMeas(measState(), remote); state.measMap=merged.map; state.measTomb=merged.tomb; state.measT=merged.t; }
+      var s=JSON.stringify(measState());
+      var rows2=[["JSON"]]; for(var k=0;k<s.length;k+=45000) rows2.push([s.slice(k,k+45000)]);
+      return fetch(GSHEET_URL, {method:"POST", body:JSON.stringify({key:accessKey(), store:"meas", rows:rows2})});
+    })
+    .then(function(r){ return r.text(); })
+    .then(function(){ state.measSyncing=false; state.measStatus="측정 저장됨"; if(state.measPending){ state.measPending=false; measSync(); } })
+    .catch(function(){ state.measSyncing=false; state.measStatus="오프라인 (이 기기에만 저장됨)"; });
+}
+function measPersist(){ try{ localStorage.setItem("naracha-meas", JSON.stringify(measState())); }catch(e){} measSync(); }
 function measSort(list){ return list.sort(function(a,b){ if(b.year!==a.year) return b.year-a.year; var ah=a.half==="H2"?2:1, bh=b.half==="H2"?2:1; if(bh!==ah) return bh-ah; return (a.kind<b.kind?-1:1); }); }
 function _normh(s){ return String(s==null?"":s).replace(/\s/g,""); }
 function parseMeasureAoa(aoa){
@@ -11967,7 +12035,7 @@ window.importMeasureXlsx=function(input){
       if(existed && !confirm('"'+year+"년 "+(half==="H1"?"전반기":"후반기")+" "+p.kind+'" 자료가 이미 있습니다.\n새 파일로 덮어쓸까요?')){ input.value=""; return; }
       var matched=0, have={}; (STUDENTS||[]).forEach(function(s){ have[s.n]=1; }); p.rows.forEach(function(rw){ if(have[rw.name]) matched++; });
       m[id]={ id:id, year:year, half:half, kind:p.kind, title:year+"년 "+(half==="H1"?"전반기":"후반기")+" "+p.kind, cats:p.cats, rows:p.rows, n:p.rows.length, matched:matched, date:today(), _t:Date.now() };
-      var w=workData(); w.t=Date.now(); workPersist();
+      state.measT=Date.now(); measPersist();
       state.topCat="측정"; state.measSel=id; render();
       alert((existed?"덮어썼습니다":"불러왔습니다")+": "+m[id].title+"\n· 총 "+p.rows.length+"명 (명단 일치 "+matched+"명)");
     }catch(err){ alert("엑셀을 읽는 중 오류가 발생했습니다.\n"+err); }
@@ -11976,7 +12044,7 @@ window.importMeasureXlsx=function(input){
   reader.readAsArrayBuffer(f);
 };
 window.setMeasSel=function(id){ state.measSel=id||null; state.measView=null; render(); };
-window.delMeasureSession=function(id){ var m=measuresData(); if(!m[id]) return; if(!confirm('"'+m[id].title+'" 측정 회차를 삭제할까요?\n(이 회차의 측정 기록이 모두 지워집니다)')) return; delete m[id]; var w=workData(); if(!w.tombMeas)w.tombMeas={}; w.tombMeas[id]=Date.now(); w.t=Date.now(); workPersist(); state.measSel=null; render(); };
+window.delMeasureSession=function(id){ var m=measuresData(); if(!m[id]) return; if(!confirm('"'+m[id].title+'" 측정 회차를 삭제할까요?\n(이 회차의 측정 기록이 모두 지워집니다)')) return; delete m[id]; if(!state.measTomb)state.measTomb={}; state.measTomb[id]=Date.now(); state.measT=Date.now(); measPersist(); state.measSel=null; render(); };
 window.openMeasFor=function(name){ state.topCat="측정"; state.measSel=null; render(); };
 function measCell(row,catKw,subKw){ for(var k in row.cells){ var parts=k.split(""); if(parts[0].indexOf(catKw)>=0 && (!subKw||parts[1].indexOf(subKw)>=0)) return row.cells[k]; } return ""; }
 function studentLatestByKind(name,kind){ var m=measuresData(), best=null; Object.keys(m).forEach(function(id){ var s=m[id]; if(s.kind!==kind) return; var row=(s.rows||[]).filter(function(r){return r.name===name;})[0]; if(!row) return; var sc=s.year+(s.half==="H2"?0.5:0); if(!best||sc>best.sc) best={s:s,row:row,sc:sc}; }); return best; }
@@ -14989,6 +15057,7 @@ function phoneCarBody(){
 loadAll();
 render();
 setTimeout(function(){ if(state.unlocked) cloudPull(); }, 500);  /* 잠금 해제 후에만 자동 동기화 (로그인 화면 튕김 방지) */
+setTimeout(function(){ if(state.unlocked){ try{ _migrateMeasFromWork(); }catch(e){} try{ if(typeof measPull==="function") measPull(); }catch(e){} } }, 1400);  /* 측정 전용 창고 최초 동기화 + 옛 데이터 이전 */
 setTimeout(function(){ try{ seedSchoolsOnce(); }catch(e){} try{ checkGradeAdvance(); }catch(e){} }, 3000);   /* 학교 자동채움·12월 진학조사 (로컬 로스터 대비) */
 setTimeout(function(){ if(state.unlocked && typeof pullSignups==="function" && signupUrl()) try{ pullSignups(); }catch(e){} }, 3500);   /* 구글폼 신규 신청 자동 확인 */
 </script>
