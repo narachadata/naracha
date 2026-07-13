@@ -574,7 +574,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.51";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.52";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -13809,18 +13809,22 @@ function render(){
     /* 시점별 인원 계산 함수: 특정 YYYY-MM 시점의 재원생 반별 분포 */
     function snapshotAt(y, m){
       var endYm=y+"-"+p2(m)+"-31";
+      var td=today();
+      var asOf=(endYm>td)?td:endYm;   /* 이번 달·미래는 '오늘' 기준으로 계산 → 현재 재원생과 일치 */
       var byBan={};
       BANS.forEach(function(b){ byBan[b]={m:0,w:0,t:0}; });
       var totM=0, totW=0;
       STUDENTS.forEach(function(s){
         /* 등록일 없는 원생: 조회 시점이 오늘 이후일 때만 포함 (등록일 불명) */
         if(!s.joinDate){
-          if(endYm < today().slice(0,7)) return;   /* 과거 시점 조회 시 제외 */
+          if(asOf < td.slice(0,7)) return;   /* 과거 시점 조회 시 제외 */
         } else {
-          if(s.joinDate>endYm) return;
+          if(s.joinDate>asOf) return;
         }
         var cs=state.closedMap[s.n];
-        if(cs && ((cs.start||"0000-00")<=endYm)) return;   /* 시작일 미상 휴관은 항상 제외 */
+        if(cs && ((cs.start||"0000-00")<=asOf)) return;   /* 그 시점까지 휴관 → 제외 (시작일 미상은 항상 제외) */
+        var qq=(state.quitMap||{})[s.n];
+        if(qq && !qq.del && ((qq.start||"0000-00")<=asOf)) return;   /* 그 시점까지 퇴관 → 제외 (재원 정의와 일치) */
         /* 반은 그 시점의 나이 기준으로 재계산 */
         var ban=s.b;
         if(s.by){
@@ -13901,8 +13905,9 @@ function render(){
     var snap=snapshotAt(state.snapYear, state.snapMonth);
     var maxSnap=1;
     BANS.forEach(function(b){ if(snap.byBan[b].t>maxSnap) maxSnap=snap.byBan[b].t; });
+    var _snapNow=((state.snapYear+"-"+p2(state.snapMonth)+"-31")>today());
     h+='<div style="background:var(--blueSoft);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:13.5px;font-weight:800;text-align:center">'+
-       state.snapYear+'년 '+state.snapMonth+'월 말 기준 <span style="color:var(--blue);font-size:17px">'+snap.total+'명</span> (남 '+snap.totM+' · 여 '+snap.totW+')</div>';
+       state.snapYear+'년 '+state.snapMonth+'월 '+(_snapNow?'현재':'말')+' 기준 <span style="color:var(--blue);font-size:17px">'+snap.total+'명</span> (남 '+snap.totM+' · 여 '+snap.totW+')</div>';
     BANS.forEach(function(b){
       var r=snap.byBan[b];
       var pct=snap.total?Math.round(r.t/snap.total*1000)/10:0;
