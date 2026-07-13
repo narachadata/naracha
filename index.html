@@ -574,7 +574,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.50";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.51";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -4905,8 +4905,8 @@ function renderRosterTab(){
     (myRole()==="admin"?'<button class="chip sm" style="color:var(--sub);border-color:var(--line);font-weight:600;background:#FBFBFA" title="구글폼 신규등록 자동연동을 설정합니다" onclick="openSignupSetup()">📝 폼연동'+(function(){var n=signupForms().length;return n?' <span style="background:#DCF0E3;color:#1E7B3C;border-radius:10px;padding:0 5px;font-size:11.5px;font-weight:800">'+n+'</span>':'';})()+'</button>':'')+
     '</div>'+
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"><span style="font-size:11.5px;color:var(--sub);align-self:center">정렬:</span>'+
-    ["이름순","반별","급수별"].map(function(k){
-      return '<button class="chip sm'+((state.rosterSort||"이름순")===k?' on':'')+'" onclick="setRosterSort(\''+k+'\')">'+k+'</button>';
+    ["이름순","반별","급수별","시범단"].map(function(k){
+      return '<button class="chip sm'+((state.rosterSort||"이름순")===k?' on':'')+'" onclick="setRosterSort(\''+k+'\')">'+(k==="시범단"?"🛡 시범단":k)+'</button>';
     }).join('')+'</div>'+
     (function(){
       var so=state.rosterSort||"이름순";
@@ -4997,9 +4997,10 @@ function rosterListHtml(){
       return !state.rosterGF || g.indexOf(state.rosterGF)===0;
     });
   }
+  if(rso==="시범단") list=list.filter(function(s){ return isDemo(s.n); });   /* 시범단 원생만 */
   if(rso==="반별")  list.sort(function(a,b){ return (a.b||"").localeCompare(b.b||"") || a.n.localeCompare(b.n); });
   if(rso==="급수별") list.sort(function(a,b){ return gradeRank(b.grade)-gradeRank(a.grade) || a.n.localeCompare(b.n); });
-  if(rso==="이름순") list.sort(function(a,b){ return a.n.localeCompare(b.n); });
+  if(rso==="이름순"||rso==="시범단") list.sort(function(a,b){ return a.n.localeCompare(b.n); });
   x+='<div style="font-size:13.5px;color:var(--sub);margin-bottom:8px">'+f+' '+list.length+'명</div>';
   list.slice(0,200).forEach(function(s){
     var gd=(s.gd||[]);
