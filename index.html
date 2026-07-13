@@ -574,7 +574,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.38";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.39";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -1279,7 +1279,7 @@ function cloudSync(){
         state.deletedStudents=merged.deletedStudents||state.deletedStudents||{};
         state.longRegs=merged.longRegs||state.longRegs; state.deletedLongIds=merged.deletedLongIds||state.deletedLongIds;
         state.trash=merged.trash||state.trash; state.dupDismissed=merged.dupDismissed||state.dupDismissed;
-        if(merged.roster && merged.roster.list && merged.roster.list.length && (merged.roster.t||0)>=(state.rosterT||0)){
+        if(!STUDENTS.length && merged.roster && merged.roster.list && merged.roster.list.length){   /* 명단은 출석 창고 단일 소스 · 회계 창고 명단은 빈 상태(최초 로드)일 때만 채움 */
           STUDENTS=merged.roster.list; state.rosterT=merged.roster.t||0;
           for(var rdi=STUDENTS.length-1;rdi>=0;rdi--){ if((state.deletedStudents[STUDENTS[rdi].n]||0) > (STUDENTS[rdi]._t||0)) STUDENTS.splice(rdi,1); }
           state.newStudents.forEach(function(ns){ if(((state.deletedStudents||{})[ns.n]||0) > (ns._t||0)) return; if(!STUDENTS.some(function(x){return x.n===ns.n;})) STUDENTS.push(ns); });
@@ -1386,7 +1386,7 @@ function cloudPull(){
         state.deletedStudents=merged.deletedStudents||state.deletedStudents||{};
         state.longRegs=merged.longRegs||state.longRegs; state.deletedLongIds=merged.deletedLongIds||state.deletedLongIds;
         state.trash=merged.trash||state.trash; state.dupDismissed=merged.dupDismissed||state.dupDismissed;
-        if(merged.roster && merged.roster.list && merged.roster.list.length){
+        if(!STUDENTS.length && merged.roster && merged.roster.list && merged.roster.list.length){   /* 명단은 출석 창고 단일 소스 · 회계 창고 명단은 빈 상태(최초 로드)일 때만 채움 */
           STUDENTS=merged.roster.list;
           state.rosterT=merged.roster.t||0;
           for(var rdi=STUDENTS.length-1;rdi>=0;rdi--){ if((state.deletedStudents[STUDENTS[rdi].n]||0) > (STUDENTS[rdi]._t||0)) STUDENTS.splice(rdi,1); }
