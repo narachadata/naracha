@@ -638,7 +638,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.56";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.57";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -6553,13 +6553,14 @@ function chipHtml(name, key, wk){
   var clsAttr = ' class="'+(mk.m?'hasTip':'')+hitCls+'"';
   var tip = mk.m ? ' data-tip="'+esc(mk.m)+'"' : '';
   var __rec=isExamRec(name), __conf=isExamConf(name);
-  var __dots=(__rec||__conf)?'<span style="display:inline-flex;flex-direction:column;gap:2px;margin-right:2px;flex:none;justify-content:center" title="'+(__rec?'심사추천':'')+(__conf?(__rec?' · ':'')+'심사확정':'')+'">'+(__rec?'<span style="width:7px;height:7px;border-radius:50%;background:#CA8A04;box-shadow:0 0 0 1.3px #fff,0 0 1px rgba(0,0,0,.3)"></span>':'')+(__conf?'<span style="width:7px;height:7px;border-radius:50%;background:#15803D;box-shadow:0 0 0 1.3px #fff,0 0 1px rgba(0,0,0,.3)"></span>':'')+'</span>':'';   /* 심사추천=진노란 · 심사확정=진초록 · 흰테두리로 색배경에서도 선명 */
+  var __dots=(__rec||__conf)?'<span style="display:inline-flex;flex-direction:column;gap:2px;margin-right:1px;flex:none;justify-content:center" title="'+(__rec?'심사추천':'')+(__conf?(__rec?' · ':'')+'심사확정':'')+'">'+(__rec?'<span style="width:6px;height:6px;border-radius:50%;background:#CA8A04;box-shadow:0 0 0 1.2px #fff,0 0 1px rgba(0,0,0,.3)"></span>':'')+(__conf?'<span style="width:6px;height:6px;border-radius:50%;background:#15803D;box-shadow:0 0 0 1.2px #fff,0 0 1px rgba(0,0,0,.3)"></span>':'')+'</span>':'';   /* 심사추천=진노란 · 심사확정=진초록 · 흰테두리로 색배경에서도 선명 (6px) */
+  /* 부가 이모지(심사·메모·생일)는 이름보다 작게·살짝 반투명 → 이름이 돋보이고 칩이 깔끔 */
+  var __ic=(kind==="심사"?"📋":"")+(mk.m?"📝":"")+((s&&isBdayDate(s, addDays(wk, DAY_IDX[key.split("-")[0]]||0)))?"🎂":"");
+  var __icHtml=__ic?'<span style="font-size:8px;margin-left:1px;opacity:.85;letter-spacing:-1.5px;flex:none">'+__ic+'</span>':'';
   return '<span draggable="true" ondragstart="dragChip(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" style="'+style+'"'+clsAttr+tip+' onpointerdown="chipDown(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" onpointerup="chipUp(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" onpointerleave="chipCancelLP()" oncontextmenu="event.preventDefault()">'+
     __dots+
-    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;letter-spacing:-0.3px'+(name.length>=5?';font-size:9px':'')+'">'+esc(name)+'</span>'+(kind==="심사"?"📋":"")+(mk.m?"📝":"")+
-    ((s&&isBdayDate(s, addDays(wk, DAY_IDX[key.split("-")[0]]||0)))?"🎂":"")+
-
-    ((!s)?'<i style="font-size:10px;opacity:.9">체</i>':'')+
+    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;letter-spacing:-0.3px'+(name.length>=5?';font-size:9px':'')+'">'+esc(name)+'</span>'+__icHtml+
+    ((!s)?'<i style="font-size:10px;opacity:.9;margin-left:1px">체</i>':'')+
     '</span>';
 }
 
