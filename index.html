@@ -190,6 +190,8 @@
   100% { box-shadow:0 0 0 2px #FDE047, 0 0 6px 2px rgba(250,204,21,.7); }
 }
 .ttHit{ animation:ttHitPulse .8s ease-in-out infinite; position:relative; z-index:8; outline:2px solid #FACC15; outline-offset:-1px; }
+.measTable th,.measTable td{ border:1px solid #E7EAF0; padding:5px 8px; text-align:center; background:#fff; }
+.measTable thead th{ background:#F4F6FA; font-weight:800; }
 </style>
 </head>
 <body>
@@ -572,7 +574,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.36";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.37";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -8086,6 +8088,7 @@ function renderStuChart(m){
         '</div>'+
         '<div style="display:flex;flex-direction:column;gap:10px">'+
           sc('📅 출석 요약', attInner)+
+          sc('💪 체력·체격 측정', studentMeasureCard(m.n))+
           sc('🏛 국기원·단증', kkwInner)+
           sc('🧭 학적 연혁', tlInner)+
           sc('🗒 상담·특이사항 로그', counselInner)+
@@ -9437,12 +9440,12 @@ function applyWorkTomb(w, coll, tk){
 function mergeWork(local, remote){
   if(!remote||!remote.workV) return local;
   var out=JSON.parse(JSON.stringify(local));
-  ["manage","flags","events","logs","tasks","routines","rchecks","staff","car","carMaint","typeColors","holidays","holHidden","signupDone"].forEach(function(coll){
+  ["manage","flags","events","logs","tasks","routines","rchecks","staff","car","carMaint","typeColors","holidays","holHidden","signupDone","measures"].forEach(function(coll){
     var rc=remote[coll]||{}, oc=out[coll]||(out[coll]={});
     for(var k in rc){ if(!oc[k] || (rc[k]._t||0)>(oc[k]._t||0)) oc[k]=rc[k]; }
   });
   /* 삭제 표식 병합 (양쪽 최신 시각 유지) */
-  ["tombEvents","tombFlags","tombTasks","tombRoutines","tombCar","tombCarMaint","tombTypes"].forEach(function(tk){
+  ["tombEvents","tombFlags","tombTasks","tombRoutines","tombCar","tombCarMaint","tombTypes","tombMeas"].forEach(function(tk){
     var rt=remote[tk]||{}, ot=out[tk]||(out[tk]={});
     for(var k in rt){ if(!ot[k] || rt[k]>ot[k]) ot[k]=rt[k]; }
   });
@@ -9453,6 +9456,7 @@ function mergeWork(local, remote){
   applyWorkTomb(out, "routines", "tombRoutines");
   applyWorkTomb(out, "car", "tombCar");
   applyWorkTomb(out, "carMaint", "tombCarMaint");
+  applyWorkTomb(out, "measures", "tombMeas");
   /* 차량 정보(단일 객체): 최신본 우선 */
   if(remote.carInfo && (remote.carInfo._t||0) > ((out.carInfo&&out.carInfo._t)||0)) out.carInfo=remote.carInfo;
   /* 백업 비밀번호(단일 객체): 최신본 우선 → 모든 PC 자동 동기화 */
@@ -11876,6 +11880,140 @@ document.addEventListener("pointerdown", function(e){
     if(window.__pendingRender){ window.__pendingRender=false; setTimeout(render, 0); }
   }
 }, true);
+
+/* ══════════════════ 측정관리 (체력·체격·줄넘기) ══════════════════ */
+function measuresData(){ var w=workData(); if(!w.measures) w.measures={}; return w.measures; }
+function measSort(list){ return list.sort(function(a,b){ if(b.year!==a.year) return b.year-a.year; var ah=a.half==="H2"?2:1, bh=b.half==="H2"?2:1; if(bh!==ah) return bh-ah; return (a.kind<b.kind?-1:1); }); }
+function _normh(s){ return String(s==null?"":s).replace(/\s/g,""); }
+function parseMeasureAoa(aoa){
+  if(!aoa || aoa.length<3) return null;
+  var r0=aoa[0]||[], r1=aoa[1]||[];
+  var maxc=Math.max(r0.length, r1.length);
+  var cat=[], cur=""; for(var c=0;c<maxc;c++){ var v=(r0[c]!=null?String(r0[c]).trim():""); if(v) cur=v; cat[c]=cur; }
+  var idset={"이름":"name","성별":"gender","나이":"age","타임":"time","부/반":"cls","부반":"cls","반":"cls"};
+  var idIdx={}; for(var c2=0;c2<maxc;c2++){ var hh=_normh(cat[c2]); if(idset[hh]!==undefined && idIdx[idset[hh]]===undefined) idIdx[idset[hh]]=c2; }
+  var cats=[], colmap=[], byCat={};
+  for(var c3=0;c3<maxc;c3++){ var cn=cat[c3]; if(!cn || idset[_normh(cn)]!==undefined) continue;
+    var sub=(r1[c3]!=null?String(r1[c3]).trim():""); var key=cn+""+(sub||"값");
+    colmap.push({c:c3,cat:cn,sub:sub,key:key});
+    if(!byCat[cn]){ byCat[cn]={name:cn,subs:[]}; cats.push(byCat[cn]); } byCat[cn].subs.push({sub:sub,key:key});
+  }
+  var allcat=cats.map(function(x){return x.name;}).join(",");
+  var kind = /줄넘기|앞으로뛰기|뒤로뛰기|엇걸어|2중뛰기/.test(allcat) ? "줄넘기" : (/비만도|심폐|근력|근지구력|유연성|순발력/.test(allcat) ? "체력" : "기타");
+  var rows=[];
+  for(var r=2;r<aoa.length;r++){ var row=aoa[r]||[]; var ni=(idIdx.name!==undefined?idIdx.name:0); var nm=(row[ni]!=null?String(row[ni]).trim():""); if(!nm) continue;
+    var rec={ name:nm, gender:(idIdx.gender!==undefined?String(row[idIdx.gender]||"").trim():""), age:(idIdx.age!==undefined?String(row[idIdx.age]||"").trim():""), time:(idIdx.time!==undefined?String(row[idIdx.time]||"").trim():""), cls:(idIdx.cls!==undefined?String(row[idIdx.cls]||"").trim():""), cells:{} };
+    colmap.forEach(function(cm){ var v=row[cm.c]; if(v!=null && String(v).trim()!=="") rec.cells[cm.key]=String(v).trim(); });
+    rows.push(rec);
+  }
+  return { kind:kind, cats:cats, rows:rows };
+}
+function detectYearHalf(fn){ fn=String(fn||""); var y=(fn.match(/20\d\d/)||[])[0]; var half=/(2차|하반기|후반기)/.test(fn)?"H2":(/(1차|상반기|전반기)/.test(fn)?"H1":""); return { year:y?Number(y):null, half:half }; }
+window.triggerMeasImport=function(){ var el=document.getElementById("measFileInput"); if(el) el.click(); };
+window.importMeasureXlsx=function(input){
+  var f=input.files&&input.files[0]; if(!f){ return; }
+  if(typeof XLSX==="undefined"){ alert("엑셀 읽기 모듈을 불러오지 못했습니다.\n인터넷 연결을 확인하고 새로고침(⌘+Shift+R) 후 다시 시도해 주세요."); input.value=""; return; }
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+      var p=parseMeasureAoa(aoa);
+      if(!p || !p.rows.length){ alert("측정 데이터를 찾지 못했습니다.\n(1행=항목, 2행=기록/점수/등급, 3행부터 데이터인 형식이어야 합니다.)"); input.value=""; return; }
+      var yh=detectYearHalf(f.name); var year=yh.year, half=yh.half;
+      if(!year){ var yv=prompt("측정 연도를 입력하세요 (예: 2026)", today().slice(0,4)); if(yv===null){ input.value=""; return; } year=Number((yv||"").replace(/[^0-9]/g,"")); if(!year){ alert("연도를 인식하지 못했습니다."); input.value=""; return; } }
+      if(!half){ var hv=prompt("전반기(상반기)면 1, 후반기(하반기)면 2 를 입력하세요.", "1"); if(hv===null){ input.value=""; return; } half=(String(hv).indexOf("2")>=0)?"H2":"H1"; }
+      if(p.kind==="기타"){ var kv2=prompt("측정 종류를 입력하세요 (체력 / 줄넘기)", "체력"); if(kv2===null){ input.value=""; return; } p.kind=(String(kv2).indexOf("줄")>=0)?"줄넘기":"체력"; }
+      var id=year+"-"+half+"-"+p.kind; var m=measuresData(); var existed=!!m[id];
+      if(existed && !confirm('"'+year+"년 "+(half==="H1"?"전반기":"후반기")+" "+p.kind+'" 자료가 이미 있습니다.\n새 파일로 덮어쓸까요?')){ input.value=""; return; }
+      var matched=0, have={}; (STUDENTS||[]).forEach(function(s){ have[s.n]=1; }); p.rows.forEach(function(rw){ if(have[rw.name]) matched++; });
+      m[id]={ id:id, year:year, half:half, kind:p.kind, title:year+"년 "+(half==="H1"?"전반기":"후반기")+" "+p.kind, cats:p.cats, rows:p.rows, n:p.rows.length, matched:matched, date:today(), _t:Date.now() };
+      var w=workData(); w.t=Date.now(); workPersist();
+      state.topCat="측정"; state.measSel=id; render();
+      alert((existed?"덮어썼습니다":"불러왔습니다")+": "+m[id].title+"\n· 총 "+p.rows.length+"명 (명단 일치 "+matched+"명)");
+    }catch(err){ alert("엑셀을 읽는 중 오류가 발생했습니다.\n"+err); }
+    input.value="";
+  };
+  reader.readAsArrayBuffer(f);
+};
+window.setMeasSel=function(id){ state.measSel=id||null; render(); };
+window.delMeasureSession=function(id){ var m=measuresData(); if(!m[id]) return; if(!confirm('"'+m[id].title+'" 측정 회차를 삭제할까요?\n(이 회차의 측정 기록이 모두 지워집니다)')) return; delete m[id]; var w=workData(); if(!w.tombMeas)w.tombMeas={}; w.tombMeas[id]=Date.now(); w.t=Date.now(); workPersist(); state.measSel=null; render(); };
+window.openMeasFor=function(name){ state.topCat="측정"; state.measSel=null; render(); };
+function measCell(row,catKw,subKw){ for(var k in row.cells){ var parts=k.split(""); if(parts[0].indexOf(catKw)>=0 && (!subKw||parts[1].indexOf(subKw)>=0)) return row.cells[k]; } return ""; }
+function studentLatestByKind(name,kind){ var m=measuresData(), best=null; Object.keys(m).forEach(function(id){ var s=m[id]; if(s.kind!==kind) return; var row=(s.rows||[]).filter(function(r){return r.name===name;})[0]; if(!row) return; var sc=s.year+(s.half==="H2"?0.5:0); if(!best||sc>best.sc) best={s:s,row:row,sc:sc}; }); return best; }
+function _mbox(l,v){ return '<div style="flex:1;min-width:58px;background:#F4F6FA;border-radius:9px;padding:6px 4px;text-align:center"><div style="font-size:14.5px;font-weight:900;color:var(--ink)">'+esc(String(v))+'</div><div style="font-size:9.5px;color:var(--sub)">'+l+'</div></div>'; }
+function studentMeasureCard(name){
+  var m=measuresData(); if(!Object.keys(m).length) return '<div style="font-size:12px;color:var(--sub)">아직 측정 자료가 없습니다. 상단 <b>[측정관리]</b>에서 엑셀을 불러오세요.</div>';
+  var fit=studentLatestByKind(name,"체력"), jr=studentLatestByKind(name,"줄넘기");
+  if(!fit && !jr) return '<div style="font-size:12px;color:var(--sub)">이 수련생의 측정 기록이 아직 없습니다.</div>';
+  var h='';
+  if(fit){ var ki=measCell(fit.row,"비만도","신장")||measCell(fit.row,"신장",""); var mo=measCell(fit.row,"비만도","몸무게")||measCell(fit.row,"몸무게",""); var bmi=measCell(fit.row,"비만도","기록"); var gr=(fit.row.cells["종합등급값"]||measCell(fit.row,"종합등급",""));
+    h+='<div style="font-size:11px;color:var(--sub);font-weight:700;margin-bottom:4px">체력·체격 · '+esc(fit.s.title)+'</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+_mbox('키',ki?ki+'㎝':'-')+_mbox('몸무게',mo?mo+'㎏':'-')+_mbox('BMI',bmi||'-')+_mbox('종합등급',gr||'-')+'</div>'; }
+  if(jr){ var parts=(jr.s.cats||[]).slice(0,4).map(function(cat){ var rec=jr.row.cells[cat.name+"기록"]; return rec?('<span style="font-size:11.5px;color:var(--ink)">'+esc(cat.name)+' <b>'+esc(rec)+'</b></span>'):''; }).filter(Boolean).join('&nbsp;&nbsp;');
+    h+='<div style="font-size:11px;color:var(--sub);font-weight:700;margin:2px 0 4px">줄넘기 · '+esc(jr.s.title)+'</div><div style="margin-bottom:6px">'+(parts||'<span style="font-size:12px;color:var(--sub)">기록 없음</span>')+'</div>'; }
+  h+='<button class="chip sm" style="color:var(--blue)" onclick="openMeasFor(\''+esc(name).replace(/'/g,"\\'")+'\')">📊 측정관리에서 보기</button>';
+  return h;
+}
+function renderMeasureTab(){
+  var m=measuresData(); var ids=Object.keys(m);
+  var fileInput='<input type="file" id="measFileInput" accept=".xlsx,.xls" style="display:none" onchange="importMeasureXlsx(this)">';
+  if(state.measSel && m[state.measSel]) return fileInput+renderMeasureDetail(m[state.measSel]);
+  var sessions=measSort(ids.map(function(k){return m[k];}));
+  var h=fileInput+'<div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+    '<b style="font-size:15px">📏 측정관리</b><span style="font-size:11.5px;color:var(--sub)">'+sessions.length+'개 회차</span><span style="flex:1"></span>'+
+    '<button onclick="triggerMeasImport()" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">⬆ 엑셀 불러오기</button></div>'+
+    '<div style="font-size:12px;color:var(--sub);margin-top:8px;line-height:1.6">체력·체격, 줄넘기 측정 엑셀을 불러와 저장·분석합니다. 파일 이름의 연도·차수(예: 2026년1차)를 자동 인식하고, 항목은 자동으로 구분합니다.</div></div>';
+  if(!sessions.length){
+    h+='<div class="card" style="text-align:center;padding:26px 16px"><div style="font-size:34px;margin-bottom:8px">📥</div><div style="font-size:14px;font-weight:700;margin-bottom:6px">아직 불러온 측정 자료가 없습니다.</div><div style="font-size:12.5px;color:var(--sub);margin-bottom:14px">엑셀 파일을 불러오면 회차별로 정리되고, 학적부에도 자동으로 표시됩니다.</div><button onclick="triggerMeasImport()" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">⬆ 첫 엑셀 불러오기</button></div>';
+    return h;
+  }
+  var byYear={}; sessions.forEach(function(s){ (byYear[s.year]=byYear[s.year]||[]).push(s); });
+  Object.keys(byYear).sort(function(a,b){return b-a;}).forEach(function(y){
+    h+='<div class="card"><div style="font-size:13.5px;font-weight:900;margin-bottom:10px">'+y+'년</div>';
+    byYear[y].forEach(function(s){
+      var kc=(s.kind==="줄넘기")?'#2B5FB8':(s.kind==="체력")?'#1E7B3C':'#7C3AED';
+      h+='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px">'+
+        '<span style="background:'+kc+'1f;color:'+kc+';border-radius:8px;padding:3px 10px;font-size:11.5px;font-weight:800">'+esc(s.kind)+'</span>'+
+        '<b style="font-size:14px">'+esc(s.half==="H1"?"전반기":"후반기")+'</b>'+
+        '<span style="font-size:12px;color:var(--sub)">'+s.n+'명'+(s.matched!=null?' · 명단일치 '+s.matched+'명':'')+'</span>'+
+        '<span style="flex:1"></span>'+
+        '<button class="chip sm" style="color:var(--blue)" onclick="setMeasSel(\''+s.id+'\')">보기</button>'+
+        '<button class="chip sm" style="color:var(--red)" onclick="delMeasureSession(\''+s.id+'\')">삭제</button>'+
+      '</div>';
+    });
+    h+='</div>';
+  });
+  return h;
+}
+function renderMeasureDetail(s){
+  var have={}; (STUDENTS||[]).forEach(function(st){ have[st.n]=1; });
+  var kc=(s.kind==="줄넘기")?'#2B5FB8':(s.kind==="체력")?'#1E7B3C':'#7C3AED';
+  var h='<div class="card"><div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:6px">'+
+    '<button onclick="setMeasSel(\'\')" style="background:#EAF1FB;border:1.5px solid #2B5FB8;color:#2B5FB8;border-radius:10px;padding:7px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">← 회차 목록</button>'+
+    '<span style="background:'+kc+'1f;color:'+kc+';border-radius:8px;padding:3px 10px;font-size:11.5px;font-weight:800">'+esc(s.kind)+'</span>'+
+    '<b style="font-size:15px">'+esc(s.title)+'</b>'+
+    '<span style="font-size:12px;color:var(--sub)">'+s.n+'명'+(s.matched!=null?' · 명단일치 '+s.matched+'명':'')+'</span></div>'+
+    '<div style="font-size:11.5px;color:var(--sub);margin-bottom:10px">불러온 날짜 '+esc(s.date||'')+' · 회색 이름은 현재 재원 명단에 없는 수련생입니다.</div>';
+  /* 표 헤더 */
+  var cats=s.cats||[];
+  var head1='<tr><th rowspan="2" style="position:sticky;left:0;background:#F4F6FA;z-index:2">이름</th><th rowspan="2">성별</th><th rowspan="2">나이</th><th rowspan="2">반</th>';
+  var head2='<tr>';
+  cats.forEach(function(cat){ var sp=cat.subs.length||1; head1+='<th colspan="'+sp+'" style="background:'+kc+'14;color:'+kc+'">'+esc(cat.name)+'</th>'; cat.subs.forEach(function(su){ head2+='<th style="font-weight:600;color:var(--sub);font-size:10.5px">'+esc(su.sub||'값')+'</th>'; }); });
+  head1+='</tr>'; head2+='</tr>';
+  var body='';
+  (s.rows||[]).forEach(function(rw){ var inRoster=have[rw.name]; var nmCol=inRoster?'<b>'+esc(rw.name)+'</b>':'<span style="color:#AAB2C0">'+esc(rw.name)+'</span>';
+    body+='<tr><td style="position:sticky;left:0;background:#fff;text-align:left;font-weight:700">'+nmCol+'</td><td>'+esc(rw.gender)+'</td><td>'+esc(rw.age)+'</td><td style="font-size:10.5px">'+esc(rw.cls)+'</td>';
+    cats.forEach(function(cat){ cat.subs.forEach(function(su){ var v=rw.cells[su.key]||''; body+='<td>'+esc(v)+'</td>'; }); });
+    body+='</tr>';
+  });
+  h+='<div style="overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:10px">'+
+    '<table style="border-collapse:collapse;font-size:11.5px;white-space:nowrap;min-width:100%" class="measTable">'+
+    '<thead style="position:sticky;top:0;z-index:1">'+head1+head2+'</thead><tbody>'+body+'</tbody></table></div>';
+  h+='<div style="font-size:11.5px;color:var(--sub);margin-top:10px">다음 단계에서 이 자료로 <b>향상왕·기록왕 자동생성</b>과 <b>개인 전문 브리핑</b>이 붙습니다.</div></div>';
+  return h;
+}
+
 function render(){
   if(state.topCat!=="심사" && typeof hideExam==="function") hideExam();
   /* ① 한글 조합 중엔 다시 그리지 않음 (글자 깨짐·튕김 방지) */
@@ -12265,7 +12403,7 @@ function render(){
   }
   var activeCount=STUDENTS.filter(function(s){ return !state.closedMap[s.n]&&!isQuit(s.n); }).length;
   /* ── 탭 줄 HTML (접힘/펼침 공용) ── */
-  var __tabsHtml = (state.topCat==="심사"||state.topCat==="업무")
+  var __tabsHtml = (state.topCat==="심사"||state.topCat==="업무"||state.topCat==="측정")
     ? ''
     : state.topCat==="출석"
     ? '<div class="tabs">'+["수련시간표","출석 현황","수련생 명단","인원현황","📊 브리핑"].map(function(t){
@@ -12282,7 +12420,7 @@ function render(){
   var __hdrDone=false;
   if(state.hdrCollapsed){
     h+='<div class="header"><div class="slimbar">'+
-       (__tabsHtml||'<span style="color:#94A3B8;font-size:13.5px;padding:12px 4px">'+(state.topCat==="업무"?"업무관리":"심사관리")+'</span>')+
+       (__tabsHtml||'<span style="color:#94A3B8;font-size:13.5px;padding:12px 4px">'+(state.topCat==="업무"?"업무관리":state.topCat==="측정"?"측정관리":"심사관리")+'</span>')+
        '<button class="slimExpand" onclick="toggleHeader()" title="상단 메뉴 펼치기"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>메뉴 펼치기</button>'+
        '</div></div>';
     __hdrDone=true;
@@ -12317,8 +12455,10 @@ function render(){
         var icPlus='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+'<path d="M12 5v14M5 12h14"></path></svg>';
         var icExam='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+'<path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>';
         var icWork='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+'<rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M3 12h18"></path></svg>';
+        var icMeas='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+'<path d="M3 3v18h18"></path><path d="M7 15l3-4 3 3 4-6"></path></svg>';
         return catBtn('출석', icAtt, '수련생출석', false)+
           catBtn('심사', icExam, '심사관리', false)+
+          catBtn('측정', icMeas, '측정관리', false)+
           catBtn('업무', icWork, '업무관리', false)+
           '<button onclick="openStuM()" class="regBtn" style="cursor:pointer;font-family:inherit">'+icPlus+'원생 등록</button>'+
           '<span style="flex:1"></span>'+
@@ -12345,6 +12485,7 @@ function render(){
   /* 탭별 컨테이너 폭: 대시보드=넓게 · 명단/내역=중간 · 입력폼=좁게 (일반 모니터 최적화) */
   h+='<div class="wrap'+(function(){
       if(state.topCat==="업무") return ((state.workTab==="행사"&&!state.eventSel)||state.workTab==="일지") ? " wrap--lg" : " wrap--md";   /* 행사 캘린더+리스트·업무일지는 넓게 */
+      if(state.topCat==="측정") return state.measSel ? " wrap--wide" : " wrap--md";   /* 측정 상세표는 넓게 */
       var t=(state.topCat==="출석")?state.attTab:state.tab;
       if(t==="📊 브리핑"||t==="인원현황"||t==="출석 현황") return " wrap--wide";   /* 출석현황: 심사 통합으로 정보량 증가 → 넓게 */
       if(t==="납부내역"||t==="납부집계"||t==="연간브리핑") return " wrap--lg";   /* 회계 표·브리핑: 고정폭 컬럼 정렬을 위해 1200px */
@@ -12354,6 +12495,13 @@ function render(){
   /* ── 업무관리: 관장·사범 공용 협업 화면 ── */
   if(state.topCat==="업무"){
     h+=renderWorkTab();
+    h+='</div>';
+    document.getElementById("root").innerHTML=h;
+    __applyRestore();
+    return;
+  }
+  if(state.topCat==="측정"){
+    h+=renderMeasureTab();
     h+='</div>';
     document.getElementById("root").innerHTML=h;
     __applyRestore();
