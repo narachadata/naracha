@@ -638,7 +638,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.57";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.58";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -6629,6 +6629,7 @@ function renderWeekTab(){
    '<button class="chip" onclick="goThisWeek()">이번 주</button>'+
    '<input id="tsSearchIn" class="input" style="max-width:170px;padding:6px 11px;font-size:13.5px;border-radius:10px" placeholder="🔍 이름 검색 ('+(/Mac|iPhone|iPad/i.test(navigator.platform||navigator.userAgent)?"⌘F":"Ctrl+F")+')" value="'+esc(state.tsQ||"")+'" oninput="tsQF(this.value)">'+
    '<button class="tool" onclick="copyPrevWeek()">📋 지난주 복사</button>'+
+   '<button class="tool" onclick="copyWeeksAgo(2)" title="2주 전 시간표를 이번 주로 복사">📋 2주 전 복사</button>'+
         (state.dayView?'':'<button class="tool'+(state.fitW?' on':'')+'" onclick="toggleFitW()">'+(state.fitW?'↔ 화면 맞춤':'↔ 넓게 보기')+'</button>')+
    '<button class="tool" onclick="openAbsM()">🗓 결석 예정</button>'+
    '<button class="tool'+(state.pastEdit?' warn':'')+'" title="지난 날짜 출결 수정 잠금/해제" onclick="togglePastEdit()">'+(state.pastEdit?'🔓 지난날짜 수정 켜짐':'🔒 지난날짜 수정')+'</button>'+
@@ -7114,11 +7115,14 @@ window.cycleLvT=function(key,li){
 };
 window.setCellCat=function(key,v){ wcell(key).cat=v; touchWeek(); };
 window.setCellTch=function(key,v){ wcell(key).tch=v; touchWeek(); };
-window.copyPrevWeek=function(){
-  var wk=curWeek(), prevWk=addDays(wk,-7);
+window.copyPrevWeek=function(){ copyWeeksAgo(1); };
+window.copyWeeksAgo=function(n){
+  n=n||1;
+  var lbl=(n===1?"지난주":n+"주 전");
+  var wk=curWeek(), prevWk=addDays(wk,-7*n);
   var prev=state.weeks[prevWk];
   if(!prev || !prev.cells || !Object.keys(prev.cells).length){
-    alert("지난주("+prevWk+")에 복사할 배치가 없습니다."); return;
+    alert(lbl+"("+prevWk+")에 복사할 배치가 없습니다."); return;
   }
   /* 복사 대상 계산: 보강·체험 제외, 출석 표시는 비움, 관리는 메모 유지 */
   var total=0, skipped=0, setCells=0;
@@ -7134,12 +7138,13 @@ window.copyPrevWeek=function(){
     }
   }
   if(!total && !setCells){ alert("복사할 정규 배치가 없습니다. (보강·체험 "+skipped+"명은 제외됩니다)"); return; }
-  if(!confirm("지난주("+prevWk+") 시간표를 이번 주로 복사할까요?\n\n"+
+  if(!confirm(lbl+"("+prevWk+") 시간표를 이번 주로 복사할까요?\n\n"+
     "· 정규 배치 "+total+"명 복사 (보강·체험 "+skipped+"명은 제외)\n"+
     "· 수업유형·지도진·시간별 사범 이니셜도 함께 복사\n"+
     "· 결석 예정 수련생은 자동으로 '결석 · 사유' 표시\n"+
-    "· 심사·국기원·대회연습 배치는 다음 주에 '출석(정규)'으로 복사\n"+
-    "· 그 외 출석/결석 표시는 새로 시작 · 이미 배치된 이름은 건너뜀")) return;
+    "· 심사·국기원·대회연습 배치는 '출석(정규)'으로 복사\n"+
+    "· 이번 주에 미리 배치해 둔 보강·체험 등 모든 이름은 그대로 유지됩니다\n"+
+    "· 그 외 출석/결석 표시는 새로 시작")) return;
   var added=0, heldMarked=0;
   for(var key2 in prev.cells){
     var pc2=prev.cells[key2];
@@ -7174,8 +7179,8 @@ window.copyPrevWeek=function(){
     }
   }
   touchWeek();
-  alert("✅ 복사 완료 — "+added+"명 배치"+(heldMarked?" · 결석 예정 "+heldMarked+"건 자동 결석 처리":"")+
-        "\n(수업유형·지도진·사범 이니셜 포함 · 그 외 출석 표시는 새로 시작)");
+  alert("✅ "+lbl+" 복사 완료 — "+added+"명 배치"+(heldMarked?" · 결석 예정 "+heldMarked+"건 자동 결석 처리":"")+
+        "\n(수업유형·지도진·사범 이니셜 포함 · 미리 배치한 이름 유지 · 그 외 출석 표시는 새로 시작)");
   render();
 };
 window.moveWeek=function(n){ state.weekSel=addDays(curWeek(), n*7); render(); };
@@ -12105,7 +12110,10 @@ document.addEventListener("compositionstart", function(){ __composing=true; wind
 document.addEventListener("compositionupdate", function(){ window.__composeT=Date.now(); });
 document.addEventListener("compositionend", function(){
   __composing=false;
-  if(window.__pendingRender){ window.__pendingRender=false; setTimeout(render, 0); }
+  /* [튕김 수정] 한글 조합을 스페이스로 끝낼 때, 아직 입력칸에 있으면 화면을 다시 그리지 않음
+     (다시 그리면 커서가 칸 밖으로 튕겨나감) → 대기 상태로 두고 칸을 벗어날 때(focusout) 반영 */
+  var _ae=document.activeElement, _ed=_ae&&(_ae.tagName==="TEXTAREA"||(_ae.tagName==="INPUT"&&!/checkbox|radio|button|submit|reset|file|image/.test((_ae.type||"").toLowerCase())));
+  if(window.__pendingRender && !_ed){ window.__pendingRender=false; setTimeout(render, 0); }
 });
 /* ── 조합신호 유실 안전장치 ①: 다른 곳을 클릭하는 순간 조합은 끝난 것으로 간주
    (크롬에서 한글 조합 중 자동완성 드롭다운을 마우스로 고르면 compositionend가 유실되어
