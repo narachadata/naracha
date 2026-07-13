@@ -574,7 +574,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.37";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.38";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -11937,7 +11937,7 @@ window.importMeasureXlsx=function(input){
   };
   reader.readAsArrayBuffer(f);
 };
-window.setMeasSel=function(id){ state.measSel=id||null; render(); };
+window.setMeasSel=function(id){ state.measSel=id||null; state.measView=null; render(); };
 window.delMeasureSession=function(id){ var m=measuresData(); if(!m[id]) return; if(!confirm('"'+m[id].title+'" 측정 회차를 삭제할까요?\n(이 회차의 측정 기록이 모두 지워집니다)')) return; delete m[id]; var w=workData(); if(!w.tombMeas)w.tombMeas={}; w.tombMeas[id]=Date.now(); w.t=Date.now(); workPersist(); state.measSel=null; render(); };
 window.openMeasFor=function(name){ state.topCat="측정"; state.measSel=null; render(); };
 function measCell(row,catKw,subKw){ for(var k in row.cells){ var parts=k.split(""); if(parts[0].indexOf(catKw)>=0 && (!subKw||parts[1].indexOf(subKw)>=0)) return row.cells[k]; } return ""; }
@@ -11958,6 +11958,7 @@ function studentMeasureCard(name){
 function renderMeasureTab(){
   var m=measuresData(); var ids=Object.keys(m);
   var fileInput='<input type="file" id="measFileInput" accept=".xlsx,.xls" style="display:none" onchange="importMeasureXlsx(this)">';
+  if(state.measView && m[state.measView.id]) return fileInput+(state.measView.type==="improve"?renderImproveKing(m[state.measView.id]):renderRecordKing(m[state.measView.id]));
   if(state.measSel && m[state.measSel]) return fileInput+renderMeasureDetail(m[state.measSel]);
   var sessions=measSort(ids.map(function(k){return m[k];}));
   var h=fileInput+'<div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
@@ -11978,6 +11979,8 @@ function renderMeasureTab(){
         '<b style="font-size:14px">'+esc(s.half==="H1"?"전반기":"후반기")+'</b>'+
         '<span style="font-size:12px;color:var(--sub)">'+s.n+'명'+(s.matched!=null?' · 명단일치 '+s.matched+'명':'')+'</span>'+
         '<span style="flex:1"></span>'+
+        '<button class="chip sm" style="color:#B45309;border-color:#F0C36D" onclick="openMeasView(\'improve\',\''+s.id+'\')">🏅 향상왕</button>'+
+        '<button class="chip sm" style="color:#B45309;border-color:#F0C36D" onclick="openMeasView(\'record\',\''+s.id+'\')">🥇 기록왕</button>'+
         '<button class="chip sm" style="color:var(--blue)" onclick="setMeasSel(\''+s.id+'\')">보기</button>'+
         '<button class="chip sm" style="color:var(--red)" onclick="delMeasureSession(\''+s.id+'\')">삭제</button>'+
       '</div>';
@@ -12012,6 +12015,92 @@ function renderMeasureDetail(s){
     '<thead style="position:sticky;top:0;z-index:1">'+head1+head2+'</thead><tbody>'+body+'</tbody></table></div>';
   h+='<div style="font-size:11.5px;color:var(--sub);margin-top:10px">다음 단계에서 이 자료로 <b>향상왕·기록왕 자동생성</b>과 <b>개인 전문 브리핑</b>이 붙습니다.</div></div>';
   return h;
+}
+
+/* ══════════ 측정관리 2단계: 향상왕 · 기록왕 (자동계산) ══════════ */
+function _fmtN(n){ if(n==null||isNaN(n)) return ""; var r=Math.round(n*10)/10; return (r===Math.round(r))?String(Math.round(r)):String(r); }
+function measKindColor(k){ return (k==="줄넘기")?"#2B5FB8":(k==="체력")?"#1E7B3C":"#7C3AED"; }
+function prevMeasSession(s){ var m=measuresData(), best=null, cur=s.year+(s.half==="H2"?0.5:0); Object.keys(m).forEach(function(id){ var o=m[id]; if(o.id===s.id||o.kind!==s.kind) return; var sc=o.year+(o.half==="H2"?0.5:0); if(sc<cur && (!best||sc>(best.year+(best.half==="H2"?0.5:0)))) best=o; }); return best; }
+function measRecordCats(s){ return (s.cats||[]).filter(function(c){ return c.name.indexOf("비만도")<0 && c.name.indexOf("종합")<0 && c.name.indexOf("비고")<0 && c.subs.some(function(su){return su.sub==="기록";}); }); }
+function _recVal(row,catName){ return parseFloat(measCell(row,catName,"기록")); }
+function computeImprove(s){
+  var prev=prevMeasSession(s); if(!prev) return null;
+  var pByName={}; (prev.rows||[]).forEach(function(r){ pByName[r.name]=r; });
+  return measRecordCats(s).map(function(cat){
+    var byAge={};
+    (s.rows||[]).forEach(function(r){ var pr=pByName[r.name]; if(!pr) return; var cur=_recVal(r,cat.name), pv=_recVal(pr,cat.name); if(isNaN(cur)||isNaN(pv)) return; var imp=cur-pv; if(imp<=0) return; var age=r.age||"?"; if(!byAge[age]||imp>byAge[age].imp) byAge[age]={age:age,name:r.name,gender:r.gender,cls:r.cls,prev:pv,cur:cur,imp:imp}; });
+    var list=Object.keys(byAge).sort(function(a,b){return (parseFloat(a)||99)-(parseFloat(b)||99);}).map(function(k){return byAge[k];});
+    return {catName:cat.name, list:list};
+  });
+}
+function computeRecord(s){
+  return measRecordCats(s).map(function(cat){
+    var byAge={};
+    (s.rows||[]).forEach(function(r){ var v=_recVal(r,cat.name); if(isNaN(v)) return; var age=r.age||"?"; (byAge[age]=byAge[age]||[]).push({name:r.name,gender:r.gender,rec:v}); });
+    var groups=Object.keys(byAge).sort(function(a,b){return (parseFloat(a)||99)-(parseFloat(b)||99);}).map(function(age){
+      var arr=byAge[age].slice().sort(function(a,b){return b.rec-a.rec;});
+      var out=[], rank=0, prevv=null, cnt=0;
+      for(var i=0;i<arr.length;i++){ cnt++; if(prevv===null||arr[i].rec<prevv){ rank=cnt; prevv=arr[i].rec; } if(rank>3) break; out.push({rank:rank,name:arr[i].name,gender:arr[i].gender,rec:arr[i].rec}); }
+      return {age:age, rows:out};
+    });
+    return {catName:cat.name, groups:groups};
+  });
+}
+window.openMeasView=function(type,id){ state.measView={type:type,id:id}; state.measSel=null; render(); };
+window.closeMeasView=function(){ state.measView=null; render(); };
+window.measSectionImage=function(secId,fname){ var el=document.getElementById(secId); if(!el){ return; } if(typeof html2canvas==="undefined"){ alert("이미지 저장 모듈을 불러오지 못했습니다. 인터넷 연결 확인 후 새로고침해 주세요."); return; } html2canvas(el,{scale:2,backgroundColor:"#ffffff",useCORS:true}).then(function(cv){ var a=document.createElement("a"); a.href=cv.toDataURL("image/jpeg",0.92); a.download=(fname||"측정")+".jpg"; document.body.appendChild(a); a.click(); a.remove(); }).catch(function(e){ alert("이미지 생성 중 오류: "+e); }); };
+window.measAllPdf=function(prefix){ var secs=[].slice.call(document.querySelectorAll(".measSlide")); if(!secs.length){ alert("내보낼 내용이 없습니다."); return; } if(typeof html2canvas==="undefined"||!window.jspdf){ alert("PDF 모듈을 불러오지 못했습니다. 인터넷 연결 확인 후 새로고침해 주세요."); return; } var jsPDF=window.jspdf.jsPDF; var pdf=null; (function next(i){ if(i>=secs.length){ if(pdf) pdf.save((prefix||"측정")+".pdf"); return; } html2canvas(secs[i],{scale:2,backgroundColor:"#ffffff",useCORS:true}).then(function(cv){ var w=cv.width, ht=cv.height; if(!pdf){ pdf=new window.jspdf.jsPDF({orientation:w>=ht?"landscape":"portrait",unit:"px",format:[w,ht]}); } else { pdf.addPage([w,ht], w>=ht?"landscape":"portrait"); } pdf.addImage(cv.toDataURL("image/jpeg",0.92),"JPEG",0,0,w,ht); next(i+1); }).catch(function(){ next(i+1); }); })(0); };
+function _measBackBar(s,label){ var kc=measKindColor(s.kind); return '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:12px">'+
+  '<button onclick="closeMeasView()" style="background:#EAF1FB;border:1.5px solid #2B5FB8;color:#2B5FB8;border-radius:10px;padding:7px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">← 회차 목록</button>'+
+  '<span style="background:'+kc+'1f;color:'+kc+';border-radius:8px;padding:3px 10px;font-size:11.5px;font-weight:800">'+esc(s.kind)+'</span>'+
+  '<b style="font-size:15px">'+esc(s.title)+' · '+label+'</b><span style="flex:1"></span>'+
+  '<button class="chip sm" style="color:var(--blue)" onclick="measAllPdf(\''+esc(s.title).replace(/[^0-9가-힣A-Za-z]/g,"_")+'_'+label+'\')">📄 전체 PDF 저장</button></div>'; }
+function renderImproveKing(s){
+  var kc=measKindColor(s.kind);
+  var h='<div class="card">'+_measBackBar(s,"향상왕");
+  var prev=prevMeasSession(s);
+  if(!prev){ h+='<div style="background:#FFF7ED;border:1px solid #FDBA74;color:#9A3412;border-radius:11px;padding:14px 16px;font-size:13px;line-height:1.6">직전 회차가 없어 <b>향상 비교</b>를 할 수 없습니다.<br>같은 종류(<b>'+esc(s.kind)+'</b>)의 이전 회차 엑셀을 불러오면 자동으로 향상왕이 계산됩니다.</div></div>'; return h; }
+  h+='<div style="font-size:12px;color:var(--sub);margin-bottom:12px">기준: <b>'+esc(prev.title)+'</b> → <b>'+esc(s.title)+'</b> · 연령별 최고 향상자 (향상량 기준)</div>';
+  var data=computeImprove(s); var any=false;
+  data.forEach(function(cat,idx){ if(!cat.list.length) return; any=true; var secId="mimp_"+idx;
+    h+='<div style="margin-bottom:16px;max-width:980px">'+
+       '<div class="measSlide" id="'+secId+'" style="background:#FCF7E8;border:1px solid #EAD9A6;border-radius:14px;overflow:hidden">'+
+         '<div style="background:'+kc+';color:#fff;padding:12px 16px;font-size:19px;font-weight:900;text-align:center;letter-spacing:.5px">'+esc(s.title)+' 향상왕</div>'+
+         '<div style="text-align:center;font-size:17px;font-weight:900;padding:9px 6px;color:#2b2b2b">〈'+esc(cat.catName)+'〉</div>'+
+         '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:0 13px 12px">'+
+           cat.list.map(function(x){ var ph=getPhoto(x.name);
+             return '<div style="background:#fff;border-radius:9px;padding:9px;display:flex;align-items:center;gap:9px">'+
+               (ph?'<img src="'+ph+'" style="width:56px;height:56px;border-radius:9px;object-fit:cover;flex:none">':'<div style="width:56px;height:56px;border-radius:9px;background:#EEF2F7;display:flex;align-items:center;justify-content:center;color:#B0B8C4;font-size:11px;flex:none">사진</div>')+
+               '<div style="line-height:1.4"><b style="font-size:14px">'+esc(x.name)+'('+esc(x.age)+'세)</b>'+(x.cls?'<span style="font-size:10.5px;color:#8A93A0"> '+esc(x.cls)+'</span>':'')+'<div style="font-size:13px;color:#333">'+_fmtN(x.prev)+' → '+_fmtN(x.cur)+'</div><b style="font-size:13px;color:#D0332A">'+_fmtN(x.imp)+' 향상</b></div>'+
+             '</div>';
+           }).join('')+
+         '</div>'+
+         '<div style="text-align:center;font-size:12px;color:#7a6a3a;padding:2px 0 11px">최선을 다해 노력한 수련생 모두 대견하고 자랑스럽습니다!</div>'+
+       '</div>'+
+       '<div style="text-align:right;margin-top:5px"><button class="chip sm" onclick="measSectionImage(\''+secId+'\',\''+esc(s.title).replace(/[^0-9가-힣A-Za-z]/g,"_")+'_향상왕_'+esc(cat.catName).replace(/[^0-9가-힣A-Za-z]/g,"_")+'\')">🖼 이미지 저장(밴드용)</button></div>'+
+    '</div>';
+  });
+  if(!any) h+='<div style="font-size:13px;color:var(--sub);padding:10px 2px">향상한 수련생을 찾지 못했습니다. (두 회차에 공통으로 기록이 있는 수련생이 필요합니다.)</div>';
+  h+='</div>'; return h;
+}
+function renderRecordKing(s){
+  var kc=measKindColor(s.kind);
+  var h='<div class="card">'+_measBackBar(s,"기록왕");
+  h+='<div style="font-size:12px;color:var(--sub);margin-bottom:12px">연령별 기록 순위 (기록 높은 순 · 상위 3위)</div>';
+  var data=computeRecord(s); var any=false;
+  data.forEach(function(cat,idx){ if(!cat.groups.length) return; any=true; var secId="mrec_"+idx;
+    var rows='';
+    cat.groups.forEach(function(g){ g.rows.forEach(function(r,ri){ rows+='<tr>'+(ri===0?'<td rowspan="'+g.rows.length+'" style="font-weight:800;background:#FBFBF6">'+esc(g.age)+'세</td>':'')+'<td style="text-align:left">'+esc(r.name)+'</td><td>'+esc(r.gender)+'</td><td style="font-weight:800">'+r.rank+'</td><td style="font-weight:800">'+_fmtN(r.rec)+'</td></tr>'; }); });
+    h+='<div style="margin-bottom:16px;max-width:820px">'+
+       '<div class="measSlide" id="'+secId+'" style="background:#fff;border:1px solid #EAD9A6;border-radius:14px;overflow:hidden;padding-bottom:8px">'+
+         '<div style="font-size:18px;font-weight:900;padding:13px 16px 8px;color:#2b2b2b">'+esc(s.title)+' 기록왕 〈'+esc(cat.catName)+'〉</div>'+
+         '<div style="padding:0 12px"><table class="measTable" style="border-collapse:collapse;width:100%;font-size:13px;text-align:center"><thead><tr><th style="background:#F6D96A">나이</th><th style="background:#F6D96A">이름</th><th style="background:#F6D96A">성별</th><th style="background:#F6D96A">순위</th><th style="background:#F6D96A">기록</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+       '</div>'+
+       '<div style="text-align:right;margin-top:5px"><button class="chip sm" onclick="measSectionImage(\''+secId+'\',\''+esc(s.title).replace(/[^0-9가-힣A-Za-z]/g,"_")+'_기록왕_'+esc(cat.catName).replace(/[^0-9가-힣A-Za-z]/g,"_")+'\')">🖼 이미지 저장(밴드용)</button></div>'+
+    '</div>';
+  });
+  if(!any) h+='<div style="font-size:13px;color:var(--sub);padding:10px 2px">기록이 있는 수련생을 찾지 못했습니다.</div>';
+  h+='</div>'; return h;
 }
 
 function render(){
@@ -12485,7 +12574,7 @@ function render(){
   /* 탭별 컨테이너 폭: 대시보드=넓게 · 명단/내역=중간 · 입력폼=좁게 (일반 모니터 최적화) */
   h+='<div class="wrap'+(function(){
       if(state.topCat==="업무") return ((state.workTab==="행사"&&!state.eventSel)||state.workTab==="일지") ? " wrap--lg" : " wrap--md";   /* 행사 캘린더+리스트·업무일지는 넓게 */
-      if(state.topCat==="측정") return state.measSel ? " wrap--wide" : " wrap--md";   /* 측정 상세표는 넓게 */
+      if(state.topCat==="측정") return (state.measSel||state.measView) ? " wrap--wide" : " wrap--md";   /* 측정 상세표·향상왕은 넓게 */
       var t=(state.topCat==="출석")?state.attTab:state.tab;
       if(t==="📊 브리핑"||t==="인원현황"||t==="출석 현황") return " wrap--wide";   /* 출석현황: 심사 통합으로 정보량 증가 → 넓게 */
       if(t==="납부내역"||t==="납부집계"||t==="연간브리핑") return " wrap--lg";   /* 회계 표·브리핑: 고정폭 컬럼 정렬을 위해 1200px */
