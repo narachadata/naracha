@@ -574,7 +574,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.43";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.44";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -610,7 +610,7 @@ var state = { tab:"회계입력", payments:[], expiryMap:{}, deletedIds:[], hold
               topCat:"출석", attTab:"수련시간표", role:null,
               schedule:null, scheduleT:0, tempStudents:[],
               attPulledOnce:false, attSyncing:false, attStatus:"", stuM:null, tempM:null,
-              accMap:{}, accT:0, lastExamMap:{}, lastExamT:0, kkwPending:[], kkwT:0, kkwInfo:{}, danDateMap:{},
+              accMap:{}, accT:0, lastExamMap:{}, lastExamT:0, kkwPending:[], kkwT:0, kkwInfo:{}, danDateMap:{}, examConfirmMap:{}, examConfirmT:0,
               weeks:{}, weekSel:null, dayView:null, markM:null, addBox:null, newStudents:[], histEdits:{}, deletedStudents:{}, savedAt:0,
               device:"", syncStatus:"", syncing:false, lastSync:0,
               query:"", picked:null, date:today(), cat:"수련비", method:"카드",
@@ -5195,6 +5195,12 @@ function attendDates(name, ym){
     return { d:d, wd:WD.charAt(dt.getDay()), c:m.c, nc2:m.nc, nc:(m.c===0) };
   });
 }
+/* ── 심사추천/심사확정 (누적 14회 규칙) ── */
+function examConfObj(){ if(!state.examConfirmMap) state.examConfirmMap={}; return state.examConfirmMap; }
+function isExamRec(name){ if(!name) return false; if((state.kkwPending||[]).indexOf(name)>-1) return false; return (state.accMap[name]||0)>=14; }
+function isExamConf(name){ var e=(state.examConfirmMap||{})[name]; return !!(e&&e.conf); }
+window.toggleExamConfirm=function(name){ var m=examConfObj(); var e=m[name]||{}; e.conf=e.conf?0:1; e.t=Date.now(); m[name]=e; state.examConfirmT=Date.now(); try{persistAtt();}catch(_){}; render(); };
+window.toggleExamField=function(name,field){ var m=examConfObj(); var e=m[name]||{}; e[field]=e[field]?0:1; e.t=Date.now(); m[name]=e; state.examConfirmT=Date.now(); try{persistAtt();}catch(_){}; render(); };
 /* 그룹(전체/반별/급수별)까지 적용한 기준 목록 — 상태 카운트·추가필터의 바탕 */
 function statBaseRows(){
   var ym=state.statYm;
@@ -5208,7 +5214,7 @@ function statBaseRows(){
       var last=state.lastExamMap[s.n]||"";
       var cycleOk=!last || addMonths(last,examCycleMonths(s.grade))<=today();   /* 급수별 주기 */
       var kkw=!!kkwSet[s.n];
-      var ready=acc>=24 && cycleOk && !kkw;
+      var ready=acc>=14 && !kkw;   /* 심사추천: 누적 14회 이상 (국기원 대기 제외) */
       return { s:s, ct:ct, ac:ac, st:st, diff: ct?Math.abs(ac-ct.n):0,
                acc:acc, last:last, kkw:kkw, ready:ready };
     });
@@ -5272,6 +5278,11 @@ function statViewRows(){
   if(q) rows=rows.filter(function(r){ return r.s.n.indexOf(q)>-1; });
   if(f==="추천"){                                   /* 심사추천: 누적횟수 많은 순 유지 (준비도 판단용) */
     rows=rows.filter(function(r){ return r.ready; });
+    rows.sort(function(a,b){ return b.acc-a.acc || cmpName(a,b); });
+    return rows;
+  }
+  if(f==="확정"){                                   /* 심사확정: 확정 체크된 수련생만 */
+    rows=rows.filter(function(r){ return isExamConf(r.s.n); });
     rows.sort(function(a,b){ return b.acc-a.acc || cmpName(a,b); });
     return rows;
   }
@@ -5358,11 +5369,11 @@ function renderStatusTab(){
   if(!state.statYm) state.statYm=today().slice(0,7);
   var ym=state.statYm, f=state.statF||"";
   var base=statBaseRows();
-  var cnt={미달:0,초과:0,정상:0,추천:0};
-  base.forEach(function(r){ if(cnt[r.st]!=null) cnt[r.st]++; if(r.ready) cnt.추천++; });
+  var cnt={미달:0,초과:0,정상:0,추천:0,확정:0};
+  base.forEach(function(r){ if(cnt[r.st]!=null) cnt[r.st]++; if(r.ready) cnt.추천++; if(isExamConf(r.s.n)) cnt.확정++; });
 
-  /* 상태 필터 버튼 (미달/초과/일치/심사추천) — 위계 1: 크고 뜻에 맞는 색 · 다시 누르면 해제 */
-  var SF=[{k:"미달",c:"#B45309"},{k:"초과",c:"#D0332A"},{k:"정상",lbl:"일치",c:"#1E7B3C"},{k:"추천",lbl:"🥋 심사추천",c:"var(--brandRed)"}];
+  /* 상태 필터 버튼 (미달/초과/일치/심사추천/심사확정) — 위계 1: 크고 뜻에 맞는 색 · 다시 누르면 해제 */
+  var SF=[{k:"미달",c:"#B45309"},{k:"초과",c:"#D0332A"},{k:"정상",lbl:"일치",c:"#1E7B3C"},{k:"추천",lbl:"🥋 심사추천",c:"var(--brandRed)"},{k:"확정",lbl:"✅ 심사확정",c:"#2B5FB8"}];
   var sfBtns=SF.map(function(o){
     var on=(f===o.k);
     return '<button onclick="setStatF(\''+o.k+'\')" style="padding:9px 16px;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;border:1.5px solid '+o.c+';'+(on?'background:'+o.c+';color:#fff':'background:#fff;color:'+o.c)+'">'+(o.lbl||o.k)+' '+(cnt[o.k]||0)+'</button>';
@@ -5470,6 +5481,24 @@ function statListHtml(view){
   var x='';
   view.slice(0,250).forEach(function(r){
     var s=r.s;
+    var esName=esc(s.n).replace(/'/g,"\\'");
+    var f=state.statF||"";
+    if(f==="확정"){
+      var ec=(state.examConfirmMap||{})[s.n]||{};
+      x+='<div style="border-top:1px solid var(--line);padding:11px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+        avatarHtml(s.n, s.g, 34)+
+        '<span style="flex:0 0 auto;width:4px;height:22px;border-radius:2px;background:'+gradeColor(s.grade||"")+'"></span>'+
+        demoSlot(s.n)+
+        '<b style="flex:0 0 92px;font-size:13.5px;cursor:pointer;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="학적부 열기" onclick="openStuM(\''+esName+'\')">'+esc(s.n)+'</b>'+
+        '<span style="flex:0 0 58px;font-size:11.5px;color:var(--sub)">'+esc(s.grade||"급수?")+'</span>'+
+        '<span style="flex:0 0 auto;font-size:11.5px;color:var(--sub)">심사 누적 <b style="color:var(--ink)">'+r.acc+'회</b></span>'+
+        '<span style="flex:1"></span>'+
+        '<label style="display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid '+(ec.applied?"#1E7B3C":"var(--line)")+';border-radius:9px;padding:6px 11px;background:'+(ec.applied?"#E7F7EC":"#fff")+';color:'+(ec.applied?"#1E7B3C":"var(--sub)")+'"><input type="checkbox" '+(ec.applied?"checked":"")+' onchange="toggleExamField(\''+esName+'\',\'applied\')" style="accent-color:#1E7B3C">심사신청서</label>'+
+        '<label style="display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid '+(ec.tape?"#7C3AED":"var(--line)")+';border-radius:9px;padding:6px 11px;background:'+(ec.tape?"#F3EBFF":"#fff")+';color:'+(ec.tape?"#7C3AED":"var(--sub)")+'"><input type="checkbox" '+(ec.tape?"checked":"")+' onchange="toggleExamField(\''+esName+'\',\'tape\')" style="accent-color:#7C3AED">테이프전달</label>'+
+        '<button class="chip sm" style="color:var(--sub)" title="심사확정 해제" onclick="toggleExamConfirm(\''+esName+'\')">확정해제</button>'+
+      '</div>';
+      return;
+    }
     var tag = r.st==="미달" ? '<span style="background:#FFF3E0;color:#B45309;border-radius:10px;padding:2px 9px;font-size:11.5px;font-weight:800;white-space:nowrap">'+ (r.ct.n-r.ac) +'회 미달</span>'
       : r.st==="초과" ? '<span style="background:var(--redSoft);color:var(--red);border-radius:10px;padding:2px 9px;font-size:11.5px;font-weight:800;white-space:nowrap">'+(r.ac-r.ct.n)+'회 초과</span>'
       : r.st==="정상" ? '<span style="background:#E7F7EC;color:#1E7B3C;border-radius:10px;padding:2px 9px;font-size:11.5px;font-weight:800;white-space:nowrap">일치 ✓</span>'
@@ -5504,7 +5533,7 @@ function statListHtml(view){
     var exBadge = r.kkw ? '<span title="'+(kkwAp?'국기원 접수일 '+esc(kkwAp)+' · ':'')+'이름을 누르면 학적부에서 단증 수령·취소 처리" style="background:#EEE;color:#666;border-radius:10px;padding:2px 7px;font-size:11.5px;font-weight:800;white-space:nowrap;cursor:help">국기원 대기'+(kkwAp?' '+esc(kkwAp.slice(5)):'')+'</span>'
       : (r.ready && isLongAbsent(s.n)) ? '<span title="누적·주기는 충족했지만 4주 이상 무출석 — 연락 먼저" style="background:#FFF3E0;color:#B45309;border:1px dashed #F0C36D;border-radius:10px;padding:2px 7px;font-size:11.5px;font-weight:800;white-space:nowrap">추천·연락필요</span>'
       : r.ready ? '<span style="background:var(--redSoft);color:var(--red);border-radius:10px;padding:2px 7px;font-size:11.5px;font-weight:800;white-space:nowrap">추천</span>'
-      : r.acc<24 ? '<span style="font-size:11.5px;color:var(--sub);white-space:nowrap">'+(24-r.acc)+'회 남음</span>'
+      : r.acc<14 ? '<span style="font-size:11.5px;color:var(--sub);white-space:nowrap">'+(14-r.acc)+'회 남음</span>'
       : '';   /* 24회 이상·주기 미충족: 재응시 가능일 표기는 생략 (마지막 심사일로 판단) */
     /* 품·단 마지막 단계(국기원 대상)인데 연한이 아직 안 됐으면 안내 칩 */
     var termChip='';
@@ -5533,6 +5562,7 @@ function statListHtml(view){
       examCl+
       /* 오른쪽: 출석 날짜 버튼 (모든 행 같은 x에서 시작) */
       '<div style="flex:1;min-width:200px;overflow-x:auto">'+dateBtns+'</div>'+
+      (f==="추천"?'<label style="flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:800;cursor:pointer;border:1.5px solid '+(isExamConf(s.n)?'#2B5FB8':'var(--line)')+';border-radius:9px;padding:6px 11px;background:'+(isExamConf(s.n)?'#EAF1FB':'#fff')+';color:'+(isExamConf(s.n)?'#2B5FB8':'var(--sub)')+'"><input type="checkbox" '+(isExamConf(s.n)?'checked':'')+' onchange="toggleExamConfirm(\''+esName+'\')" style="accent-color:#2B5FB8">심사확정</label>':'')+
       '</div>';
   });
   if(view.length>250) x+='<div style="font-size:11.5px;color:var(--sub);margin-top:8px">외 '+(view.length-250)+'명</div>';
@@ -6399,7 +6429,10 @@ function chipHtml(name, key, wk){
   }
   var clsAttr = ' class="'+(mk.m?'hasTip':'')+hitCls+'"';
   var tip = mk.m ? ' data-tip="'+esc(mk.m)+'"' : '';
+  var __rec=isExamRec(name), __conf=isExamConf(name);
+  var __dots=(__rec||__conf)?'<span style="display:inline-flex;flex-direction:column;gap:1px;margin-right:2px;flex:none;justify-content:center" title="'+(__rec?'심사추천':'')+(__conf?(__rec?' · ':'')+'심사확정':'')+'">'+(__rec?'<span style="width:5px;height:5px;border-radius:50%;background:#8B5CF6"></span>':'')+(__conf?'<span style="width:5px;height:5px;border-radius:50%;background:#2B5FB8"></span>':'')+'</span>':'';
   return '<span draggable="true" ondragstart="dragChip(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" style="'+style+'"'+clsAttr+tip+' onpointerdown="chipDown(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" onpointerup="chipUp(event,\''+key+'\',\''+esc(name).replace(/'/g,"\\'")+'\')" onpointerleave="chipCancelLP()" oncontextmenu="event.preventDefault()">'+
+    __dots+
     '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;letter-spacing:-0.3px'+(name.length>=5?';font-size:9px':'')+'">'+esc(name)+'</span>'+(kind==="심사"?"📋":"")+(mk.m?"📝":"")+
     ((s&&isBdayDate(s, addDays(wk, DAY_IDX[key.split("-")[0]]||0)))?"🎂":"")+
 
@@ -8747,6 +8780,7 @@ function attState(){
     sig:{ q:state.sigQ||{}, qt:state.sigQT||{}, a:state.sigA||{}, t:state.sigTT||0 },
     lastExam:{ map:state.lastExamMap||{}, t:state.lastExamT||0 },
     kkw:{ list:state.kkwPending||[], t:state.kkwT||0, info:state.kkwInfo||{}, dan:state.danDateMap||{} },
+    examConfirm:{ map:state.examConfirmMap||{}, t:state.examConfirmT||0 },   /* 심사확정(신청서·테이프전달) */
     /* [완전 분리] 심사데이터는 exam 창고로 이전됨 → 출석 창고에는 더 이상 저장하지 않음.
        (기존 출석 창고에 남아 있던 심사데이터는 applyAtt에서 계속 읽어 exam으로 합쳐짐 = 유실 없음) */
     deletedStudents: state.deletedStudents||{},   /* 삭제 묘비를 출석 창고에도 → 사범 기기 유령 부활 방지 */
@@ -8960,6 +8994,7 @@ function mergeAtt(a, b){
            quitMapAtt:mergeStamped(a.quitMapAtt,b.quitMapAtt), closedMapAtt:mergeStamped(a.closedMapAtt,b.closedMapAtt),
            acc:mergeAcc(a.acc,b.acc), accBase:mergeAccBase(a.accBase,b.accBase), sig:mergeSig(a.sig,b.sig),
            lastExam:{ map:_lx, t:Math.max((a.lastExam||{}).t||0,(b.lastExam||{}).t||0) }, kkw:newerBlob(a.kkw,b.kkw,{}),
+           examConfirm:mergeStamped(a.examConfirm,b.examConfirm),
            examData:mergeExam(a.examData,b.examData),
            archivedYears:_mergeArchivedYears(a.archivedYears,b.archivedYears),
            savedAt:Math.max(a.savedAt||0,b.savedAt||0) };
@@ -9000,6 +9035,7 @@ function applyAtt(m){
   if(m.lastExam){ state.lastExamMap=m.lastExam.map||{}; state.lastExamT=m.lastExam.t||0; }
   reconcileAcc();   /* 동기화된 출석 마크(단말기 포함) + 수동 기준점을 수련횟수에 즉시 반영 */
   if(m.kkw){ state.kkwPending=m.kkw.list||[]; state.kkwT=m.kkw.t||0; state.kkwInfo=m.kkw.info||{}; state.danDateMap=m.kkw.dan||{}; }
+  if(m.examConfirm && m.examConfirm.map){ if(!state.examConfirmMap) state.examConfirmMap={}; var _ecm=m.examConfirm.map; for(var _en in _ecm){ var _cur=state.examConfirmMap[_en]; if(!_cur || (_ecm[_en].t||0)>(_cur.t||0)) state.examConfirmMap[_en]=_ecm[_en]; } state.examConfirmT=Math.max(state.examConfirmT||0, m.examConfirm.t||0); }
   if(m.examData){
     /* 클라우드에서 온 심사 데이터를 현재와 레코드별 최신(_t)으로 합침 */
     if(!state.examData) state.examData = { meta:{}, students:{}, t:0 };
