@@ -574,7 +574,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.40";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.41";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -1412,7 +1412,7 @@ function cloudPull(){
       state.pulledOnce=true;
       state.syncing=false; state.lastSync=Date.now();
       state.syncStatus="가져옴 "+timeStr(state.lastSync);
-      render();
+      syncRender();
       /* 수신 완료 → 보류 중이던 내 변경사항을 합쳐진 상태로 안전하게 전송 */
       setTimeout(function(){ cloudSync(); }, 400);
     })
@@ -9107,7 +9107,7 @@ function attPull(){
       try{ localStorage.setItem("naracha-att", JSON.stringify(merged)); }catch(e){}
       state.attPulledOnce=true;
       state.attStatus="동기화됨";
-      render();
+      syncRender();
       setTimeout(attSync, 400);
     })
     .catch(function(){ state.attStatus="오프라인"; });
@@ -9152,7 +9152,7 @@ function photoPull(cb){
         state.photoMap=merged.map; state.photoT=merged.t;
       }
       state.photoPulledOnce=true; state.photoStatus="사진 동기화됨";
-      try{ render(); }catch(e){}   /* 받아온 사진을 화면에 즉시 반영 */
+      try{ syncRender(); }catch(e){}   /* 받아온 사진을 화면에 즉시 반영 (입력 중이면 미룸) */
       if(cb)cb(true);
     })
     .catch(function(){ state.photoStatus="오프라인"; if(cb)cb(false); });
@@ -9189,7 +9189,7 @@ function photoSync(){
     .then(function(txt){
       state.photoSyncing=false;
       state.photoStatus = (txt==="OK") ? "사진 저장됨" : "사진 저장 실패";
-      render();
+      syncRender();
     })
     .catch(function(){ state.photoSyncing=false; state.photoStatus="오프라인 (이 기기에만 저장됨)"; });
 }
@@ -12103,6 +12103,12 @@ function renderRecordKing(s){
   h+='</div>'; return h;
 }
 
+/* ── 동기화용 렌더: 입력 중(텍스트칸 포커스)엔 화면 재구성을 미룬다 (데이터는 이미 상태에 병합됨) → 타이핑 멈춤·튕김 방지 ── */
+function __isEditingField(el){ if(!el) return false; var tg=el.tagName, ty=(el.type||"").toLowerCase(); return (tg==="TEXTAREA")||(tg==="INPUT"&&!/checkbox|radio|button|submit|reset|file|image/.test(ty)); }
+function syncRender(){ if(__isEditingField(document.activeElement)){ window.__pendingRender=true; return; } render(); }
+document.addEventListener("focusout", function(){
+  setTimeout(function(){ if(!__isEditingField(document.activeElement) && window.__pendingRender){ window.__pendingRender=false; try{ render(); }catch(e){} } }, 30);
+}, true);
 function render(){
   if(state.topCat!=="심사" && typeof hideExam==="function") hideExam();
   /* ① 한글 조합 중엔 다시 그리지 않음 (글자 깨짐·튕김 방지) */
