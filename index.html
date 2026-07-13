@@ -574,7 +574,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.39";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.40";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -14354,7 +14354,40 @@ function render(){
 }
 /* 포커스·커서·스크롤 복원 — render()의 모든 화면 경로(업무·심사 조기 종료 포함)에서 공통 호출.
    ① 시그니처(어떤 입력칸인지: oninput·onchange·placeholder·id)로 같은 칸을 먼저 찾고 ② 없으면 기존 인덱스로 */
+/* ── 전역 Tab 이동: 모든 입력창에서 Tab=다음 칸, Shift+Tab=이전 칸 (재렌더에도 안전) ── */
+function __fldSig(el){ if(!el||!el.getAttribute) return ""; return (el.getAttribute("oninput")||"")+"§"+(el.getAttribute("onchange")||"")+"§"+(el.getAttribute("placeholder")||"")+"§"+(el.id||""); }
+function __isTabField(el){
+  if(!el) return false; var tag=el.tagName;
+  if(tag!=="INPUT"&&tag!=="TEXTAREA"&&tag!=="SELECT") return false;
+  if(el.disabled||el.readOnly) return false;
+  var ty=(el.type||"").toLowerCase();
+  if(tag==="INPUT" && /hidden|button|submit|reset|image|file/.test(ty)) return false;
+  if(el.getAttribute("tabindex")==="-1") return false;
+  if(el.offsetParent===null && el.getClientRects().length===0) return false;   /* 화면에 안 보이는 칸 제외 */
+  return true;
+}
+document.addEventListener("keydown", function(e){
+  if(e.key!=="Tab" || e.altKey || e.ctrlKey || e.metaKey) return;
+  var ae=document.activeElement; if(!__isTabField(ae)) return;
+  var all=Array.prototype.slice.call(document.querySelectorAll("input,textarea,select"));
+  var focusable=all.filter(__isTabField);
+  var idx=focusable.indexOf(ae); if(idx<0) return;
+  var next=e.shiftKey?focusable[idx-1]:focusable[idx+1]; if(!next) return;   /* 처음·끝이면 기본 동작 */
+  e.preventDefault();
+  var sig=__fldSig(next), nth=0;
+  for(var j=0;j<all.length && all[j]!==next;j++){ if(__fldSig(all[j])===sig) nth++; }
+  window.__tabTarget={sig:sig, nth:nth};
+  try{ next.focus(); if(next.select && (next.tagName!=="SELECT")) next.select(); }catch(_){}
+  setTimeout(function(){ window.__tabTarget=null; }, 0);
+}, true);
 function __applyRestore(){
+  if(window.__tabTarget){
+    var __tt=window.__tabTarget; window.__tabTarget=null; window.__restoreFocus=null;
+    var __af=Array.prototype.slice.call(document.querySelectorAll("input,textarea,select"));
+    var __seenT=0, __tgt=null;
+    for(var __ti=0;__ti<__af.length;__ti++){ if(__fldSig(__af[__ti])===__tt.sig){ if(__seenT===__tt.nth){ __tgt=__af[__ti]; break; } __seenT++; } }
+    if(__tgt){ try{ __tgt.focus(); if(__tgt.select && __tgt.tagName!=="SELECT") __tgt.select(); }catch(e){} return; }
+  }
   var __fi2=window.__restoreFocus;
   if(__fi2 && __fi2.i>-1){
     var __all2=Array.prototype.slice.call(document.querySelectorAll("input,textarea"));
