@@ -226,22 +226,31 @@ window.examBridgePush = function(app){
   if(!state.examData) state.examData = { meta:{}, students:{}, t:0 };
   /* 메타(심사일·평가자·기수) */
   state.examData.meta = { date:app.date||'', examiner:app.examiner||'', period:app.period||'' };
-  /* 학생별: id를 키로, 각 레코드에 _t(수정시각) 보존 */
+  /* 학생별: id를 키로, 각 레코드에 _t(수정시각) 보존.
+     [근본수정] 내용이 안 바뀐 레코드는 기존 _t 유지 — 스테일 iframe 저장이 전체 레코드에 '최신' 도장을 찍어 타 PC 최신본을 이기던 버그 수정 */
   app.students.forEach(function(s){
     var rec = JSON.parse(JSON.stringify(s));
-    if(!rec._t) rec._t = now;
+    var old = state.examData.students[rec.id];
+    if(old){
+      var cmpNew = JSON.parse(JSON.stringify(rec)); delete cmpNew._t; delete cmpNew._deleted;
+      var cmpOld = JSON.parse(JSON.stringify(old)); delete cmpOld._t; delete cmpOld._deleted;
+      if(JSON.stringify(cmpNew)===JSON.stringify(cmpOld)){ return; }   /* 변경 없음 → 기존 레코드(_t·삭제표식) 그대로 유지 */
+    }
+    if(!rec._t || old) rec._t = now;   /* 실제 변경된 레코드만 지금 시각 */
     state.examData.students[rec.id] = rec;
   });
-  /* 삭제 반영: iframe app에 없는 id는 삭제로 간주하되, 타 기기 최신본 보호 위해 tombstone */
+  /* 삭제 반영: iframe app에 없는 id는 삭제로 간주하되, 타 기기 최신본 보호 위해 tombstone.
+     [근본수정] iframe에 건네준 적 있는 id만 삭제 처리 — iframe이 모르는(타 PC가 그 사이 추가한) 레코드를 지우던 버그 수정 */
   var liveIds = {};
   app.students.forEach(function(s){ liveIds[s.id]=1; });
+  var given = state._examGivenIds || null;
   for(var id in state.examData.students){
-    if(!liveIds[id] && !state.examData.students[id]._deleted){
-      /* 이 기기에서 사라진 레코드 → 삭제 표식(다음 병합에서 최신 우선) */
+    if(!liveIds[id] && !state.examData.students[id]._deleted && (!given || given[id])){
       state.examData.students[id]._deleted = now;
       state.examData.students[id]._t = now;
     }
   }
+  state._examGivenIds = liveIds;   /* 이번 저장 후 iframe이 아는 id 갱신 */
   state.examData.t = now;
   persistAtt();   /* (이중 보관) att 창고에도 저장 — 유실 방지 */
   if(typeof examSync==="function") examSync();   /* 심사 창고(exam)에 저장 = 새 기본 위치 */
@@ -306,13 +315,14 @@ window.examCountAttendAfter = function(name, fromDate){
 };
 window.examBridgePull = function(){
   if(!state.examData || !state.examData.students) return null;
-  var studs = [];
+  var studs = [], _gv={};
   for(var id in state.examData.students){
     var r = state.examData.students[id];
     if(r._deleted) continue;
     var copy = JSON.parse(JSON.stringify(r));
-    studs.push(copy);
+    studs.push(copy); _gv[id]=1;
   }
+  state._examGivenIds=_gv;   /* [근본수정] iframe에 건네준 id 기록 — 저장 시 이 밖의 id는 삭제 처리 금지 */
   var m = state.examData.meta || {};
   return { date:m.date||'', examiner:m.examiner||'', period:m.period||'', students:studs };
 };
@@ -320,6 +330,7 @@ window.examBridgePull = function(){
 /* ── 씨앗 편입: examData가 비어 있으면 최초 1회 v5.8 백업 64명 이식 ── */
 function seedExamIfEmpty(){
   if(state.examSeeded) return;
+  if(!state.examPulledOnce && accessKey()){ return; }   /* [근본수정] 심사 창고 수신 전 시드 금지 — 새 기기에서 내장 64명이 최신 도장을 받고 서버 최신본을 오염시키던 버그 방지 */
   var empty = !state.examData || !state.examData.students || Object.keys(state.examData.students).length===0;
   if(empty){
     var now = Date.now();
@@ -466,7 +477,7 @@ function gradeLabelToIdx(lbl){ lbl=(lbl||"").trim(); if(!lbl) return null; var m
 function studentGrade(s){ if(s&&s.schoolGrade&&s.schoolGradeY){ var bi=gradeLabelToIdx(s.schoolGrade); if(bi!=null) return gradeIdxToLabel(bi+(schoolYearNow()-Number(s.schoolGradeY))); } if(s&&s.by) return gradeIdxToLabel(gradeIdxFromBirth(s.by)); return ""; }
 function studentSchoolLevel(s){ var gl=studentGrade(s); if(/^초/.test(gl)) return "초등학교"; if(/^중/.test(gl)) return "중학교"; if(/^고/.test(gl)) return "고등학교"; if(/세|유치|유아/.test(gl)) return "유치원"; if(/졸업/.test(gl)) return "졸업·성인"; var sc=(s&&s.school)||""; if(/유치원|어린이집/.test(sc)) return "유치원"; if(/초등/.test(sc)) return "초등학교"; if(/중학교/.test(sc)) return "중학교"; if(/고등학교/.test(sc)) return "고등학교"; return "기타"; }
 /* 엑셀 회원현황 → 학교 1회 자동 채움 (빈 학교만, 명단에 있는 원생만) */
-function seedSchoolsOnce(){ try{ if(localStorage.getItem("naracha_school_seed_v1")) return; if(!STUDENTS||!STUDENTS.length) return; var ch=0; STUDENTS.forEach(function(s){ if(s&&!s.school&&NARACHA_SCHOOL_MAP[s.n]){ s.school=NARACHA_SCHOOL_MAP[s.n]; s._t=Date.now(); ch++; } }); localStorage.setItem("naracha_school_seed_v1","1"); if(ch){ state.rosterT=Date.now(); try{ rosterSave(); }catch(e){} try{ if(myRole()==="admin"&&typeof persist==="function") persist(); }catch(e){} } }catch(e){} }
+function seedSchoolsOnce(){ try{ if(localStorage.getItem("naracha_school_seed_v1")) return; if(!state.attPulledOnce) return; /* [근본수정] 클라우드 명단 수신 전 실행 금지 — 옛 기록에 최신 도장 방지 */ if(!STUDENTS||!STUDENTS.length) return; var ch=0; STUDENTS.forEach(function(s){ if(s&&!s.school&&NARACHA_SCHOOL_MAP[s.n]){ s.school=NARACHA_SCHOOL_MAP[s.n]; s._t=Date.now(); ch++; } }); localStorage.setItem("naracha_school_seed_v1","1"); if(ch){ state.rosterT=Date.now(); try{ rosterSave(); }catch(e){} try{ if(myRole()==="admin"&&typeof persist==="function") persist(); }catch(e){} } }catch(e){} }
 window.setStuSchool=function(v){ if(state.stuM) state.stuM.school=v; };
 window.setStuGrade=function(v){ if(!state.stuM) return; if(v==="__auto"){ state.stuM.schoolGrade=""; state.stuM.schoolGradeY=""; } else { state.stuM.schoolGrade=v; state.stuM.schoolGradeY=schoolYearNow(); } render(); };
 /* ── 구글폼 신규 등록 자동 연동 ── */
@@ -586,7 +597,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.53";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.54";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -743,7 +754,9 @@ function mergeRoster(ra, rb){
   function add(list, sideT){
     (list||[]).forEach(function(s){
       if(!s || !s.n) return;
-      var st=s._t||sideT||0, cur=byName[s.n];
+      /* [근본수정] 원생별 자기 수정시각(_t)만 비교 — 명단 전체 시각(sideT) 상속 금지.
+         (한 PC가 다른 원생을 고쳐 명단 시각이 새로워져도, 옛 상태의 원생이 다른 PC의 진짜 최신 원생을 덮어쓰지 못함 → 시범단 해제 버그 원인) */
+      var st=s._t||0, cur=byName[s.n];
       if(!cur){ byName[s.n]={s:s, t:st}; order.push(s.n); }
       else {
         var mc=mergeCompLists(cur.s.comps, s.comps);
@@ -763,7 +776,8 @@ function mergeData(a,b){
   var dels={}, i;
   (a.deletedIds||[]).concat(b.deletedIds||[]).forEach(function(id){ dels[id]=1; });
   var byId={};
-  (a.payments||[]).concat(b.payments||[]).forEach(function(pm){ byId[pm.id]=pm; });
+  /* [근본수정] 같은 결제건은 수정시각(_t)이 최신인 쪽이 이김 — 예전 규칙(뒤쪽 무조건 우선)은 옛 서버 사본이 방금 한 납부체크를 되돌릴 수 있었음. _t 없는 옛 기록끼리는 기존과 동일하게 뒤쪽 우선 */
+  (a.payments||[]).concat(b.payments||[]).forEach(function(pm){ var cur=byId[pm.id]; if(!cur || (pm._t||0)>=(cur._t||0)) byId[pm.id]=pm; });
   var pays=[];
   for(var k in byId){ if(!dels[byId[k].id]) pays.push(byId[k]); }
   pays.sort(function(x,y){ return y.id-x.id; });
@@ -901,8 +915,7 @@ function loadAll(){
   state.longRegs=m.longRegs||[]; state.deletedLongIds=m.deletedLongIds||[];
   state.trash=m.trash||[]; state.dupDismissed=m.dupDismissed||{};
   /* 명단은 파일이 아닌 저장 데이터에서 불러옴 */
-  if(m.roster && m.roster.list && m.roster.list.length){ STUDENTS=m.roster.list; }
-  state.rosterT=(m.roster&&m.roster.t)||0;
+  if(!STUDENTS.length && m.roster && m.roster.list && m.roster.list.length){ STUDENTS=m.roster.list; state.rosterT=(m.roster&&m.roster.t)||0; }   /* [근본수정] 회계 창고의 옛(legacy) 명단은 출석 창고 명단이 없을 때만 사용 · rosterT 되감기 금지 */
   /* 출석 창고 로컬 데이터 (명단은 더 최신인 쪽 사용) */
   try{
     var attRaw=localStorage.getItem("naracha-att");
@@ -1004,7 +1017,7 @@ function loadAll(){
   /* 재원생 고유번호(sid) 자동 부여: 로드·명단 동기화 후 1회, 번호 없는 원생에게 부여 */
   setTimeout(function(){
     try{
-      if(state.unlocked && accessKey() && !state.sidAutoDone){
+      if(state.unlocked && accessKey() && !state.sidAutoDone && state.attPulledOnce){   /* [근본수정] 명단 수신 후에만 자동 부여 */
         var n=ensureSids();
         state.sidAutoDone=true;
         if(n>0){ state.rosterT=Date.now(); persistAtt(); if(myRole()==="admin") persist(); render(); }
@@ -1758,7 +1771,7 @@ window.bulkCommit=function(){
     if(r.link!==false){
       var pend = bulkFindPending(r.name, r.amt);
       if(pend){
-        pend.paid=true; pend.paidDate=r.date; pend.method=r.method;
+        pend.paid=true; pend.paidDate=r.date; pend.method=r.method; pend._t=Date.now();
         linkedCnt++;
         return;   /* 새 기록 생성 안 함 */
       }
@@ -2107,7 +2120,7 @@ window.togglePaid=function(id){
       var pm=state.payments[i];
       if(pm.paid){
         if(!confirm(pm.name+" - 납부 취소하시겠습니까?")) return;
-        pm.paid=false; pm.paidDate=null; pm.method="";
+        pm.paid=false; pm.paidDate=null; pm.method=""; pm._t=Date.now();
       } else {
         var d=prompt(pm.name+" 원생 납부일 입력 (YYYY-MM-DD):", today());
         if(d===null) return;
@@ -2118,7 +2131,7 @@ window.togglePaid=function(id){
         var methodMap={"1":"카드","2":"계좌","3":"현금","4":"성남","5":"결선","6":"성+카","7":"성+계","8":"kis"};
         var m=methodMap[v];
         if(!m){ alert("1~8 사이 숫자를 입력하세요."); return; }
-        pm.paid=true; pm.paidDate=d; pm.method=m;
+        pm.paid=true; pm.paidDate=d; pm.method=m; pm._t=Date.now();
       }
       break;
     }
@@ -2159,6 +2172,7 @@ window.saveEditPay=function(){
       state.payments[i].method=state.editMethod;
       state.payments[i].memo=state.editMemo.trim();
       if(state.editCat==="수련비"){ state.payments[i].w=Number(state.editW)||null; }
+      state.payments[i]._t=Date.now();   /* 수정시각 — 병합에서 최신 수정 우선 */
       break;
     }
   }
@@ -2282,6 +2296,8 @@ window.editClosed=function(name){
   var reason=prompt(name+" 원생의 휴관 사유 수정:", c.reason||"");
   if(reason===null) return;
   state.closedMap[name].reason=reason;
+  state.closedMap[name].t=Date.now(); state.closedT=Date.now();   /* [근본수정] 수정시각 갱신 — 다른 기기로 전파되게 */
+  persistAtt();   /* 휴관 기록은 att 창고에도 저장(사범 기기 포함 전파) */
   persist(); render();
 };
 
@@ -6899,6 +6915,7 @@ function noteSync(name, key, newM){
   var lines=(s.note||"").split("\n").filter(function(L){ return L.trim() && L.indexOf(tag)!==0; });
   if((newM||"").trim()) lines.push(tag+' '+newM.trim());
   s.note=lines.join("\n");
+  s._t=Date.now();   /* 원생별 수정시각 갱신 (병합 유실 방지) */
   state.rosterT=Date.now();
 }
 /* ── 홀딩 (기간 지정 또는 미정) ── */
@@ -7765,6 +7782,7 @@ window.maybeApplyRosterFile=function(){
     if(state.closedMap[cn]===true) state.closedMap[cn]={start:"2000-01-01", reason:"휴원(날짜 미상)", t:0};
   }
   if(state.rosterFileV) return;
+  if(!state.attPulledOnce) return;   /* [근본수정] 출석 창고 수신 전 재시드 금지 — 새 PC에서 내장 명단파일이 최신 명단을 오염시키는 레이스 방지 */
   if(!STUDENTS.length) return;
   var n=applyRosterFile();
   state.rosterFileV=1;
@@ -7817,6 +7835,15 @@ window.stuMGd=function(i,k,v){ state.stuM.gd[i][k]=v; };
 window.closeStuM=function(){ state.stuM=null; render(); };
 window.stuMToEdit=function(){ if(state.stuM){ state.stuM.view=false; render(); } };
 window.stuMToView=function(){ if(state.stuM){ state.stuM.view=true; render(); } };
+/* 수정폼의 시범단 체크박스 — 기존 원생은 원본(STUDENTS)에 즉시 저장(전용 토글과 동일 경로), 신규 등록만 폼 값 사용 */
+window.stuMDemoChange=function(v){
+  var m=state.stuM; if(!m) return;
+  if(m.mode==="new"){ m.demo=!!v; render(); return; }
+  var nm=m.orig||m.n;
+  var s=STUDENTS.find(function(x){return x.n===nm;});
+  if(s && !!v!==!!s.demo){ toggleDemoNow(nm); }
+  else { m.demo=!!v; render(); }
+};
 /* 시범단 즉시 저장 토글 — 학적부에서 한 번에 설정/해제(전체 폼 저장 없이 바로 명단에 반영·동기화) */
 window.toggleDemoNow=function(name){
   var s=STUDENTS.find(function(x){return x.n===name;});
@@ -7856,7 +7883,7 @@ window.saveStuM=function(){
     var s=STUDENTS.find(function(x){return x.n===m.orig;});
     if(!s) return;
     s.n=name; s.b=m.b; s.g=m.g; s.by=m.by; s.t=m.t; s.grade=(m.grade||"").trim(); s.bd=m.bd||""; s.note=m.note||"";
-    s.sp=(m.sp||"").trim(); s.joinDate=m.joinDate||""; s.reg=m.reg||s.reg; s.gd=gd; s.comps=comps; s.evHist=evHist; s.school=(m.school||"").trim(); s.schoolGrade=m.schoolGrade||""; s.schoolGradeY=m.schoolGradeY||""; s.demo=!!m.demo; s.health=cleanHealth(m.health); s.family=(m.family||"").trim(); s._t=Date.now();
+    s.sp=(m.sp||"").trim(); s.joinDate=m.joinDate||""; s.reg=m.reg||s.reg; s.gd=gd; s.comps=comps; s.evHist=evHist; s.school=(m.school||"").trim(); s.schoolGrade=m.schoolGrade||""; s.schoolGradeY=m.schoolGradeY||""; /* [근본수정] 시범단(demo)은 전용 토글에서만 관리 — 수정폼 저장이 옛 스냅샷으로 덮어쓰지 않음 */ s.health=cleanHealth(m.health); s.family=(m.family||"").trim(); s._t=Date.now();
     /* 학적부에서 이름 변경 시: 결제·출석·심사·기준수련횟수·홀딩 등 모든 기록을 새 이름으로 이동 + 옛 이름 묘비 */
     if(name!==m.orig){
       _moveNameKeys(m.orig, name, false);
@@ -8531,7 +8558,7 @@ function renderStuModal(){
    '<div style="display:flex;gap:8px;margin-top:8px">'+
    '<div style="flex:1.6"><span class="label" style="font-size:11.5px">반 <span style="color:var(--sub);font-weight:400">(생년월일로 자동)</span></span><select class="input" onchange="stuMBan(this.value)">'+
    ['','1킨더(7이하)','2초주니어(8~10)','3초시니어(11~13)','4청소년(14-19)','5성인1(20-39)','6성인2(40이상)'].map(function(b){return '<option'+(m.b===b?' selected':'')+' value="'+b+'">'+(b||"선택")+'</option>';}).join('')+'</select></div>'+
-   '<div style="flex:0 0 auto;display:flex;align-items:flex-end;padding-bottom:1px"><label style="display:inline-flex;align-items:center;gap:5px;font-size:13.5px;font-weight:800;cursor:pointer;border:1.5px solid '+(m.demo?'#1F2E5C':'var(--line)')+';border-radius:10px;padding:8px 10px;background:'+(m.demo?'#EAF1FB':'#fff')+';color:'+(m.demo?'#1F2E5C':'var(--sub)')+'"><input type="checkbox" '+(m.demo?'checked':'')+' onchange="stuMF(\'demo\',this.checked);render()" style="accent-color:#1F2E5C">🛡 시범단</label></div>'+
+   '<div style="flex:0 0 auto;display:flex;align-items:flex-end;padding-bottom:1px"><label style="display:inline-flex;align-items:center;gap:5px;font-size:13.5px;font-weight:800;cursor:pointer;border:1.5px solid '+(m.demo?'#1F2E5C':'var(--line)')+';border-radius:10px;padding:8px 10px;background:'+(m.demo?'#EAF1FB':'#fff')+';color:'+(m.demo?'#1F2E5C':'var(--sub)')+'"><input type="checkbox" '+(m.demo?'checked':'')+' onchange="stuMDemoChange(this.checked)" style="accent-color:#1F2E5C">🛡 시범단</label></div>'+
    '<div style="flex:1"><span class="label" style="font-size:11.5px">등록일</span><input class="input" type="date" value="'+esc(m.joinDate||"")+'" oninput="stuMF(\'joinDate\',this.value)"></div>'+
    '</div>'+
    '<div style="border-top:1px solid var(--line);margin:8px 0 6px;padding-top:7px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
@@ -8996,6 +9023,8 @@ function mergeAtt(a, b){
   var _cl={}; [a.contactLog||{}, b.contactLog||{}].forEach(function(src){ for(var _k in src){ if(!_cl[_k]||(src[_k].t||0)>(_cl[_k].t||0)) _cl[_k]=src[_k]; } });
   var _dl={}; [a.dunLog||{}, b.dunLog||{}].forEach(function(src){ for(var _kd in src){ if(!_dl[_kd]||(src[_kd].t||0)>(_dl[_kd].t||0)) _dl[_kd]=src[_kd]; } });
   var _lm={}; [a.laManual||{}, b.laManual||{}].forEach(function(src){ for(var _k2 in src){ if(!_lm[_k2]||(src[_k2].t||0)>(_lm[_k2].t||0)) _lm[_k2]=src[_k2]; } });
+  /* [근본수정] 회계 홀딩: 이름별 최신(t) 병합 — 반환 누락으로 동기화 후 통째 유실되던 버그 수정 */
+  var _ah={}; [a.acctHold||{}, b.acctHold||{}].forEach(function(src){ for(var _ka in src){ if(!_ah[_ka]||(src[_ka].t||0)>(_ah[_ka].t||0)) _ah[_ka]=src[_ka]; } });
   /* 삭제 묘비: 이름별 최신 시각 union */
   var _ds={}; [a.deletedStudents||{}, b.deletedStudents||{}].forEach(function(src){ for(var _d in src){ if(!_ds[_d]||src[_d]>_ds[_d]) _ds[_d]=src[_d]; } });
   /* 복관 기록: 이름별 union (중복 제거) */
@@ -9004,7 +9033,7 @@ function mergeAtt(a, b){
       if(!_rl[_r].some(function(x){ return ((x.closed&&x.closed.start||"")+"|"+(x.reopenDate||""))===sig; })) _rl[_r].push(lg); }); } });
   /* 마지막 심사일: 이름별로 더 나중 날짜가 이김 (통-블롭이면 동시 갱신 유실) */
   var _lx={}; [ (a.lastExam||{}).map||{}, (b.lastExam||{}).map||{} ].forEach(function(src){ for(var _e in src){ if(!_lx[_e]||src[_e]>_lx[_e]) _lx[_e]=src[_e]; } });
-  return { absences:abs, contactLog:_cl, dunLog:_dl, laManual:_lm, attV:1, roster:roster, schedule:schedule, tempStudents:temps, weeks:weeks,
+  return { absences:abs, contactLog:_cl, dunLog:_dl, laManual:_lm, acctHold:_ah, attV:1, roster:roster, schedule:schedule, tempStudents:temps, weeks:weeks,
            deletedStudents:_ds, reopenLog:_rl,
            rosterFileV:Math.max(a.rosterFileV||0, b.rosterFileV||0),
            quitMapAtt:mergeStamped(a.quitMapAtt,b.quitMapAtt), closedMapAtt:mergeStamped(a.closedMapAtt,b.closedMapAtt),
@@ -9029,9 +9058,10 @@ function applyAtt(m){
   if(m.dunLog) state.dunLog = m.dunLog;
   if(m.acctHold) state.acctHold = m.acctHold;
   if(m.laManual) state.laManual = m.laManual;
-  if(m.roster && m.roster.list && m.roster.list.length && (m.roster.t||0)>=(state.rosterT||0)){
-    STUDENTS = m.roster.list;
-    state.rosterT = m.roster.t||0;
+  if(m.roster && m.roster.list && m.roster.list.length){
+    /* [근본수정] 통째 교체 금지 → 항상 원생별(_t) 병합. 들어온 명단이 오래됐어도 최신 원생만 이기고, 내 최신 변경(시범단 등)은 보존됨 */
+    if(!STUDENTS.length){ STUDENTS=m.roster.list; state.rosterT=m.roster.t||0; }
+    else { var _mr=mergeRoster({list:STUDENTS,t:state.rosterT||0}, m.roster); STUDENTS=_mr.list; state.rosterT=_mr.t||0; }
     if(state.deletedStudents) for(var di=STUDENTS.length-1;di>=0;di--){ if((state.deletedStudents[STUDENTS[di].n]||0) > (STUDENTS[di]._t||0)) STUDENTS.splice(di,1); }
   }
   state.schedule = m.schedule || state.schedule;
@@ -9354,7 +9384,7 @@ function examPull(cb){
     .then(function(r){ return r.json(); })
     .then(function(rows){
       if(rows && rows.error){ if(cb)cb(false); return; }
-      if(!rows || rows.length<2){ state.examPulledOnce=true; if(cb)cb(true); return; }
+      if(!rows || rows.length<2){ state.examPulledOnce=true; try{ seedExamIfEmpty(); if(state.topCat==="심사") pushExamToFrame(); }catch(e){} if(cb)cb(true); return; }   /* 창고가 정말 비었을 때만(최초 사용) 시드 편입 */
       var joined="";
       for(var i=0;i<rows.length;i++){
         if(rows[i][0]==="JSON" && i+1<rows.length){
