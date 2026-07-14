@@ -645,9 +645,9 @@ function checkGradeAdvance(){ try{
 
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
-var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.66";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
-var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
+var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
+var APP_VER = "v9.73";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
             tel:"031-711-4474" };
@@ -1086,6 +1086,54 @@ function loadAll(){
   }, 30000);
   /* 1분마다 백업 상태 표시 갱신 */
   setInterval(function(){ renderSyncBadge(); }, 60000);
+  /* ── 새 버전 자동 감지 → 자동 새로고침 ──
+     새 파일을 올리면, 옛 화면을 열어둔 다른 PC가 서버의 최신 버전(APP_VER)을 감지해
+     스스로 새로고침합니다. 옛 코드로 계속 돌다가 '입력이 안 되는' 상황을 예방합니다.
+     ★ 입력 중일 때는 새로고침하지 않고, 입력이 끝난 뒤에 반영해 데이터 손실을 막습니다. */
+  (function setupAutoUpdate(){
+    try{ if(!/^https?:$/.test(location.protocol)) return; }catch(e){ return; }   /* 로컬(file:) 등은 스킵 */
+    function num(v){ var m=String(v||'').replace(/^v/,'').split('.'); return (Number(m[0])||0)*1000+(Number(m[1])||0); }
+    var curNum=num(APP_VER), reloading=false, pendingUpd=false, lastCheck=0;
+    function baseUrl(){ return location.href.split('#')[0].split('?')[0]; }
+    function svVer(t){ var m=/APP_VER\s*=\s*"(v[\d.]+)"/.exec(t||''); return m?num(m[1]):null; }
+    function busyTyping(){
+      try{
+        if(window.__composing) return true;                                     /* 한글 조합 중 */
+        var ae=document.activeElement;
+        if(ae && (ae.tagName==="INPUT"||ae.tagName==="TEXTAREA")) return true;   /* 입력칸 편집 중 */
+        if(ae && ae.id==="examFrame" && typeof examIframeEditing==="function" && examIframeEditing()) return true;
+      }catch(e){}
+      return false;
+    }
+    function applyReload(){
+      if(reloading) return;
+      if(busyTyping()){ pendingUpd=true; return; }                              /* 입력 중이면 대기 */
+      reloading=true;
+      try{ if(typeof workPersist==="function") workPersist(); }catch(e){}       /* 혹시 모를 미저장분 저장 */
+      try{
+        var d=document.createElement('div');
+        d.style.cssText="position:fixed;inset:0;z-index:2147483647;background:rgba(15,25,45,.72);display:flex;align-items:center;justify-content:center;font-family:inherit";
+        d.innerHTML='<div style="background:#fff;border-radius:14px;padding:22px 26px;box-shadow:0 12px 40px rgba(0,0,0,.35);text-align:center;max-width:300px"><div style="font-size:30px;margin-bottom:8px">🔄</div><div style="font-size:15px;font-weight:800;color:#1F3A5F;margin-bottom:5px">새 버전이 적용되었습니다</div><div style="font-size:12.5px;color:#5B6577;line-height:1.5">최신 상태로 새로고침합니다…</div></div>';
+        document.body.appendChild(d);
+      }catch(e){}
+      setTimeout(function(){ try{ location.reload(true); }catch(e){ location.reload(); } }, 1200);
+    }
+    function check(force){
+      var now=Date.now();
+      if(reloading) return;
+      if(!force && now-lastCheck<60000) return;                                 /* 과도한 호출 방지: 최소 60초 간격 */
+      lastCheck=now;
+      fetch(baseUrl()+'?_v='+now, {cache:'no-store'})
+        .then(function(r){ return r.ok? r.text() : null; })
+        .then(function(t){ if(!t) return; var sv=svVer(t); if(sv!=null && sv>curNum) applyReload(); })   /* 서버가 더 새 버전일 때만 */
+        .catch(function(){});
+    }
+    setTimeout(function(){ check(true); }, 15000);                              /* 시작 15초 후 1회 확인 */
+    setInterval(function(){ check(true); }, 600000);                           /* 이후 10분마다 확인 */
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) check(false); });   /* 탭 다시 볼 때 */
+    window.addEventListener('focus', function(){ check(false); });
+    document.addEventListener('focusout', function(){ if(pendingUpd){ pendingUpd=false; setTimeout(function(){ if(!busyTyping()) applyReload(); }, 300); } });   /* 입력 끝나면 밀린 업데이트 반영 */
+  })();
 }
 /* ═══════════════════════════════════════════════════════════
    데이터 구조 버전 · 고유번호(sid) · 용량 모니터 (10년 안정화 기반작업)
@@ -1677,8 +1725,51 @@ window.pick=function(idx){
 window.pickNew=function(){ var np={n:state.query.trim(),b:"신규",t:""}; state.picked=np; initRefInputs(np); render(); };
 window.setMonBaseYm=function(v){ state.monBaseYm=v; };
 window.unpick=function(){ state.picked=null; state.query=""; render(); };
-window.setCat=function(c){ state.cat=c; render(); };
+/* 구분별 기준금액: 설정해 두면 그 구분을 선택할 때 금액이 자동 입력됨 (기본: 승급심사 20,000) */
+function feeStd(cat){ try{ var a=(workData().feeCfg||{}).amts||{}; var v=a[cat]; return (v!=null&&v!=="")?(Number(v)||0):null; }catch(e){ return null; } }
+window.setCat=function(c){
+  state.cat=c;
+  var std=feeStd(c);
+  /* 기준금액이 있는 구분 → 자동 입력. 단, 직접 입력한 금액은 덮어쓰지 않음(비었거나 이전 자동입력일 때만) */
+  if(std!=null){ if(!state.amount || state.amountAuto){ state.amount=String(std); state.amountAuto=true; } }
+  else if(state.amountAuto){ state.amount=""; state.amountAuto=false; }   /* 기준 없는 구분으로 바꾸면 자동입력분은 비움 */
+  render();
+};
 window.setMethod=function(m){ state.method=m; render(); };
+/* ── 구분별 기준금액 설정 (오버레이) ── */
+window.openFeeCfg=function(){ var a=(workData().feeCfg||{}).amts||{}; state.feeDraft={}; CATS.forEach(function(c){ state.feeDraft[c]=(a[c]!=null?String(a[c]):""); }); _renderFeeCfgOv(); };
+window.setFeeDraft=function(cat,v){ if(!state.feeDraft)state.feeDraft={}; state.feeDraft[cat]=v.replace(/[^0-9]/g,""); };
+window.closeFeeCfg=function(){ var ex=document.getElementById("feeCfgOv"); if(ex) ex.remove(); };
+window.saveFeeCfg=function(){
+  var amts={}; CATS.forEach(function(c){ var v=(state.feeDraft&&state.feeDraft[c])||""; if(v!=="") amts[c]=Number(v)||0; });
+  var w=workData(); w.feeCfg={ amts:amts, _t:Date.now() }; workPersist();
+  closeFeeCfg();
+  /* 지금 선택된 구분에 기준이 생겼고 아직 직접입력 전이면 즉시 반영 */
+  var std=feeStd(state.cat); if(std!=null && (!state.amount||state.amountAuto)){ state.amount=String(std); state.amountAuto=true; }
+  render();
+};
+function _renderFeeCfgOv(){
+  var ex=document.getElementById("feeCfgOv"); if(ex) ex.remove();
+  var ov=document.createElement("div"); ov.id="feeCfgOv";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px";
+  ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+  var d=state.feeDraft||{};
+  var rows=CATS.map(function(c){ var v=d[c]||"";
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #EFF2F6">'+
+      '<span style="flex:0 0 100px;font-size:13.5px;font-weight:700;color:#1A2233">'+esc(c)+'</span>'+
+      '<div style="flex:1;position:relative">'+
+      '<input class="input" inputmode="numeric" placeholder="자동입력 안 함" value="'+(v?Number(v).toLocaleString("ko-KR"):"")+'" oninput="setFeeDraft(\''+c+'\',this.value)" style="width:100%;height:38px;padding-right:28px;font-size:13.5px">'+
+      '<span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--sub);font-size:13px;font-weight:700;pointer-events:none">원</span>'+
+      '</div></div>';
+  }).join("");
+  ov.innerHTML='<div style="background:#fff;border-radius:16px;max-width:440px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.3)" onclick="event.stopPropagation()">'+
+    '<div style="padding:16px 18px 12px;border-bottom:1px solid var(--line)"><div style="display:flex;align-items:center;gap:8px"><b style="font-size:16.5px">⚙ 구분별 기준금액</b><span style="flex:1"></span><button onclick="closeFeeCfg()" class="chip" style="font-size:13px">닫기</button></div>'+
+      '<div style="font-size:12px;color:var(--sub);margin-top:7px;line-height:1.55">구분을 선택하면 여기서 정한 금액이 <b style="color:var(--blue)">자동 입력</b>됩니다. 자동 입력 후에도 금액칸에서 직접 수정할 수 있어요. 비워두면 그 구분은 자동입력하지 않습니다.</div></div>'+
+    '<div style="overflow:auto;padding:6px 18px 14px">'+rows+'</div>'+
+    '<div style="padding:12px 18px;border-top:1px solid var(--line)"><button onclick="saveFeeCfg()" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit">저장</button></div>'+
+  '</div>';
+  document.body.appendChild(ov);
+}
 window.setPeriod=function(m){
   state.period=m;
   if(m<6) state.startYm=null;
@@ -1698,7 +1789,7 @@ function splitPreviewText(){
   }
   return parts.join("");
 }
-window.setAmount=function(v){ state.amount=v.replace(/[^0-9]/g,"");
+window.setAmount=function(v){ state.amount=v.replace(/[^0-9]/g,""); state.amountAuto=false;   /* 직접 입력 → 이후 구분 바꿔도 이 금액 보존 */
   var el=document.getElementById("splitPreview");
   if(el) el.innerHTML=splitPreviewText();
 };
@@ -1927,7 +2018,7 @@ window.savePay=function(skipConfirm){
   persist();
   state.saveMsg="저장 완료 — "+state.picked.n+" "+won(amt)+(addAmt>0?" + 추가수련 "+won(addAmt):"")+(exp?" ("+exp+"까지)":"")+(months>=2?" · "+months+"개월 자동 분할":"");
   state.addAmount="";
-  state.picked=null; state.query=""; state.amount=""; state.memo=""; state.period=0; state.startYm=null;
+  state.picked=null; state.query=""; state.amount=""; state.amountAuto=false; state.memo=""; state.period=0; state.startYm=null;
   render();
 };
 /* 원생별 "몇 월까지 납부 완료" 계산 */
@@ -3655,7 +3746,7 @@ window.exportExcel=function(){
     return;
   }
   var wb=XLSX.utils.book_new();
-  var CATS=["수련비","승급심사","용품구입","대회출전","행사참여","해외행사","시범단연회비","기타"];
+  var CATS=["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","해외행사","시범단연회비","기타"];
   var num=function(v){ return {v:Number(v)||0, t:"n", z:"#,##0"}; };
 
   /* ── 1. 전체장부: 모든 기록 + 자동 필터 ── */
@@ -5626,6 +5717,7 @@ function statListHtml(view){
         '<span style="flex:1"></span>'+
         '<label style="display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid '+(ec.applied?"#1E7B3C":"var(--line)")+';border-radius:9px;padding:6px 11px;background:'+(ec.applied?"#E7F7EC":"#fff")+';color:'+(ec.applied?"#1E7B3C":"var(--sub)")+'"><input type="checkbox" '+(ec.applied?"checked":"")+' onchange="toggleExamField(\''+esName+'\',\'applied\')" style="accent-color:#1E7B3C">심사신청서</label>'+
         '<label style="display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid '+(ec.tape?"#7C3AED":"var(--line)")+';border-radius:9px;padding:6px 11px;background:'+(ec.tape?"#F3EBFF":"#fff")+';color:'+(ec.tape?"#7C3AED":"var(--sub)")+'"><input type="checkbox" '+(ec.tape?"checked":"")+' onchange="toggleExamField(\''+esName+'\',\'tape\')" style="accent-color:#7C3AED">테이프전달</label>'+
+        '<label style="display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid '+(ec.fee?"#B45309":"var(--line)")+';border-radius:9px;padding:6px 11px;background:'+(ec.fee?"#FCF3E7":"#fff")+';color:'+(ec.fee?"#B45309":"var(--sub)")+'"><input type="checkbox" '+(ec.fee?"checked":"")+' onchange="toggleExamField(\''+esName+'\',\'fee\')" style="accent-color:#B45309">심사비</label>'+
         '<button class="chip sm" style="color:var(--sub)" title="심사확정 해제" onclick="toggleExamConfirm(\''+esName+'\')">확정해제</button>'+
       '</div>';
       return;
@@ -8970,7 +9062,7 @@ function persistAtt(){
    옛 기록(필드별 시각 없음)은 레코드 t로 폴백 → 하위호환 */
 function mergeExamConfirm(x, y){
   x=x||{map:{},t:0}; y=y||{map:{},t:0};
-  var xm=x.map||{}, ym=y.map||{}, out={}, names={}, FIELDS=['conf','applied','tape'];
+  var xm=x.map||{}, ym=y.map||{}, out={}, names={}, FIELDS=['conf','applied','tape','fee'];
   for(var n in xm) names[n]=1; for(var n2 in ym) names[n2]=1;
   for(var nm in names){
     var a=xm[nm], b=ym[nm];
@@ -9645,6 +9737,9 @@ function workData(){
   if(!state.work.tombCar) state.work.tombCar={};
   /* ── 차량 정보(단일 객체): 번호·연식·이름·사진 ── */
   if(!state.work.carInfo) state.work.carInfo={};
+  /* ── 구분별 기준금액(단일 객체): 선택 시 자동 입력 · 승급심사 기본 20,000 ──
+     _t=1 → 다른 PC에서 실제로 저장한 설정이 있으면 그쪽이 이김 */
+  if(!state.work.feeCfg) state.work.feeCfg={ amts:{"승급심사":20000}, _t:1 };
   /* 완료 이력 로그 (유실 방지 · 매일 처리한 일 기록) */
   if(!state.work.doneLog) state.work.doneLog={};
   if(!state.work.tombDoneLog) state.work.tombDoneLog={};
@@ -9753,6 +9848,8 @@ function mergeWork(local, remote){
   if(remote.backupPwSync && (remote.backupPwSync._t||0) > ((out.backupPwSync&&out.backupPwSync._t)||0)) out.backupPwSync=remote.backupPwSync;
   /* 구글폼 신규등록 연동 설정(단일 객체): 최신본 우선 → 모든 PC 자동 동기화 */
   if(remote.signupCfg && (remote.signupCfg._t||0) > ((out.signupCfg&&out.signupCfg._t)||0)) out.signupCfg=remote.signupCfg;
+  /* 구분별 기준금액(단일 객체): 최신본 우선 → 모든 PC 자동 동기화 */
+  if(remote.feeCfg && (remote.feeCfg._t||0) > ((out.feeCfg&&out.feeCfg._t)||0)) out.feeCfg=remote.feeCfg;
   out.t=Math.max(local.t||0, remote.t||0);
   return out;
 }
@@ -9897,6 +9994,7 @@ function sortTodos(todos){
   if(mode==="event"){ arr.sort(function(a,b){ var ra=(a.kind==='행사'?0:1), rb=(b.kind==='행사'?0:1); if(ra!==rb)return ra-rb; if((a.group||"")!==(b.group||""))return (a.group||"")<(b.group||"")?-1:1; return byDue(a,b); }); }
   else if(mode==="task"){ arr.sort(function(a,b){ var ra=(a.kind==='업무'?0:1), rb=(b.kind==='업무'?0:1); if(ra!==rb)return ra-rb; if((a.team||"")!==(b.team||""))return (a.team||"")<(b.team||"")?-1:1; return byDue(a,b); }); }
   else if(mode==="owner"){ arr.sort(function(a,b){ var oa=(a.mentions&&a.mentions[0])||"퟿", ob=(b.mentions&&b.mentions[0])||"퟿"; if(oa!==ob)return oa<ob?-1:1; return byDue(a,b); }); }
+  else if(mode==="kind"){ arr.sort(function(a,b){ var rk={'행사':0,'업무':1,'수련생':2}; var ra=(rk[a.kind]==null?9:rk[a.kind]), rb=(rk[b.kind]==null?9:rk[b.kind]); if(ra!==rb)return ra-rb; return byDue(a,b); }); }
   else arr.sort(byDue);
   return arr;
 }
@@ -9926,10 +10024,13 @@ function renderWorkTodoBoard(){
   var todos=sortTodos(workAllTodos());
   var active=todos.filter(function(t){return !t.done;}), done=todos.filter(function(t){return t.done;});
   var view=state.todoView||"gantt";
+  var sm=state.todoSort||"due";
+  function tbchip(k,label){ var on=sm===k; return '<button onclick="setTodoSort(\''+k+'\')" style="border:1px solid '+(on?'#2B5FB8':'var(--line)')+';background:'+(on?'#2B5FB8':'#fff')+';color:'+(on?'#fff':'var(--sub)')+';border-radius:8px;padding:3px 11px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">'+label+'</button>'; }
   var h='<div class="card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap"><b style="font-size:15px">⏰ 기한·할 일</b>'+
     '<span style="font-size:11.5px;color:var(--sub)">미완료 <b style="color:var(--ink)">'+active.length+'</b> · 완료 <b style="color:#1E7B3C">'+done.length+'</b> · 관리수련생+행사 통합</span>'+
     '<span style="flex:1"></span>'+
-    '<div style="display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden">'+
+    (todos.length?'<span style="font-size:11.5px;color:var(--sub)">정렬</span>'+tbchip('due','마감순')+tbchip('owner','담당자별')+tbchip('kind','종류별'):'')+
+    '<div style="display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-left:2px">'+
       '<button onclick="setTodoView(\'gantt\')" style="border:none;background:'+(view==="gantt"?'var(--blue)':'#fff')+';color:'+(view==="gantt"?'#fff':'var(--sub)')+';font-size:11.5px;font-weight:800;padding:5px 12px;cursor:pointer;font-family:inherit">간트차트</button>'+
       '<button onclick="setTodoView(\'list\')" style="border:none;border-left:1px solid var(--line);background:'+(view==="list"?'var(--blue)':'#fff')+';color:'+(view==="list"?'#fff':'var(--sub)')+';font-size:11.5px;font-weight:800;padding:5px 12px;cursor:pointer;font-family:inherit">리스트</button>'+
     '</div></div>';
@@ -9944,14 +10045,7 @@ function renderWorkTodoBoard(){
   } else {
     h+=renderTodoGantt(todos);
   }
-  /* 정렬 (간트·리스트 아래) */
-  if(todos.length){
-    var sm=state.todoSort||"due";
-    function sbtn(k,l){ return '<button onclick="setTodoSort(\''+k+'\')" class="chip sm'+(sm===k?" on":"")+'" style="font-weight:'+(sm===k?'800':'600')+'">'+l+'</button>'; }
-    h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px;border-top:1px solid var(--line);padding-top:9px">'+
-      '<span style="font-size:11px;font-weight:800;color:var(--sub)">정렬</span>'+
-      sbtn('due','기한순')+sbtn('event','행사별')+sbtn('task','업무별')+sbtn('owner','담당자별')+'</div>';
-  }
+  /* 정렬 버튼은 상단 헤더로 이동함 */
   h+='<div style="font-size:11px;color:var(--sub);margin-top:8px">막대 색: <span style="color:#7C3AED;font-weight:800">행사=종류 고유색</span> · <span style="color:#2B5FB8;font-weight:800">업무=팀색</span>(<span style="color:#2B5FB8">행정</span>·<span style="color:#1E7B3C">교육</span>, 가늘게) · <span style="color:#8FA0B5;font-weight:800">수련생</span>. <b style="color:#B23A48">빨간 테두리</b>=기한 지남 · 오른쪽 D-day 색으로 급함 표시 · 회색·빗금=완료.</div></div>';
   return h;
 }
@@ -10689,6 +10783,7 @@ function renderWorkDashboard(){
       '<span style="font-size:13px;color:#A9B2C3">'+dw.slice(5).replace('-','/')+'('+wdn+')</span>'+
       '<span style="flex:1"></span>'+
       (todayDone.length?'<span style="font-size:11.5px;color:#8593A8">정렬</span>'+dchip('time','최근순')+dchip('owner','담당자별')+dchip('kind','종류별'):'')+
+      '<button onclick="openWorkDiary(\''+today()+'\')" title="날짜별 업무일지 보기·출력" style="border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#D3DBE8;border-radius:8px;padding:3px 11px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">📔 일지·출력</button>'+
       '<span style="font-size:14.5px;font-weight:900;color:#34D399;margin-left:4px">'+todayDone.length+'건</span>'+
       (denom?'<span style="font-size:12.5px;color:#A9B2C3">· 진행 '+pct+'%</span>':'')+
     '</div>';
@@ -10716,7 +10811,7 @@ function renderWorkDashboard(){
       var byDate={}; past.forEach(function(e){ (byDate[e.doneDate]=byDate[e.doneDate]||[]).push(e); });
       var dates=Object.keys(byDate).sort().reverse().slice(0,14);
       h+='<div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">'+dates.map(function(d){
-        return '<div><div style="font-size:11px;font-weight:800;color:#8FA0B8;margin-bottom:3px">'+esc(d.slice(5).replace('-','/'))+' · '+byDate[d].length+'건</div>'+
+        return '<div><div style="font-size:11.5px;font-weight:800;color:#8FA0B8;margin-bottom:3px;cursor:pointer" title="이 날 일지 보기·출력" onclick="openWorkDiary(\''+d+'\')">'+esc(d.slice(5).replace('-','/'))+' · '+byDate[d].length+'건 <span style="color:#5E6B82;font-weight:600">📔</span></div>'+
           byDate[d].map(function(e){ var ks=doneKindStyle(e); return '<div style="font-size:12px;color:#D7DEEA;padding:2px 0;display:flex;gap:7px;align-items:center"><span style="color:'+ks.c+'">'+ks.ic+'</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(e.label||'')+'</span>'+(e.by?'<span style="color:#8FA0B8;font-size:10.5px">@'+esc(e.by)+'</span>':'')+'</div>'; }).join('')+
         '</div>';
       }).join('')+'</div>';
@@ -10769,6 +10864,192 @@ function renderWorkDashboard(){
 window.toggleWorkDoneHist=function(){ state.workDoneOpen=!state.workDoneOpen; render(); };
 window.setDoneSort=function(k){ state.doneSort=k; render(); };
 window.setTodoSort2=function(k){ state.todoSort2=k; render(); };
+/* ══════════ 업무 일지 (매일 처리한 일 기록·조회·출력) ══════════ */
+/* 특정 날짜의 완료 업무 + 팀 메모 + 루틴 취합 (모두 이미 저장된 데이터에서 파생 → 유실 없음) */
+function workDiaryData(date){
+  var w=workData();
+  var done=doneLogRows().filter(function(e){ return e.doneDate===date; }).sort(function(a,b){ return (a.doneT||0)-(b.doneT||0); });
+  var memos={}; ['행정','교육','공동'].forEach(function(tm){ var lg=(w.logs||{})[date+'|'+tm]; if(lg&&(lg.text||'').trim()) memos[tm]=lg.text.trim(); });
+  var routines=[]; var rl=(w.routines||{}); for(var rid in rl){ var c=(w.rchecks||{})[date+'|'+rid]; if(c&&c.done && rl[rid]&&rl[rid].text) routines.push(rl[rid].text); }
+  /* ── 그날의 차량관리 기록(운행·주유·정비) — 이미 저장된 차계부 데이터에서 파생 ── */
+  var car={ drive:null, driveDiff:null, fuels:[], maint:[] };
+  var cr=(w.car||{})[date];
+  if(cr){ car.drive=cr;
+    var prev=null; carRows().forEach(function(r){ if(r.date<date && (!prev||r.date>prev.date)) prev=r; });
+    if(prev && cr.odo!=null && prev.odo!=null && cr.odo>=prev.odo) car.driveDiff=cr.odo-prev.odo;
+  }
+  car.fuels=carFuelRows().filter(function(f){ return f.date===date; });
+  car.maint=maintList().filter(function(m){ return m.lastDate===date; });
+  var hasCar=!!(car.drive || car.fuels.length || car.maint.length);
+  return { date:date, done:done, memos:memos, routines:routines, car:car, hasCar:hasCar };
+}
+function _diaryWdn(d){ var dt=new Date(d+'T00:00:00'); return ['일','월','화','수','목','금','토'][isNaN(dt)?0:dt.getDay()]; }
+function _diaryKind(e){ return (e.kind==='행사준비')?'행사준비':(e.kind==='관리수련생')?'관리수련생':'업무'; }
+/* 완료 업무를 담당자별로 그룹 (담당 미지정은 맨 뒤) */
+function _diaryByOwner(done){
+  var map={}, order=[];
+  done.forEach(function(e){ var o=((e.by||'').trim())||'담당 미지정'; if(!map[o]){ map[o]=[]; order.push(o); } map[o].push(e); });
+  function _un(o){ return (o==='담당 미지정'||o==='미지정')?1:0; }
+  order.sort(function(a,b){ var ua=_un(a),ub=_un(b); if(ua!==ub)return ua-ub; return a.localeCompare(b,'ko'); });
+  return order.map(function(o){ return { owner:o, items:map[o] }; });
+}
+/* 담당자 이름 → 고정 색상(이니셜 아바타·헤더용) */
+function _ownerColor(name){
+  var pal=['#2B5FB8','#1E7B3C','#B45309','#7C3AED','#B23A48','#0E7490','#0F766E','#C2410C'];
+  var s=0, n=name||''; for(var i=0;i<n.length;i++) s=(s+n.charCodeAt(i))|0;
+  return pal[Math.abs(s)%pal.length];
+}
+/* 그날 차량 기록을 사람이 읽는 줄로 (화면·출력 공용) */
+function _diaryCarLines(car){
+  var out=[];
+  if(car.drive) out.push({t:'운행', v:'총 '+(car.drive.odo||0).toLocaleString()+'km'+(car.driveDiff!=null?' (당일 +'+car.driveDiff.toLocaleString()+'km)':'')+(car.drive.memo?' · '+car.drive.memo:'')});
+  (car.fuels||[]).forEach(function(f){ out.push({t:'주유', v:(f.fuelL?f.fuelL.toLocaleString()+'L':'')+((f.fuelL&&f.fuelWon)?' · ':'')+(f.fuelWon?f.fuelWon.toLocaleString()+'원':'')+(f.memo?' · '+f.memo:'')}); });
+  (car.maint||[]).forEach(function(m){ out.push({t:'정비', v:m.name+' 교체'+(m.lastKm!=null?' ('+m.lastKm.toLocaleString()+'km)':'')+(m.memo?' · '+m.memo:'')}); });
+  return out;
+}
+window.openWorkDiary=function(date){ state.diaryDate=date||today(); _renderDiaryOv(); };
+window.setDiaryDate=function(v){ if(v){ state.diaryDate=v; _renderDiaryOv(); } };
+window.diaryShift=function(n){ state.diaryDate=addDays(state.diaryDate||today(), n); _renderDiaryOv(); };
+window.closeWorkDiary=function(){ var ex=document.getElementById("workDiaryOv"); if(ex) ex.remove(); };
+function _renderDiaryOv(){
+  var ex=document.getElementById("workDiaryOv"); if(ex) ex.remove();
+  var ov=document.createElement("div"); ov.id="workDiaryOv";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px";
+  ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML=renderWorkDiaryBody(); document.body.appendChild(ov);
+}
+function renderWorkDiaryBody(){
+  var d=state.diaryDate||today();
+  var data=workDiaryData(d);
+  var groups=_diaryByOwner(data.done);
+  var totalDone=data.done.length;
+  var kindColor={업무:'#2B5FB8',행사준비:'#7C3AED',관리수련생:'#B45309'};
+  var kindLbl={업무:'업무',행사준비:'행사',관리수련생:'관리'};
+  function itemHtml(e){ var kk=_diaryKind(e);
+    return '<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 2px;border-top:1px solid #EFF2F6">'+
+      '<span style="flex:0 0 auto;font-size:12px;color:#8A94A6;font-weight:700;width:44px;padding-top:2px">'+_hhmm(e.doneT)+'</span>'+
+      '<span style="flex:0 0 auto;font-size:10.5px;font-weight:800;color:#fff;background:'+kindColor[kk]+';border-radius:5px;padding:2px 7px;margin-top:1px">'+kindLbl[kk]+'</span>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:14.5px;color:#1A2233;font-weight:600;line-height:1.45;word-break:break-word">'+esc(e.label||'')+'</div>'+
+      (e.note?'<div style="font-size:12.5px;color:#5B6577;margin-top:3px;word-break:break-word">💬 '+esc(e.note)+'</div>':'')+'</div>'+
+    '</div>';
+  }
+  function ownerHtml(gr){ var col=_ownerColor(gr.owner); var ini=esc((gr.owner||'?').slice(0,2));
+    return '<div style="border:1px solid #E3E8EF;border-radius:13px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 3px rgba(20,30,60,.05)">'+
+      '<div style="display:flex;align-items:center;gap:10px;padding:10px 13px;background:linear-gradient(90deg,'+col+'16,'+col+'03)">'+
+        '<span style="flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:'+col+';color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">'+ini+'</span>'+
+        '<b style="font-size:15.5px;color:#1A2233">'+esc(gr.owner)+'</b><span style="flex:1"></span>'+
+        '<span style="font-size:12px;font-weight:800;color:'+col+';background:'+col+'18;border-radius:20px;padding:3px 12px">'+gr.items.length+'건</span>'+
+      '</div>'+
+      '<div style="padding:0 13px 8px">'+gr.items.map(itemHtml).join('')+'</div>'+
+    '</div>';
+  }
+  var carHtml='';
+  if(data.hasCar){ var lines=_diaryCarLines(data.car);
+    carHtml='<div style="border:1px solid #DCE6F0;border-radius:13px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 3px rgba(20,30,60,.05)">'+
+      '<div style="padding:9px 13px;background:linear-gradient(90deg,#0E749016,#0E749003);font-size:14.5px;font-weight:800;color:#0E7490">🚗 차량 관리</div>'+
+      '<div style="padding:9px 13px;display:flex;flex-direction:column;gap:7px">'+
+        lines.map(function(x){ return '<div style="display:flex;gap:10px;align-items:baseline"><span style="flex:0 0 auto;font-size:11px;font-weight:800;color:#0E7490;background:#0E74900F;border-radius:5px;padding:2px 8px">'+esc(x.t)+'</span><span style="font-size:14px;color:#1A2233;word-break:break-word">'+esc(x.v)+'</span></div>'; }).join('')+
+      '</div></div>';
+  }
+  var memoKeys=Object.keys(data.memos);
+  var body='';
+  if(totalDone) body+=groups.map(ownerHtml).join('');
+  body+=carHtml;
+  if(!totalDone && !data.hasCar) body='<div style="font-size:13.5px;color:var(--sub);text-align:center;padding:26px 0">이 날 기록된 업무·차량 내용이 없습니다.</div>';
+  if(data.routines.length) body+='<div style="margin-top:2px;border-top:1px dashed var(--line);padding-top:12px;margin-bottom:12px"><div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:6px">✅ 완료한 루틴 '+data.routines.length+'건</div><div style="font-size:13px;color:var(--ink);line-height:1.8">'+data.routines.map(function(x){return '· '+esc(x);}).join('<br>')+'</div></div>';
+  if(memoKeys.length) body+='<div style="border-top:1px dashed var(--line);padding-top:12px"><div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:7px">📝 팀 메모·보고</div>'+
+    memoKeys.map(function(tm){ return '<div style="margin-bottom:9px;border-left:3px solid '+workTeamColor(tm)+';padding-left:10px"><div style="font-size:12px;font-weight:800;color:'+workTeamColor(tm)+';margin-bottom:2px">'+esc(tm)+'</div><div style="font-size:13.5px;color:var(--ink);white-space:pre-wrap;line-height:1.55">'+esc(data.memos[tm])+'</div></div>'; }).join('')+'</div>';
+  return '<div style="background:#F7F9FC;border-radius:16px;max-width:680px;width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.3)" onclick="event.stopPropagation()">'+
+    '<div style="padding:15px 18px 12px;border-bottom:1px solid #E3E8EF;background:#fff;border-radius:16px 16px 0 0">'+
+      '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap"><b style="font-size:17px">📔 업무 일지</b>'+
+        '<span style="font-size:11.5px;color:var(--sub)">담당자별</span><span style="flex:1"></span>'+
+        '<button onclick="printWorkDiary()" style="background:var(--blue);color:#fff;border:none;border-radius:9px;padding:7px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">🖨 출력</button>'+
+        '<button onclick="closeWorkDiary()" class="chip" style="font-size:13px">닫기</button></div>'+
+      '<div style="display:flex;align-items:center;gap:7px;margin-top:11px;flex-wrap:wrap">'+
+        '<button onclick="diaryShift(-1)" class="chip sm">◀ 이전날</button>'+
+        '<input type="date" value="'+esc(d)+'" onchange="setDiaryDate(this.value)" style="height:34px;border:1px solid var(--line);border-radius:9px;padding:0 9px;font-size:13px;font-family:inherit">'+
+        '<b style="font-size:14.5px">'+esc(d.slice(5).replace('-','월 ')+'일')+' ('+_diaryWdn(d)+')</b>'+
+        '<button onclick="diaryShift(1)" class="chip sm">다음날 ▶</button>'+
+        '<button onclick="setDiaryDate(\''+today()+'\')" class="chip sm" style="color:var(--blue)">오늘</button>'+
+        '<span style="flex:1"></span>'+
+        '<span style="font-size:12.5px;color:var(--sub)">완료 <b style="color:#1E7B3C">'+totalDone+'</b>건'+(data.hasCar?' · <b style="color:#0E7490">🚗</b>':'')+'</span></div>'+
+    '</div>'+
+    '<div style="overflow:auto;padding:15px 16px 18px">'+body+'</div>'+
+    '<div style="padding:9px 18px;border-top:1px solid #E3E8EF;font-size:10.5px;color:var(--sub);background:#fff;border-radius:0 0 16px 16px">※ 완료 업무·차량 기록이 담당자별로 이 일지에 날짜별로 쌓입니다. [🖨 출력]로 A4 인쇄·PDF 저장이 됩니다.</div>'+
+  '</div>';
+}
+/* 출력용 A4 HTML — 담당자별 · 전문 문서 스타일(네이비 액센트·표) */
+function buildWorkDiaryPrint(date){
+  var data=workDiaryData(date);
+  var groups=_diaryByOwner(data.done);
+  var ci=(workData().carInfo||{});
+  var kindLbl={업무:'업무',행사준비:'행사준비',관리수련생:'관리수련생'};
+  var memoKeys=Object.keys(data.memos);
+  function ownerSec(gr,idx){
+    var rows=gr.items.map(function(e){ return '<tr><td class="c">'+_hhmm(e.doneT)+'</td><td class="c">'+kindLbl[_diaryKind(e)]+'</td><td>'+esc(e.label||'')+'</td><td>'+esc(e.note||'')+'</td></tr>'; }).join('');
+    return '<div class="osec"><div class="ohd"><span class="onum">'+(idx+1)+'</span><span class="oname">'+esc(gr.owner)+'</span><span class="ocnt">'+gr.items.length+'건</span></div>'+
+      '<table class="t"><colgroup><col style="width:54px"><col style="width:64px"><col><col style="width:150px"></colgroup>'+
+      '<thead><tr><th>시각</th><th>구분</th><th>업무 내용</th><th>비고</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }
+  var carBlock='';
+  if(data.hasCar){ var lines=_diaryCarLines(data.car);
+    carBlock='<div class="cbox"><div class="cboxT">차량 관리 기록</div><table class="t ct"><colgroup><col style="width:74px"><col></colgroup><tbody>'+
+      lines.map(function(x){ return '<tr><td class="c">'+esc(x.t)+'</td><td>'+esc(x.v)+'</td></tr>'; }).join('')+'</tbody></table></div>';
+  }
+  var CSS='<style>*{box-sizing:border-box}'+
+    'html,body{margin:0;padding:0}'+
+    'body{font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;color:#1A1A1A;font-size:11pt;line-height:1.5;background:#fff}'+
+    '.doc{max-width:186mm;margin:0 auto;padding:16mm 15mm}'+
+    '.kick{text-align:center;font-size:11px;letter-spacing:3px;color:#5A6B85;font-weight:700}'+
+    '.title{text-align:center;font-size:30px;font-weight:800;letter-spacing:14px;color:#1F3A5F;margin:3px 0 2px;padding-left:14px}'+
+    '.trule{border:none;border-top:2.5px solid #1F3A5F;border-bottom:1px solid #1F3A5F;height:4px;margin:8px 0 14px}'+
+    '.meta{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11.5px}'+
+    '.meta td{border:1px solid #C7D0DE;padding:6px 10px}'+
+    '.meta .k{background:#EEF2F8;font-weight:700;color:#334;width:70px;text-align:center;white-space:nowrap}'+
+    '.sum{font-size:11.5px;color:#333;margin:0 0 14px;padding:8px 12px;background:#F5F8FC;border-left:4px solid #1F3A5F;border-radius:0 4px 4px 0}'+
+    '.osec{margin-bottom:13px;page-break-inside:avoid}'+
+    '.ohd{display:flex;align-items:center;gap:8px;background:#1F3A5F;color:#fff;padding:6px 11px;border-radius:5px 5px 0 0}'+
+    '.ohd .onum{width:19px;height:19px;border-radius:50%;background:#fff;color:#1F3A5F;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}'+
+    '.ohd .oname{font-size:13.5px;font-weight:800;letter-spacing:.5px}.ohd .ocnt{margin-left:auto;font-size:11px;font-weight:700;opacity:.92}'+
+    '.t{width:100%;border-collapse:collapse}'+
+    '.t th,.t td{border:1px solid #C7D0DE;padding:5px 8px;text-align:left;vertical-align:top;font-size:11px}'+
+    '.t th{background:#EEF2F8;font-weight:700;color:#2B3A52;text-align:center}'+
+    '.t td.c{text-align:center;color:#445;white-space:nowrap}'+
+    '.t tbody tr:nth-child(even){background:#F8FAFC}'+
+    '.osec .t{border-top:none}'+
+    '.cbox{margin:16px 0 13px;page-break-inside:avoid}'+
+    '.cboxT{font-size:12.5px;font-weight:800;color:#0E5A6B;border-left:4px solid #0E7490;padding-left:8px;margin-bottom:6px}'+
+    '.ct td.c{background:#F0F7F9;font-weight:700;color:#0E5A6B;text-align:center}'+
+    '.sec{margin-bottom:13px;page-break-inside:avoid}.secT{font-size:12.5px;font-weight:800;color:#2B3A52;border-left:4px solid #1F3A5F;padding-left:8px;margin-bottom:6px}'+
+    '.memo{border:1px solid #C7D0DE;border-radius:5px;padding:8px 11px;margin-bottom:7px}.memo .mt{font-weight:800;font-size:11.5px;color:#334;margin-bottom:3px}.memo .mc{white-space:pre-wrap;line-height:1.55;font-size:11px}'+
+    '.foot{margin-top:20px;border-top:1px solid #C7D0DE;padding-top:8px;font-size:10px;color:#8A94A6;display:flex;justify-content:space-between}'+
+    '.pbtn{position:fixed;top:12px;right:14px}.pbtn button{font-size:13px;padding:7px 14px;margin-left:6px;border-radius:8px;border:1px solid #888;background:#fff;cursor:pointer}'+
+    '@media print{.pbtn{display:none}.doc{padding:0}@page{size:A4;margin:15mm 14mm}}'+
+    '</style>';
+  var docBody='<div class="kick">나라차태권도 분당도장</div>'+
+    '<div class="title">업 무 일 지</div>'+
+    '<hr class="trule">'+
+    '<table class="meta"><tr>'+
+      '<td class="k">일자</td><td>'+esc(date)+' ('+_diaryWdn(date)+'요일)</td>'+
+      '<td class="k">차량</td><td>'+esc(ci.name||'-')+(ci.plate?' ('+esc(ci.plate)+')':'')+'</td></tr>'+
+    '<tr><td class="k">작성일</td><td>'+esc(today())+'</td>'+
+      '<td class="k">완료</td><td>총 '+data.done.length+'건 · 담당자 '+groups.length+'명'+(data.routines.length?' · 루틴 '+data.routines.length:'')+'</td></tr></table>'+
+    (data.done.length?'<div class="sum">아래 내용은 해당 일자에 완료 처리된 업무를 담당자별로 정리한 것입니다.</div>'+groups.map(ownerSec).join(''):'<div class="sum">이 날 완료 처리된 업무 기록이 없습니다.</div>')+
+    carBlock+
+    (data.routines.length?'<div class="sec"><div class="secT">완료한 루틴</div><table class="t"><tbody>'+data.routines.map(function(x){return '<tr><td>'+esc(x)+'</td></tr>';}).join('')+'</tbody></table></div>':'')+
+    (memoKeys.length?'<div class="sec"><div class="secT">팀 메모 · 보고</div>'+memoKeys.map(function(tm){return '<div class="memo"><div class="mt">'+esc(tm)+'</div><div class="mc">'+esc(data.memos[tm])+'</div></div>';}).join('')+'</div>':'')+
+    '<div class="foot"><span>나라차태권도 분당도장 업무관리</span><span>출력일 '+esc(today())+'</span></div>';
+  var body='<div class="pbtn"><button onclick="window.print()">🖨 인쇄 / PDF</button><button onclick="window.close()">닫기</button></div>'+
+    '<div class="doc">'+docBody+'</div>';
+  return '<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>업무일지_'+esc(date)+'</title>'+CSS+'</head><body onload="setTimeout(function(){try{window.print()}catch(e){}},350)">'+body+'</body></html>';
+}
+window.printWorkDiary=function(){
+  var d=state.diaryDate||today();
+  var html=buildWorkDiaryPrint(d);
+  var win=window.open("","_blank");
+  if(!win){ alert("팝업이 차단되었습니다. 브라우저에서 팝업을 허용해 주세요."); return; }
+  win.document.open(); win.document.write(html); win.document.close();
+};
 /* 완료 항목 코멘트 (다크 카드에서 바로 입력 · 완료 이력에 저장) */
 window.setDoneNote=function(srcId,v){ var w=workData(); if(w.doneLog&&w.doneLog[srcId]){ w.doneLog[srcId].note=v; w.doneLog[srcId]._t=Date.now(); workSaveDebounced(); } };
 window.commitDoneNote=function(srcId){ var w=workData(); if(w.doneLog&&w.doneLog[srcId]){ w.doneLog[srcId]._t=Date.now(); workPersist(); } };
@@ -12793,9 +13074,34 @@ function renderRecordKing(s){
 
 /* ── 동기화용 렌더: 입력 중(텍스트칸 포커스)엔 화면 재구성을 미룬다 (데이터는 이미 상태에 병합됨) → 타이핑 멈춤·튕김 방지 ── */
 function __isEditingField(el){ if(!el) return false; var tg=el.tagName, ty=(el.type||"").toLowerCase(); return (tg==="TEXTAREA")||(tg==="INPUT"&&!/checkbox|radio|button|submit|reset|file|image/.test(ty)); }
-function syncRender(){ if(__isEditingField(document.activeElement)){ window.__pendingRender=true; return; } render(); }
+/* 스크롤 활동 추적: 사용자가 스크롤 중일 때 배경 동기화 렌더를 미뤄 '위로 튀는' 현상 방지 */
+if(!window.__scrollTrackHooked){
+  window.__scrollTrackHooked=true; window.__lastScrollT=0;
+  window.addEventListener("scroll", function(){ window.__lastScrollT=Date.now(); }, {passive:true});
+}
+function __userBusy(){
+  if(__isEditingField(document.activeElement)) return true;            /* 입력칸 편집 중 */
+  if(window.__composing) return true;                                  /* 한글 조합 중 */
+  if(Date.now()-(window.__lastScrollT||0)<900) return true;            /* 스크롤 직후 0.9초 */
+  return false;
+}
+/* 배경 동기화 등으로 렌더가 밀렸을 때, 사용자가 손을 뗄 때까지 기다렸다 반영 */
+function schedulePendingRender(){
+  if(window.__pendRenderTimer) return;
+  window.__pendRenderTimer=setTimeout(function(){
+    window.__pendRenderTimer=null;
+    if(!window.__pendingRender) return;
+    if(__userBusy()){ schedulePendingRender(); return; }               /* 아직 입력·스크롤 중이면 계속 대기 */
+    window.__pendingRender=false; try{ render(); }catch(e){}
+  }, 1000);
+}
+function syncRender(){
+  /* 입력·조합·스크롤 중에는 다시 그리지 않고, 멈춘 뒤(schedulePendingRender)에 반영 → 스크롤 위치 안정 */
+  if(__userBusy()){ window.__pendingRender=true; schedulePendingRender(); return; }
+  render();
+}
 document.addEventListener("focusout", function(){
-  setTimeout(function(){ if(!__isEditingField(document.activeElement) && window.__pendingRender){ window.__pendingRender=false; try{ render(); }catch(e){} } }, 30);
+  setTimeout(function(){ if(!__userBusy() && window.__pendingRender){ window.__pendingRender=false; try{ render(); }catch(e){} } }, 30);
 }, true);
 function render(){
   if(state.topCat!=="심사" && typeof hideExam==="function") hideExam();
@@ -13885,7 +14191,8 @@ function render(){
          '</div></div>'
        :'')+
        '<div id="splitPreview" style="font-size:11.5px;color:var(--blue);font-weight:700;margin-top:2px;margin-bottom:8px;min-height:15px">'+splitPreviewText()+'</div>'+
-       '<span class="label">구분</span>'+chipRow(CATS,state.cat,"setCat");
+       '<div style="display:flex;align-items:center;gap:8px"><span class="label" style="margin:0">구분</span><button class="chip sm" style="color:var(--blue);font-weight:800" onclick="openFeeCfg()" title="구분을 선택하면 자동 입력될 기준금액을 정합니다">⚙ 기준금액</button></div>'+chipRow(CATS,state.cat,"setCat")+
+       (feeStd(state.cat)!=null?'<div style="font-size:11.5px;color:#1E7B3C;font-weight:700;margin-top:4px">✔ 기준금액 '+won(feeStd(state.cat))+'이 자동 입력되었습니다. 필요하면 위 금액을 직접 수정하세요.</div>':'');
     if(state.cat==="수련비"){
       h+='<span class="label" style="font-size:11.5px">등록 기간 (재등록 알림에 사용)</span>'+chipRow(PERIODS,state.period,"setPeriod",true);
       if(state.period>=6){
@@ -14767,7 +15074,7 @@ function render(){
        /* 2행: 구분 칩 */
        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:9px">'+
          '<span style="'+LBL+'">구분</span>'+
-         '<div style="display:flex;gap:4px;flex-wrap:wrap">'+["전체","수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"].map(function(c){
+         '<div style="display:flex;gap:4px;flex-wrap:wrap">'+["전체","수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"].map(function(c){
            return scBtn(state.listCat,c,c,"setListCat");
          }).join('')+'</div>'+
        '</div>'+
