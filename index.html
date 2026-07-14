@@ -638,7 +638,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.63";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.64";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -10644,13 +10644,16 @@ function renderWorkDashboard(){
     h+='<div style="font-size:13px;color:#A9B2C3;padding:6px 0 2px">아직 오늘 완료한 일이 없어요. 아래 업무·준비물·관리수련생을 완료 체크하면 여기에 모입니다.</div>';
   } else {
     h+='<div style="display:flex;flex-direction:column;gap:6px">'+todayDone.map(function(e){
-      var ks=doneKindStyle(e);
-      return '<div style="display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:8px 11px">'+
+      var ks=doneKindStyle(e); var sid=wEsn(e.srcId);
+      return '<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:8px 11px">'+
         '<span style="flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:#34D39926;color:#34D399;display:flex;align-items:center;justify-content:center;font-size:12px">✓</span>'+
-        '<span style="flex:1;min-width:0;font-size:13px;color:#F5F7FA;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(e.label||'')+'</span>'+
+        '<span style="flex:0 1 auto;min-width:60px;max-width:40%;font-size:13px;color:#F5F7FA;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(e.label||'')+'</span>'+
+        /* 코멘트 입력칸 (담당자 왼쪽) */
+        '<input value="'+esc(e.note||'')+'" placeholder="💬 코멘트" oninput="setDoneNote(\''+sid+'\',this.value)" onchange="commitDoneNote(\''+sid+'\')" style="flex:1 1 90px;min-width:70px;height:27px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:#EAF0F8;padding:0 9px;font-size:11.5px;font-family:inherit">'+
         (e.by?'<span style="flex:0 0 auto;font-size:10.5px;font-weight:800;color:#C9D2E0;background:rgba(255,255,255,.08);border-radius:7px;padding:1px 7px">@'+esc(e.by)+'</span>':'')+
         '<span style="flex:0 0 auto;font-size:10px;font-weight:800;color:'+ks.c+';background:'+ks.c+'22;border-radius:7px;padding:1px 7px;white-space:nowrap">'+ks.ic+' '+esc(e.kind||'업무')+'</span>'+
         '<span style="flex:0 0 auto;font-size:10.5px;color:#8FA0B8;white-space:nowrap">'+_hhmm(e.doneT)+'</span>'+
+        '<button onclick="undoDone(\''+sid+'\')" title="완료 취소 — 다시 할 일로 되돌리기" style="flex:0 0 auto;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#C9D2E0;border-radius:8px;padding:3px 8px;font-size:10.5px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap">↩ 작업으로</button>'+
       '</div>';
     }).join('')+'</div>';
   }
@@ -10699,6 +10702,18 @@ function renderWorkDashboard(){
   return h;
 }
 window.toggleWorkDoneHist=function(){ state.workDoneOpen=!state.workDoneOpen; render(); };
+/* 완료 항목 코멘트 (다크 카드에서 바로 입력 · 완료 이력에 저장) */
+window.setDoneNote=function(srcId,v){ var w=workData(); if(w.doneLog&&w.doneLog[srcId]){ w.doneLog[srcId].note=v; w.doneLog[srcId]._t=Date.now(); workSaveDebounced(); } };
+window.commitDoneNote=function(srcId){ var w=workData(); if(w.doneLog&&w.doneLog[srcId]){ w.doneLog[srcId]._t=Date.now(); workPersist(); } };
+/* 완료한 일 → 다시 작업(할 일)으로 되돌리기 */
+window.undoDone=function(srcId){
+  var w=workData();
+  if(srcId.indexOf('tk:')===0){ var id=srcId.slice(3); if(w.tasks[id]){ if(w.tasks[id].done) toggleTask(id); return; } }
+  else if(srcId.indexOf('mg:')===0){ var nm=srcId.slice(3); if(w.manage[nm]){ if(w.manage[nm].done) toggleManageDone(nm); return; } }
+  else if(srcId.indexOf('ev:')===0){ var rest=srcId.slice(3), ci=rest.indexOf(':'); var eid=rest.slice(0,ci), pid=rest.slice(ci+1); var ev=w.events[eid]; if(ev){ var pp=(ev.prep||[]).filter(function(x){return x.id===pid;})[0]; if(pp&&pp.done){ toggleEventPrep(eid,pid); return; } } }
+  /* 원본이 삭제돼 되돌릴 대상이 없음 → 이력에서만 지울지 확인 */
+  if(confirm("원본 항목이 삭제되어 작업으로 되돌릴 수 없습니다.\n완료 이력에서 지울까요?")){ _doneLogRemove(srcId); workPersist(); render(); }
+};
 
 /* ── 관리수련생 현황 ── */
 function renderWorkManageBody(){
