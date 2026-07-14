@@ -646,7 +646,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.74";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.76";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -5421,8 +5421,49 @@ function attendDates(name, ym){
 function examConfObj(){ if(!state.examConfirmMap) state.examConfirmMap={}; return state.examConfirmMap; }
 function isExamRec(name){ if(!name) return false; if((state.kkwPending||[]).indexOf(name)>-1) return false; return (state.accMap[name]||0)>=14; }
 function isExamConf(name){ var e=(state.examConfirmMap||{})[name]; return !!(e&&e.conf); }
+/* 지도진 수동 심사추천 여부 (유급자/국기원) */
+function isManualRec(name){ var e=(state.examConfirmMap||{})[name]; return !!(e&&e.mrec); }
+function isManualKkw(name){ var e=(state.examConfirmMap||{})[name]; return !!(e&&e.mkkw); }
+/* 국기원 확정 여부 (국기원추천 → 국기원확정) */
+function isKkwConf(name){ var e=(state.examConfirmMap||{})[name]; return !!(e&&e.kconf); }
 window.toggleExamConfirm=function(name){ var m=examConfObj(); var e=m[name]||{}; e.conf=e.conf?0:1; e.confT=Date.now(); e.t=Date.now(); m[name]=e; state.examConfirmT=Date.now(); try{persistAtt();}catch(_){}; render(); };
+window.toggleKkwConf=function(name){ var m=examConfObj(); var e=m[name]||{}; e.kconf=e.kconf?0:1; e.kconfT=Date.now(); e.t=Date.now(); m[name]=e; state.examConfirmT=Date.now(); try{persistAtt();}catch(_){}; render(); };
 window.toggleExamField=function(name,field){ var m=examConfObj(); var e=m[name]||{}; e[field]=e[field]?0:1; e[field+'T']=Date.now(); e.t=Date.now(); m[name]=e; state.examConfirmT=Date.now(); try{persistAtt();}catch(_){}; render(); };
+/* ── 지도진 수동 심사추천 지정 메뉴 (학적부 '심사추천' 버튼) ── */
+window.openRecMenu=function(name){ _renderRecMenu(name); };
+window.closeRecMenu=function(){ var ex=document.getElementById("recMenuOv"); if(ex) ex.remove(); };
+window.toggleManualRec=function(name,kind){
+  var field=(kind==='kkw')?'mkkw':'mrec';
+  var m=examConfObj(); var e=m[name]||{}; e[field]=e[field]?0:1; e[field+'T']=Date.now(); e.t=Date.now(); m[name]=e;
+  state.examConfirmT=Date.now(); try{persistAtt();}catch(_){}
+  render();                 /* 뒤 목록·배지 갱신 (학적부는 열린 채 유지) */
+  _renderRecMenu(name);     /* 메뉴 상태 갱신 */
+};
+function _renderRecMenu(name){
+  var ex=document.getElementById("recMenuOv"); if(ex) ex.remove();
+  var e=(state.examConfirmMap||{})[name]||{};
+  var esn=esc(name).replace(/'/g,"\\'");
+  var ov=document.createElement("div"); ov.id="recMenuOv";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2147483600;display:flex;align-items:center;justify-content:center;padding:16px";
+  ov.onclick=function(ev){ if(ev.target===ov) ov.remove(); };
+  function row(kind,lbl,desc,on,col){
+    return '<button onclick="toggleManualRec(\''+esn+'\',\''+kind+'\')" style="display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:1.5px solid '+(on?col:'var(--line)')+';background:'+(on?col+'12':'#fff')+';border-radius:12px;padding:13px 15px;cursor:pointer;font-family:inherit;margin-bottom:10px">'+
+      '<span style="flex:0 0 auto;width:24px;height:24px;border-radius:7px;border:2px solid '+(on?col:'#C7D0DB')+';background:'+(on?col:'#fff')+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900">'+(on?'✓':'')+'</span>'+
+      '<span style="flex:1"><span style="display:block;font-size:14.5px;font-weight:800;color:#1A2233">'+lbl+'</span><span style="display:block;font-size:11.5px;color:var(--sub);margin-top:2px">'+desc+'</span></span>'+
+      '<span style="flex:0 0 auto;font-size:11.5px;font-weight:800;color:'+(on?col:'var(--sub)')+'">'+(on?'지정됨':'지정')+'</span>'+
+    '</button>';
+  }
+  ov.innerHTML='<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.3)" onclick="event.stopPropagation()">'+
+    '<div style="padding:16px 18px 10px;border-bottom:1px solid var(--line)"><div style="display:flex;align-items:center;gap:8px"><b style="font-size:16.5px">🖐 심사추천 지정</b><span style="flex:1"></span><button onclick="closeRecMenu()" class="chip" style="font-size:13px">닫기</button></div>'+
+      '<div style="font-size:12.5px;color:var(--sub);margin-top:6px"><b style="color:var(--ink)">'+esc(name)+'</b> 을(를) 지도진이 직접 심사추천 대상으로 지정합니다.</div></div>'+
+    '<div style="padding:14px 18px 8px">'+
+      row('gup','유급자 심사추천','심사추천 목록에 추가 · 지도진추천 배지 표시',!!e.mrec,'#C0392B')+
+      row('kkw','국기원 심사추천','국기원심사추천 목록에 추가 · 지도진추천 배지 표시',!!e.mkkw,'#7C3AED')+
+    '</div>'+
+    '<div style="padding:2px 18px 15px;font-size:11px;color:var(--sub)">※ 다시 누르면 지정이 해제됩니다. 자동 추천 조건과 무관하게 지도진이 직접 관리합니다.</div>'+
+  '</div>';
+  document.body.appendChild(ov);
+}
 /* 그룹(전체/반별/급수별)까지 적용한 기준 목록 — 상태 카운트·추가필터의 바탕 */
 function statBaseRows(){
   var ym=state.statYm;
@@ -5436,9 +5477,10 @@ function statBaseRows(){
       var last=state.lastExamMap[s.n]||"";
       var cycleOk=!last || addMonths(last,examCycleMonths(s.grade))<=today();   /* 급수별 주기 */
       var kkw=!!kkwSet[s.n];
-      var ready=acc>=14 && !kkw;   /* 심사추천: 누적 14회 이상 (국기원 대기 제외) */
+      var manRec=isManualRec(s.n), manKkw=isManualKkw(s.n);
+      var ready=(acc>=14 && !kkw) || manRec;   /* 심사추천: 누적 14회 이상 또는 지도진 수동 추천 (국기원 대기 제외) */
       return { s:s, ct:ct, ac:ac, st:st, diff: ct?Math.abs(ac-ct.n):0,
-               acc:acc, last:last, kkw:kkw, ready:ready };
+               acc:acc, last:last, kkw:kkw, ready:ready, manRec:manRec, manKkw:manKkw };
     });
   var grp=state.statGroup||"전체";
   if(grp==="시범단"){ rows=rows.filter(function(r){ return isDemo(r.s.n); }); }
@@ -5510,8 +5552,13 @@ function statViewRows(){
     rows.sort(function(a,b){ return b.acc-a.acc || cmpName(a,b); });
     return rows;
   }
-  if(f==="국기원"){                                 /* 국기원심사추천: 유급자 1급 · 유품자·유단자 각 품·단 2급 */
-    rows=rows.filter(function(r){ return isKkwReady(r.s.grade); });
+  if(f==="국기원"){                                 /* 국기원추천: 유급자 1급 · 유품자·유단자 각 품·단 2급 · 지도진 수동 추천 */
+    rows=rows.filter(function(r){ return isKkwReady(r.s.grade) || r.manKkw; });
+    rows.sort(function(a,b){ return gradeRank(b.s.grade)-gradeRank(a.s.grade) || cmpName(a,b); });
+    return rows;
+  }
+  if(f==="국기원확정"){                             /* 국기원확정: 국기원추천에서 확정 처리된 수련생 */
+    rows=rows.filter(function(r){ return isKkwConf(r.s.n); });
     rows.sort(function(a,b){ return gradeRank(b.s.grade)-gradeRank(a.s.grade) || cmpName(a,b); });
     return rows;
   }
@@ -5603,11 +5650,12 @@ function renderStatusTab(){
   if(!state.statYm) state.statYm=today().slice(0,7);
   var ym=state.statYm, f=state.statF||"";
   var base=statBaseRows();
-  var cnt={미달:0,초과:0,정상:0,추천:0,국기원:0,확정:0};
-  base.forEach(function(r){ if(cnt[r.st]!=null) cnt[r.st]++; if(r.ready) cnt.추천++; if(isKkwReady(r.s.grade)) cnt.국기원++; if(isExamConf(r.s.n)) cnt.확정++; });
+  var cnt={미달:0,초과:0,정상:0,추천:0,국기원:0,확정:0,국기원확정:0};
+  base.forEach(function(r){ if(cnt[r.st]!=null) cnt[r.st]++; if(r.ready) cnt.추천++; if(isKkwReady(r.s.grade)||r.manKkw) cnt.국기원++; if(isExamConf(r.s.n)) cnt.확정++; if(isKkwConf(r.s.n)) cnt.국기원확정++; });
 
-  /* 상태 필터 버튼 (초과/심사추천/국기원심사추천/심사확정) — 위계 1: 크고 뜻에 맞는 색 · 다시 누르면 해제 */
-  var SF=[{k:"초과",c:"#D0332A"},{k:"추천",lbl:"🥋 심사추천",c:"var(--brandRed)"},{k:"국기원",lbl:"🏛 국기원심사추천",c:"#7C3AED"},{k:"확정",lbl:"✅ 심사확정",c:"#2B5FB8"}];
+  /* 상태 필터 버튼 — 위계 1: 크고 뜻에 맞는 색 · 다시 누르면 해제
+     심사(빨강·파랑) / 국기원(보라 계열)로 구분 · 국기원추천(연보라)·국기원확정(진보라) */
+  var SF=[{k:"초과",c:"#D0332A"},{k:"추천",lbl:"🥋 심사추천",c:"var(--brandRed)"},{k:"확정",lbl:"✅ 심사확정",c:"#2B5FB8"},{k:"국기원",lbl:"🏛 국기원추천",c:"#7C3AED"},{k:"국기원확정",lbl:"🏛 국기원확정",c:"#5B21B6"}];
   var sfBtns=SF.map(function(o){
     var on=(f===o.k);
     return '<button onclick="setStatF(\''+o.k+'\')" style="padding:9px 16px;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;border:1.5px solid '+o.c+';'+(on?'background:'+o.c+';color:#fff':'background:#fff;color:'+o.c)+'">'+(o.lbl||o.k)+' '+(cnt[o.k]||0)+'</button>';
@@ -5736,17 +5784,33 @@ function statListHtml(view){
     }
     if(f==="국기원"){
       var kc=(state.examConfirmMap||{})[s.n]||{};
-      x+='<div style="border-top:1px solid var(--line);padding:11px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+      x+='<div style="border-top:1px solid var(--line);border-left:3px solid #7C3AED;background:#FBFAFF;padding:11px 0 11px 9px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
         avatarHtml(s.n, s.g, 34)+
         '<span style="flex:0 0 auto;width:4px;height:22px;border-radius:2px;background:'+gradeColor(s.grade||"")+'"></span>'+
         demoSlot(s.n)+
         '<b style="flex:0 0 92px;font-size:13.5px;cursor:pointer;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="학적부 열기" onclick="openStuM(\''+esName+'\')">'+esc(s.n)+'</b>'+
         '<span style="flex:0 0 62px;font-size:11.5px;color:var(--sub);font-weight:700">'+esc(s.grade||"급수?")+'</span>'+
-        '<span style="flex:0 0 auto;font-size:11.5px;color:#7C3AED;font-weight:800">→ 국기원 대상</span>'+
+        (isManualKkw(s.n)?'<span title="지도진이 직접 지정" style="flex:0 0 auto;background:#4F46E5;color:#fff;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:800">지도진추천</span>':'<span style="flex:0 0 auto;background:#EDE7FA;color:#7C3AED;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:800">🏛 국기원 대상</span>')+
         '<span style="flex:0 0 auto;font-size:11.5px;color:var(--sub)">심사 누적 <b style="color:var(--ink)">'+r.acc+'회</b></span>'+
         '<span style="flex:1"></span>'+
-        '<label style="display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid '+(kc.ktikon?"#0E7490":"var(--line)")+';border-radius:9px;padding:6px 11px;background:'+(kc.ktikon?"#E6F4F7":"#fff")+';color:'+(kc.ktikon?"#0E7490":"var(--sub)")+'"><input type="checkbox" '+(kc.ktikon?"checked":"")+' onchange="toggleExamField(\''+esName+'\',\'ktikon\')" style="accent-color:#0E7490">티콘생성</label>'+
-        '<label style="display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid '+(kc.kfee?"#B45309":"var(--line)")+';border-radius:9px;padding:6px 11px;background:'+(kc.kfee?"#FCF3E7":"#fff")+';color:'+(kc.kfee?"#B45309":"var(--sub)")+'"><input type="checkbox" '+(kc.kfee?"checked":"")+' onchange="toggleExamField(\''+esName+'\',\'kfee\')" style="accent-color:#B45309">심사비</label>'+
+        '<label style="display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:800;cursor:pointer;border:1.5px solid '+(kc.kconf?"#5B21B6":"#C9B8E8")+';border-radius:9px;padding:6px 12px;background:'+(kc.kconf?"#5B21B6":"#fff")+';color:'+(kc.kconf?"#fff":"#5B21B6")+'"><input type="checkbox" '+(kc.kconf?"checked":"")+' onchange="toggleKkwConf(\''+esName+'\')" style="accent-color:#5B21B6">국기원확정</label>'+
+      '</div>';
+      return;
+    }
+    if(f==="국기원확정"){
+      var kc2=(state.examConfirmMap||{})[s.n]||{};
+      x+='<div style="border-top:1px solid var(--line);border-left:3px solid #5B21B6;background:#F3EEFC;padding:11px 0 11px 9px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+        avatarHtml(s.n, s.g, 34)+
+        '<span style="flex:0 0 auto;width:4px;height:22px;border-radius:2px;background:'+gradeColor(s.grade||"")+'"></span>'+
+        demoSlot(s.n)+
+        '<b style="flex:0 0 92px;font-size:13.5px;cursor:pointer;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="학적부 열기" onclick="openStuM(\''+esName+'\')">'+esc(s.n)+'</b>'+
+        '<span style="flex:0 0 62px;font-size:11.5px;color:var(--sub);font-weight:700">'+esc(s.grade||"급수?")+'</span>'+
+        '<span style="flex:0 0 auto;background:#5B21B6;color:#fff;border-radius:10px;padding:2px 9px;font-size:11px;font-weight:800">🏛 국기원확정</span>'+
+        '<span style="flex:0 0 auto;font-size:11.5px;color:var(--sub)">심사 누적 <b style="color:var(--ink)">'+r.acc+'회</b></span>'+
+        '<span style="flex:1"></span>'+
+        '<label style="display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid '+(kc2.ktikon?"#0E7490":"var(--line)")+';border-radius:9px;padding:6px 11px;background:'+(kc2.ktikon?"#E6F4F7":"#fff")+';color:'+(kc2.ktikon?"#0E7490":"var(--sub)")+'"><input type="checkbox" '+(kc2.ktikon?"checked":"")+' onchange="toggleExamField(\''+esName+'\',\'ktikon\')" style="accent-color:#0E7490">티콘생성</label>'+
+        '<label style="display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid '+(kc2.kfee?"#B45309":"var(--line)")+';border-radius:9px;padding:6px 11px;background:'+(kc2.kfee?"#FCF3E7":"#fff")+';color:'+(kc2.kfee?"#B45309":"var(--sub)")+'"><input type="checkbox" '+(kc2.kfee?"checked":"")+' onchange="toggleExamField(\''+esName+'\',\'kfee\')" style="accent-color:#B45309">심사비</label>'+
+        '<button class="chip sm" style="color:var(--sub)" title="국기원확정 해제" onclick="toggleKkwConf(\''+esName+'\')">확정해제</button>'+
       '</div>';
       return;
     }
@@ -5782,6 +5846,7 @@ function statListHtml(view){
     var esn2=esc(s.n).replace(/'/g,"\\'");
     var kkwAp=r.kkw?(((state.kkwInfo||{})[s.n]||{}).ap||""):"";
     var exBadge = r.kkw ? '<span title="'+(kkwAp?'국기원 접수일 '+esc(kkwAp)+' · ':'')+'이름을 누르면 학적부에서 단증 수령·취소 처리" style="background:#EEE;color:#666;border-radius:10px;padding:2px 7px;font-size:11.5px;font-weight:800;white-space:nowrap;cursor:help">국기원 대기'+(kkwAp?' '+esc(kkwAp.slice(5)):'')+'</span>'
+      : r.manRec ? '<span title="지도진이 직접 지정한 심사추천" style="background:#4F46E5;color:#fff;border-radius:10px;padding:2px 7px;font-size:11.5px;font-weight:800;white-space:nowrap">지도진추천</span>'
       : (r.ready && isLongAbsent(s.n)) ? '<span title="누적·주기는 충족했지만 4주 이상 무출석 — 연락 먼저" style="background:#FFF3E0;color:#B45309;border:1px dashed #F0C36D;border-radius:10px;padding:2px 7px;font-size:11.5px;font-weight:800;white-space:nowrap">추천·연락필요</span>'
       : r.ready ? '<span style="background:var(--redSoft);color:var(--red);border-radius:10px;padding:2px 7px;font-size:11.5px;font-weight:800;white-space:nowrap">추천</span>'
       : r.acc<14 ? '<span style="font-size:11.5px;color:var(--sub);white-space:nowrap">'+(14-r.acc)+'회 남음</span>'
@@ -8382,7 +8447,7 @@ function renderStuChart(m){
           '</div>'+
           '<div style="display:flex;flex-direction:column">'+
             '<button onclick="openExamHistory(\''+esafe+'\')" style="flex:1;background:'+INK+';border:none;border-bottom:1px solid rgba(255,255,255,.15);color:#fff;padding:6px 11px;cursor:pointer;font-family:inherit;font-size:11.5px;font-weight:800;white-space:nowrap">📊 승급심사결과</button>'+
-            '<button onclick="openResultsByGrade(\''+esafe+'\')" title="같은 급수 수련생들의 심사 결과를 함께 보기" style="flex:1;background:#31465f;border:none;color:#fff;padding:6px 11px;cursor:pointer;font-family:inherit;font-size:11.5px;font-weight:800;white-space:nowrap">📁 급수별 결과</button>'+
+            '<button onclick="openRecMenu(\''+esafe+'\')" title="지도진이 직접 심사추천(유급자·국기원) 지정" style="flex:1;background:#31465f;border:none;color:#fff;padding:6px 11px;cursor:pointer;font-family:inherit;font-size:11.5px;font-weight:800;white-space:nowrap">🖐 심사추천</button>'+
           '</div>'+
         '</div>'+
       '</div>'+
@@ -9090,7 +9155,7 @@ function persistAtt(){
    옛 기록(필드별 시각 없음)은 레코드 t로 폴백 → 하위호환 */
 function mergeExamConfirm(x, y){
   x=x||{map:{},t:0}; y=y||{map:{},t:0};
-  var xm=x.map||{}, ym=y.map||{}, out={}, names={}, FIELDS=['conf','applied','tape','fee','ktikon','kfee'];
+  var xm=x.map||{}, ym=y.map||{}, out={}, names={}, FIELDS=['conf','applied','tape','fee','ktikon','kfee','mrec','mkkw','kconf'];
   for(var n in xm) names[n]=1; for(var n2 in ym) names[n2]=1;
   for(var nm in names){
     var a=xm[nm], b=ym[nm];
