@@ -646,7 +646,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.86";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.87";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -10167,9 +10167,9 @@ function sortTodos(todos){
 }
 function workAllTodos(){
   var w=workData(), out=[];
-  for(var n in (w.manage||{})){ var m=w.manage[n]; if(!m||!m.memo) continue; var tg=workTags(m.memo); if(!tg.due) continue; out.push({kind:'수련생',group:'관리수련생',team:'',evType:'',label:n,due:tg.due,start:null,done:!!m.done,mentions:tg.mentions,openFn:"editManageInline('"+wEsn(n)+"')",editFn:"editManageInline('"+wEsn(n)+"')",doneFn:"toggleManageDone('"+wEsn(n)+"')"}); }
-  for(var eid in (w.events||{})){ var ev=w.events[eid]; if(!ev) continue; (ev.prep||[]).forEach(function(p){ if(!p.due) return; var ms=(p.owner?[p.owner]:[]).concat(workTags(p.item||'').mentions); out.push({kind:'행사',group:(ev.title||'행사'),team:'',evType:(ev.type||''),label:(ev.title||'행사')+' · '+(p.item||'(준비)'),due:p.due,start:(p.start||null),done:!!p.done,mentions:ms,openFn:"editPrepInline('"+eid+"','"+p.id+"')",editFn:"editPrepInline('"+eid+"','"+p.id+"')",doneFn:"toggleEventPrep('"+eid+"','"+p.id+"')"}); }); }
-  for(var tid in (w.tasks||{})){ var t=w.tasks[tid]; if(!t||!t.due) continue; out.push({kind:'업무',group:(t.team?t.team+'팀':'업무'),team:(t.team||''),evType:'',label:(t.team?'['+t.team+'] ':'')+(t.title||'(제목 없음)'),due:t.due,start:(t.start||null),done:!!t.done,mentions:(t.owner?[t.owner]:[]),openFn:"editTaskInline('"+tid+"')",doneFn:"toggleTask('"+tid+"')",editFn:"editTaskInline('"+tid+"')"}); }
+  for(var n in (w.manage||{})){ var m=w.manage[n]; if(!m||!m.memo) continue; var tg=workTags(m.memo); if(!tg.due) continue; out.push({kind:'수련생',group:'관리수련생',team:'',evType:'',label:n,due:tg.due,start:null,done:!!m.done,doneT:(m.doneT||null),mentions:tg.mentions,openFn:"editManageInline('"+wEsn(n)+"')",editFn:"editManageInline('"+wEsn(n)+"')",doneFn:"toggleManageDone('"+wEsn(n)+"')"}); }
+  for(var eid in (w.events||{})){ var ev=w.events[eid]; if(!ev) continue; (ev.prep||[]).forEach(function(p){ if(!p.due) return; var ms=(p.owner?[p.owner]:[]).concat(workTags(p.item||'').mentions); out.push({kind:'행사',group:(ev.title||'행사'),team:'',evType:(ev.type||''),label:(ev.title||'행사')+' · '+(p.item||'(준비)'),due:p.due,start:(p.start||null),done:!!p.done,doneT:(p.doneT||null),mentions:ms,openFn:"editPrepInline('"+eid+"','"+p.id+"')",editFn:"editPrepInline('"+eid+"','"+p.id+"')",doneFn:"toggleEventPrep('"+eid+"','"+p.id+"')"}); }); }
+  for(var tid in (w.tasks||{})){ var t=w.tasks[tid]; if(!t||!t.due) continue; out.push({kind:'업무',group:(t.team?t.team+'팀':'업무'),team:(t.team||''),evType:'',label:(t.team?'['+t.team+'] ':'')+(t.title||'(제목 없음)'),due:t.due,start:(t.start||null),done:!!t.done,doneT:(t.doneT||null),mentions:(t.owner?[t.owner]:[]),openFn:"editTaskInline('"+tid+"')",doneFn:"toggleTask('"+tid+"')",editFn:"editTaskInline('"+tid+"')"}); }
   /* 긴급순: 기한 지난 것 → 임박한 것 → 여유 순 (남은 일수 오름차순). 시작일은 동일 기한 내 보조 정렬. */
   out.sort(function(a,b){ var da=workDueDays(a.due), db=workDueDays(b.due); if(da!==db) return da-db; return (a.start||a.due)<(b.start||b.due)?-1:1; });
   return out;
@@ -10264,15 +10264,73 @@ function renderTodoGantt(todos){
       '</div>'+
     '</div>';
   }
-  var active=todos.filter(function(t){return !t.done;}), done=todos.filter(function(t){return t.done;});
+  var active=todos.filter(function(t){return !t.done;});
+  var doneAll=todos.filter(function(t){return t.done;});
+  var cut=addDays(td,-21);   /* 최근 3주 경계 */
+  var recent=doneAll.filter(function(t){ return _todoDoneDate(t)>=cut; });
+  var older=doneAll.filter(function(t){ return _todoDoneDate(t)<cut; });
   active.forEach(function(t){ h+=ganttRow(t); });
-  if(done.length){
-    h+='<div style="font-size:11px;font-weight:800;color:#1E7B3C;margin:9px 0 3px">✅ 완료됨 '+done.length+'건</div>';
-    done.forEach(function(t){ h+=ganttRow(t); });
+  /* 최근 3주 완료 — 접기/펼치기 */
+  if(recent.length){
+    var dOpen=(state.ganttDoneOpen!==false);   /* 기본 열림 */
+    h+='<div onclick="toggleGanttDone()" style="cursor:pointer;user-select:none;font-size:12px;font-weight:800;color:#1E7B3C;margin:11px 0 4px;display:flex;align-items:center;gap:6px"><span style="font-size:10px">'+(dOpen?'▼':'▶')+'</span>✅ 완료됨 · 최근 3주 '+recent.length+'건'+(dOpen?'':' <span style="color:var(--sub);font-weight:600">(펼치기)</span>')+'</div>';
+    if(dOpen){ recent.forEach(function(t){ h+=ganttRow(t); }); }
   }
-  h+='</div></div>';
+  h+='</div></div>';   /* 간트 스크롤 컨테이너 닫기 */
+  h+=renderGanttOlder(older);   /* 이전 완료항목(주/월 이동) */
   return h;
 }
+/* todo의 완료 날짜(YYYY-MM-DD): 완료 시각(doneT) 우선, 없으면 기한일로 대체 */
+function _todoDoneDate(t){
+  if(t.doneT){ var d=new Date(t.doneT); return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()); }
+  return t.due||'';
+}
+/* 이전 완료항목 — 최근 3주보다 이전 · 주/월 단위로 이동하며 보기 */
+function renderGanttOlder(older){
+  if(!older.length) return '';
+  var openB=!!state.ganttOldOpen;
+  var h='<div style="margin-top:10px;border-top:1px dashed var(--line);padding-top:9px">';
+  h+='<button onclick="toggleGanttOld()" style="border:1px solid var(--line);background:#F4F6FA;color:#556;border-radius:9px;padding:6px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">🗂 이전 완료항목 '+older.length+'건 '+(openB?'▲ 접기':'▼ 펼치기')+'</button>';
+  if(openB){
+    var mode=state.ganttOldMode||'week';
+    var ref=state.ganttOldRef||addDays(today(),-21);
+    var ps,pe,label;
+    if(mode==='month'){ var mm=ym(ref); ps=mm+'-01'; pe=mm+'-31'; label=mm.slice(0,4)+'년 '+Number(mm.slice(5,7))+'월'; }
+    else { var ws=mondayOf(ref); pe=addDays(ws,6); ps=ws; label=ws.slice(0,4)+'. '+ws.slice(5).replace('-','/')+' ~ '+pe.slice(5).replace('-','/'); }
+    var inP=older.filter(function(t){ var dd=_todoDoneDate(t); return dd>=ps && dd<=pe; }).sort(function(a,b){ return _todoDoneDate(a)<_todoDoneDate(b)?1:-1; });
+    function mBtn(m,l){ var on=(mode===m); return '<button onclick="setGanttOldMode(\''+m+'\')" style="border:1px solid '+(on?'var(--blue)':'var(--line)')+';background:'+(on?'var(--blue)':'#fff')+';color:'+(on?'#fff':'var(--sub)')+';border-radius:8px;padding:3px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">'+l+'</button>'; }
+    h+='<div style="margin-top:9px;background:#F7F9FC;border:1px solid var(--line);border-radius:11px;padding:11px 13px">'+
+       '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:9px">'+mBtn('week','주별')+mBtn('month','월별')+
+         '<span style="flex:1"></span>'+
+         '<button onclick="ganttOldNav(-1)" class="chip sm" title="이전">◀</button>'+
+         '<b style="font-size:12.5px;min-width:120px;text-align:center">'+esc(label)+'</b>'+
+         '<button onclick="ganttOldNav(1)" class="chip sm" title="다음">▶</button>'+
+       '</div>'+
+       (inP.length? inP.map(_oldDoneRow).join('') : '<div style="font-size:12px;color:var(--sub);text-align:center;padding:14px 0">이 '+(mode==='month'?'달':'주')+'에 완료한 항목이 없습니다.</div>')+
+       '</div>';
+  }
+  h+='</div>';
+  return h;
+}
+function _oldDoneRow(t){
+  var kc=todoColor(t);
+  return '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:7px 2px;border-top:1px solid #EDF0F4">'+
+    '<button class="chip sm" style="color:var(--sub);flex:0 0 auto;padding:2px 7px" title="완료 되돌리기" onclick="'+t.doneFn+'">↩</button>'+
+    '<span style="background:'+kc+'1f;color:'+kc+';border-radius:7px;padding:2px 8px;font-size:11px;font-weight:800;flex:0 0 auto">'+esc((t.kind==='업무'&&t.team)?t.team:t.kind)+'</span>'+
+    '<b style="flex:1 1 auto;min-width:0;font-size:13px;color:#3A4453;word-break:break-word;line-height:1.4;cursor:pointer" onclick="'+t.openFn+'">'+esc(t.label)+'</b>'+
+    '<span style="flex:0 0 auto;font-size:11px;font-weight:700;color:var(--sub);white-space:nowrap">'+esc(_todoDoneDate(t).slice(5).replace('-','/'))+' 완료</span>'+
+  '</div>';
+}
+window.toggleGanttDone=function(){ state.ganttDoneOpen=(state.ganttDoneOpen===false); render(); };
+window.toggleGanttOld=function(){ state.ganttOldOpen=!state.ganttOldOpen; if(state.ganttOldOpen && !state.ganttOldRef) state.ganttOldRef=addDays(today(),-21); render(); };
+window.setGanttOldMode=function(m){ state.ganttOldMode=m; render(); };
+window.ganttOldNav=function(dir){
+  var mode=state.ganttOldMode||'week';
+  var ref=state.ganttOldRef||addDays(today(),-21);
+  if(mode==='month'){ ref=addMonths(ym(ref), dir)+'-01'; }
+  else { ref=addDays(mondayOf(ref), dir*7); }
+  state.ganttOldRef=ref; render();
+};
 
 /* ══════════ 업무일지 (3단계) — 담당자별 취합·루틴·단기/중장기 업무 ══════════ */
 function journalStaff(team){ var w=workData(); var s=(w.staff||{})[team]; return (s&&s.name)||(team==='행정'?'행정담당':'교육담당'); }
