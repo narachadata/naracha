@@ -638,7 +638,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비"};
-var APP_VER = "v9.62";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.63";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -9629,6 +9629,9 @@ function workData(){
   if(!state.work.tombCar) state.work.tombCar={};
   /* ── 차량 정보(단일 객체): 번호·연식·이름·사진 ── */
   if(!state.work.carInfo) state.work.carInfo={};
+  /* 완료 이력 로그 (유실 방지 · 매일 처리한 일 기록) */
+  if(!state.work.doneLog) state.work.doneLog={};
+  if(!state.work.tombDoneLog) state.work.tombDoneLog={};
   /* ── 주유 기록: 주행거리(계기판)와 분리해 별도 저장 · 여러 건/일 가능 ── */
   if(!state.work.carFuel) state.work.carFuel={};
   if(!state.work.tombFuel) state.work.tombFuel={};
@@ -9709,12 +9712,12 @@ function applyWorkTomb(w, coll, tk){
 function mergeWork(local, remote){
   if(!remote||!remote.workV) return local;
   var out=JSON.parse(JSON.stringify(local));
-  ["manage","flags","events","logs","tasks","routines","rchecks","staff","car","carFuel","carMaint","typeColors","holidays","holHidden","signupDone","measures"].forEach(function(coll){
+  ["manage","flags","events","logs","tasks","routines","rchecks","staff","car","carFuel","carMaint","typeColors","holidays","holHidden","signupDone","measures","doneLog"].forEach(function(coll){
     var rc=remote[coll]||{}, oc=out[coll]||(out[coll]={});
     for(var k in rc){ if(!oc[k] || (rc[k]._t||0)>(oc[k]._t||0)) oc[k]=rc[k]; }
   });
   /* 삭제 표식 병합 (양쪽 최신 시각 유지) */
-  ["tombEvents","tombFlags","tombTasks","tombRoutines","tombCar","tombFuel","tombCarMaint","tombTypes","tombMeas"].forEach(function(tk){
+  ["tombEvents","tombFlags","tombTasks","tombRoutines","tombCar","tombFuel","tombCarMaint","tombTypes","tombMeas","tombDoneLog"].forEach(function(tk){
     var rt=remote[tk]||{}, ot=out[tk]||(out[tk]={});
     for(var k in rt){ if(!ot[k] || rt[k]>ot[k]) ot[k]=rt[k]; }
   });
@@ -9726,6 +9729,7 @@ function mergeWork(local, remote){
   applyWorkTomb(out, "car", "tombCar");
   applyWorkTomb(out, "carFuel", "tombFuel");
   applyWorkTomb(out, "carMaint", "tombCarMaint");
+  applyWorkTomb(out, "doneLog", "tombDoneLog");
   applyWorkTomb(out, "measures", "tombMeas");
   /* 차량 정보(단일 객체): 최신본 우선 */
   if(remote.carInfo && (remote.carInfo._t||0) > ((out.carInfo&&out.carInfo._t)||0)) out.carInfo=remote.carInfo;
@@ -9830,7 +9834,22 @@ function workStamp(dev,t){
 window.setWorkTab=function(t){ state.workTab=t; render(); };
 window.setManageMemo=function(name,v){ var w=workData(); if(!w.manage[name]) w.manage[name]={}; w.manage[name].memo=v; workSaveDebounced(); };
 window.commitManage=function(name){ var w=workData(); if(!w.manage[name]) w.manage[name]={}; w.manage[name].dev=workDev(); w.manage[name]._t=Date.now(); workPersist(); render(); };
-window.toggleManageDone=function(name){ var w=workData(); if(!w.manage[name]) w.manage[name]={}; w.manage[name].done=!w.manage[name].done; w.manage[name].dev=workDev(); w.manage[name]._t=Date.now(); workPersist(); render(); };
+/* ── 완료 이력 로그 (유실 방지): 무엇을·언제·누가 완료했는지 append-only 기록.
+   원본(업무·행사준비·관리수련생)이 삭제돼도 이 로그는 남아 '매일 처리한 일'이 사라지지 않음 ── */
+function _doneLogAdd(srcId, label, kind, team, by){
+  var w=workData(); if(!w.doneLog) w.doneLog={};
+  var now=Date.now();
+  w.doneLog[srcId]={ srcId:srcId, label:(label||'').slice(0,120), kind:kind||'업무', team:team||'', by:by||'', doneDate:today(), doneT:now, _t:now };
+  if(w.tombDoneLog) delete w.tombDoneLog[srcId];   /* 다시 완료하면 묘비 해제 */
+}
+function _doneLogRemove(srcId){
+  var w=workData();
+  if(w.doneLog && w.doneLog[srcId]) delete w.doneLog[srcId];
+  if(!w.tombDoneLog) w.tombDoneLog={}; w.tombDoneLog[srcId]=Date.now();   /* 되돌리기 → 로그 제거 + 묘비(부활 방지) */
+}
+window.toggleManageDone=function(name){ var w=workData(); if(!w.manage[name]) w.manage[name]={}; var nowDone=!w.manage[name].done; w.manage[name].done=nowDone; w.manage[name].doneT=nowDone?Date.now():null; w.manage[name].dev=workDev(); w.manage[name]._t=Date.now();
+  if(nowDone) _doneLogAdd('mg:'+name, name+' 관리 완료', '관리수련생', '', workDev()); else _doneLogRemove('mg:'+name);
+  workPersist(); render(); };
 window.setGwan=function(name,v){ var w=workData(); if(!w.manage[name]) w.manage[name]={}; w.manage[name].gwan=v; workSaveDebounced(); };
 window.commitGwan=function(name){ var w=workData(); if(!w.manage[name]) w.manage[name]={}; w.manage[name].gwanDev=workDev(); w.manage[name].gwanT=Date.now(); w.manage[name]._t=Date.now(); workPersist(); render(); };
 window.setWorkFlagInput=function(v){ state.workFlagInput=v; };
@@ -10014,7 +10033,9 @@ window.editTaskInline=function(id){
 };
 window.setTask=function(id,k,v){ var w=workData(); var t=w.tasks[id]; if(!t)return; t[k]=v; workSaveDebounced(); };
 window.commitTask=function(id){ var w=workData(); var t=w.tasks[id]; if(!t)return; t.dev=workDev(); t._t=Date.now(); workPersist(); render(); };
-window.toggleTask=function(id){ var w=workData(); var t=w.tasks[id]; if(!t)return; t.done=!t.done; t.doneT=t.done?Date.now():null; t.dev=workDev(); t._t=Date.now(); workPersist(); render(); };
+window.toggleTask=function(id){ var w=workData(); var t=w.tasks[id]; if(!t)return; t.done=!t.done; t.doneT=t.done?Date.now():null; t.dev=workDev(); t._t=Date.now();
+  if(t.done) _doneLogAdd('tk:'+id, (t.title||'(제목 없음)'), '업무', t.team||'', t.owner||workDev()); else _doneLogRemove('tk:'+id);
+  workPersist(); render(); };
 window.toggleTaskKind=function(id){ var w=workData(); var t=w.tasks[id]; if(!t)return; t.kind=(t.kind==='중장기'?'단기':'중장기'); t._t=Date.now(); workPersist(); render(); };
 window.delTask=function(id){ var w=workData(); var t=w.tasks[id]; if(!t)return; if(!confirm('"'+(t.title||'(제목 없음)')+'" 업무를 삭제할까요?')) return; w.tombTasks[id]=Date.now(); delete w.tasks[id]; workPersist(); render(); };
 window.setTaskGwan=function(id,v){ var w=workData(); var t=w.tasks[id]; if(!t)return; t.gwan=v; workSaveDebounced(); };
@@ -10558,10 +10579,126 @@ function renderWorkTab(){
       tabBtn('관리','관리수련생 현황')+tabBtn('행사','행사 관리')+tabBtn('일지','업무일지')+
     '</div></div>';
   h+=renderSignupBanner();
+  h+=renderWorkDashboard();      /* 상단 대시보드: 오늘 완료 · 오늘 할 일 */
   h+=renderWorkTodoBoard();
   h+=(wt==="행사")?renderWorkEvents():(wt==="일지")?renderWorkJournal():renderWorkManageBody();
   return h;
 }
+/* 팀 색 (일관 표기): 공동=슬레이트 · 행정=파랑 · 교육=초록 */
+function workTeamColor(team){ return team==='교육'?'#1E7B3C':team==='행정'?'#2B5FB8':'#64748B'; }
+/* 완료 항목 종류별 색·아이콘 (색+아이콘 병기) */
+function doneKindStyle(e){
+  if(e.kind==='행사준비') return {c:'#8B5CF6', ic:'📋'};
+  if(e.kind==='관리수련생') return {c:'#F59E0B', ic:'👤'};
+  return {c:(e.team? (e.team==='교육'?'#34D399':'#60A5FA') : '#93C5FD'), ic:'✔'};   /* 업무: 팀색(다크 배경용 밝은 톤) */
+}
+function doneLogRows(){ var w=workData(); return Object.keys(w.doneLog||{}).map(function(k){return w.doneLog[k];}).filter(Boolean); }
+function _hhmm(t){ try{ var d=new Date(t); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }catch(e){ return ''; } }
+/* 상단 대시보드 */
+function renderWorkDashboard(){
+  var td=today();
+  var logs=doneLogRows();
+  var todayDone=logs.filter(function(e){ return e.doneDate===td; }).sort(function(a,b){ return (b.doneT||0)-(a.doneT||0); });
+  /* 오늘 할 일: 기한 있는 미완료(관리메모·행사준비·업무) */
+  var todos=(typeof workAllTodos==="function")?workAllTodos():[];
+  var openTodos=todos.filter(function(t){ return !t.done; });
+  var overdue=openTodos.filter(function(t){ return t.due<td; });
+  var dueToday=openTodos.filter(function(t){ return t.due===td; });
+  var soon=openTodos.filter(function(t){ return t.due>td; });
+  var kProg=todayDone.length, kOpen=openTodos.length, kToday=dueToday.length, kOver=overdue.length;
+  /* 진행률: 오늘 완료 ÷ (오늘 완료 + 오늘마감 미완료) */
+  var denom=kProg+kToday, pct=denom? Math.round(kProg/denom*100):0;
+  /* 지난 7일 완료 일별 건수 (미니 막대) */
+  var days=[]; for(var i=6;i>=0;i--){ days.push(addDays(td,-i)); }
+  var perDay=days.map(function(d){ return { d:d, n:logs.filter(function(e){return e.doneDate===d;}).length }; });
+  var maxN=Math.max(1, perDay.reduce(function(m,x){return Math.max(m,x.n);},0));
+
+  function tile(lbl,n,col,ic){ return '<div style="flex:1 1 120px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:10px 12px;display:flex;align-items:center;gap:9px">'+
+    '<span style="width:34px;height:34px;border-radius:10px;background:'+col+'18;color:'+col+';display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto">'+ic+'</span>'+
+    '<div><div style="font-size:21px;font-weight:900;color:'+col+';line-height:1">'+n+'</div><div style="font-size:11px;color:var(--sub)">'+lbl+'</div></div></div>'; }
+
+  var h='<div class="card">';
+  /* [0] KPI 띠 */
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+
+    tile('오늘 완료',kProg,'#1E7B3C','✅')+tile('진행중',kOpen,'#2B5FB8','⏳')+tile('오늘 마감',kToday,'#B45309','🔔')+tile('기한 지남',kOver,'#B23A48','⚠️')+
+    '<div style="flex:1 1 150px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:10px 12px">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--sub);margin-bottom:5px"><span>오늘 진행률</span><b style="color:#1E7B3C">'+pct+'%'+(denom?' ('+kProg+'/'+denom+')':'')+'</b></div>'+
+      '<div style="height:8px;background:#EEF1F5;border-radius:5px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:#1E7B3C"></div></div>'+
+      '<div style="display:flex;align-items:flex-end;gap:3px;height:22px;margin-top:7px" title="최근 7일 완료">'+
+        perDay.map(function(x){ var hh=Math.max(2,Math.round(x.n/maxN*20)); var isT=(x.d===td); return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><div style="width:100%;height:'+hh+'px;background:'+(isT?'#1E7B3C':'#BBD8C4')+';border-radius:2px" title="'+x.d.slice(5)+' · '+x.n+'건"></div></div>'; }).join('')+
+      '</div><div style="font-size:9.5px;color:var(--sub);text-align:right;margin-top:2px">최근 7일 완료</div>'+
+    '</div>'+
+  '</div>';
+
+  /* [1] 🌙 오늘 완료 다크 히어로 */
+  var dw=today(), dd2=new Date(dw+'T00:00:00'); var wdn=['일','월','화','수','목','금','토'][isNaN(dd2)?0:dd2.getDay()];
+  h+='<div style="background:linear-gradient(160deg,#1E2233,#141821);border-radius:18px;padding:15px 17px;color:#F5F7FA">'+
+    '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:'+(todayDone.length?'11px':'4px')+'">'+
+      '<span style="font-size:15.5px;font-weight:900">🌙 오늘 완료한 일</span>'+
+      '<span style="font-size:12px;color:#A9B2C3">'+dw.slice(5).replace('-','/')+'('+wdn+')</span>'+
+      '<span style="flex:1"></span>'+
+      '<span style="font-size:13px;font-weight:900;color:#34D399">'+todayDone.length+'건</span>'+
+      (denom?'<span style="font-size:11.5px;color:#A9B2C3">· 진행 '+pct+'%</span>':'')+
+    '</div>';
+  if(!todayDone.length){
+    h+='<div style="font-size:13px;color:#A9B2C3;padding:6px 0 2px">아직 오늘 완료한 일이 없어요. 아래 업무·준비물·관리수련생을 완료 체크하면 여기에 모입니다.</div>';
+  } else {
+    h+='<div style="display:flex;flex-direction:column;gap:6px">'+todayDone.map(function(e){
+      var ks=doneKindStyle(e);
+      return '<div style="display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:8px 11px">'+
+        '<span style="flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:#34D39926;color:#34D399;display:flex;align-items:center;justify-content:center;font-size:12px">✓</span>'+
+        '<span style="flex:1;min-width:0;font-size:13px;color:#F5F7FA;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(e.label||'')+'</span>'+
+        (e.by?'<span style="flex:0 0 auto;font-size:10.5px;font-weight:800;color:#C9D2E0;background:rgba(255,255,255,.08);border-radius:7px;padding:1px 7px">@'+esc(e.by)+'</span>':'')+
+        '<span style="flex:0 0 auto;font-size:10px;font-weight:800;color:'+ks.c+';background:'+ks.c+'22;border-radius:7px;padding:1px 7px;white-space:nowrap">'+ks.ic+' '+esc(e.kind||'업무')+'</span>'+
+        '<span style="flex:0 0 auto;font-size:10.5px;color:#8FA0B8;white-space:nowrap">'+_hhmm(e.doneT)+'</span>'+
+      '</div>';
+    }).join('')+'</div>';
+  }
+  /* 지난 7일 완료 (접힘) */
+  var past=logs.filter(function(e){ return e.doneDate && e.doneDate<td; }).sort(function(a,b){ return (b.doneT||0)-(a.doneT||0); });
+  if(past.length){
+    var op=!!state.workDoneOpen;
+    h+='<div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:9px">'+
+      '<button onclick="toggleWorkDoneHist()" style="background:none;border:none;color:#A9B2C3;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0">📅 지난 완료 이력 '+(op?'▾':'▸')+' <span style="color:#7E8AA0">('+past.length+'건)</span></button>';
+    if(op){
+      var byDate={}; past.forEach(function(e){ (byDate[e.doneDate]=byDate[e.doneDate]||[]).push(e); });
+      var dates=Object.keys(byDate).sort().reverse().slice(0,14);
+      h+='<div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">'+dates.map(function(d){
+        return '<div><div style="font-size:11px;font-weight:800;color:#8FA0B8;margin-bottom:3px">'+esc(d.slice(5).replace('-','/'))+' · '+byDate[d].length+'건</div>'+
+          byDate[d].map(function(e){ var ks=doneKindStyle(e); return '<div style="font-size:12px;color:#D7DEEA;padding:2px 0;display:flex;gap:7px;align-items:center"><span style="color:'+ks.c+'">'+ks.ic+'</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(e.label||'')+'</span>'+(e.by?'<span style="color:#8FA0B8;font-size:10.5px">@'+esc(e.by)+'</span>':'')+'</div>'; }).join('')+
+        '</div>';
+      }).join('')+'</div>';
+    }
+  }
+  h+='<div style="font-size:10px;color:#6E7A90;margin-top:9px">※ 자정이 지나면 어제 완료는 위에서 자동으로 빠지지만 <b style="color:#9AA6BC">데이터는 지워지지 않고</b> 이력에 남습니다.</div>';
+  h+='</div>';
+
+  /* [2] ☀️ 오늘 할 일 */
+  h+='<div style="margin-top:12px;background:#F7F9FC;border:1px solid var(--line);border-radius:16px;padding:13px 15px">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"><b style="font-size:14.5px">☀️ 오늘 해야 될 일</b>'+
+      '<span style="font-size:11.5px;color:var(--sub)">남은 <b style="color:#B45309">'+openTodos.length+'</b>건 · 기한 있는 일</span></div>';
+  function bucket(title,arr,col,ic){
+    if(!arr.length) return '';
+    arr=arr.slice().sort(function(a,b){ return a.due<b.due?-1:1; });
+    return '<div style="margin-bottom:7px"><div style="font-size:11.5px;font-weight:800;color:'+col+';margin-bottom:4px">'+ic+' '+title+' '+arr.length+'</div>'+
+      arr.slice(0,20).map(function(t){ var tc=workTeamColor(t.team); var dd=workDueDays(t.due);
+        return '<div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-left:3px solid '+col+';border-radius:9px;padding:6px 10px;margin-bottom:4px">'+
+          (t.doneFn?'<span onclick="'+t.doneFn+'" title="완료 처리" style="flex:0 0 auto;width:18px;height:18px;border:2px solid '+col+';border-radius:5px;cursor:pointer;display:inline-block"></span>':'')+
+          '<span style="flex:1;min-width:0;font-size:12.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" onclick="'+(t.openFn||'')+'">'+esc(t.label||'')+'</span>'+
+          (t.mentions&&t.mentions.length?'<span style="flex:0 0 auto;font-size:10.5px;font-weight:800;color:'+tc+'">@'+esc(t.mentions[0])+'</span>':'')+
+          '<span style="flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:'+tc+'" title="'+(t.team||'공동')+'"></span>'+
+          '<span style="flex:0 0 auto;font-size:10.5px;font-weight:800;color:'+col+';white-space:nowrap">'+(dd<0?('D+'+(-dd)):(dd===0?'오늘':'D-'+dd))+'</span>'+
+        '</div>'; }).join('')+
+      '</div>';
+  }
+  var body=bucket('기한 지남',overdue,'#B23A48','⚠️')+bucket('오늘 마감',dueToday,'#B45309','🔔')+bucket('이번주 다가옴',soon.filter(function(t){return workDueDays(t.due)<=7;}),'#64748B','🗓');
+  h+=(body||'<div style="font-size:12.5px;color:var(--sub);padding:4px 0">기한이 임박한 할 일이 없습니다. 여유 있어요 👍</div>');
+  h+='</div>';
+
+  h+='</div>';
+  return h;
+}
+window.toggleWorkDoneHist=function(){ state.workDoneOpen=!state.workDoneOpen; render(); };
 
 /* ── 관리수련생 현황 ── */
 function renderWorkManageBody(){
@@ -10753,7 +10890,9 @@ window.stuMDelEv=function(i){ if(state.stuM&&state.stuM.evHist){ state.stuM.evHi
 window.addPrep=function(id){ var w=workData(); var ev=w.events[id]; if(!ev)return; if(!ev.prep)ev.prep=[]; ev.prep.push({id:"p"+Date.now(), item:"", owner:"", start:"", due:"", amount:0, done:false, dev:workDev(), _t:Date.now()}); ev._t=Date.now(); workPersist(); render(); };
 window.setPrep=function(id,pid,k,v){ var w=workData(); var ev=w.events[id]; if(!ev)return; var p=(ev.prep||[]).filter(function(x){return x.id===pid;})[0]; if(!p)return; if(k==='amount'){ p.amount=Number(String(v).replace(/[^0-9]/g,''))||0; } else { p[k]=v; } ev._t=Date.now(); workSaveDebounced(); };
 window.commitPrep=function(id,pid){ var w=workData(); var ev=w.events[id]; if(!ev)return; var p=(ev.prep||[]).filter(function(x){return x.id===pid;})[0]; if(!p)return; p.dev=workDev(); p._t=Date.now(); ev._t=Date.now(); workPersist(); render(); };
-window.toggleEventPrep=function(id,pid){ var w=workData(); var ev=w.events[id]; if(!ev)return; var p=(ev.prep||[]).filter(function(x){return x.id===pid;})[0]; if(!p)return; p.done=!p.done; p.dev=workDev(); p._t=Date.now(); ev._t=Date.now(); workPersist(); render(); };
+window.toggleEventPrep=function(id,pid){ var w=workData(); var ev=w.events[id]; if(!ev)return; var p=(ev.prep||[]).filter(function(x){return x.id===pid;})[0]; if(!p)return; p.done=!p.done; p.doneT=p.done?Date.now():null; p.dev=workDev(); p._t=Date.now(); ev._t=Date.now();
+  if(p.done) _doneLogAdd('ev:'+id+':'+pid, (ev.title||'행사')+' · '+(p.item||'준비'), '행사준비', '', (p.owner||workDev())); else _doneLogRemove('ev:'+id+':'+pid);
+  workPersist(); render(); };
 window.delPrep=function(id,pid){ var w=workData(); var ev=w.events[id]; if(!ev)return; ev.prep=(ev.prep||[]).filter(function(x){return x.id!==pid;}); ev._t=Date.now(); workPersist(); render(); };
 /* 큐시트 */
 window.addCue=function(id){ var w=workData(); var ev=w.events[id]; if(!ev)return; if(!ev.cue)ev.cue=[]; ev.cue.push({id:"c"+Date.now(), time:"", content:"", who:"", note:""}); ev._t=Date.now(); workPersist(); render(); };
