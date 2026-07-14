@@ -646,7 +646,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.85";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.86";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -10248,15 +10248,15 @@ function renderTodoGantt(todos){
     var ddLbl=t.done?'완료':(overdue?('D+'+(-dd)+' 지남'):(dd===0?'D-day':('D-'+dd)));
     var own=(t.mentions&&t.mentions.length)?t.mentions.join('·'):'';
     var badgeTxt=(t.kind==='업무'&&t.team)?t.team:t.kind;
-    return '<div style="padding:6px 0;border-bottom:1px solid #F0F2F6;'+(t.done?'opacity:.72':'')+'">'+
-      /* ① 제목 줄 — 전체 폭, 잘리지 않음 */
+    return '<div style="padding:7px 0;border-bottom:1px solid #F0F2F6;'+(t.done?'opacity:.92':'')+'">'+
+      /* ① 제목 줄 — 전체 폭, 잘리지 않음 · 완료여도 무슨 일이었는지 읽히도록(취소선 없이 은은한 진회색) */
       '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">'+
         '<button class="chip sm" style="color:'+(t.done?'var(--sub)':'#1E7B3C')+';flex:0 0 auto;padding:2px 7px" title="'+(t.done?'완료 되돌리기':'완료 처리')+'" onclick="'+t.doneFn+'">'+(t.done?'↩':'✓')+'</button>'+
-        '<span style="background:'+kc+'1f;color:'+kc+';border-radius:7px;padding:1px 7px;font-size:10.5px;font-weight:800;flex:0 0 auto">'+esc(badgeTxt)+'</span>'+
-        '<b style="flex:1 1 auto;min-width:0;font-size:12.5px;color:'+(t.done?'var(--sub)':'var(--blue)')+';cursor:pointer;'+(t.done?'text-decoration:line-through':'')+';line-height:1.35;word-break:break-word" title="'+(t.editFn?'클릭하면 내용을 수정합니다':'클릭하면 상세로 이동')+'" onclick="'+t.openFn+'">'+esc(t.label)+'</b>'+
+        '<span style="background:'+kc+'1f;color:'+kc+';border-radius:7px;padding:2px 8px;font-size:11.5px;font-weight:800;flex:0 0 auto">'+esc(badgeTxt)+'</span>'+
+        '<b style="flex:1 1 auto;min-width:0;font-size:14px;color:'+(t.done?'#3A4453':'var(--blue)')+';cursor:pointer;line-height:1.4;word-break:break-word" title="'+(t.editFn?'클릭하면 내용을 수정합니다':'클릭하면 상세로 이동')+'" onclick="'+t.openFn+'">'+esc(t.label)+'</b>'+
         (t.editFn?'<button class="chip sm" style="color:var(--blue);flex:0 0 auto;padding:2px 7px" title="업무 내용 수정" onclick="'+t.editFn+'">✎</button>':'')+
-        (own?'<span style="flex:0 0 auto;font-size:11px;font-weight:800;color:'+kc+';white-space:nowrap">@'+esc(own)+'</span>':'')+
-        '<span style="flex:0 0 auto;font-size:11px;font-weight:800;color:'+urg+';white-space:nowrap;text-align:right">'+esc(t.due.slice(5))+' · '+ddLbl+'</span>'+
+        (own?'<span style="flex:0 0 auto;font-size:12px;font-weight:800;color:'+kc+';white-space:nowrap">@'+esc(own)+'</span>':'')+
+        '<span style="flex:0 0 auto;font-size:12px;font-weight:800;color:'+urg+';white-space:nowrap;text-align:right">'+esc(t.due.slice(5))+' · '+ddLbl+'</span>'+
       '</div>'+
       /* ② 타임라인 막대 줄 */
       '<div style="position:relative;height:16px;background:#F4F6FA;border-radius:6px">'+todayLine+
@@ -12482,11 +12482,15 @@ function eventCardsHtml(){
     var _att=(ev.attendees&&ev.attendees.length)?('👥 '+ev.attendees.length+'명'+(ev.target?' · '+esc(ev.target):'')):(ev.target?('👥 '+esc(ev.target)):'');
     var meta=[_drange?('🗓 '+_drange+(ev.time?' '+esc(ev.time):'')):'', ev.place?('📍 '+esc(ev.place)):'', _att].filter(Boolean).join('&nbsp;&nbsp;&nbsp;');
     var canceled=(ev.status==="취소");
-    var compact=evCompactOn();
-    return '<div style="border:1px solid var(--line);border-radius:12px;padding:'+(compact?'8px 12px':'11px 13px')+';margin-bottom:'+(compact?'5px':'8px')+';cursor:pointer'+(canceled?';opacity:.6;background:#FAFAFB':'')+'" onclick="openEvent(\''+ev.id+'\')">'+
-      '<div style="display:flex;align-items:center;gap:7px;'+(compact?'':'flex-wrap:wrap')+'">'+
+    var done=(ev.status==="완료");
+    /* 완료된 행사는 그 항목만 자동으로 '간략히'로 보이고, 흐리게(채도↓)·작게 표시해 덜 눈에 띄게 */
+    var compact=evCompactOn() || done;
+    var dim = canceled ? ';opacity:.6;background:#FAFAFB' : (done ? ';opacity:.5;background:#FCFCFD' : '');
+    var titleFs = done ? '12.5px' : '14.5px';
+    return '<div style="border:1px solid var(--line);border-radius:12px;padding:'+(compact?'8px 12px':'11px 13px')+';margin-bottom:'+(compact?'5px':'8px')+';cursor:pointer'+dim+'" onclick="openEvent(\''+ev.id+'\')">'+
+      '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+   /* 항상 줄바꿈 허용 → 간략히에서도 제목 전체 표시 */
         (ev.type?'<span style="background:'+tc+'1f;color:'+tc+';border-radius:8px;padding:2px 8px;font-size:11px;font-weight:800;white-space:nowrap;flex:none">'+esc(ev.type)+'</span>':'')+
-        '<b style="font-size:14.5px'+(compact?';overflow:hidden;text-overflow:ellipsis;white-space:nowrap':'')+(canceled?';text-decoration:line-through;color:var(--sub)':'')+'">'+esc(ev.title||"(제목 없음)")+'</b>'+
+        '<b style="font-size:'+titleFs+';word-break:keep-all'+(canceled?';text-decoration:line-through;color:var(--sub)':'')+'">'+esc(ev.title||"(제목 없음)")+'</b>'+
         '<span style="background:'+stCol+'1f;color:'+stCol+';border-radius:8px;padding:2px 8px;font-size:11px;font-weight:800;white-space:nowrap;flex:none">'+esc(ev.status||"준비중")+'</span>'+
         (ev.date?workDueBadge(ev.date):'')+
         '<span style="flex:1"></span>'+
