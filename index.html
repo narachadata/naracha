@@ -646,7 +646,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.80";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.84";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -6844,7 +6844,7 @@ function renderWeekTab(){
    '<button class="tool hasTip" data-tip="지난주(1주 전) 시간표를 이번 주로 복사\n미리 배치한 이름은 그대로 유지됩니다" onclick="copyPrevWeek()">📋<b style="font-size:11.5px;margin-left:1px">1</b></button>'+
    '<button class="tool hasTip" data-tip="2주 전 시간표를 이번 주로 복사\n심사 주간 다음 주에 정규 반원을 되살릴 때 유용" onclick="copyWeeksAgo(2)">📋<b style="font-size:11.5px;margin-left:1px">2</b></button>'+
         (state.dayView?'':'<button class="tool hasTip'+(state.fitW?' on':'')+'" data-tip="'+(state.fitW?'화면 너비에 맞춰 보기 (현재 켜짐)':'표를 넓게 펼쳐서 보기')+'" onclick="toggleFitW()" style="padding:6px 9px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 7 3 12 8 17"></polyline><polyline points="16 7 21 12 16 17"></polyline><line x1="3" y1="12" x2="21" y2="12"></line></svg></button>')+
-   '<button class="tool hasTip" data-tip="결석 예정 등록·관리" onclick="openAbsM()">🗓</button>'+
+   '<button class="tool hasTip" data-tip="결석 예정 등록·관리" onclick="openAbsM()" style="background:var(--red);border-color:var(--red);color:#fff;font-weight:800;font-size:12px;padding:6px 13px;box-shadow:0 1px 3px rgba(210,51,42,.28)">🗓 결석 관리</button>'+
    '<button class="tool hasTip'+(state.pastEdit?' warn':'')+'" data-tip="지난 날짜 출결 수정 잠금/해제'+(state.pastEdit?'\n현재: 수정 켜짐':'\n현재: 잠김')+'" onclick="togglePastEdit()">'+(state.pastEdit?'🔓':'🔒')+'</button>'+
    /* ⚙ 시간표 설정 — 아이콘만 · 마우스 올리면 툴팁 팝업 */
    '<button class="tool schedGear hasTip" data-tip="시간표 설정 (수업유형·반 이름·사범 등)" aria-label="시간표 설정" onclick="setAttTab(\'시간표 설정\')" style="padding:6px 9px;display:inline-flex;align-items:center;justify-content:center">'+
@@ -7091,7 +7091,19 @@ window.cycleAttend=function(key, name){
   var wasP=prev.s==="출석", nowP=next==="출석";
   /* 출처 표시: 지도진이 화면에서 찍은 출석은 coach. 단, 단말기(self) 출석은 그대로 보존 */
   var byTag = (next==="출석") ? (prev.by==="self" ? "self" : "coach") : (prev.by||"");
-  c.marks[name]={ s:next, k:prev.k, m:prev.m||"", t:Date.now(), by:byTag };
+  var memo = prev.m||"";
+  var cd=dateOfKey(key, curWeek());
+  var future=cd>today();
+  /* 미래 날짜에 '미리 결석 처리'할 때는 사유 메모를 입력받는다 (결석 관리 등록과 동일하게 사유 기록·복사 유지)
+     오늘·지난 날짜의 결석 체크는 빠르게(메모창 없이) 처리 */
+  if(next==="결석" && future){
+    var inp=prompt(name+" 님을 "+cd+"에 미리 결석 처리합니다.\n결석 사유·메모를 입력하세요. (예: 가족여행, 병원, 학원)\n※ 비워두면 사유 없이 결석 처리됩니다.", memo);
+    if(inp===null) return;                 /* 취소 → 상태 변경 안 함 */
+    memo = inp.trim();
+  }
+  c.marks[name]={ s:next, k:prev.k, m:memo, t:Date.now(), by:byTag };
+  /* 미래 결석은 결석 관리 리스트에도 표시(추가) / 결석 해제 시 리스트에서도 제거 */
+  if(future) setChipAbs(name, cd, next==="결석", memo);
   reconcileAcc();   /* 출석 확정(진파랑) 즉시 수련횟수 정확 반영 */
   touchWeek(); render();
 };
@@ -7229,9 +7241,21 @@ function absOf(name, date){
   var arr=(state.absences||{})[name]||[];
   for(var i=0;i<arr.length;i++){
     var e=arr[i];
-    if(!e.del && e.from<=date && date<=e.to) return e;
+    /* src="chip"(시간표 미리 결석)은 결석 관리 리스트 표시용일 뿐 — 칩 토글 자유·회계 무관하도록 여기서 제외 */
+    if(!e.del && e.src!=="chip" && e.from<=date && date<=e.to) return e;
   }
   return null;
+}
+/* 시간표에서 미리 결석 체크한 날짜를 결석 관리 리스트에도 올림 (src="chip") · 회계 홀딩(src="hold")과 분리 */
+function setChipAbs(name, date, on, reason){
+  if(!name||!date) return;
+  if(!state.absences) state.absences={};
+  var arr=state.absences[name]=state.absences[name]||[];
+  var e=arr.filter(function(x){ return x.src==="chip" && x.from===date; })[0];
+  if(on){
+    if(e){ e.reason=(reason||"").trim(); e.del=false; e.to=date; e.open=false; e.t=Date.now(); }
+    else { arr.push({ hid:_newHid(), from:date, to:date, open:false, reason:(reason||"").trim(), src:"chip", t:Date.now() }); }
+  } else if(e && !e.del){ e.del=true; e.t=Date.now(); }
 }
 function dateOfKey(key, wk){
   var idx={mon:0,tue:1,wed:2,thu:3,fri:4,sat:5}[key.split("-")[0]];
@@ -7267,9 +7291,22 @@ window.startEditHold=function(name, hid){
 };
 /* 수정 취소 → 새 홀딩 추가 모드로 */
 window.absNewMode=function(){ state.absM.editHid=null; state.absM.from=today(); state.absM.to=""; state.absM.reason=""; render(); };
+/* 특정 날짜의 시간표 '미리 결석'(칩) 표시를 지움 (그 주 해당 날짜 셀에서) */
+function _clearChipMarkOn(name, date){
+  var wk=mondayOf(date); var wd=state.weeks&&state.weeks[wk];
+  if(!wd||!wd.cells) return;
+  for(var key in wd.cells){
+    if(dateOfKey(key, wk)!==date) continue;
+    var mks=wd.cells[key].marks||{};
+    if(mks[name] && mks[name].s==="결석"){ mks[name]={ s:"", k:mks[name].k, m:mks[name].m||"", t:Date.now(), by:"" }; }
+  }
+}
 window.delAbsHid=function(name, hid){
   if(!confirm(name+" 님의 이 결석 예정을 삭제할까요?")) return;
-  removeHoldEntry(name, hid); persistAtt(); persist(); render();
+  var e=((state.absences||{})[name]||[]).filter(function(x){return x.hid===hid;})[0];
+  if(e && e.src==="chip"){ _clearChipMarkOn(name, e.from); e.del=true; e.t=Date.now(); }   /* 시간표 미리결석: 칩 표시도 함께 해제 */
+  else { removeHoldEntry(name, hid); }
+  persistAtt(); persist(); render();
 };
 window.saveAbs=function(){
   var m=state.absM;
@@ -7355,10 +7392,12 @@ window.copyWeeksAgo=function(n){
     "· 정규 배치 "+total+"명 복사 (보강·체험 "+skipped+"명은 제외)\n"+
     "· 수업유형·지도진·시간별 사범 이니셜도 함께 복사\n"+
     "· 결석 예정 수련생은 자동으로 '결석 · 사유' 표시\n"+
+    "· 직접 결석 체크된 정규 인원도 결석으로 복사(결석 관리 리스트에도 표시)\n"+
+    "· 이번 주에 '심사'로 설정한 시간에는 정규 출석생을 배치하지 않음\n"+
     "· 심사·국기원·대회연습 배치는 '출석(정규)'으로 복사\n"+
-    "· 이번 주에 미리 배치해 둔 보강·체험 등 모든 이름은 그대로 유지됩니다\n"+
-    "· 그 외 출석/결석 표시는 새로 시작")) return;
-  var added=0, heldMarked=0;
+    "· 이번 주에 미리 배치해 둔 이름(보강·체험·심사 배치 등)은 모두 그대로 유지됩니다\n"+
+    "· 그 외 출석 표시는 새로 시작")) return;
+  var added=0, heldMarked=0, absCarried=0;
   for(var key2 in prev.cells){
     var pc2=prev.cells[key2];
     var cur=wcell(key2);
@@ -7369,6 +7408,8 @@ window.copyWeeksAgo=function(n){
       if(!cur.lvT) cur.lvT=["","",""];
       for(var lt=0; lt<3; lt++){ if(pc2.lvT[lt] && !cur.lvT[lt]) cur.lvT[lt]=pc2.lvT[lt]; }
     }
+    /* ★ 이번 주에 '심사'로 미리 설정한 시간에는 정규 출석생을 배치하지 않음 (그 시간은 심사자용 · 셀 설정만 복사) */
+    if(cur.cat==="심사"){ continue; }
     /* ② 이름 배치 복사 */
     for(var li2=0; li2<3; li2++){
       (pc2.lv[li2]||[]).forEach(function(nm){
@@ -7384,6 +7425,12 @@ window.copyWeeksAgo=function(n){
           var reason=(ab.reason?ab.reason+' · ':'')+(ab.open?'결석예정 '+ab.from+'~미정':'결석예정 '+ab.from+'~'+ab.to);
           cur.marks[nm]={ k:(mk.k||"정규"), s:"결석", m:reason, t:Date.now() };
           heldMarked++;
+        } else if(mk.s==="결석"){
+          /* 결석 관리(홀딩)에 없지만 그 주에 직접 결석 체크된 정규 인원 → 복사할 때도 결석 유지
+             (그냥 배치만 하고 결석 처리한 장기 미참여자를 매주 다시 표시하지 않아도 되게) */
+          cur.marks[nm]={ k:(mk.k||"정규"), s:"결석", m:(mk.m||""), t:Date.now() };
+          var _dcd=dateOfKey(key2, wk); if(_dcd>today()) setChipAbs(nm, _dcd, true, mk.m||"");   /* 미래 날짜면 결석 관리 리스트에도 표시 */
+          absCarried++;
         } else if(mk.k==="관리"){
           cur.marks[nm]={ k:"관리", m:mk.m||"", t:Date.now() };
         }
@@ -7392,7 +7439,7 @@ window.copyWeeksAgo=function(n){
     }
   }
   touchWeek();
-  alert("✅ "+lbl+" 복사 완료 — "+added+"명 배치"+(heldMarked?" · 결석 예정 "+heldMarked+"건 자동 결석 처리":"")+
+  alert("✅ "+lbl+" 복사 완료 — "+added+"명 배치"+(heldMarked?" · 결석 예정 "+heldMarked+"건 자동 결석 처리":"")+(absCarried?" · 직접 결석 "+absCarried+"명 결석 유지":"")+
         "\n(수업유형·지도진·사범 이니셜 포함 · 미리 배치한 이름 유지 · 그 외 출석 표시는 새로 시작)");
   render();
 };
@@ -7591,6 +7638,7 @@ window.removePlace=function(){
   var wasP=(c.marks[m.name]||{}).s==="출석";
   if(((c.marks[m.name]||{}).m||"").trim()) noteSync(m.name, m.key, null);
   for(var i=0;i<3;i++){ var ix=c.lv[i].indexOf(m.name); if(ix>-1) c.lv[i].splice(ix,1); }
+  var _cd=dateOfKey(m.key, curWeek()); if(_cd>today()) setChipAbs(m.name, _cd, false);   /* 미래 결석 배치 제거 → 결석 관리 리스트에서도 제거 */
   delete c.marks[m.name];
   if(!c.del) c.del={};
   c.del[m.name]=Date.now();
@@ -13484,9 +13532,9 @@ function render(){
     var cur=[];
     var A=state.absences||{};
     Object.keys(A).forEach(function(an){ (A[an]||[]).forEach(function(e){
-      if(e.del || e.src!=="hold") return;
+      if(e.del || (e.src!=="hold" && e.src!=="chip")) return;   /* 홀딩 + 시간표 미리결석(chip) 함께 표시 */
       if(!e.open && e.to < _td) return;
-      cur.push({n:an,hid:e.hid,from:e.from,to:e.to,open:!!e.open,reason:e.reason||""});
+      cur.push({n:an,hid:e.hid,from:e.from,to:e.to,open:!!e.open,reason:e.reason||"",src:e.src});
     }); });
     var openN=cur.filter(function(e){return e.open;}).length;
     var absSort=state.absSort||"endAsc";
@@ -13571,12 +13619,14 @@ function render(){
         '<div style="max-height:52vh;overflow:auto;padding-right:4px">'+
         curShown.slice(0,80).map(function(e){
           var editing=(am.editHid===e.hid);
-          return '<div style="display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:10px;margin-bottom:5px;background:'+(editing?'#FFF7E8':'#FBFCFE')+';border:1px solid '+(editing?'#F5D9A8':'#EEF2F7')+'">'+
+          var isChip=(e.src==="chip");
+          return '<div style="display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:10px;margin-bottom:5px;background:'+(editing?'#FFF7E8':(isChip?'#F5F8FF':'#FBFCFE'))+';border:1px solid '+(editing?'#F5D9A8':(isChip?'#D8E4F7':'#EEF2F7'))+'">'+
             '<b style="flex:0 0 84px;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:var(--blue)" title="이 원생 선택" onclick="absPick(\''+esc(e.n).replace(/'/g,"\\'")+'\')">'+esc(e.n)+'</b>'+
             '<span style="flex:0 0 auto">'+ddayBadge(e)+'</span>'+
             periodPill(e)+
+            (isChip?'<span style="flex:0 0 auto;font-size:10.5px;font-weight:800;color:#2B5FB8;background:#E7EFFC;border:1px solid #CFE0FA;border-radius:8px;padding:2px 7px" title="시간표에서 미리 결석 체크한 건">🗓 시간표</span>':'')+
             '<span style="flex:1;min-width:0">'+reasonPill(e.reason)+'</span>'+
-            '<button onclick="startEditHold(\''+esc(e.n).replace(/'/g,"\\'")+'\',\''+e.hid+'\')" style="flex:0 0 auto;border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:10px;padding:3px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit">수정</button>'+
+            (isChip?'' : '<button onclick="startEditHold(\''+esc(e.n).replace(/'/g,"\\'")+'\',\''+e.hid+'\')" style="flex:0 0 auto;border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:10px;padding:3px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit">수정</button>')+
             '<button onclick="delAbsHid(\''+esc(e.n).replace(/'/g,"\\'")+'\',\''+e.hid+'\')" style="flex:0 0 auto;border:1px solid #F1C0C0;background:#fff;color:var(--red);border-radius:10px;padding:3px 9px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit">해제</button>'+
             '</div>';
         }).join("")+
