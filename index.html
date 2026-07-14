@@ -646,7 +646,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.84";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.85";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -7220,6 +7220,12 @@ window.dropChip=function(ev, toKey, toLi){
     to.marks[d.name]=Object.assign({}, mk, { t:Date.now() });   /* 출석 상태·메모까지 함께 이동 */
     delete from.marks[d.name];
     if((mk.m||"").trim()){ noteSync(d.name, d.key, null); noteSync(d.name, toKey, mk.m); }
+    /* 미래 '미리 결석' 배치를 다른 날로 옮기면 결석 관리 리스트도 따라 이동 */
+    if(mk.s==="결석"){
+      var _od=dateOfKey(d.key, curWeek()), _nd=dateOfKey(toKey, curWeek());
+      if(_od>today()) setChipAbs(d.name, _od, false);
+      if(_nd>today()) setChipAbs(d.name, _nd, true, mk.m||"");
+    }
   }
   if(!from.del) from.del={}; from.del[d.name]=Date.now();       /* 기기 간 병합에서 원래 자리 재출현 방지 */
   if(to.del) delete to.del[d.name];
