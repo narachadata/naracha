@@ -646,7 +646,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.79";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.80";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -13190,7 +13190,9 @@ function __isEditingField(el){ if(!el) return false; var tg=el.tagName, ty=(el.t
 /* 스크롤 활동 추적: 사용자가 스크롤 중일 때 배경 동기화 렌더를 미뤄 '위로 튀는' 현상 방지 */
 if(!window.__scrollTrackHooked){
   window.__scrollTrackHooked=true; window.__lastScrollT=0;
-  window.addEventListener("scroll", function(){ window.__lastScrollT=Date.now(); }, {passive:true});
+  /* capture:true → 팝업(학적부 등) 내부 스크롤 컨테이너의 스크롤까지 잡음(스크롤 이벤트는 버블링 안 되므로 캡처로 받음) */
+  window.addEventListener("scroll", function(){ window.__lastScrollT=Date.now(); }, {passive:true, capture:true});
+  window.addEventListener("touchmove", function(){ window.__lastScrollT=Date.now(); }, {passive:true});   /* 모바일: 손가락 스크롤 중 즉시 감지 */
 }
 function __userBusy(){
   if(__isEditingField(document.activeElement)) return true;            /* 입력칸 편집 중 */
@@ -13248,9 +13250,12 @@ function render(){
     if(__idx>-1) __fi={ i:__idx, sig:__sig, nth:__nth, s:__ae.selectionStart, e:__ae.selectionEnd };
   }
   window.__restoreFocus=__fi;
-  /* ③ 시간표 스크롤 위치 기억 → 다시 그린 뒤 복원 (드롭다운·이니셜·배치 시 위로 튀는 것 방지) */
+  /* ③ 시간표·팝업 스크롤 위치 기억 → 다시 그린 뒤 복원 (드롭다운·이니셜·배치·동기화 시 위로 튀는 것 방지) */
   var __wsEl=document.getElementById("weekScroll");
-  window.__restoreScroll={ y:window.scrollY||0, wt:__wsEl?__wsEl.scrollTop:null, wl:__wsEl?__wsEl.scrollLeft:null };
+  var __mBox=document.querySelector(".stuMBox");                 /* 학적부 팝업 내부 스크롤 */
+  var __mBack=__mBox?__mBox.parentElement:null;                  /* 팝업 배경(고정) 스크롤 */
+  window.__restoreScroll={ y:window.scrollY||0, wt:__wsEl?__wsEl.scrollTop:null, wl:__wsEl?__wsEl.scrollLeft:null,
+    mt:(__mBox?__mBox.scrollTop:null), mbt:(__mBack?__mBack.scrollTop:null) };
 
   /* 비밀번호 잠금 확인 */
   var pwHash=localStorage.getItem("naracha_pw_hash");
@@ -15530,6 +15535,11 @@ function __applyRestore(){
   if(__rs){
     var __ws2=document.getElementById("weekScroll");
     if(__ws2 && __rs.wt!=null){ __ws2.scrollTop=__rs.wt; __ws2.scrollLeft=__rs.wl||0; }
+    /* 학적부 팝업 스크롤 복원 (재생성된 새 요소에 적용) */
+    if(__rs.mt!=null){ var __mBox2=document.querySelector(".stuMBox");
+      if(__mBox2){ __mBox2.scrollTop=__rs.mt; if(__mBox2.parentElement && __rs.mbt!=null) __mBox2.parentElement.scrollTop=__rs.mbt; } }
+    /* 모바일 학적부 팝업(바텀시트) 스크롤 복원 */
+    if(__rs.ms!=null){ var __ms2=document.getElementById("moStuScroll"); if(__ms2) __ms2.scrollTop=__rs.ms; }
     if(Math.abs((window.scrollY||0)-__rs.y)>2) window.scrollTo(0, __rs.y);
     window.__restoreScroll=null;
   }
@@ -15749,6 +15759,9 @@ function renderPhone(){
     '<div id="moScroll" style="padding:14px 14px calc(84px + env(safe-area-inset-bottom));max-width:560px;margin:0 auto">'+body+'</div>'+
     phoneNav()+ overlay +
   '</div>';
+  /* 다시 그리기 전에 스크롤 위치 기억 → 재생성 후 복원 (모바일 학적부 팝업이 위로 튀는 것 방지) */
+  var __msEl=document.getElementById("moStuScroll");
+  window.__restoreScroll={ y:window.scrollY||0, wt:null, wl:null, mt:null, mbt:null, ms:(__msEl?__msEl.scrollTop:null) };
   root.innerHTML=h;
   try{ if(typeof __applyRestore==="function") __applyRestore(); }catch(e){}
 }
@@ -15823,7 +15836,7 @@ function phoneStuOverlay(name){
     (guards?'<div style="margin-top:12px"><div style="font-size:12.5px;color:var(--sub);font-weight:800;margin-bottom:2px">보호자 연락처</div>'+guards+'</div>':'')+
     '<div style="text-align:center;font-size:10.5px;color:#9AA0A8;margin-top:16px">정보 수정은 도장 PC에서만 가능합니다</div>';
   return '<div onclick="closeMoStu()" style="position:fixed;inset:0;background:rgba(20,22,26,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center">'+
-    '<div onclick="event.stopPropagation()" style="background:#fff;width:100%;max-width:560px;border-radius:18px 18px 0 0;max-height:88vh;overflow:auto;padding:16px 18px calc(22px + env(safe-area-inset-bottom))">'+
+    '<div id="moStuScroll" onclick="event.stopPropagation()" style="background:#fff;width:100%;max-width:560px;border-radius:18px 18px 0 0;max-height:88vh;overflow:auto;padding:16px 18px calc(22px + env(safe-area-inset-bottom))">'+
       '<div style="display:flex;justify-content:flex-end"><button onclick="closeMoStu()" style="background:none;border:none;font-size:24px;color:var(--sub);cursor:pointer">×</button></div>'+
       body+'</div></div>';
 }
