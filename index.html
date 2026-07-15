@@ -647,7 +647,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.95";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.97";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -7550,9 +7550,10 @@ window.sigQInput=function(v){
   __sigQTimer=setTimeout(function(){ sigQSave(); }, 900);
 };
 window.sigQSave=function(){ if(__sigQTimer){ clearTimeout(__sigQTimer); __sigQTimer=null; } state.sigTT=Date.now(); persistAtt(); };
-window.openSigBank=function(){ state.sigBank={year:"전체",order:"desc"}; render(); };
+window.openSigBank=function(){ state.sigBank={year:"전체",month:"전체",order:"desc"}; render(); };
 window.closeSigBank=function(){ state.sigBank=null; render(); };
-window.sigBankYear=function(y){ if(!state.sigBank)state.sigBank={}; state.sigBank.year=y; render(); };
+window.sigBankYear=function(y){ if(!state.sigBank)state.sigBank={}; state.sigBank.year=y; state.sigBank.month="전체"; render(); };
+window.sigBankMonth=function(m){ if(!state.sigBank)state.sigBank={}; state.sigBank.month=m; render(); };
 window.sigBankOrder=function(){ if(!state.sigBank)state.sigBank={}; state.sigBank.order=(state.sigBank.order==="asc")?"desc":"asc"; render(); };
 /* 한 학생의 질문&대답 이력 (최신 주 먼저) */
 function sigListFor(name){
@@ -7582,8 +7583,12 @@ function renderSigBank(){
   var recent=allWks.filter(function(wk){ return wk<=curMon && wk>=lo; }).sort(function(a,b){return b.localeCompare(a);});
   /* 연도 목록 */
   var years=[]; allWks.forEach(function(wk){ var y=wk.slice(0,4); if(years.indexOf(y)<0) years.push(y); }); years.sort();
-  /* 본문 목록 (연도 필터 + 정렬) */
-  var list=allWks.filter(function(wk){ return selY==="전체" || wk.slice(0,4)===selY; })
+  var selM=cfg.month||"전체";
+  /* 선택 연도에 존재하는 월 목록 */
+  var months=[]; allWks.forEach(function(wk){ if(selY==="전체"||wk.slice(0,4)===selY){ var mo=wk.slice(5,7); if(months.indexOf(mo)<0) months.push(mo); } }); months.sort();
+  if(selM!=="전체" && months.indexOf(selM)<0) selM="전체";
+  /* 본문 목록 (연도·월 필터 + 정렬) */
+  var list=allWks.filter(function(wk){ return (selY==="전체"||wk.slice(0,4)===selY) && (selM==="전체"||wk.slice(5,7)===selM); })
     .sort(function(a,b){ return order==="asc"? a.localeCompare(b) : b.localeCompare(a); });
   var body="";
   /* 최근 한 달 섹션 */
@@ -7593,17 +7598,19 @@ function renderSigBank(){
       recent.map(function(wk){ return _sigCard(wk,Q,A,true); }).join('')+
     '</div>';
   }
-  /* 필터/정렬 바 */
-  var yBtn=function(y,lab){ var on=(selY===y); return '<button onclick="sigBankYear(\''+y+'\')" style="border:1.5px solid '+(on?"#2B5FB8":"#D6DEE9")+';background:'+(on?"#2B5FB8":"#fff")+';color:'+(on?"#fff":"#33507D")+';border-radius:16px;padding:4px 11px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">'+lab+'</button>'; };
-  var bar='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;position:sticky;top:0;background:#F5F5F7;padding:2px 0 8px;z-index:1">'+
-    '<span style="font-size:11.5px;color:var(--sub);font-weight:800;margin-right:2px">연도</span>'+
-    yBtn("전체","전체")+years.map(function(y){return yBtn(y,y+"년");}).join('')+
+  /* 필터/정렬 바 (연도·월 = 드롭다운) */
+  var selCss='border:1.5px solid #C7D3E3;background:#fff;color:#26313F;border-radius:9px;padding:6px 10px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer';
+  var yOpts='<option value="전체"'+(selY==="전체"?" selected":"")+'>전체 연도</option>'+years.map(function(y){return '<option value="'+y+'"'+(selY===y?" selected":"")+'>'+y+'년</option>';}).join('');
+  var mOpts='<option value="전체"'+(selM==="전체"?" selected":"")+'>전체 월</option>'+months.map(function(mo){return '<option value="'+mo+'"'+(selM===mo?" selected":"")+'>'+Number(mo)+'월</option>';}).join('');
+  var bar='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;position:sticky;top:0;background:#F5F5F7;padding:2px 0 8px;z-index:1">'+
+    '<select onchange="sigBankYear(this.value)" style="'+selCss+'">'+yOpts+'</select>'+
+    '<select onchange="sigBankMonth(this.value)" style="'+selCss+'">'+mOpts+'</select>'+
     '<span style="flex:1"></span>'+
-    '<button onclick="sigBankOrder()" style="border:1.5px solid #D6DEE9;background:#fff;color:#33507D;border-radius:16px;padding:4px 11px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">'+(order==="asc"?"과거순 ↑":"최신순 ↓")+'</button>'+
+    '<button onclick="sigBankOrder()" style="border:1.5px solid #C7D3E3;background:#fff;color:#33507D;border-radius:9px;padding:6px 12px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">'+(order==="asc"?"과거순 ↑":"최신순 ↓")+'</button>'+
   '</div>';
   /* 연·월 그룹 목록 */
   var listBody="";
-  if(!list.length){ listBody='<div style="color:var(--sub);font-size:13.5px;padding:24px 0;text-align:center">해당 연도의 질문이 없습니다.</div>'; }
+  if(!list.length){ listBody='<div style="color:var(--sub);font-size:13.5px;padding:24px 0;text-align:center">해당 조건의 질문이 없습니다.</div>'; }
   else { var lastYM="";
     list.forEach(function(wk){ var ym=wk.slice(0,7);
       if(ym!==lastYM){ lastYM=ym; listBody+='<div style="font-size:13.5px;font-weight:900;color:#2B5FB8;margin:16px 0 6px;border-bottom:2px solid #D9E4F5;padding-bottom:4px">'+wk.slice(0,4)+'년 '+Number(wk.slice(5,7))+'월</div>'; }
@@ -7616,7 +7623,7 @@ function renderSigBank(){
     '<div style="padding:16px 18px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px">'+
       '<span style="font-size:17px;font-weight:900">📚 시그니처 질문모음</span><span style="font-size:11.5px;color:var(--sub)">인성덕목·연·월·주별 누적</span><span style="flex:1"></span>'+
       '<button class="chip" onclick="closeSigBank()">닫기</button></div>'+
-    '<div style="overflow:auto;padding:10px 18px 18px">'+body+bar+listBody+'</div>'+
+    '<div id="sigBankScroll" style="overflow:auto;padding:10px 18px 18px">'+body+bar+listBody+'</div>'+
     '</div></div>';
 }
 /* 출석 처리 창 단축키: Enter=저장 · Esc=취소 · Ctrl/Cmd+E=배치 삭제 (한영·대소문자 무관: 물리 키 위치 기준) */
@@ -13980,8 +13987,9 @@ function render(){
   var __wsEl=document.getElementById("weekScroll");
   var __mBox=document.querySelector(".stuMBox");                 /* 학적부 팝업 내부 스크롤 */
   var __mBack=__mBox?__mBox.parentElement:null;                  /* 팝업 배경(고정) 스크롤 */
+  var __sbEl=document.getElementById("sigBankScroll");          /* 시그니처 질문모음 팝업 내부 스크롤 */
   window.__restoreScroll={ y:window.scrollY||0, wt:__wsEl?__wsEl.scrollTop:null, wl:__wsEl?__wsEl.scrollLeft:null,
-    mt:(__mBox?__mBox.scrollTop:null), mbt:(__mBack?__mBack.scrollTop:null) };
+    mt:(__mBox?__mBox.scrollTop:null), mbt:(__mBack?__mBack.scrollTop:null), sb:(__sbEl?__sbEl.scrollTop:null) };
 
   /* 비밀번호 잠금 확인 */
   var pwHash=localStorage.getItem("naracha_pw_hash");
@@ -16268,6 +16276,8 @@ function __applyRestore(){
       if(__mBox2){ __mBox2.scrollTop=__rs.mt; if(__mBox2.parentElement && __rs.mbt!=null) __mBox2.parentElement.scrollTop=__rs.mbt; } }
     /* 모바일 학적부 팝업(바텀시트) 스크롤 복원 */
     if(__rs.ms!=null){ var __ms2=document.getElementById("moStuScroll"); if(__ms2) __ms2.scrollTop=__rs.ms; }
+    /* 시그니처 질문모음 팝업 스크롤 복원 */
+    if(__rs.sb!=null){ var __sb2=document.getElementById("sigBankScroll"); if(__sb2) __sb2.scrollTop=__rs.sb; }
     if(Math.abs((window.scrollY||0)-__rs.y)>2) window.scrollTo(0, __rs.y);
     window.__restoreScroll=null;
   }
