@@ -7,6 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="icon" type="image/png" href="data:image/png;base64,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">
 <link rel="apple-touch-icon" href="data:image/png;base64,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">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
@@ -646,7 +647,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.91";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.93";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -13101,7 +13102,7 @@ window.importMeasureXlsx=function(input){
   };
   reader.readAsArrayBuffer(f);
 };
-window.setMeasSel=function(id){ state.measSel=id||null; state.measView=null; if(id&&measuresData()[id]) measAutoAll(measuresData()[id]); render(); };
+window.setMeasSel=function(id){ state.measSel=id||null; state.measView=null; state.measReport=false; if(id&&measuresData()[id]) measAutoAll(measuresData()[id]); render(); };
 window.delMeasureSession=function(id){ var m=measuresData(); if(!m[id]) return; if(!confirm('"'+m[id].title+'" 측정 회차를 삭제할까요?\n(이 회차의 측정 기록이 모두 지워집니다)')) return; delete m[id]; if(!state.measTomb)state.measTomb={}; state.measTomb[id]=Date.now(); state.measT=Date.now(); measPersist(); state.measSel=null; render(); };
 window.openMeasFor=function(name){ state.topCat="측정"; state.measSel=null; render(); };
 function measCell(row,catKw,subKw){ for(var k in row.cells){ var parts=k.split(""); if(parts[0].indexOf(catKw)>=0 && (!subKw||parts[1].indexOf(subKw)>=0)) return row.cells[k]; } return ""; }
@@ -13151,10 +13152,10 @@ window.openMeasInput=function(kind){
   var id=year+"-"+half+"-"+kind;
   if(!m[id]){ m[id]={ id:id, year:year, half:half, kind:kind, title:year+"년 "+(half==="H1"?"전반기":"후반기")+" "+kind, cats:_measTplCats(kind), rows:[], n:0, matched:0, date:today(), _t:Date.now() }; state.measT=Date.now(); measPersist(); }
   else if(!m[id].cats||!m[id].cats.length){ m[id].cats=_measTplCats(kind); }
-  state.measSel=id; state.measInput=true; state.measView=null; state.measFocusRow=null; render();
+  state.measSel=id; state.measInput=true; state.measView=null; state.measReport=false; state.measFocusRow=null; render();
 };
 window.closeMeasInput=function(){ state.measInput=false; state.measFocusRow=null; render(); };
-window.openMeasInputExisting=function(id){ var s=measuresData()[id]; if(!s) return; if(!s.cats||!s.cats.length) s.cats=_measTplCats(s.kind); measAutoAll(s); state.measSel=id; state.measInput=true; state.measView=null; state.measFocusRow=null; render(); };
+window.openMeasInputExisting=function(id){ var s=measuresData()[id]; if(!s) return; if(!s.cats||!s.cats.length) s.cats=_measTplCats(s.kind); measAutoAll(s); state.measSel=id; state.measInput=true; state.measView=null; state.measReport=false; state.measFocusRow=null; render(); };
 window.measSetCell=function(id,ri,ci,si,v){ var s=measuresData()[id]; if(!s||!s.rows[ri])return; var cat=(s.cats||[])[ci]; if(!cat)return; var su=cat.subs[si]; if(!su)return; v=String(v); if(v.trim()==="") delete s.rows[ri].cells[su.key]; else s.rows[ri].cells[su.key]=v.trim(); s._t=Date.now(); state.measT=Date.now(); if(s.kind==="체력"){ measAutoRow(s,ri); measSyncAutoDom(s,ri); } measSaveDebounced(); };
 window.measSetField=function(id,ri,f,v){ var s=measuresData()[id]; if(!s||!s.rows[ri])return; s.rows[ri][f]=String(v).trim(); s._t=Date.now(); state.measT=Date.now(); measSaveDebounced(); };
 /* ── 체력·체격 표준 점수 자동환산 (PAPS 공식 배점) ──
@@ -13277,9 +13278,383 @@ function renderMeasInput(s){
     '<div style="font-size:11.5px;color:var(--sub);margin-top:9px">입력은 자동 저장됩니다.'+(s.kind==="체력"?' <b style="color:#1E7B3C">등급</b>을 넣으면 <b>점수·종합점수·종합등급</b>이 자동 계산됩니다.':'')+' 완료 후 <b>⬇ 엑셀파일 저장</b>으로 같은 양식의 엑셀을 받을 수 있어요.</div></div>';
   return h;
 }
+/* ══════════════════ 학부모 리포트 (체력·체격) ══════════════════ */
+/* 라이브러리 지연 로드 */
+var _rptLibsOK=false;
+function loadReportLibs(cb){
+  var need=[];
+  if(typeof window.jspdf==="undefined") need.push("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+  if(typeof window.html2canvas==="undefined") need.push("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+  if(typeof window.JSZip==="undefined") need.push("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+  if(!need.length){ _rptLibsOK=true; cb(true); return; }
+  var i=0; (function nx(){ if(i>=need.length){ _rptLibsOK=true; cb(true); return; } var sc=document.createElement("script"); sc.src=need[i++]; sc.onload=nx; sc.onerror=function(){ cb(false); }; document.head.appendChild(sc); })();
+}
+/* 값 읽기 */
+function _rv(row,catName,sub){ if(!row||!row.cells) return ""; return String(row.cells[_measKey(catName,sub)]||"").trim(); }
+function _rnum(v){ var n=parseFloat(String(v).replace(/[^0-9.\-]/g,"")); return isNaN(n)?null:n; }
+var RPT_BMI="비만도(비만도정밀)";
+/* 체력 항목 메타 */
+var RPT_FIT=[
+  {cat:"상지근력(악력검사)", main:"근력", detail:"악력검사", short:"근력", unit:"kg", grp:"운동발현능력"},
+  {cat:"순발력(제자리멀리뛰기)", main:"순발력", detail:"제자리멀리뛰기", short:"순발력", unit:"cm", grp:"운동발현능력"},
+  {cat:"근지구력(윗몸일으키기)", main:"근지구력", detail:"윗몸일으키기", short:"근지구력", unit:"회", grp:"운동지속능력"},
+  {cat:"심폐지구력(15m왕복오래달리기)", main:"심폐지구력", detail:"15m 왕복오래달리기", short:"심폐", unit:"회", grp:"운동지속능력"},
+  {cat:"유연성(앉아윗몸앞으로굽히기)", main:"유연성", detail:"앉아 윗몸앞으로굽히기", short:"유연성", unit:"cm", grp:"운동조정능력"}
+];
+function _rptPhoto(name,size,radius){ var r=(radius!=null?radius:12); var ph=(typeof getPhoto==="function")?getPhoto(name):null; if(ph) return '<img src="'+ph+'" style="width:'+size+'px;height:'+size+'px;border-radius:'+r+'px;object-fit:cover;object-position:top;border:2.5px solid #fff;box-shadow:0 2px 7px rgba(20,40,70,.18)">'; return '<div style="width:'+size+'px;height:'+size+'px;border-radius:'+r+'px;background:linear-gradient(140deg,#E3ECF7,#C2D2E6);display:flex;align-items:center;justify-content:center;font-size:'+Math.round(size*0.4)+'px;font-weight:800;color:#5B7AA8;border:2.5px solid #fff;box-shadow:0 2px 7px rgba(20,40,70,.15)">'+esc((name||" ").slice(0,1))+'</div>'; }
+function _gradeLabel(g){ g=String(g).replace(/[^0-9]/g,""); return ({"1":"매우 우수","2":"우수","3":"보통","4":"약함","5":"매우 약함"})[g]||"-"; }
+function _gradeColor(g){ g=String(g).replace(/[^0-9]/g,""); return ({"1":"#1E7B3C","2":"#4CAF7D","3":"#E0A020","4":"#E8637A","5":"#D6455F"})[g]||"#888"; }
+/* 소아 표준 신장·체중 (성장도표 근사치) */
+var STD_HW={
+  "남":{6:[117,21],7:[123,24],8:[128,27],9:[130.4,29.2],10:[139,34],11:[144,39],12:[151,45],13:[159,51],14:[166,57],15:[171,61]},
+  "여":{6:[116,20],7:[122,23],8:[128,26],9:[133,30],10:[140,35],11:[146,40],12:[152,45],13:[156,49],14:[159,52],15:[161,54]}
+};
+function _stdHW(gender,age){ var g=(gender==="여")?"여":"남"; var a=Math.max(6,Math.min(15,Math.round(age||9))); return STD_HW[g][a]||STD_HW[g][9]; }
+/* 인바디 저장 */
+window.setIb=function(id,ri,field,v){ var s=measuresData()[id]; if(!s||!s.rows[ri])return; s.rows[ri].ib=s.rows[ri].ib||{}; if(String(v).trim()==="") delete s.rows[ri].ib[field]; else s.rows[ri].ib[field]=String(v).trim(); s._t=Date.now(); state.measT=Date.now(); measPersist(); render(); };
+/* 리포트 열기/닫기/선택 */
+window.openMeasReport=function(id){ var s=measuresData()[id]; if(!s)return; measAutoAll(s); state.measSel=id; state.measReport=true; state.measInput=false; state.measView=null; if(!state.rptRi||!s.rows[state.rptRi]) state.rptRi=0; render(); };
+window.closeMeasReport=function(){ state.measReport=false; state.measSel=null; render(); };
+window.setRptRi=function(ri){ state.rptRi=Number(ri); render(); };
+window.rptToggle=function(ri){ state.rptChk=state.rptChk||{}; ri=String(ri); if(state.rptChk[ri]) delete state.rptChk[ri]; else state.rptChk[ri]=1; render(); };
+window.rptToggleAll=function(id){ var s=measuresData()[id]; if(!s)return; state.rptChk=state.rptChk||{}; var all=s.rows.length>0&&s.rows.every(function(r,i){return state.rptChk[String(i)];}); state.rptChk={}; if(!all){ s.rows.forEach(function(r,i){ state.rptChk[String(i)]=1; }); } render(); };
+window.toggleRptMissing=function(){ state.rptMissing=!state.rptMissing; render(); };
+
+/* ── 계산 ── */
+function rptData(s,row){
+  var d={}; d.name=row.name||""; d.gender=(row.gender==="여")?"여":"남"; d.age=_rnum(row.age)||9;
+  d.h=_rnum(_rv(row,RPT_BMI,"신장")); d.wt=_rnum(_rv(row,RPT_BMI,"몸무게"));
+  d.bmi=_rnum(_rv(row,RPT_BMI,"기록")); if(d.bmi==null && d.h && d.wt){ d.bmi=Math.round(d.wt/Math.pow(d.h/100,2)*10)/10; }
+  var ib=row.ib||{};
+  d.tbw=_rnum(ib.tbw); d.pro=_rnum(ib.pro); d.min=_rnum(ib.min); d.fat=_rnum(ib.fat); d.smm=_rnum(ib.smm); d.bfp=_rnum(ib.bfp); d.whr=_rnum(ib.whr);
+  d.hasIb=(d.fat!=null);
+  d.lbm=(d.fat!=null && d.wt!=null)?Math.round((d.wt-d.fat)*10)/10:((d.tbw!=null&&d.pro!=null&&d.min!=null)?Math.round((d.tbw+d.pro+d.min)*10)/10:null);
+  d.bmr=(d.lbm!=null)?Math.round((370+21.6*d.lbm)*10)/10:null;
+  d.kcal=(d.bmr!=null)?Math.round(d.bmr*1.235):null;
+  if(d.bfp==null && d.fat!=null && d.wt) d.bfp=Math.round(d.fat/d.wt*1000)/10;
+  /* 표준범위 */
+  var st=_stdHW(d.gender,d.age); d.stdH=st[0]; d.stdW=st[1];
+  d.stdWt=[Math.round(14.2*Math.pow(d.h/100,2)*10)/10, Math.round(19.0*Math.pow(d.h/100,2)*10)/10];
+  var bfLo=(d.gender==="여")?15:10, bfHi=(d.gender==="여")?25:20;
+  d.stdBfp=[bfLo,bfHi];
+  if(d.wt){ d.stdFat=[Math.round(bfLo/100*d.wt*10)/10, Math.round(bfHi/100*d.wt*10)/10]; }
+  d.stdSmm=[Math.round((d.stdWt[0]*0.40)*10)/10, Math.round((d.stdWt[1]*0.46)*10)/10];
+  d.stdBmi=[14.2,19.0]; d.stdWhr=[0.75,0.90];
+  /* 비만 판정: 체지방률(인바디) 우선, 없으면 BMI */
+  var cat="표준";
+  if(d.bfp!=null){ var ob=(d.gender==="남")?25:30, ov=(d.gender==="남")?20:25, sob=(d.gender==="남")?40:45;
+    if(d.bfp>=sob) cat="고도비만"; else if(d.bfp>=ob) cat="비만"; else if(d.bfp>=ov) cat="과체중"; else cat="표준"; }
+  else if(d.bmi!=null){ if(d.bmi>=d.stdBmi[1]+3) cat="고도비만"; else if(d.bmi>=d.stdBmi[1]+1) cat="비만"; else if(d.bmi>d.stdBmi[1]) cat="과체중"; else if(d.bmi<d.stdBmi[0]-1.5) cat="저체중"; else cat="표준"; }
+  if(cat==="표준" && d.bmi!=null && d.bmi<d.stdBmi[0]-1.5) cat="저체중";
+  d.cat=cat;
+  return d;
+}
+function _fmt(n,dec){ if(n==null||isNaN(n))return"—"; var r=Math.round(n*Math.pow(10,dec||0))/Math.pow(10,dec||0); return String(r); }
+
+/* ── 디자인 팔레트 ── */
+var RPT={navy:"#1F3A5F",navy2:"#2E5A87",ink:"#26313F",sub:"#8B95A4",faint:"#AEB7C4",line:"#E7ECF3",soft:"#F6F8FC",teal:"#0F8A8F",gold:"#BE9433",green:"#2E9E6A",greenSoft:"#E9F6EF",red:"#D64D6A",redSoft:"#FBEAEF",blueSoft:"#EAF1FA"};
+/* ── SVG·바 차트 ── */
+function _hBar(val,stdLo,stdHi,color){
+  if(val==null) return '<div style="height:24px;display:flex;align-items:center;color:'+RPT.faint+';font-size:11px;font-style:italic">— 미입력</div>';
+  var scale=Math.max(val,(stdHi||0))*1.35||1;
+  var w=Math.max(3,Math.min(100,val/scale*100));
+  var inR=(stdLo!=null&&stdHi!=null)?(val>=stdLo&&val<=stdHi):true;
+  var c=inR?color:RPT.red;
+  var band=(stdLo!=null)?'<div style="position:absolute;left:'+(stdLo/scale*100)+'%;width:'+((stdHi-stdLo)/scale*100)+'%;top:0;bottom:0;background:'+color+'12;border-left:1.5px dashed '+color+'70;border-right:1.5px dashed '+color+'70"></div>':'';
+  var lx=Math.min(w,80);
+  return '<div style="position:relative;height:24px;background:'+RPT.soft+';border:1px solid '+RPT.line+';border-radius:7px;overflow:hidden">'+band
+    +'<div style="position:absolute;left:0;top:0;bottom:0;width:'+w+'%;background:linear-gradient(90deg,'+c+'cc,'+c+');border-radius:6px"></div>'
+    +'<div style="position:absolute;top:50%;left:'+lx+'%;transform:translate(6px,-50%);font-size:11.5px;font-weight:800;color:'+RPT.ink+';text-shadow:0 0 3px #fff">'+_fmt(val,1)+'</div></div>';
+}
+function _donut(parts,centerA,centerB){
+  var tot=parts.reduce(function(a,p){return a+p.val;},0)||1; var acc=0; var R=48,C=62,SW=20; var segs="";
+  parts.forEach(function(p){ var frac=p.val/tot; var a0=acc*2*Math.PI-Math.PI/2, a1=(acc+frac)*2*Math.PI-Math.PI/2; acc+=frac;
+    var x0=C+R*Math.cos(a0),y0=C+R*Math.sin(a0),x1=C+R*Math.cos(a1),y1=C+R*Math.sin(a1); var large=frac>0.5?1:0;
+    segs+='<path d="M '+x0.toFixed(1)+' '+y0.toFixed(1)+' A '+R+' '+R+' 0 '+large+' 1 '+x1.toFixed(1)+' '+y1.toFixed(1)+'" fill="none" stroke="'+p.color+'" stroke-width="'+SW+'" stroke-linecap="round"/>';
+  });
+  var ctr=(centerA!=null)?'<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:9px;color:'+RPT.sub+';font-weight:700">'+centerA+'</span><span style="font-size:14px;font-weight:900;color:'+RPT.navy+'">'+centerB+'</span></div>':'';
+  return '<div style="position:relative;width:124px;height:124px"><svg width="124" height="124" viewBox="0 0 124 124">'+segs+'</svg>'+ctr+'</div>';
+}
+/* ── 공통 레이아웃 ── */
+function _pageWrap(inner,accent){ accent=accent||RPT.navy2;
+  return '<div class="rpt-page" style="width:794px;height:1123px;background:#fff;box-sizing:border-box;padding:0;font-family:\'Malgun Gothic\',\'Apple SD Gothic Neo\',sans-serif;color:'+RPT.ink+';position:relative;overflow:hidden">'+
+    '<div style="height:7px;background:linear-gradient(90deg,'+accent+','+RPT.navy+')"></div>'+
+    '<div style="padding:28px 40px 46px">'+inner+'</div>'+
+    '<div style="position:absolute;left:0;right:0;bottom:0;height:30px;background:'+RPT.soft+';border-top:1px solid '+RPT.line+';display:flex;align-items:center;justify-content:space-between;padding:0 40px;font-size:9px;letter-spacing:1px;color:'+RPT.faint+'"><span>NARACHA TAEKWONDO · 분당도장</span><span>학부모 건강 리포트</span></div>'+
+  '</div>';
+}
+function _hdr(title,eng,rightMain,accent){ accent=accent||RPT.navy2;
+  return '<div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px">'+
+    '<div>'+
+      '<div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:'+RPT.navy+';line-height:1.05">'+title+'</div>'+
+      '<div style="font-size:10px;letter-spacing:2.5px;color:'+accent+';font-weight:800;margin-top:4px">'+eng+'</div>'+
+      '<div style="width:44px;height:3px;background:'+accent+';border-radius:2px;margin-top:8px"></div>'+
+    '</div>'+
+    '<div style="text-align:right">'+
+      '<div style="display:inline-flex;align-items:center;gap:8px;background:'+RPT.navy+';color:#fff;border-radius:11px;padding:8px 15px">'+
+        '<span style="width:22px;height:22px;border-radius:50%;background:#fff;color:'+RPT.navy+';font-size:10px;font-weight:900;display:inline-flex;align-items:center;justify-content:center">태</span>'+
+        '<span style="font-size:15px;font-weight:900">'+rightMain+'</span></div>'+
+      '<div style="font-size:9.5px;color:'+RPT.sub+';margin-top:5px">관장 임미화 · Tel 010-7520-4474</div>'+
+    '</div>'+
+  '</div>';
+}
+function _sec(icon,label,accent){ accent=accent||RPT.navy2;
+  return '<div style="display:flex;align-items:center;gap:8px;margin:15px 0 9px">'+
+    '<span style="width:23px;height:23px;border-radius:7px;background:'+accent+'1f;display:inline-flex;align-items:center;justify-content:center;font-size:13px">'+icon+'</span>'+
+    '<b style="font-size:13.5px;color:'+RPT.navy+';letter-spacing:-.3px">'+label+'</b>'+
+    '<div style="flex:1;height:1px;background:'+RPT.line+'"></div></div>';
+}
+function _fld(lab,val){ return '<div style="background:'+RPT.soft+';border:1px solid '+RPT.line+';border-radius:9px;padding:7px 12px"><div style="font-size:9.5px;color:'+RPT.sub+';font-weight:700;letter-spacing:.3px">'+lab+'</div><div style="font-size:14px;font-weight:800;color:'+RPT.ink+';margin-top:1px">'+val+'</div></div>'; }
+function _catTag(cat){ var m={"고도비만":RPT.red,"비만":RPT.red,"과체중":"#E08A2B","표준":RPT.green,"저체중":"#3B82C4"}; var c=m[cat]||RPT.green; return '<span style="display:inline-block;background:'+c+'1c;color:'+c+';border:1px solid '+c+'55;border-radius:20px;padding:3px 12px;font-size:11px;font-weight:800">'+cat+'</span>'; }
+
+/* 페이지1: 체성분 분석 */
+function rptPage1(s,row){
+  var d=rptData(s,row); var AC=RPT.navy2;
+  var box=function(lab,val,red){ return '<div style="flex:1;text-align:center;padding:12px 4px;border-right:1px solid '+RPT.line+'"><div style="font-size:10.5px;color:'+RPT.sub+';font-weight:600">'+lab+'</div><div style="font-size:25px;font-weight:900;color:'+(red?RPT.red:RPT.navy)+';margin-top:2px">'+val+'</div></div>'; };
+  var opinion=({"고도비만":"고도비만 상태입니다. 전문가 상담과 함께 규칙적인 식습관·운동 관리가 필요합니다.","비만":"비만입니다. 규칙적인 식습관과 규칙적인 운동이 필요합니다. 여러 질병의 위험을 예방하기 위해 표준체형이 될 수 있도록 노력해주세요.","과체중":"과체중 경향이 있습니다. 균형 잡힌 식사와 꾸준한 유산소 운동으로 표준체형을 유지해요.","표준":"표준체형입니다. 지금의 좋은 식습관과 운동습관을 꾸준히 유지해주세요.","저체중":"저체중 경향이 있습니다. 균형 잡힌 영양 섭취와 근력 운동으로 건강한 체중을 만들어가요."})[d.cat];
+  var grid=["마른비만","과지방","비만","저체중","표준체형","근육형\n과체중","저지방\n저체중","저지방\n근육형","운동선수형"];
+  var hi=4; if(d.cat==="비만"||d.cat==="고도비만") hi=2; else if(d.cat==="과체중") hi=5; else if(d.cat==="저체중") hi=3; else hi=4;
+  var gridH=""; grid.forEach(function(g,i){ var on=(i===hi); gridH+='<div style="padding:9px 2px;text-align:center;font-size:10.5px;line-height:1.25;font-weight:'+(on?800:600)+';color:'+(on?"#fff":RPT.sub)+';background:'+(on?RPT.red:RPT.soft)+';border:1px solid '+(on?RPT.red:RPT.line)+';border-radius:7px;white-space:pre-line">'+g+'</div>'; });
+  var ecell=function(lab,val,slo,shi,color){ return '<tr><td style="padding:7px 6px 7px 2px;font-weight:700;font-size:11.5px;white-space:nowrap;color:'+RPT.ink+'">'+lab+'</td><td style="padding:7px 8px;width:54%">'+_hBar(val,slo,shi,color)+'</td><td style="padding:7px 2px;text-align:right;font-size:11px;font-weight:800;color:'+RPT.navy2+';white-space:nowrap">'+(slo!=null?_fmt(slo,1)+" ~ "+_fmt(shi,1):"—")+'</td></tr>'; };
+  var inner=_hdr("체성분 분석결과지","BODY COMPOSITION ANALYSIS","나라차태권도 분당도장",AC)+
+    '<div style="display:flex;gap:14px;align-items:stretch;margin-bottom:4px">'+
+      '<div style="display:flex;align-items:center">'+_rptPhoto(d.name,78,14)+'</div>'+
+      '<div style="flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'+
+        _fld("성명",esc(d.name))+_fld("나이",_fmt(d.age)+"세")+_fld("성별",esc(d.gender))+
+        _fld("측정일",esc(s.date||"—"))+_fld("신장",_fmt(d.h,1)+" cm")+_fld("체중",_fmt(d.wt,1)+" kg")+
+      '</div>'+
+    '</div>'+
+    _sec("🧾","종합소견",AC)+
+    '<div style="background:linear-gradient(90deg,'+RPT.blueSoft+',#F7FAFE);border-left:4px solid '+AC+';border-radius:0 9px 9px 0;padding:12px 15px;font-size:12.5px;line-height:1.65;color:'+RPT.ink+'">'+opinion+'</div>'+
+    _sec("💧","체성분 분석 (인바디)",AC)+
+    (d.hasIb?
+      '<div style="display:flex;border:1px solid '+RPT.line+';border-radius:11px;overflow:hidden;background:#fff">'+box("체수분량 ℓ",_fmt(d.tbw,1))+box("단백질 kg",_fmt(d.pro,1))+box("무기질 kg",_fmt(d.min,1))+'<div style="flex:1;text-align:center;padding:12px 4px"><div style="font-size:10.5px;color:'+RPT.sub+';font-weight:600">체지방 kg</div><div style="font-size:25px;font-weight:900;color:'+RPT.red+';margin-top:2px">'+_fmt(d.fat,1)+'</div></div></div>'
+      :'<div style="border:1.5px dashed #C9D3E0;border-radius:11px;padding:15px;text-align:center;color:'+RPT.sub+';font-size:12px;background:'+RPT.soft+'">🔒 인바디 값 입력 후 자동 표시됩니다 &nbsp;(체수분량·단백질·무기질·체지방·골격근량)</div>')+
+    '<div style="display:flex;gap:18px;margin-top:2px">'+
+      '<div style="flex:1">'+_sec("💪","골격근 · 지방",RPT.green)+
+        '<table style="width:100%;border-collapse:collapse">'+
+        ecell("체중 kg",d.wt,d.stdWt[0],d.stdWt[1],RPT.green)+
+        ecell("골격근량 kg",d.smm,d.stdSmm[0],d.stdSmm[1],RPT.green)+
+        ecell("체지방량 kg",d.fat,d.stdFat?d.stdFat[0]:null,d.stdFat?d.stdFat[1]:null,RPT.green)+
+        '</table></div>'+
+      '<div style="flex:1">'+_sec("⚖️","비만 진단",RPT.red)+
+        '<table style="width:100%;border-collapse:collapse">'+
+        ecell("체질량 BMI",d.bmi,d.stdBmi[0],d.stdBmi[1],RPT.red)+
+        ecell("체지방률 %",d.bfp,d.stdBfp[0],d.stdBfp[1],RPT.red)+
+        ecell("복부비만률",d.whr,d.stdWhr[0],d.stdWhr[1],RPT.red)+
+        '</table></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:18px;margin-top:6px">'+
+      '<div style="flex:1">'+
+        _sec("🔥","열량 평가",RPT.gold)+
+        '<div style="display:flex;gap:10px">'+
+          '<div style="flex:1;background:'+RPT.soft+';border:1px solid '+RPT.line+';border-radius:10px;padding:11px;text-align:center"><div style="font-size:10.5px;color:'+RPT.sub+';font-weight:700">기초대사량</div><div style="font-size:19px;font-weight:900;color:'+RPT.navy+';margin-top:3px">'+(d.bmr!=null?_fmt(d.bmr,0):"—")+'<span style="font-size:10px;color:'+RPT.sub+'"> Kcal</span></div></div>'+
+          '<div style="flex:1;background:'+RPT.soft+';border:1px solid '+RPT.line+';border-radius:10px;padding:11px;text-align:center"><div style="font-size:10.5px;color:'+RPT.sub+';font-weight:700">1일 필요열량</div><div style="font-size:19px;font-weight:900;color:'+RPT.navy+';margin-top:3px">'+(d.kcal!=null?_fmt(d.kcal):"—")+'<span style="font-size:10px;color:'+RPT.sub+'"> Kcal</span></div></div>'+
+        '</div>'+
+        _sec("🧍","체형 평가",AC)+
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">'+gridH+'</div>'+
+      '</div>'+
+      '<div style="flex:1">'+
+        _sec("🎯","조절 목표",RPT.teal)+
+        '<table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center"><tr style="background:'+RPT.soft+';color:'+RPT.sub+';font-size:10.5px"><td style="padding:7px;border:1px solid '+RPT.line+'">항목</td><td style="padding:7px;border:1px solid '+RPT.line+'">측정치</td><td style="padding:7px;border:1px solid '+RPT.line+'">조절수치</td></tr>'+
+        _adjRow("체중",d.wt,d.stdWt)+_adjRow("골격근량",d.smm,d.stdSmm)+_adjRow("체지방량",d.fat,d.stdFat)+'</table>'+
+        '<div style="margin-top:9px;font-size:9.5px;color:'+RPT.faint+';line-height:1.5">＊ 표준범위·조절수치는 성장도표 및 표준 체지방률 기준으로 산출한 참고값이며, 인바디 자동 연동 시 기기값으로 갱신됩니다.</div>'+
+      '</div>'+
+    '</div>';
+  return _pageWrap(inner,AC);
+}
+function _adjRow(lab,val,std){ var adj=(val!=null&&std)?Math.round(((std[0]+std[1])/2-val)*10)/10:null; var col=adj==null?RPT.faint:(adj>0?RPT.green:(adj<0?RPT.red:RPT.sub)); var txt=adj==null?"—":(adj>0?"+"+adj:String(adj)); return '<tr><td style="padding:8px;border:1px solid '+RPT.line+';font-weight:700;color:'+RPT.ink+'">'+lab+'</td><td style="padding:8px;border:1px solid '+RPT.line+'">'+_fmt(val,1)+'</td><td style="padding:8px;border:1px solid '+RPT.line+';font-weight:800;color:'+col+'">'+txt+'</td></tr>'; }
+
+/* 페이지2: 체력측정 결과지 */
+function rptPage2(s,row){
+  var d=rptData(s,row); var AC=RPT.teal;
+  var rows="";
+  ["운동발현능력","운동지속능력","운동조정능력"].forEach(function(grp){
+    var items=RPT_FIT.filter(function(f){return f.grp===grp;});
+    items.forEach(function(f,idx){ var rec=_rv(row,f.cat,"기록"); var g=_rv(row,f.cat,"등급");
+      rows+='<tr>'+(idx===0?'<td rowspan="'+items.length+'" style="padding:8px 4px;border:1px solid '+RPT.line+';background:'+AC+'12;font-weight:800;font-size:10.5px;line-height:1.3;color:'+RPT.navy+';width:56px;text-align:center;white-space:pre-line">'+grp.replace("능력","\n능력")+'</td>':'')+
+        '<td style="padding:7px 12px;border:1px solid '+RPT.line+'"><div style="font-weight:800;font-size:12px;color:'+RPT.ink+'">'+f.main+'</div><div style="font-size:10px;color:'+RPT.sub+';margin-top:1px">('+f.detail+')</div></td>'+
+        '<td style="padding:7px 8px;border:1px solid '+RPT.line+';text-align:center;font-weight:800;font-size:12.5px;white-space:nowrap;color:'+RPT.ink+'">'+(rec!==""?esc(rec)+(f.unit?f.unit:""):"—")+'</td>'+
+        '<td style="padding:7px 6px;border:1px solid '+RPT.line+';text-align:center;white-space:nowrap"><span style="display:inline-block;background:'+_gradeColor(g)+'18;color:'+_gradeColor(g)+';border-radius:14px;padding:3px 10px;font-weight:800;font-size:11.5px">'+_gradeLabel(g)+'</span></td></tr>';
+    });
+  });
+  var barItems=RPT_FIT.map(function(f){ var g=parseInt(String(_rv(row,f.cat,"등급")).replace(/[^0-9]/g,""),10); var sc=isNaN(g)?0:(6-g); return {label:f.short,sc:sc,g:g}; });
+  var chart=""; barItems.forEach(function(b){ var h=b.sc/5*100; var col=_gradeColor(b.g); chart+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px"><div style="width:100%;height:120px;display:flex;align-items:flex-end;justify-content:center"><div style="width:56%;height:'+h+'%;min-height:5px;background:linear-gradient(180deg,'+col+','+col+'99);border-radius:6px 6px 0 0;box-shadow:inset 0 -2px 4px rgba(0,0,0,.06)"></div></div><div style="font-size:10px;color:'+RPT.sub+';text-align:center;font-weight:600">'+b.label+'</div></div>'; });
+  var tot=_rv(row,"종합점수","값"); var totg=_rv(row,"종합등급","값");
+  var growth=(d.cat==="비만"||d.cat==="고도비만")?("신장 "+_fmt(d.h,1)+"cm, 체중 "+_fmt(d.wt,1)+"kg"+(d.bfp!=null?", 체지방률 "+_fmt(d.bfp,1)+"%":"")+"로 "+d.cat+"입니다. 체지방을 줄이기 위해선 저·중강도의 유산소 운동을 꾸준히 실시하여 체지방을 감량할 필요가 있습니다.")
+    :(d.cat==="저체중")?("신장 "+_fmt(d.h,1)+"cm, 체중 "+_fmt(d.wt,1)+"kg로 저체중 경향입니다. 균형 잡힌 영양과 근력 운동으로 건강한 성장을 도와줄 필요가 있습니다.")
+    :("신장 "+_fmt(d.h,1)+"cm, 체중 "+_fmt(d.wt,1)+"kg로 표준 범위입니다. 현재의 좋은 습관을 유지하며 꾸준히 운동해주세요.");
+  var fitTxt="운동발현·지속·조정 능력을 종합 측정한 결과, 종합 체력은 "+(_recTier(totg))+" 수준에 해당합니다.";
+  var rec5=[["심폐지구력","조깅·줄넘기"],["근력·근지구력","팔굽혀펴기·플랭크"],["순발력·민첩성","사다리·왕복달리기"],["유연성","스트레칭·요가"],["평형성","한발서기·균형걷기"]];
+  var recH=rec5.map(function(r){return '<td style="padding:9px 6px;border:1px solid '+RPT.line+';text-align:center;font-size:10.5px;color:'+RPT.sub+';background:'+RPT.soft+';font-weight:700">'+r[0]+'</td>';}).join("");
+  var recH2=rec5.map(function(r){return '<td style="padding:10px 6px;border:1px solid '+RPT.line+';text-align:center;font-size:12px;font-weight:800;color:'+RPT.ink+'">'+r[1]+'</td>';}).join("");
+  var inner=_hdr("체력측정 결과지","PHYSICAL FITNESS TEST","나라차태권도 분당도장",AC)+
+    _sec("🧑","대상자 정보",AC)+
+    '<div style="display:flex;gap:14px;align-items:center">'+
+      _rptPhoto(d.name,72,14)+
+      '<div style="flex:1"><table style="width:100%;border-collapse:collapse;text-align:center;font-size:12px">'+
+      '<tr style="background:'+RPT.soft+';color:'+RPT.sub+';font-size:10.5px"><td style="padding:7px;border:1px solid '+RPT.line+'">이름</td><td style="padding:7px;border:1px solid '+RPT.line+'">나이</td><td style="padding:7px;border:1px solid '+RPT.line+'">성별</td><td style="padding:7px;border:1px solid '+RPT.line+'">신장(cm)</td><td style="padding:7px;border:1px solid '+RPT.line+'">체중(kg)</td><td style="padding:7px;border:1px solid '+RPT.line+'">BMI</td><td style="padding:7px;border:1px solid '+RPT.line+'">판정</td></tr>'+
+      '<tr style="font-weight:800;font-size:13px"><td style="padding:9px;border:1px solid '+RPT.line+'">'+esc(d.name)+'</td><td style="padding:9px;border:1px solid '+RPT.line+'">'+_fmt(d.age)+'</td><td style="padding:9px;border:1px solid '+RPT.line+'">'+esc(d.gender)+'</td><td style="padding:9px;border:1px solid '+RPT.line+'">'+_fmt(d.h,1)+'</td><td style="padding:9px;border:1px solid '+RPT.line+'">'+_fmt(d.wt,1)+'</td><td style="padding:9px;border:1px solid '+RPT.line+'">'+_fmt(d.bmi,1)+'</td><td style="padding:6px;border:1px solid '+RPT.line+'">'+_catTag(d.cat)+'</td></tr></table></div>'+
+    '</div>'+
+    _sec("📊","체격 및 체력 측정결과",AC)+
+    '<div style="display:flex;gap:14px">'+
+      '<div style="flex:1;border:1px solid '+RPT.line+';border-radius:11px;padding:12px 12px 8px;background:'+RPT.soft+'"><div style="font-size:10.5px;color:'+RPT.sub+';margin-bottom:8px;font-weight:600">체력 프로파일 <span style="color:'+RPT.faint+'">(막대가 높을수록 우수)</span></div><div style="display:flex;align-items:flex-end;gap:6px;height:145px;background:#fff;border-radius:8px;padding:8px 6px 0">'+chart+'</div></div>'+
+      '<div style="flex:1.2"><table style="width:100%;border-collapse:collapse">'+
+        '<tr style="background:'+AC+'12;color:'+RPT.navy+';font-size:10.5px;font-weight:700"><td style="padding:7px 4px;border:1px solid '+RPT.line+';width:56px">요인</td><td style="padding:7px;border:1px solid '+RPT.line+'">측정항목</td><td style="padding:7px;border:1px solid '+RPT.line+';width:58px">측정값</td><td style="padding:7px;border:1px solid '+RPT.line+';width:66px">평가</td></tr>'+rows+'</table></div>'+
+    '</div>'+
+    _sec("🏅","종합평가 결과",AC)+
+    '<div style="border:1px solid '+RPT.line+';border-radius:11px;overflow:hidden">'+
+      '<div style="display:flex"><div style="width:92px;background:'+AC+'12;padding:12px;font-weight:800;font-size:12px;color:'+RPT.navy+';display:flex;align-items:center;justify-content:center">성장 및 비만</div><div style="flex:1;padding:12px 14px;font-size:12px;line-height:1.65;border-left:1px solid '+RPT.line+'">'+growth+'</div></div>'+
+      '<div style="display:flex;border-top:1px solid '+RPT.line+'"><div style="width:92px;background:'+AC+'12;padding:12px;font-weight:800;font-size:12px;color:'+RPT.navy+';display:flex;align-items:center;justify-content:center">체력</div><div style="flex:1;padding:12px 14px;font-size:12px;line-height:1.65;border-left:1px solid '+RPT.line+'">'+fitTxt+' &nbsp;종합점수 <b style="color:'+RPT.navy+'">'+esc(tot||"—")+'</b> · 종합등급 <b style="color:'+RPT.navy+'">'+esc(String(totg||"—").toUpperCase())+'</b></div></div>'+
+    '</div>'+
+    _sec("🏃","추천 운동",AC)+
+    '<table style="width:100%;border-collapse:collapse"><tr>'+recH+'</tr><tr>'+recH2+'</tr></table>';
+  return _pageWrap(inner,AC);
+}
+function _recTier(g){ g=String(g||"").toLowerCase(); if(g.indexOf("a")>=0)return"우수"; if(g.indexOf("b")>=0)return"양호"; if(g.indexOf("c")>=0)return"보통"; if(g==="")return"측정"; return"관리가 필요한"; }
+
+/* 페이지3: 식이결과지 */
+var MEAL_DB={
+  "비만":{ adv:"밥의 양과 튀긴 반찬의 섭취를 조금 줄이고, 채소 반찬과 단백질 위주로 섭취하는 것이 좋습니다. 단 음료·과자는 줄여주세요.",
+    b:[["현미밥","시금치된장국","계란찜","두부구이","방울토마토"],["보리밥","콩나물국","멸치볶음","김구이","방울토마토"],["잡곡밥","미역국","닭가슴살구이","오이무침","방울토마토"],["현미밥","무국","고등어구이","나물무침","방울토마토"],["귀리밥","순두부국","계란말이","브로콜리","방울토마토"],["잡곡밥","배추된장국","두부조림","오이","방울토마토"],["현미밥","시래기국","달걀찜","버섯볶음","방울토마토"]],
+    d:[["잡곡밥","닭가슴살샐러드","배추김치","나물무침","과일한쪽"],["현미밥","소고기무국","오이생채","김치","과일한쪽"],["보리밥","된장찌개","고등어구이","시금치나물","과일한쪽"],["잡곡밥","두부김치","콩나물무침","김","과일한쪽"],["현미밥","미역국","닭안심구이","브로콜리","과일한쪽"],["귀리밥","순두부찌개","달걀부침","무생채","과일한쪽"],["잡곡밥","채소된장국","생선구이","나물","과일한쪽"]] },
+  "표준":{ adv:"성장기에 맞게 밥·국·단백질·채소·과일을 골고루 섭취하는 균형 잡힌 식단이 좋습니다.",
+    b:[["현미밥","시금치된장국","계란찜","소세지야채볶음","방울토마토"],["쌀밥","콩나물국","멸치볶음","자반고등어조림","방울토마토"],["흑미밥","된장국","묵은지고등어조림","어묵볶음","방울토마토"],["현미밥","조개된장국","감자조림","어묵볶음","방울토마토"],["감자밥","우거지된장국","참치계란찜","어묵볶음","방울토마토"],["잡곡밥","근대국","고등어무조림","게맛살튀김","방울토마토"],["참치김밥","냉이달래된장찌개","오징어채볶음","방울토마토","우유"]],
+    d:[["쌀밥","육개장","배추김치","제육볶음","과일샐러드"],["쌀밥","김치국","배추김치","갈치구이","과일샐러드"],["비빔국수","계란탕","열무김치","삶은계란","과일샐러드"],["쌀밥","소고기무국","포기김치","두부조림","과일샐러드"],["비빔밥","감자된장국","알타리무김치","계란후라이","과일샐러드"],["현미밥","돼지고기국","배추김치","삼치구이","과일샐러드"],["카레라이스","배추김치","단무지","참치야채샐러드","과일샐러드"]] },
+  "저체중":{ adv:"충분한 열량과 단백질을 위해 밥·고기·생선·달걀·견과·유제품을 넉넉히 섭취하는 것이 좋습니다.",
+    b:[["쌀밥","소고기미역국","계란말이","치즈","바나나·우유"],["잡곡밥","된장국","제육볶음","김","요거트·견과"],["쌀밥","닭곰탕","달걀찜","김치","우유·과일"],["현미밥","순두부국","연어구이","나물","치즈·우유"],["쌀밥","갈비탕","계란말이","브로콜리","바나나"],["잡곡밥","북어국","불고기","김","요거트"],["볶음밥","어묵국","돈까스","샐러드","우유"]],
+    d:[["쌀밥","소고기무국","제육볶음","계란찜","과일·우유"],["잡곡밥","닭볶음탕","두부조림","김치","견과·요거트"],["카레라이스","돈까스","샐러드","단무지","우유"],["쌀밥","된장찌개","고등어구이","나물","과일"],["볶음밥","계란국","불고기","김치","치즈"],["쌀밥","갈비찜","시금치나물","김","바나나·우유"],["스파게티","치킨샐러드","마늘빵","피클","요거트"]] }
+};
+function rptPage3(s,row){
+  var d=rptData(s,row); var AC=RPT.green;
+  var mkey=(d.cat==="비만"||d.cat==="고도비만"||d.cat==="과체중")?"비만":(d.cat==="저체중")?"저체중":"표준";
+  var meal=MEAL_DB[mkey];
+  var days=["1일","2일","3일","4일","5일","6일","7일"];
+  var mealRow=function(icon,lab,arr,bg){ var tds=arr.map(function(m){return '<td style="padding:9px 6px;border:1px solid '+RPT.line+';font-size:10.5px;line-height:1.6;vertical-align:top;background:'+bg+'">'+m.map(esc).join("<br>")+'</td>';}).join(""); return '<tr><td style="padding:8px;border:1px solid '+RPT.line+';background:'+AC+'16;text-align:center;font-weight:800;font-size:11px;color:'+RPT.navy+';width:42px">'+icon+'<br>'+lab+'</td>'+tds+'</tr>'; };
+  var dayHead=days.map(function(x){return '<td style="padding:7px;border:1px solid '+RPT.line+';background:'+RPT.soft+';color:'+RPT.sub+';font-size:11px;text-align:center;font-weight:700">'+x+'</td>';}).join("");
+  var nutri=[["탄수화물","힘을 내는 기본 에너지를 공급합니다."],["단백질","몸을 만들고 여러 질병을 예방합니다."],["지방","체온을 지키고 피부·모발 윤기를 돕습니다."],["비타민","신체 기능을 조절하고 흡수를 돕습니다."],["철분","적혈구 구성으로 어지러움을 예방합니다."],["칼슘","뼈·근육·신경·혈액에 중요합니다."],["섬유소","소화와 체중 관리에 도움이 됩니다."]];
+  var nutriH=nutri.map(function(n){return '<tr><td style="padding:7px 9px;border:1px solid '+RPT.line+';font-weight:800;font-size:11px;white-space:nowrap;background:'+RPT.soft+';color:'+RPT.navy+'">'+n[0]+'</td><td style="padding:7px 9px;border:1px solid '+RPT.line+';font-size:11px;color:'+RPT.sub+';line-height:1.5">'+n[1]+'</td></tr>';}).join("");
+  var macro=[{label:"탄수화물",val:60,color:"#EDB24A"},{label:"단백질",val:22,color:"#3FB6C4"},{label:"지방",val:18,color:"#E888A8"}];
+  var legend=macro.map(function(m){return '<div style="display:flex;align-items:center;gap:7px;font-size:12px;color:'+RPT.ink+';font-weight:600"><span style="width:12px;height:12px;border-radius:4px;background:'+m.color+';display:inline-block"></span>'+m.label+' <b style="color:'+RPT.navy+'">'+m.val+'%</b></div>';}).join("");
+  var inner=_hdr("식이 결과지","THE DIET RESULT SHEETS","나라차태권도 분당도장",AC)+
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:2px">'+_rptPhoto(d.name,54,12)+'<div><div style="font-size:16px;font-weight:900;color:'+RPT.navy+'">'+esc(d.name)+' <span style="font-size:12px;color:'+RPT.sub+';font-weight:600">'+_fmt(d.age)+'세 · '+esc(d.gender)+'</span></div><div style="margin-top:3px">'+_catTag(d.cat)+' <span style="font-size:11px;color:'+RPT.sub+'">맞춤 식단</span></div></div></div>'+
+    _sec("🥗","영양 어드바이스",AC)+
+    '<div style="background:linear-gradient(90deg,'+RPT.greenSoft+',#F6FCF9);border-left:4px solid '+AC+';border-radius:0 9px 9px 0;padding:12px 15px;font-size:12.5px;line-height:1.65">'+meal.adv+'</div>'+
+    _sec("📏","나의 신체정보",AC)+
+    '<table style="width:100%;border-collapse:collapse;text-align:center;font-size:12px">'+
+      '<tr style="background:'+RPT.soft+';color:'+RPT.sub+';font-size:10.5px"><td style="padding:7px;border:1px solid '+RPT.line+'" colspan="2">신장(cm)</td><td style="padding:7px;border:1px solid '+RPT.line+'" colspan="2">체중(kg)</td><td style="padding:7px;border:1px solid '+RPT.line+'">권장섭취칼로리</td><td style="padding:7px;border:1px solid '+RPT.line+'">기초대사량</td></tr>'+
+      '<tr style="font-size:10.5px;color:'+RPT.sub+'"><td style="padding:5px;border:1px solid '+RPT.line+'">본인</td><td style="padding:5px;border:1px solid '+RPT.line+'">표준</td><td style="padding:5px;border:1px solid '+RPT.line+'">본인</td><td style="padding:5px;border:1px solid '+RPT.line+'">표준</td><td rowspan="2" style="padding:5px;border:1px solid '+RPT.line+';font-weight:900;color:'+RPT.navy+';font-size:16px">'+(d.kcal!=null?_fmt(d.kcal)+"<br><span style=\"font-size:10px;color:"+RPT.sub+"\">Kcal</span>":"인바디 후")+'</td><td rowspan="2" style="padding:5px;border:1px solid '+RPT.line+';font-weight:900;color:'+RPT.navy+';font-size:16px">'+(d.bmr!=null?_fmt(d.bmr,0)+"<br><span style=\"font-size:10px;color:"+RPT.sub+"\">Kcal</span>":"인바디 후")+'</td></tr>'+
+      '<tr style="font-weight:800"><td style="padding:8px;border:1px solid '+RPT.line+'">'+_fmt(d.h,1)+'</td><td style="padding:8px;border:1px solid '+RPT.line+';color:'+RPT.sub+'">'+_fmt(d.stdH,1)+'</td><td style="padding:8px;border:1px solid '+RPT.line+'">'+_fmt(d.wt,1)+'</td><td style="padding:8px;border:1px solid '+RPT.line+';color:'+RPT.sub+'">'+_fmt(d.stdW,1)+'</td></tr>'+
+    '</table>'+
+    '<div style="display:flex;gap:18px;margin-top:4px">'+
+      '<div style="flex:1">'+_sec("🥧","3대 영양소",AC)+'<div style="display:flex;align-items:center;gap:16px;padding:6px 4px">'+_donut(macro,"권장","비율")+'<div style="display:flex;flex-direction:column;gap:9px">'+legend+'</div></div><div style="font-size:9.5px;color:'+RPT.faint+';margin-top:2px">＊ 성장기 권장 3대영양소 비율 기준</div></div>'+
+      '<div style="flex:1.25">'+_sec("📖","영양소 정보",AC)+'<table style="width:100%;border-collapse:collapse">'+nutriH+'</table></div>'+
+    '</div>'+
+    _sec("🍚","권장 식단 (7일)",AC)+
+    '<table style="width:100%;border-collapse:collapse"><tr><td style="border:1px solid '+RPT.line+';background:'+AC+'16"></td>'+dayHead+'</tr>'+mealRow("🌅","아침",meal.b,"#fff")+mealRow("🌙","저녁",meal.d,RPT.soft)+'</table>'+
+    '<div style="margin-top:8px;font-size:9.5px;color:'+RPT.faint+';line-height:1.5">＊ 식단은 질병관리청 소아·청소년 영양 및 대한비만학회 체중조절 식생활 지침을 참고한 '+mkey+' 관리 예시입니다. 알레르기·개인 상황에 맞게 조정하세요.</div>';
+  return _pageWrap(inner,AC);
+}
+function rptPagesHtml(s,row){ return rptPage1(s,row)+rptPage2(s,row)+rptPage3(s,row); }
+
+/* ── PDF/ZIP ── */
+function _renderPagesToCanvas(html, cb){
+  var wrap=document.createElement("div"); wrap.style.cssText="position:fixed;left:-99999px;top:0"; wrap.innerHTML=html; document.body.appendChild(wrap);
+  var pages=wrap.querySelectorAll(".rpt-page"); var canvases=[]; var i=0;
+  (function nx(){ if(i>=pages.length){ document.body.removeChild(wrap); cb(canvases); return; }
+    html2canvas(pages[i],{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false}).then(function(cv){ canvases.push(cv); i++; nx(); }).catch(function(){ i++; nx(); });
+  })();
+}
+function _canvasesToDoc(canvases){ var jsPDF=window.jspdf.jsPDF; var doc=new jsPDF("p","mm","a4"); canvases.forEach(function(cv,idx){ if(idx>0) doc.addPage(); var img=cv.toDataURL("image/jpeg",0.92); doc.addImage(img,"JPEG",0,0,210,297); }); return doc; }
+function _safeName(n){ return String(n||"학생").replace(/[\\/:*?"<>|]/g,"_"); }
+window.exportRptPdf=function(id,ri){ var s=measuresData()[id]; if(!s||!s.rows[ri])return; var row=s.rows[ri];
+  loadReportLibs(function(ok){ if(!ok){ alert("PDF 모듈을 불러오지 못했습니다. 인터넷 연결 확인 후 다시 시도해주세요."); return; }
+    _renderPagesToCanvas(rptPagesHtml(s,row), function(cvs){ if(!cvs.length){ alert("리포트 생성 실패"); return; } var doc=_canvasesToDoc(cvs); doc.save("나라차_체력리포트_"+_safeName(row.name)+".pdf"); });
+  });
+};
+function _exportZip(id, idxs, tag, btnId){ var s=measuresData()[id]; if(!s||!idxs.length)return;
+  loadReportLibs(function(ok){ if(!ok){ alert("PDF 모듈을 불러오지 못했습니다. 인터넷 연결 확인 후 다시 시도해주세요."); return; }
+    var zip=new window.JSZip(); var k=0; var btn=document.getElementById(btnId); var oldTxt=btn?btn.textContent:"";
+    (function nx(){ if(k>=idxs.length){ if(btn) btn.textContent="압축 중…"; zip.generateAsync({type:"blob"}).then(function(blob){ var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="나라차_체력리포트_"+tag+"_"+s.year+"년"+(s.half==="H1"?"1차":"2차")+".zip"; a.click(); setTimeout(function(){URL.revokeObjectURL(a.href);},2000); if(btn) btn.textContent=oldTxt; }); return; }
+      var row=s.rows[idxs[k]]; if(btn) btn.textContent="생성 "+(k+1)+"/"+idxs.length+" ("+_safeName(row.name)+")";
+      _renderPagesToCanvas(rptPagesHtml(s,row), function(cvs){ if(cvs.length){ var doc=_canvasesToDoc(cvs); zip.file("나라차_체력리포트_"+_safeName(row.name)+".pdf", doc.output("blob")); } k++; nx(); });
+    })();
+  });
+}
+window.exportRptAllZip=function(id){ var s=measuresData()[id]; if(!s||!s.rows.length)return; _exportZip(id, s.rows.map(function(_,i){return i;}), "전체", "rptZipBtn"); };
+window.exportRptSelZip=function(id){ var s=measuresData()[id]; if(!s)return; state.rptChk=state.rptChk||{}; var idxs=Object.keys(state.rptChk).map(Number).filter(function(i){return s.rows[i];}).sort(function(a,b){return a-b;}); if(!idxs.length){ alert("선택된 수련생이 없습니다. 왼쪽 체크박스로 선택해주세요."); return; } _exportZip(id, idxs, "선택", "rptSelBtn"); };
+
+/* 미측정 재원생 */
+function _rptMissing(s){ var have={}; s.rows.forEach(function(r){ have[r.name]=1; });
+  return (STUDENTS||[]).filter(function(x){ if(have[x.n]) return false; try{ if(typeof isQuit==="function"&&isQuit(x.n)) return false; }catch(e){} if(state.closedMap&&state.closedMap[x.n]) return false; return true; });
+}
+/* ── 리포트 화면 ── */
+function renderMeasReport(s){
+  var kc="#1E7B3C"; var ri=(state.rptRi!=null&&s.rows[state.rptRi])?state.rptRi:0; var row=s.rows[ri]||{};
+  var ib=row.ib||{}; state.rptChk=state.rptChk||{};
+  var chkN=Object.keys(state.rptChk).filter(function(k){return s.rows[k];}).length;
+  var allOn=s.rows.length>0 && chkN===s.rows.length;
+  var ibF=function(f,lab,ph){ return '<div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:10.5px;color:#8A94A6">'+lab+'</span><input value="'+esc(ib[f]||"")+'" placeholder="'+(ph||"")+'" onchange="setIb(\''+s.id+'\','+ri+',\''+f+'\',this.value)" style="width:76px;height:30px;border:1px solid #D7DEE7;border-radius:7px;padding:0 8px;font-size:12.5px;font-family:inherit;text-align:center"></div>'; };
+  var listRows=s.rows.map(function(r,i){ var on=(i===ri); var ck=!!state.rptChk[String(i)]; var ph=getPhoto(r.name);
+    var av=ph?'<img src="'+ph+'" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle">':'<span style="width:22px;height:22px;border-radius:50%;background:'+kc+'22;color:'+kc+';display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;vertical-align:middle">'+esc((r.name||" ").slice(0,1))+'</span>';
+    var demo=(typeof demoSlot==="function")?demoSlot(r.name,12):"";
+    return '<tr onclick="setRptRi('+i+')" style="cursor:pointer;background:'+(on?"#E7F0FF":"#fff")+';border-bottom:1px solid #EEF1F5">'+
+      '<td style="padding:7px 8px;text-align:center"><input type="checkbox" '+(ck?"checked":"")+' onclick="event.stopPropagation();rptToggle('+i+')" style="width:16px;height:16px;cursor:pointer"></td>'+
+      '<td style="padding:7px 8px;text-align:center;color:#8A94A6;font-size:12px">'+(i+1)+'</td>'+
+      '<td style="padding:7px 8px;font-weight:'+(on?800:600)+';white-space:nowrap">'+demo+av+' '+esc(r.name)+'</td>'+
+      '<td style="padding:7px 8px;text-align:center;font-size:12.5px">'+esc(r.gender||"")+'</td>'+
+      '<td style="padding:7px 8px;text-align:center;font-size:12.5px">'+esc(r.age||"")+'</td>'+
+      '<td style="padding:7px 8px;text-align:center">'+(i===ri?'<span style="font-size:11px;color:#2B5FB8;font-weight:800">◀ 미리보기</span>':'')+'</td></tr>';
+  }).join("");
+  var listTable='<div style="border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-bottom:12px">'+
+    '<div style="max-height:230px;overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'+
+    '<thead><tr style="background:#4A78B5;color:#fff;position:sticky;top:0;z-index:1">'+
+      '<th style="padding:9px 8px;text-align:center;width:40px"><input type="checkbox" '+(allOn?"checked":"")+' onclick="rptToggleAll(\''+s.id+'\')" title="전체 선택" style="width:16px;height:16px;cursor:pointer"></th>'+
+      '<th style="padding:9px 8px;width:44px">No</th><th style="padding:9px 8px;text-align:left">이름</th><th style="padding:9px 8px;width:56px">성별</th><th style="padding:9px 8px;width:56px">나이</th><th style="padding:9px 8px;width:84px"></th>'+
+    '</tr></thead><tbody>'+listRows+'</tbody></table></div></div>';
+  var missing=_rptMissing(s);
+  var missPanel="";
+  if(state.rptMissing){
+    var mchips=missing.length?missing.map(function(x){ var ph=getPhoto(x.n); var av=ph?'<img src="'+ph+'" style="width:20px;height:20px;border-radius:50%;object-fit:cover">':'<span style="width:20px;height:20px;border-radius:50%;background:#F0C36D33;color:#B45309;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800">'+esc(x.n.slice(0,1))+'</span>'; return '<span style="display:inline-flex;align-items:center;gap:5px;border:1px solid #F0C36D;background:#FFFBF0;border-radius:16px;padding:4px 11px 4px 5px;font-size:12.5px;font-weight:600;color:#8A5A10">'+av+esc(x.n)+'</span>'; }).join(""):'<span style="font-size:12.5px;color:#1E7B3C;font-weight:700">🎉 모든 재원생이 측정되었습니다.</span>';
+    missPanel='<div style="border:1px solid #F0C36D;background:#FFFDF6;border-radius:12px;padding:12px 14px;margin-bottom:12px">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"><b style="font-size:13px;color:#B45309">⚠ 미측정 수련생</b><span style="font-size:11.5px;color:#96A0B0">재원생 중 이 회차에 측정값이 없는 수련생 '+missing.length+'명</span></div>'+
+      '<div style="display:flex;gap:7px;flex-wrap:wrap">'+mchips+'</div>'+
+      (missing.length?'<div style="font-size:10.5px;color:#96A0B0;margin-top:8px">． 측정 후 <b>✏️ 입력</b> 화면에서 추가하면 이 목록에서 사라집니다.</div>':'')+
+    '</div>';
+  }
+  var h='<div class="card">'+
+    '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px">'+
+      '<button onclick="closeMeasReport()" style="background:#EAF1FB;border:1.5px solid #2B5FB8;color:#2B5FB8;border-radius:10px;padding:7px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">← 회차 목록</button>'+
+      '<b style="font-size:15px">📄 학부모 리포트</b><span style="font-size:12px;color:var(--sub)">'+esc(s.title)+' · '+s.rows.length+'명'+(chkN?' · 선택 '+chkN+'명':'')+'</span><span style="flex:1"></span>'+
+      '<button onclick="toggleRptMissing()" style="background:'+(state.rptMissing?"#F0C36D":"#FFF7E6")+';border:1.5px solid #F0C36D;color:#8A5A10;border-radius:10px;padding:8px 13px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">⚠ 미측정 수련생'+(missing.length?" "+missing.length:"")+'</button>'+
+    '</div>'+
+    missPanel+
+    listTable+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+
+      '<button onclick="exportRptPdf(\''+s.id+'\','+ri+')" style="background:#2B5FB8;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">⬇ 이 학생 PDF</button>'+
+      '<button id="rptSelBtn" onclick="exportRptSelZip(\''+s.id+'\')" style="background:#0E7C86;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">⬇ 선택 PDF(ZIP)'+(chkN?" · "+chkN+"명":"")+'</button>'+
+      '<button id="rptZipBtn" onclick="exportRptAllZip(\''+s.id+'\')" style="background:#1E7B3C;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">⬇ 전체 PDF(ZIP)</button>'+
+    '</div>'+
+    '<div style="border:1px solid #DDE7F0;border-radius:12px;padding:12px 14px;margin-bottom:12px;background:#FBFDFF">'+
+      '<div style="display:flex;align-items:center;gap:7px;margin-bottom:9px"><b style="font-size:13px;color:#2E4C7E">💧 인바디 값 입력</b><span style="font-size:11px;color:#96A0B0">— '+esc(row.name||"")+' · 추후 기기 자동연동 예정, 지금은 직접 입력해도 됩니다</span></div>'+
+      '<div style="display:flex;gap:12px;flex-wrap:wrap">'+ibF("tbw","체수분량 ℓ","16.1")+ibF("pro","단백질 kg","4.3")+ibF("min","무기질 kg","1.5")+ibF("fat","체지방 kg","12.4")+ibF("smm","골격근량 kg","11.0")+ibF("bfp","체지방률 %","자동")+ibF("whr","복부비만률","0.85")+'</div>'+
+      '<div style="font-size:10.5px;color:#96A0B0;margin-top:8px">체지방(kg)만 넣어도 기초대사량·권장칼로리가 자동 계산됩니다. 체지방률은 비우면 체지방÷체중으로 자동 산출됩니다.</div>'+
+    '</div>'+
+    '<div style="font-size:11.5px;color:var(--sub);margin-bottom:8px">아래는 <b>'+esc(row.name||"")+'</b> 화면 미리보기입니다. 실제 PDF는 A4 3장(체성분·체력·식이)으로 저장됩니다.</div>'+
+    '<div style="overflow:auto;border:1px solid var(--line);border-radius:10px;background:#EEF1F5;padding:16px;text-align:center">'+
+      '<div style="display:inline-block">'+
+        '<div style="box-shadow:0 3px 14px rgba(0,0,0,.12);margin-bottom:16px">'+rptPage1(s,row)+'</div>'+
+        '<div style="box-shadow:0 3px 14px rgba(0,0,0,.12);margin-bottom:16px">'+rptPage2(s,row)+'</div>'+
+        '<div style="box-shadow:0 3px 14px rgba(0,0,0,.12)">'+rptPage3(s,row)+'</div>'+
+      '</div>'+
+    '</div></div>';
+  return h;
+}
+
 function renderMeasureTab(){
   var m=measuresData(); var ids=Object.keys(m);
   var fileInput='<input type="file" id="measFileInput" accept=".xlsx,.xls" style="display:none" onchange="importMeasureXlsx(this)">';
+  if(state.measReport && m[state.measSel]) return fileInput+renderMeasReport(m[state.measSel]);
   if(state.measInput && m[state.measSel]) return fileInput+renderMeasInput(m[state.measSel]);
   if(state.measView && m[state.measView.id]) return fileInput+(state.measView.type==="improve"?renderImproveKing(m[state.measView.id]):renderRecordKing(m[state.measView.id]));
   if(state.measSel && m[state.measSel]) return fileInput+renderMeasureDetail(m[state.measSel]);
@@ -13315,6 +13690,7 @@ function renderMeasureTab(){
         '<button class="chip sm" style="color:#B45309;border-color:#F0C36D" onclick="openMeasView(\'improve\',\''+s.id+'\')">🏅 향상왕</button>'+
         '<button class="chip sm" style="color:#B45309;border-color:#F0C36D" onclick="openMeasView(\'record\',\''+s.id+'\')">🥇 기록왕</button>'+
         '<button class="chip sm" style="color:var(--blue)" onclick="setMeasSel(\''+s.id+'\')">보기</button>'+
+        (s.kind==="체력"?'<button class="chip sm" style="color:#fff;background:#2B5FB8;border-color:#2B5FB8;font-weight:800" onclick="openMeasReport(\''+s.id+'\')">📄 리포트</button>':'')+
         '<button class="chip sm" style="color:#1E7B3C" onclick="exportMeasXlsx(\''+s.id+'\')">⬇ 엑셀</button>'+
         '<button class="chip sm" style="color:var(--red)" onclick="delMeasureSession(\''+s.id+'\')">삭제</button>'+
       '</div>';
@@ -13399,7 +13775,7 @@ function computeRecord(s){
     return {catName:cat.name, groups:groups};
   });
 }
-window.openMeasView=function(type,id){ state.measView={type:type,id:id}; state.measSel=null; render(); };
+window.openMeasView=function(type,id){ state.measView={type:type,id:id}; state.measSel=null; state.measReport=false; render(); };
 window.closeMeasView=function(){ state.measView=null; render(); };
 window.measSectionImage=function(secId,fname){ var el=document.getElementById(secId); if(!el){ return; } if(typeof html2canvas==="undefined"){ alert("이미지 저장 모듈을 불러오지 못했습니다. 인터넷 연결 확인 후 새로고침해 주세요."); return; } html2canvas(el,{scale:2.5,backgroundColor:null,useCORS:true}).then(function(cv){ var a=document.createElement("a"); a.href=cv.toDataURL("image/jpeg",0.92); a.download=(fname||"측정")+".jpg"; document.body.appendChild(a); a.click(); a.remove(); }).catch(function(e){ alert("이미지 생성 중 오류: "+e); }); };
 window.measAllPdf=function(prefix){ var secs=[].slice.call(document.querySelectorAll(".measSlide")); if(!secs.length){ alert("내보낼 내용이 없습니다."); return; } if(typeof html2canvas==="undefined"||!window.jspdf){ alert("PDF 모듈을 불러오지 못했습니다. 인터넷 연결 확인 후 새로고침해 주세요."); return; } var jsPDF=window.jspdf.jsPDF; var pdf=null; (function next(i){ if(i>=secs.length){ if(pdf) pdf.save((prefix||"측정")+".pdf"); return; } html2canvas(secs[i],{scale:2,backgroundColor:"#ffffff",useCORS:true}).then(function(cv){ var w=cv.width, ht=cv.height; if(!pdf){ pdf=new window.jspdf.jsPDF({orientation:w>=ht?"landscape":"portrait",unit:"px",format:[w,ht]}); } else { pdf.addPage([w,ht], w>=ht?"landscape":"portrait"); } pdf.addImage(cv.toDataURL("image/jpeg",0.92),"JPEG",0,0,w,ht); next(i+1); }).catch(function(){ next(i+1); }); })(0); };
