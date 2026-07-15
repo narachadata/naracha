@@ -647,7 +647,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.94";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.95";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -941,6 +941,14 @@ function mergeData(a,b){
 }
 /* 주간 질문 미리저장 데이터 (2026-07-13~2030 · 월요일 주키 → 질문) */
 var SIG_Q_SEED={"2026-07-13":"사과한 친구를 용서한 적 있나?","2026-07-20":"‘나는 ~해서 속상했어’로 말해보기","2026-07-27":"어려웠지만 다시 해본 것은?","2026-08-03":"오늘 친구와 즐거웠던 순간은?","2026-08-10":"친구 힘들 때 해줄 수 있는 일은?","2026-08-17":"친구 덕분에 배운 것이 있다면?","2026-08-24":"친구 장점 한 가지 발표하기","2026-08-31":"우리 팀이 더 잘하려면?","2026-09-07":"오늘 규칙을 잘 지켜 좋았던 점은?","2026-09-14":"약한 친구를 도운 경험은?","2026-09-21":"졌지만 박수 쳐준 적 있나?","2026-09-28":"오늘 배운 것 나누고 싶은 것은?","2026-10-05":"오늘 솔직해서 마음 편했던 일은?","2026-10-12":"실수를 숨기지 않고 말한 경험은?","2026-10-19":"남의 물건을 주우면 어떻게 하는 게 정직일까요?","2026-10-26":"친구의 정직한 행동 칭찬하기","2026-11-02":"오늘 순서·규칙을 잘 지킨 순간은?","2026-11-09":"다른 친구 의견을 들어준 경험은?","2026-11-16":"편 안 가르고 함께 논 경험은?","2026-11-23":"차별 없이 대한 나의 모습 말하기","2026-11-30":"내가 심판이라면 공정하게?","2026-12-07":"오늘 친구와 힘을 합쳐 해낸 것은?","2026-12-14":"우리 팀을 위해 한 일은?","2026-12-21":"올해 태권도에서 새로 할 수 있게 된 것은?","2026-12-28":"도장 친구들에게 응원 한마디!","2027-01-04":"오늘 수련에서 스스로 잘했다고 느낀 것은?","2027-01-11":"친구의 장점을 하나 찾아 칭찬하기","2027-01-18":"힘들어도 끝까지 해낸 순간은?","2027-01-25":"친구를 소중하게 대한 방법은?","2027-02-01":"오늘 시키기 전에 스스로 한 일은?","2027-02-08":"친구가 스스로 노력한 모습 말하기","2027-02-15":"하기 싫었지만 먼저 한 일은?","2027-02-22":"친구의 부지런한 점 발견하기","2027-03-01":"오늘 용기 내어 도전한 것은?","2027-03-08":"친구가 용기 낸 순간을 봤다면?","2027-03-15":"손 들고 말하거나 시범한 경험은?","2027-03-22":"친구의 도전을 응원하는 말은?","2027-03-29":"새 학기, 도전하고 싶은 것 하나는?","2027-04-05":"오늘 가장 열심히 한 것은?","2027-04-12":"포기하지 않는 친구를 봤다면?","2027-04-19":"오늘 가장 열심히 연습한 동작은 무엇인가요?","2027-04-26":"친구의 끈기를 칭찬한다면?","2027-05-03":"오늘 인사를 바르게 한 순간은?","2027-05-10":"나에게 예의 있게 대해준 친구는?","2027-05-17":"사범님·부모님께 지킨 예절은?","2027-05-24":"어른께 예의 바른 친구 모습 말하기","2027-05-31":"가정의 달, 부모님께 지킬 예절은?","2027-06-07":"오늘 고마웠던 일 한 가지는?","2027-06-14":"친구의 고마운 행동을 말하기","2027-06-21":"부모님께 감사한 점은?","2027-06-28":"오늘 친구에게 ‘고마워’ 말한 일은?","2027-07-05":"오늘 힘들어도 참고 끝낸 것은?","2027-07-12":"친구가 인내한 모습을 봤다면?","2027-07-19":"참고 나서 뿌듯했던 경험은?","2027-07-26":"친구와 함께 버틴 일은?","2027-08-02":"어제보다 하나 더 해낸 것은?","2027-08-09":"노력해서 달라진 친구 모습은?","2027-08-16":"게임·영상 시간을 줄여본 경험은?","2027-08-23":"함께 성장한 친구에게 한마디","2027-08-30":"오늘 힘들었지만 포기하지 않고 해낸 것은?","2027-09-06":"오늘 규칙을 잘 지킨 순간은?","2027-09-13":"약한 친구를 도운 친구를 봤다면?","2027-09-20":"졌지만 결과를 인정한 경험은?","2027-09-27":"바르게 행동한 친구를 칭찬하기","2027-10-04":"오늘 솔직하게 말한 일은?","2027-10-11":"정직해서 멋졌던 친구 모습은?","2027-10-18":"남의 물건을 주우면 어떻게 하는 게 정직일까요?","2027-10-25":"친구의 정직함을 발견하기","2027-11-01":"오늘 남을 도운 일 한 가지는?","2027-11-08":"봉사하는 친구 모습을 말하기","2027-11-15":"작은 나눔을 실천한 경험은?","2027-11-22":"함께 봉사한 친구에게 한마디","2027-11-29":"이웃을 위해 하고 싶은 일은?","2027-12-06":"오늘 따뜻함을 느낀 순간은?","2027-12-13":"나에게 다정했던 친구는?","2027-12-20":"올 한 해 고마운 사람은?","2027-12-27":"도장 친구들에게 따뜻한 한마디","2028-01-03":"오늘 수련에서 내가 제일 잘한 것은?","2028-01-10":"나 자신에게 칭찬 한마디를 한다면?","2028-01-17":"오늘 나를 자랑스럽게 한 순간은?","2028-01-24":"오늘 목표로 정하고 도전한 것은 무엇이었나요?","2028-01-31":"올해 이루고 싶은 목표는?","2028-02-07":"오늘 배운 동작·약속 중 기억나는 것은?","2028-02-14":"바르게 행동해 뿌듯했던 일은?","2028-02-21":"도장에서 꼭 지킬 예절 한 가지는?","2028-02-28":"오늘 남을 위해 한 작은 행동은?","2028-03-06":"오늘 힘들어 보인 친구가 있었나?","2028-03-13":"오늘 나에게 친절을 베푼 사람은?","2028-03-20":"내가 받아 기분 좋았던 배려는?","2028-03-27":"오늘 배운 것 집에서 실천할 것은?","2028-04-03":"오늘 내가 끝까지 해낸 것은?","2028-04-10":"오늘 끝까지 책임지고 해낸 일은 무엇인가요?","2028-04-17":"우리 집에서 내가 맡은 역할은?","2028-04-24":"책임감 있게 행동한 친구 말하기","2028-05-01":"오늘 사범님 말씀 중 기억나는 것은?","2028-05-08":"어린 친구를 존중해 준 경험은?","2028-05-15":"내가 존경하는 사람 한 명만 말해볼까요?","2028-05-22":"스승·선배에게 배운 좋은 점은?","2028-05-29":"가정의 달, 부모님께 하고 싶은 말은?","2028-06-05":"새로 배운 것과 아직 서툰 것은?","2028-06-12":"오늘 나를 도와준 친구에게 고마운 점을 말해봐요.","2028-06-19":"더 연습해야 할 기본은?","2028-06-26":"남이 상 받을 때 진심 축하한 적은?","2028-07-03":"오늘 속상한 일을 어떻게 표현할까?","2028-07-10":"사과한 친구를 용서한 적 있나?","2028-07-17":"‘나는 ~해서 속상했어’로 말해보기","2028-07-24":"어려웠지만 다시 해본 것은?","2028-07-31":"실수해도 괜찮은 이유는?","2028-08-07":"오늘 친구와 즐거웠던 순간은?","2028-08-14":"친구 힘들 때 해줄 수 있는 일은?","2028-08-21":"친구 덕분에 배운 것이 있다면?","2028-08-28":"친구 장점 한 가지 발표하기","2028-09-04":"오늘 규칙을 잘 지켜 좋았던 점은?","2028-09-11":"약한 친구를 도운 경험은?","2028-09-18":"졌지만 박수 쳐준 적 있나?","2028-09-25":"오늘 배운 것 나누고 싶은 것은?","2028-10-02":"오늘 솔직해서 마음 편했던 일은?","2028-10-09":"실수를 숨기지 않고 말한 경험은?","2028-10-16":"남의 물건을 주우면 어떻게 하는 게 정직일까요?","2028-10-23":"친구의 정직한 행동 칭찬하기","2028-10-30":"정직해서 손해 봐도 왜 정직할까?","2028-11-06":"오늘 순서·규칙을 잘 지킨 순간은?","2028-11-13":"다른 친구 의견을 들어준 경험은?","2028-11-20":"편 안 가르고 함께 논 경험은?","2028-11-27":"차별 없이 대한 나의 모습 말하기","2028-12-04":"오늘 친구와 힘을 합쳐 해낸 것은?","2028-12-11":"우리 팀을 위해 한 일은?","2028-12-18":"올해 태권도에서 새로 할 수 있게 된 것은?","2028-12-25":"도장 친구들에게 응원 한마디!","2029-01-01":"오늘 수련에서 스스로 잘했다고 느낀 것은?","2029-01-08":"친구의 장점을 하나 찾아 칭찬하기","2029-01-15":"힘들어도 끝까지 해낸 순간은?","2029-01-22":"친구를 소중하게 대한 방법은?","2029-01-29":"내가 잘하는 것 한 가지를 자랑해 볼까요?","2029-02-05":"오늘 시키기 전에 스스로 한 일은?","2029-02-12":"친구가 스스로 노력한 모습 말하기","2029-02-19":"하기 싫었지만 먼저 한 일은?","2029-02-26":"친구의 부지런한 점 발견하기","2029-03-05":"오늘 용기 내어 도전한 것은?","2029-03-12":"친구가 용기 낸 순간을 봤다면?","2029-03-19":"손 들고 말하거나 시범한 경험은?","2029-03-26":"친구의 도전을 응원하는 말은?","2029-04-02":"오늘 가장 열심히 한 것은?","2029-04-09":"포기하지 않는 친구를 봤다면?","2029-04-16":"오늘 가장 열심히 연습한 동작은 무엇인가요?","2029-04-23":"친구의 끈기를 칭찬한다면?","2029-04-30":"꾸준히 연습해서 나아진 것은?","2029-05-07":"오늘 인사를 바르게 한 순간은?","2029-05-14":"나에게 예의 있게 대해준 친구는?","2029-05-21":"사범님·부모님께 지킨 예절은?","2029-05-28":"어른께 예의 바른 친구 모습 말하기","2029-06-04":"오늘 고마웠던 일 한 가지는?","2029-06-11":"친구의 고마운 행동을 말하기","2029-06-18":"부모님께 감사한 점은?","2029-06-25":"오늘 친구에게 ‘고마워’ 말한 일은?","2029-07-02":"오늘 힘들어도 참고 끝낸 것은?","2029-07-09":"친구가 인내한 모습을 봤다면?","2029-07-16":"참고 나서 뿌듯했던 경험은?","2029-07-23":"친구와 함께 버틴 일은?","2029-07-30":"방학에도 꾸준히 하고 싶은 것은?","2029-08-06":"어제보다 하나 더 해낸 것은?","2029-08-13":"노력해서 달라진 친구 모습은?","2029-08-20":"게임·영상 시간을 줄여본 경험은?","2029-08-27":"함께 성장한 친구에게 한마디","2029-09-03":"오늘 규칙을 잘 지킨 순간은?","2029-09-10":"약한 친구를 도운 친구를 봤다면?","2029-09-17":"졌지만 결과를 인정한 경험은?","2029-09-24":"바르게 행동한 친구를 칭찬하기","2029-10-01":"오늘 솔직하게 말한 일은?","2029-10-08":"정직해서 멋졌던 친구 모습은?","2029-10-15":"남의 물건을 주우면 어떻게 하는 게 정직일까요?","2029-10-22":"친구의 정직함을 발견하기","2029-10-29":"아무도 안 볼 때 바르게 행동한 일은?","2029-11-05":"오늘 남을 도운 일 한 가지는?","2029-11-12":"봉사하는 친구 모습을 말하기","2029-11-19":"작은 나눔을 실천한 경험은?","2029-11-26":"함께 봉사한 친구에게 한마디","2029-12-03":"오늘 따뜻함을 느낀 순간은?","2029-12-10":"나에게 다정했던 친구는?","2029-12-17":"올 한 해 고마운 사람은?","2029-12-24":"도장 친구들에게 따뜻한 한마디","2029-12-31":"내년에 더 아끼고 싶은 사람은?","2030-01-07":"오늘 수련에서 내가 제일 잘한 것은?","2030-01-14":"나 자신에게 칭찬 한마디를 한다면?","2030-01-21":"오늘 나를 자랑스럽게 한 순간은?","2030-01-28":"오늘 목표로 정하고 도전한 것은 무엇이었나요?","2030-02-04":"오늘 배운 동작·약속 중 기억나는 것은?","2030-02-11":"바르게 행동해 뿌듯했던 일은?","2030-02-18":"도장에서 꼭 지킬 예절 한 가지는?","2030-02-25":"오늘 남을 위해 한 작은 행동은?","2030-03-04":"오늘 힘들어 보인 친구가 있었나?","2030-03-11":"오늘 나에게 친절을 베푼 사람은?","2030-03-18":"내가 받아 기분 좋았던 배려는?","2030-03-25":"오늘 배운 것 집에서 실천할 것은?","2030-04-01":"오늘 내가 끝까지 해낸 것은?","2030-04-08":"오늘 끝까지 책임지고 해낸 일은 무엇인가요?","2030-04-15":"우리 집에서 내가 맡은 역할은?","2030-04-22":"책임감 있게 행동한 친구 말하기","2030-04-29":"오늘 스스로 정리한 것은?","2030-05-06":"오늘 사범님 말씀 중 기억나는 것은?","2030-05-13":"어린 친구를 존중해 준 경험은?","2030-05-20":"내가 존경하는 사람 한 명만 말해볼까요?","2030-05-27":"스승·선배에게 배운 좋은 점은?","2030-06-03":"새로 배운 것과 아직 서툰 것은?","2030-06-10":"오늘 나를 도와준 친구에게 고마운 점을 말해봐요.","2030-06-17":"더 연습해야 할 기본은?","2030-06-24":"남이 상 받을 때 진심 축하한 적은?","2030-07-01":"오늘 속상한 일을 어떻게 표현할까?","2030-07-08":"사과한 친구를 용서한 적 있나?","2030-07-15":"‘나는 ~해서 속상했어’로 말해보기","2030-07-22":"어려웠지만 다시 해본 것은?","2030-07-29":"실수해도 괜찮은 이유는?","2030-08-05":"오늘 친구와 즐거웠던 순간은?","2030-08-12":"친구 힘들 때 해줄 수 있는 일은?","2030-08-19":"친구 덕분에 배운 것이 있다면?","2030-08-26":"친구 장점 한 가지 발표하기","2030-09-02":"오늘 규칙을 잘 지켜 좋았던 점은?","2030-09-09":"약한 친구를 도운 경험은?","2030-09-16":"졌지만 박수 쳐준 적 있나?","2030-09-23":"오늘 배운 것 나누고 싶은 것은?","2030-09-30":"‘우리 모두를 위한 선택’은?","2030-10-07":"오늘 솔직해서 마음 편했던 일은?","2030-10-14":"실수를 숨기지 않고 말한 경험은?","2030-10-21":"남의 물건을 주우면 어떻게 하는 게 정직일까요?","2030-10-28":"친구의 정직한 행동 칭찬하기","2030-11-04":"오늘 순서·규칙을 잘 지킨 순간은?","2030-11-11":"다른 친구 의견을 들어준 경험은?","2030-11-18":"편 안 가르고 함께 논 경험은?","2030-11-25":"차별 없이 대한 나의 모습 말하기","2030-12-02":"오늘 친구와 힘을 합쳐 해낸 것은?","2030-12-09":"우리 팀을 위해 한 일은?","2030-12-16":"올해 태권도에서 새로 할 수 있게 된 것은?","2030-12-23":"도장 친구들에게 응원 한마디!","2030-12-30":"내년에 더 잘하고 싶은 것은?"};
+
+/* 질문→인성덕목 매핑 (2026~2030 시드) */
+var SIG_QCAT={"친구의 끈기를 칭찬한다면?":"열정","우리 팀이 더 잘하려면?":"우정","오늘 배운 것 나누고 싶은 것은?":"정의","친구가 스스로 노력한 모습 말하기":"주도성","어른께 예의 바른 친구 모습 말하기":"예의","오늘 내가 끝까지 해낸 것은?":"책임감","편 안 가르고 함께 논 경험은?":"공평","나에게 예의 있게 대해준 친구는?":"예의","올해 이루고 싶은 목표는?":"긍지·자부심","졌지만 박수 쳐준 적 있나?":"정의","친구 장점 한 가지 발표하기":"우정","‘나는 ~해서 속상했어’로 말해보기":"용서","오늘 나를 자랑스럽게 한 순간은?":"긍지·자부심","오늘 스스로 정리한 것은?":"책임감","바르게 행동한 친구를 칭찬하기":"정의","도장에서 꼭 지킬 예절 한 가지는?":"도덕성","봉사하는 친구 모습을 말하기":"봉사","오늘 속상한 일을 어떻게 표현할까?":"용서","내년에 더 잘하고 싶은 것은?":"협동","‘우리 모두를 위한 선택’은?":"정의","오늘 나에게 친절을 베푼 사람은?":"배려","친구의 장점을 하나 찾아 칭찬하기":"자기존중","스승·선배에게 배운 좋은 점은?":"존경","차별 없이 대한 나의 모습 말하기":"공평","남의 물건을 주우면 어떻게 하는 게 정직일까요?":"정직","손 들고 말하거나 시범한 경험은?":"용기","내가 존경하는 사람 한 명만 말해볼까요?":"존경","아무도 안 볼 때 바르게 행동한 일은?":"정직","오늘 배운 것 집에서 실천할 것은?":"배려","오늘 솔직해서 마음 편했던 일은?":"정직","내가 심판이라면 공정하게?":"공평","바르게 행동해 뿌듯했던 일은?":"도덕성","친구의 부지런한 점 발견하기":"주도성","친구를 소중하게 대한 방법은?":"자기존중","부모님께 감사한 점은?":"감사","우리 집에서 내가 맡은 역할은?":"책임감","포기하지 않는 친구를 봤다면?":"열정","오늘 친구와 힘을 합쳐 해낸 것은?":"협동","도장 친구들에게 따뜻한 한마디":"사랑","하기 싫었지만 먼저 한 일은?":"주도성","친구의 고마운 행동을 말하기":"감사","오늘 사범님 말씀 중 기억나는 것은?":"존경","오늘 나를 도와준 친구에게 고마운 점을 말해봐요.":"겸손·겸양","오늘 솔직하게 말한 일은?":"정직","오늘 수련에서 스스로 잘했다고 느낀 것은?":"자기존중","가정의 달, 부모님께 하고 싶은 말은?":"존경","새로 배운 것과 아직 서툰 것은?":"겸손·겸양","어제보다 하나 더 해낸 것은?":"극기","오늘 규칙을 잘 지킨 순간은?":"정의","오늘 남을 위해 한 작은 행동은?":"도덕성","함께 봉사한 친구에게 한마디":"봉사","나 자신에게 칭찬 한마디를 한다면?":"긍지·자부심","약한 친구를 도운 친구를 봤다면?":"정의","정직해서 손해 봐도 왜 정직할까?":"정직","오늘 가장 열심히 한 것은?":"열정","도장 친구들에게 응원 한마디!":"협동","오늘 힘들어 보인 친구가 있었나?":"배려","노력해서 달라진 친구 모습은?":"극기","오늘 수련에서 내가 제일 잘한 것은?":"긍지·자부심","이웃을 위해 하고 싶은 일은?":"봉사","오늘 남을 도운 일 한 가지는?":"봉사","친구 덕분에 배운 것이 있다면?":"우정","친구의 정직한 행동 칭찬하기":"정직","친구의 도전을 응원하는 말은?":"용기","올 한 해 고마운 사람은?":"사랑","오늘 고마웠던 일 한 가지는?":"감사","오늘 인사를 바르게 한 순간은?":"예의","친구와 함께 버틴 일은?":"인내","참고 나서 뿌듯했던 경험은?":"인내","오늘 규칙을 잘 지켜 좋았던 점은?":"정의","게임·영상 시간을 줄여본 경험은?":"극기","내가 받아 기분 좋았던 배려는?":"배려","오늘 용기 내어 도전한 것은?":"용기","꾸준히 연습해서 나아진 것은?":"열정","오늘 끝까지 책임지고 해낸 일은 무엇인가요?":"책임감","오늘 순서·규칙을 잘 지킨 순간은?":"공평","약한 친구를 도운 경험은?":"정의","사과한 친구를 용서한 적 있나?":"용서","사범님·부모님께 지킨 예절은?":"예의","다른 친구 의견을 들어준 경험은?":"공평","실수해도 괜찮은 이유는?":"용서","더 연습해야 할 기본은?":"겸손·겸양","올해 태권도에서 새로 할 수 있게 된 것은?":"협동","오늘 친구와 즐거웠던 순간은?":"우정","작은 나눔을 실천한 경험은?":"봉사","오늘 가장 열심히 연습한 동작은 무엇인가요?":"열정","함께 성장한 친구에게 한마디":"극기","내년에 더 아끼고 싶은 사람은?":"사랑","나에게 다정했던 친구는?":"사랑","친구가 인내한 모습을 봤다면?":"인내","어려웠지만 다시 해본 것은?":"용서","내가 잘하는 것 한 가지를 자랑해 볼까요?":"자기존중","오늘 목표로 정하고 도전한 것은 무엇이었나요?":"긍지·자부심","오늘 친구에게 ‘고마워’ 말한 일은?":"감사","방학에도 꾸준히 하고 싶은 것은?":"인내","오늘 시키기 전에 스스로 한 일은?":"주도성","친구 힘들 때 해줄 수 있는 일은?":"우정","힘들어도 끝까지 해낸 순간은?":"자기존중","친구의 정직함을 발견하기":"정직","어린 친구를 존중해 준 경험은?":"존경","실수를 숨기지 않고 말한 경험은?":"정직","남이 상 받을 때 진심 축하한 적은?":"겸손·겸양","친구가 용기 낸 순간을 봤다면?":"용기","오늘 힘들어도 참고 끝낸 것은?":"인내","책임감 있게 행동한 친구 말하기":"책임감","우리 팀을 위해 한 일은?":"협동","오늘 배운 동작·약속 중 기억나는 것은?":"도덕성","새 학기, 도전하고 싶은 것 하나는?":"용기","오늘 힘들었지만 포기하지 않고 해낸 것은?":"극기","가정의 달, 부모님께 지킬 예절은?":"예의","오늘 따뜻함을 느낀 순간은?":"사랑","정직해서 멋졌던 친구 모습은?":"정직","졌지만 결과를 인정한 경험은?":"정의"};
+var _SIG_CAT_LIST=["예의","용기","인내","극기","겸손·겸양","존경","정직","도덕성","공평","정의","봉사","사랑","배려","협동","우정","용서","감사","긍지·자부심","자기존중","주도성","책임감","열정"];
+function _sigCatColor(c){ var pal=["#2B5FB8","#0E7C86","#2E9E6A","#B4791F","#C2410C","#9333EA","#DB2777","#0369A1","#4F46E5","#0D9488","#CA8A04"]; var i=_SIG_CAT_LIST.indexOf(c); if(i<0){ i=0; for(var k=0;k<(c||"").length;k++) i+=c.charCodeAt(k); } return pal[i%pal.length]; }
+function sigCat(q){ if(!q) return ""; return (typeof SIG_QCAT==="object"&&SIG_QCAT[String(q).trim()])||""; }
+function sigCatTag(q){ var c=sigCat(q); if(!c) return ""; var col=_sigCatColor(c); return '<span style="display:inline-block;background:'+col+'1a;color:'+col+';border:1px solid '+col+'44;border-radius:6px;padding:1px 6px;font-size:10px;font-weight:800;white-space:nowrap;vertical-align:middle;letter-spacing:-.3px;line-height:1.5">'+esc(c)+'</span>'; }
+
 function loadAll(){
   var embedded={payments:[],expiryMap:{},deletedIds:[],savedAt:0};
   try{ embedded=JSON.parse(document.getElementById("app-data").textContent)||embedded; }catch(e){}
@@ -6868,7 +6876,8 @@ function renderWeekTab(){
    /* ── ✨ 이번 주 시그니처 질문 (생일 범례 오른쪽 · 컴팩트) ── */
    '<span style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#EAF1FB 0%,#F3F0FF 100%);border:1px solid #D8D6F5;border-radius:10px;padding:4px 6px 4px 9px;box-shadow:0 1px 3px rgba(67,56,202,.08)">'+
      '<span style="font-size:11.5px;font-weight:900;color:#2B5FB8;white-space:nowrap;letter-spacing:-.2px">✨ 이번 주 질문</span>'+
-     '<input style="width:360px;max-width:55vw;border:1.5px solid #C3D4EE;background:#fff;font-size:13.5px;font-weight:600;color:#1F3A5F;padding:5px 9px;border-radius:10px;font-family:inherit" placeholder="예: 이번 주 가장 뿌듯했던 순간은?" value="'+esc((state.sigQ||{})[curWeek()]||"")+'" oninput="sigQInput(this.value)" onchange="sigQSave()">'+
+     (sigCatTag((state.sigQ||{})[curWeek()]||"")||"")+
+     '<input style="width:340px;max-width:52vw;border:1.5px solid #C3D4EE;background:#fff;font-size:13.5px;font-weight:600;color:#1F3A5F;padding:5px 9px;border-radius:10px;font-family:inherit" placeholder="예: 이번 주 가장 뿌듯했던 순간은?" value="'+esc((state.sigQ||{})[curWeek()]||"")+'" oninput="sigQInput(this.value)" onchange="sigQSave()">'+
      '<button style="background:#2B5FB8;border:none;color:#fff;font-weight:800;white-space:nowrap;font-size:11.5px;padding:5px 9px;border-radius:10px;cursor:pointer;font-family:inherit" onclick="openSigBank()">📚 질문모음</button>'+
    '</span>'+
    '</div>'+
@@ -7541,8 +7550,10 @@ window.sigQInput=function(v){
   __sigQTimer=setTimeout(function(){ sigQSave(); }, 900);
 };
 window.sigQSave=function(){ if(__sigQTimer){ clearTimeout(__sigQTimer); __sigQTimer=null; } state.sigTT=Date.now(); persistAtt(); };
-window.openSigBank=function(){ state.sigBank={}; render(); };
+window.openSigBank=function(){ state.sigBank={year:"전체",order:"desc"}; render(); };
 window.closeSigBank=function(){ state.sigBank=null; render(); };
+window.sigBankYear=function(y){ if(!state.sigBank)state.sigBank={}; state.sigBank.year=y; render(); };
+window.sigBankOrder=function(){ if(!state.sigBank)state.sigBank={}; state.sigBank.order=(state.sigBank.order==="asc")?"desc":"asc"; render(); };
 /* 한 학생의 질문&대답 이력 (최신 주 먼저) */
 function sigListFor(name){
   var out=[], A=state.sigA||{};
@@ -7550,33 +7561,62 @@ function sigListFor(name){
   out.sort(function(a,b){ return b.wk.localeCompare(a.wk); });
   return out;
 }
+function _sigCard(wk,Q,A,highlight){
+  var q=(Q[wk]||"").trim(), ans=A[wk]||{};
+  var names=Object.keys(ans).filter(function(n){return (ans[n].a||"").trim();});
+  var tag=sigCatTag(q);
+  return '<div style="background:#fff;border:1px solid '+(highlight?"#C9DDF6":"var(--line)")+';border-radius:10px;padding:11px 13px;margin-bottom:9px'+(highlight?';box-shadow:0 1px 4px rgba(43,95,184,.08)':'')+'">'+
+    '<div style="font-size:11.5px;color:var(--sub);font-weight:700">'+esc(weekLabel(wk))+' · 답변 '+names.length+'명</div>'+
+    '<div style="margin:5px 0 7px;line-height:1.5">'+(tag?tag+' ':'')+'<span style="font-size:13.5px;font-weight:800;color:#1F3A5F">Q. '+(q?esc(q):'<span style="color:var(--sub);font-weight:400">질문 미설정</span>')+'</span></div>'+
+    (names.length? names.map(function(n){ return '<div style="font-size:13.5px;padding:4px 0;border-top:1px dashed var(--line)"><b>'+esc(n)+'</b> <span style="color:var(--sub)">— </span>'+esc(ans[n].a)+'</div>'; }).join('') : '<div style="font-size:11.5px;color:var(--sub)">아직 답변이 없습니다.</div>')+
+    '</div>';
+}
 function renderSigBank(){
   var A=state.sigA||{}, Q=state.sigQ||{}, weeks={};
+  var cfg=state.sigBank||{}; var selY=cfg.year||"전체"; var order=cfg.order||"desc";
   for(var w1 in Q){ if((Q[w1]||"").trim()) weeks[w1]=1; }
   for(var w2 in A){ if(A[w2]&&Object.keys(A[w2]).length) weeks[w2]=1; }
-  var wkList=Object.keys(weeks).sort(function(a,b){return b.localeCompare(a);});
+  var allWks=Object.keys(weeks);
+  /* 최근 한 달 (오늘 기준 지난 28일 이내, 미래 이번주까지) */
+  var curMon=(typeof mondayOf==="function")?mondayOf(today()):today(); var lo=(typeof addDays==="function")?addDays(curMon,-28):"";
+  var recent=allWks.filter(function(wk){ return wk<=curMon && wk>=lo; }).sort(function(a,b){return b.localeCompare(a);});
+  /* 연도 목록 */
+  var years=[]; allWks.forEach(function(wk){ var y=wk.slice(0,4); if(years.indexOf(y)<0) years.push(y); }); years.sort();
+  /* 본문 목록 (연도 필터 + 정렬) */
+  var list=allWks.filter(function(wk){ return selY==="전체" || wk.slice(0,4)===selY; })
+    .sort(function(a,b){ return order==="asc"? a.localeCompare(b) : b.localeCompare(a); });
   var body="";
-  if(!wkList.length){ body='<div style="color:var(--sub);font-size:13.5px;padding:24px 0;text-align:center">아직 등록된 시그니처 질문이 없습니다.</div>'; }
-  else {
-    var lastYM="";
-    wkList.forEach(function(wk){
-      var ym=wk.slice(0,7);
-      if(ym!==lastYM){ lastYM=ym; body+='<div style="font-size:13.5px;font-weight:900;color:#2B5FB8;margin:16px 0 6px;border-bottom:2px solid #D9E4F5;padding-bottom:4px">'+wk.slice(0,4)+'년 '+Number(wk.slice(5,7))+'월</div>'; }
-      var q=(Q[wk]||"").trim(), ans=A[wk]||{};
-      var names=Object.keys(ans).filter(function(n){return (ans[n].a||"").trim();});
-      body+='<div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:9px">'+
-        '<div style="font-size:11.5px;color:var(--sub);font-weight:700">'+esc(weekLabel(wk))+' · 답변 '+names.length+'명</div>'+
-        '<div style="font-size:13.5px;font-weight:800;color:#1F3A5F;margin:4px 0 7px">Q. '+(q?esc(q):'<span style="color:var(--sub);font-weight:400">질문 미설정</span>')+'</div>'+
-        (names.length? names.map(function(n){ return '<div style="font-size:13.5px;padding:4px 0;border-top:1px dashed var(--line)"><b>'+esc(n)+'</b> <span style="color:var(--sub)">— </span>'+esc(ans[n].a)+'</div>'; }).join('') : '<div style="font-size:11.5px;color:var(--sub)">아직 답변이 없습니다.</div>')+
-        '</div>';
+  /* 최근 한 달 섹션 */
+  if(recent.length){
+    body+='<div style="background:linear-gradient(90deg,#EAF1FB,#F3F0FF);border:1px solid #D8D6F5;border-radius:12px;padding:11px 13px 6px;margin-bottom:14px">'+
+      '<div style="font-size:12.5px;font-weight:900;color:#4338CA;margin-bottom:8px">🕐 최근 한 달 질문 · 대답</div>'+
+      recent.map(function(wk){ return _sigCard(wk,Q,A,true); }).join('')+
+    '</div>';
+  }
+  /* 필터/정렬 바 */
+  var yBtn=function(y,lab){ var on=(selY===y); return '<button onclick="sigBankYear(\''+y+'\')" style="border:1.5px solid '+(on?"#2B5FB8":"#D6DEE9")+';background:'+(on?"#2B5FB8":"#fff")+';color:'+(on?"#fff":"#33507D")+';border-radius:16px;padding:4px 11px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">'+lab+'</button>'; };
+  var bar='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;position:sticky;top:0;background:#F5F5F7;padding:2px 0 8px;z-index:1">'+
+    '<span style="font-size:11.5px;color:var(--sub);font-weight:800;margin-right:2px">연도</span>'+
+    yBtn("전체","전체")+years.map(function(y){return yBtn(y,y+"년");}).join('')+
+    '<span style="flex:1"></span>'+
+    '<button onclick="sigBankOrder()" style="border:1.5px solid #D6DEE9;background:#fff;color:#33507D;border-radius:16px;padding:4px 11px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">'+(order==="asc"?"과거순 ↑":"최신순 ↓")+'</button>'+
+  '</div>';
+  /* 연·월 그룹 목록 */
+  var listBody="";
+  if(!list.length){ listBody='<div style="color:var(--sub);font-size:13.5px;padding:24px 0;text-align:center">해당 연도의 질문이 없습니다.</div>'; }
+  else { var lastYM="";
+    list.forEach(function(wk){ var ym=wk.slice(0,7);
+      if(ym!==lastYM){ lastYM=ym; listBody+='<div style="font-size:13.5px;font-weight:900;color:#2B5FB8;margin:16px 0 6px;border-bottom:2px solid #D9E4F5;padding-bottom:4px">'+wk.slice(0,4)+'년 '+Number(wk.slice(5,7))+'월</div>'; }
+      listBody+=_sigCard(wk,Q,A,false);
     });
   }
+  if(!allWks.length){ body='<div style="color:var(--sub);font-size:13.5px;padding:24px 0;text-align:center">아직 등록된 시그니처 질문이 없습니다.</div>'; bar=""; }
   return '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:12px" onclick="closeSigBank()">'+
-    '<div style="background:#F5F5F7;border-radius:16px;max-width:520px;width:100%;max-height:90vh;display:flex;flex-direction:column" onclick="event.stopPropagation()">'+
+    '<div style="background:#F5F5F7;border-radius:16px;max-width:540px;width:100%;max-height:90vh;display:flex;flex-direction:column" onclick="event.stopPropagation()">'+
     '<div style="padding:16px 18px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px">'+
-      '<span style="font-size:17px;font-weight:900">📚 시그니처 질문모음</span><span style="font-size:11.5px;color:var(--sub)">연·월·주별 누적</span><span style="flex:1"></span>'+
+      '<span style="font-size:17px;font-weight:900">📚 시그니처 질문모음</span><span style="font-size:11.5px;color:var(--sub)">인성덕목·연·월·주별 누적</span><span style="flex:1"></span>'+
       '<button class="chip" onclick="closeSigBank()">닫기</button></div>'+
-    '<div style="overflow:auto;padding:8px 18px 18px">'+body+'</div>'+
+    '<div style="overflow:auto;padding:10px 18px 18px">'+body+bar+listBody+'</div>'+
     '</div></div>';
 }
 /* 출석 처리 창 단축키: Enter=저장 · Esc=취소 · Ctrl/Cmd+E=배치 삭제 (한영·대소문자 무관: 물리 키 위치 기준) */
