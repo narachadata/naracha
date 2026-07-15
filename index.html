@@ -646,7 +646,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.87";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.88";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -13186,12 +13186,19 @@ function measKindColor(k){ return (k==="줄넘기")?"#2B5FB8":(k==="체력")?"#1
 function prevMeasSession(s){ var m=measuresData(), best=null, cur=s.year+(s.half==="H2"?0.5:0); Object.keys(m).forEach(function(id){ var o=m[id]; if(o.id===s.id||o.kind!==s.kind) return; var sc=o.year+(o.half==="H2"?0.5:0); if(sc<cur && (!best||sc>(best.year+(best.half==="H2"?0.5:0)))) best=o; }); return best; }
 function measRecordCats(s){ return (s.cats||[]).filter(function(c){ return c.name.indexOf("비만도")<0 && c.name.indexOf("종합")<0 && c.name.indexOf("비고")<0 && c.subs.some(function(su){return su.sub==="기록";}); }); }
 function _recVal(row,catName){ return parseFloat(measCell(row,catName,"기록")); }
+/* 향상왕·기록왕은 '현재 재원생'만 표기 (휴관·퇴관·명단에 없는 이름 제외) */
+function _measEnrolled(name){
+  if(!name) return false;
+  try{ if(typeof isQuit==="function" && isQuit(name)) return false; }catch(e){}
+  if(state.closedMap && state.closedMap[name]) return false;
+  return STUDENTS.some(function(x){ return x.n===name; });
+}
 function computeImprove(s){
   var prev=prevMeasSession(s); if(!prev) return null;
   var pByName={}; (prev.rows||[]).forEach(function(r){ pByName[r.name]=r; });
   return measRecordCats(s).map(function(cat){
     var byAge={};
-    (s.rows||[]).forEach(function(r){ var pr=pByName[r.name]; if(!pr) return; var cur=_recVal(r,cat.name), pv=_recVal(pr,cat.name); if(isNaN(cur)||isNaN(pv)) return; var imp=cur-pv; if(imp<=0) return; var age=r.age||"?"; if(!byAge[age]||imp>byAge[age].imp) byAge[age]={age:age,name:r.name,gender:r.gender,cls:r.cls,prev:pv,cur:cur,imp:imp}; });
+    (s.rows||[]).forEach(function(r){ if(!_measEnrolled(r.name)) return; var pr=pByName[r.name]; if(!pr) return; var cur=_recVal(r,cat.name), pv=_recVal(pr,cat.name); if(isNaN(cur)||isNaN(pv)) return; var imp=cur-pv; if(imp<=0) return; var age=r.age||"?"; if(!byAge[age]||imp>byAge[age].imp) byAge[age]={age:age,name:r.name,gender:r.gender,cls:r.cls,prev:pv,cur:cur,imp:imp}; });
     var list=Object.keys(byAge).sort(function(a,b){return (parseFloat(a)||99)-(parseFloat(b)||99);}).map(function(k){return byAge[k];});
     return {catName:cat.name, list:list};
   });
@@ -13199,7 +13206,7 @@ function computeImprove(s){
 function computeRecord(s){
   return measRecordCats(s).map(function(cat){
     var byAge={};
-    (s.rows||[]).forEach(function(r){ var v=_recVal(r,cat.name); if(isNaN(v)) return; var age=r.age||"?"; (byAge[age]=byAge[age]||[]).push({name:r.name,gender:r.gender,rec:v}); });
+    (s.rows||[]).forEach(function(r){ if(!_measEnrolled(r.name)) return; var v=_recVal(r,cat.name); if(isNaN(v)) return; var age=r.age||"?"; (byAge[age]=byAge[age]||[]).push({name:r.name,gender:r.gender,rec:v}); });
     var groups=Object.keys(byAge).sort(function(a,b){return (parseFloat(a)||99)-(parseFloat(b)||99);}).map(function(age){
       var arr=byAge[age].slice().sort(function(a,b){return b.rec-a.rec;});
       var out=[], rank=0, prevv=null, cnt=0;
@@ -13220,15 +13227,19 @@ function _measBackBar(s,label){ var kc=measKindColor(s.kind); return '<div style
   '<button class="chip sm" style="color:var(--blue)" onclick="measAllPdf(\''+esc(s.title).replace(/[^0-9가-힣A-Za-z]/g,"_")+'_'+label+'\')">📄 전체 PDF 저장</button></div>'; }
 /* ── 밴드용 모바일 포스터 (세로형 · 브랜드 디자인) ── */
 function _measKindPair(k){ return (k==="줄넘기")?["#2B5FB8","#1E4A96"]:(k==="체력")?["#1E7B3C","#155E29"]:["#7C3AED","#5B21B6"]; }
-function _measHead(s, king, sub){ var p=_measKindPair(s.kind);
-  return '<div style="background:linear-gradient(140deg,'+p[0]+' 0%,'+p[1]+' 100%);color:#fff;padding:20px 22px 18px">'+
-    '<div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">'+
-      '<span style="width:36px;height:36px;border-radius:10px;background:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none;box-shadow:0 2px 6px rgba(0,0,0,.15)"><img src="'+LOGO_SYM+'" style="width:28px;height:28px;object-fit:contain"></span>'+
-      '<span style="font-size:12.5px;font-weight:800;letter-spacing:.3px;opacity:.95">나라차태권도 분당도장</span>'+
+function _measHead(s, king, sub, light){ var p=_measKindPair(s.kind);
+  /* light=true → 기록왕용: 향상왕보다 헤더·글씨를 한 단계 작게(비중 낮춤) */
+  var lg=!!light;
+  var logoSz=lg?30:36, logoImg=lg?23:28, kingFs=lg?'22px':'31px', pad=lg?'15px 18px 13px':'20px 22px 18px';
+  var titleFs=lg?'12px':'13.5px', subFs=lg?'13px':'16px', subPad=lg?'4px 13px':'6px 16px', subMt=lg?'8px':'11px';
+  return '<div style="background:linear-gradient(140deg,'+p[0]+' 0%,'+p[1]+' 100%);color:#fff;padding:'+pad+'">'+
+    '<div style="display:flex;align-items:center;gap:9px;margin-bottom:'+(lg?'8px':'12px')+'">'+
+      '<span style="width:'+logoSz+'px;height:'+logoSz+'px;border-radius:'+(lg?8:10)+'px;background:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none;box-shadow:0 2px 6px rgba(0,0,0,.15)"><img src="'+LOGO_SYM+'" style="width:'+logoImg+'px;height:'+logoImg+'px;object-fit:contain"></span>'+
+      '<span style="font-size:'+(lg?'11.5px':'12.5px')+';font-weight:800;letter-spacing:.3px;opacity:.95">나라차태권도 분당도장</span>'+
     '</div>'+
-    '<div style="font-size:13.5px;font-weight:700;opacity:.9">'+esc(s.title)+'</div>'+
-    '<div style="font-size:31px;font-weight:900;letter-spacing:-.5px;line-height:1.15;margin-top:1px">'+king+'</div>'+
-    (sub?'<div style="display:inline-block;margin-top:11px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:6px 16px;font-size:16px;font-weight:800">'+esc(sub)+'</div>':'')+
+    '<div style="font-size:'+titleFs+';font-weight:700;opacity:.9">'+esc(s.title)+'</div>'+
+    '<div style="font-size:'+kingFs+';font-weight:900;letter-spacing:-.5px;line-height:1.15;margin-top:1px">'+king+'</div>'+
+    (sub?'<div style="display:inline-block;margin-top:'+subMt+';background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:'+subPad+';font-size:'+subFs+';font-weight:800">'+esc(sub)+'</div>':'')+
   '</div>'; }
 function _measFoot(msg, kc){ return '<div style="padding:15px 20px 17px;text-align:center;background:#fff">'+
     '<div style="font-size:13px;font-weight:800;color:'+kc+';line-height:1.5">'+msg+'</div>'+
@@ -13274,19 +13285,20 @@ function renderRecordKing(s){
   h+='<div style="font-size:12px;color:var(--sub);margin-bottom:14px">연령별 기록 순위 (기록 높은 순 · 상위 3위) · 아래 카드를 <b>이미지로 저장</b>해 밴드에 올리세요.</div>';
   var data=computeRecord(s); var any=false;
   data.forEach(function(cat,idx){ if(!cat.groups.length) return; any=true; var secId="mrec_"+idx;
-    h+='<div style="margin:0 auto 18px;width:520px;max-width:100%">'+
-       '<div class="measSlide" id="'+secId+'" style="width:520px;max-width:100%;background:#F4F7FA;border-radius:20px;overflow:hidden;box-shadow:0 6px 22px rgba(20,30,50,.1)">'+
-         _measHead(s, "🥇 기록왕", cat.catName)+
-         '<div style="padding:12px 14px 8px">'+
+    h+='<div style="margin:0 auto 15px;width:460px;max-width:100%">'+
+       '<div class="measSlide" id="'+secId+'" style="width:460px;max-width:100%;background:#F4F7FA;border-radius:17px;overflow:hidden;box-shadow:0 4px 16px rgba(20,30,50,.09)">'+
+         _measHead(s, "🥇 기록왕", cat.catName, true)+
+         '<div style="padding:10px 12px 6px">'+
            cat.groups.map(function(g){
-             return '<div style="margin-top:12px">'+
-               '<div style="display:inline-block;background:'+kc+';color:#fff;border-radius:999px;padding:4px 15px;font-size:13.5px;font-weight:900;margin-bottom:8px;box-shadow:0 2px 6px '+kc+'40">'+esc(g.age)+'세</div>'+
-               g.rows.map(function(r){ var medal=r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':(r.rank+'위');
-                 return '<div style="background:#fff;border-radius:13px;padding:11px 14px;display:flex;align-items:center;gap:11px;margin-bottom:7px;box-shadow:0 1px 5px rgba(20,30,50,.06)">'+
-                   '<div style="flex:none;font-size:22px;width:30px;text-align:center">'+medal+'</div>'+
-                   '<b style="flex:1;font-size:16.5px;letter-spacing:-.3px">'+esc(r.name)+'</b>'+
-                   '<span style="font-size:11px;color:#9AA3AE">'+esc(r.gender)+'</span>'+
-                   '<div style="flex:none;background:'+kc+'14;color:'+kc+';border-radius:11px;padding:6px 13px;font-size:18px;font-weight:900">'+_fmtN(r.rec)+'</div>'+
+             return '<div style="margin-top:9px">'+
+               '<div style="display:inline-block;background:'+kc+';color:#fff;border-radius:999px;padding:3px 12px;font-size:12px;font-weight:900;margin-bottom:6px;box-shadow:0 1px 4px '+kc+'33">'+esc(g.age)+'세</div>'+
+               g.rows.map(function(r){ var medal=r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':(r.rank+'위'); var ph=getPhoto(r.name);
+                 return '<div style="background:#fff;border-radius:11px;padding:7px 11px;display:flex;align-items:center;gap:9px;margin-bottom:5px;box-shadow:0 1px 4px rgba(20,30,50,.05)">'+
+                   '<div style="flex:none;font-size:17px;width:23px;text-align:center">'+medal+'</div>'+
+                   (ph?'<img src="'+ph+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex:none;border:1.5px solid '+kc+'33">':'<div style="width:30px;height:30px;border-radius:50%;background:'+kc+'12;color:'+kc+';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex:none">'+esc((r.name||" ").slice(0,1))+'</div>')+
+                   '<b style="flex:1;min-width:0;font-size:14px;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(r.name)+'</b>'+
+                   '<span style="font-size:10px;color:#9AA3AE;flex:none">'+esc(r.gender)+'</span>'+
+                   '<div style="flex:none;background:'+kc+'14;color:'+kc+';border-radius:9px;padding:4px 10px;font-size:14.5px;font-weight:900">'+_fmtN(r.rec)+'</div>'+
                  '</div>';
                }).join('')+
              '</div>';
