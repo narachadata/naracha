@@ -647,7 +647,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.93";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.94";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -13686,11 +13686,10 @@ function renderMeasureTab(){
         '<b style="font-size:14px">'+esc(s.half==="H1"?"전반기":"후반기")+'</b>'+
         '<span style="font-size:12px;color:var(--sub)">'+s.n+'명'+(s.matched!=null?' · 명단일치 '+s.matched+'명':'')+'</span>'+
         '<span style="flex:1"></span>'+
-        '<button class="chip sm" style="color:'+kc+';border-color:'+kc+'66;font-weight:800" onclick="openMeasInputExisting(\''+s.id+'\')">✏️ 입력</button>'+
+        (s.kind==="체력"?'<button class="chip sm" style="color:#fff;background:#2B5FB8;border-color:#2B5FB8;font-weight:800" onclick="openMeasReport(\''+s.id+'\')">📄 리포트</button>':'')+
         '<button class="chip sm" style="color:#B45309;border-color:#F0C36D" onclick="openMeasView(\'improve\',\''+s.id+'\')">🏅 향상왕</button>'+
         '<button class="chip sm" style="color:#B45309;border-color:#F0C36D" onclick="openMeasView(\'record\',\''+s.id+'\')">🥇 기록왕</button>'+
         '<button class="chip sm" style="color:var(--blue)" onclick="setMeasSel(\''+s.id+'\')">보기</button>'+
-        (s.kind==="체력"?'<button class="chip sm" style="color:#fff;background:#2B5FB8;border-color:#2B5FB8;font-weight:800" onclick="openMeasReport(\''+s.id+'\')">📄 리포트</button>':'')+
         '<button class="chip sm" style="color:#1E7B3C" onclick="exportMeasXlsx(\''+s.id+'\')">⬇ 엑셀</button>'+
         '<button class="chip sm" style="color:var(--red)" onclick="delMeasureSession(\''+s.id+'\')">삭제</button>'+
       '</div>';
