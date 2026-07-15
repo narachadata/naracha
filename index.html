@@ -647,7 +647,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.97";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.98";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -13150,6 +13150,7 @@ window.importMeasureXlsx=function(input){
   reader.readAsArrayBuffer(f);
 };
 window.setMeasSel=function(id){ state.measSel=id||null; state.measView=null; state.measReport=false; if(id&&measuresData()[id]) measAutoAll(measuresData()[id]); render(); };
+window.setMSort=function(v){ state.mSort=v; render(); };
 window.delMeasureSession=function(id){ var m=measuresData(); if(!m[id]) return; if(!confirm('"'+m[id].title+'" 측정 회차를 삭제할까요?\n(이 회차의 측정 기록이 모두 지워집니다)')) return; delete m[id]; if(!state.measTomb)state.measTomb={}; state.measTomb[id]=Date.now(); state.measT=Date.now(); measPersist(); state.measSel=null; render(); };
 window.openMeasFor=function(name){ state.topCat="측정"; state.measSel=null; render(); };
 function measCell(row,catKw,subKw){ for(var k in row.cells){ var parts=k.split(""); if(parts[0].indexOf(catKw)>=0 && (!subKw||parts[1].indexOf(subKw)>=0)) return row.cells[k]; } return ""; }
@@ -13754,16 +13755,35 @@ function renderMeasureDetail(s){
     '<b style="font-size:15px">'+esc(s.title)+'</b>'+
     '<span style="font-size:12px;color:var(--sub)">'+s.n+'명'+(s.matched!=null?' · 명단일치 '+s.matched+'명':'')+'</span></div>'+
     '<div style="font-size:11.5px;color:var(--sub);margin-bottom:10px">불러온 날짜 '+esc(s.date||'')+' · 회색 이름은 현재 재원 명단에 없는 수련생입니다.</div>';
+  /* 정렬 */
+  var cats=s.cats||[];
+  var srt=state.mSort||'input';
+  var ngrade={}; (STUDENTS||[]).forEach(function(x){ ngrade[x.n]=x.grade||x.gup||''; });
+  function _grank(g){ var p=parseGradeUI(g); if(p.t==="급"){ return 10-(parseInt(p.n,10)||9); } if(p.t==="품단"){ var pm=String(p.n).match(/(\d+)(품|단)/); var base=(pm&&pm[2]==="단")?10000:1000; var pn=pm?parseInt(pm[1],10):1; var s=parseInt(p.s,10)||0; return base+pn*100-s; } return -1; }
+  function _hasMeas(rw){ return cats.some(function(cat){ return cat.subs.some(function(su){ return !_measIsAuto(s.kind,cat.name,su.sub) && String((rw.cells||{})[su.key]||'').trim()!==''; }); }); }
+  var order=(s.rows||[]).map(function(rw,oi){ return {rw:rw,oi:oi}; });
+  var _cmpN=function(a,b){ return String(a.rw.name||'').localeCompare(String(b.rw.name||''),'ko'); };
+  if(srt==='name') order.sort(_cmpN);
+  else if(srt==='cls') order.sort(function(a,b){ return String(a.rw.cls||'').localeCompare(String(b.rw.cls||''),'ko')||_cmpN(a,b); });
+  else if(srt==='grade') order.sort(function(a,b){ var ga=_grank(ngrade[a.rw.name]), gb=_grank(ngrade[b.rw.name]); ga=(ga<0?9999:ga); gb=(gb<0?9999:gb); return ga-gb||_cmpN(a,b); });
+  else if(srt==='empty') order.sort(function(a,b){ return (_hasMeas(a.rw)?1:0)-(_hasMeas(b.rw)?1:0)||_cmpN(a,b); });
+  var _emptyN=order.filter(function(o){return !_hasMeas(o.rw);}).length;
+  var sbtn=function(v,lab){ var on=(srt===v); return '<button onclick="setMSort(\''+v+'\')" style="border:1.5px solid '+(on?kc:"#D6DEE9")+';background:'+(on?kc:"#fff")+';color:'+(on?"#fff":"#33507D")+';border-radius:14px;padding:4px 11px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">'+lab+'</button>'; };
+  h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:9px">'+
+     '<span style="font-size:11.5px;color:var(--sub);font-weight:800;margin-right:2px">정렬</span>'+
+     sbtn('input','입력순')+sbtn('name','이름순')+sbtn('cls','반별')+sbtn('grade','급수별')+
+     sbtn('empty','측정값없음'+(_emptyN?' '+_emptyN:''))+'</div>';
   /* 표 헤더 */
   var cats=s.cats||[];
-  var head1='<tr><th rowspan="2" style="position:sticky;left:0;background:#F4F6FA;z-index:2">이름</th><th rowspan="2">성별</th><th rowspan="2">나이</th><th rowspan="2">반</th>';
+  var kcTint=(s.kind==="줄넘기")?'#E9EFF8':(s.kind==="체력")?'#E7F3EC':'#F1EBFB';
+  var head1='<tr><th rowspan="2" style="position:sticky;left:0;background:#EEF2F8;z-index:6">이름</th><th rowspan="2" style="background:#F4F6FA">성별</th><th rowspan="2" style="background:#F4F6FA">나이</th><th rowspan="2" style="background:#F4F6FA">반</th>';
   var head2='<tr>';
-  cats.forEach(function(cat){ var sp=cat.subs.length||1; head1+='<th colspan="'+sp+'" style="background:'+kc+'14;color:'+kc+'">'+esc(cat.name)+'</th>'; cat.subs.forEach(function(su){ head2+='<th style="font-weight:600;color:var(--sub);font-size:10.5px">'+esc(su.sub||'값')+'</th>'; }); });
+  cats.forEach(function(cat){ var sp=cat.subs.length||1; head1+='<th colspan="'+sp+'" style="background:'+kcTint+';color:'+kc+'">'+esc(cat.name)+'</th>'; cat.subs.forEach(function(su){ head2+='<th style="font-weight:600;color:var(--sub);font-size:10.5px;background:#F4F6FA">'+esc(su.sub||'값')+'</th>'; }); });
   head1+='</tr>'; head2+='</tr>';
   var body='';
   function _av(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
   function _dinp(val,call,w){ return '<input value="'+_av(val)+'" oninput="'+call+'" style="width:'+(w||46)+'px;border:1px solid var(--line);border-radius:5px;padding:3px 4px;font-size:11px;font-family:inherit;text-align:center;background:#fff;box-sizing:border-box">'; }
-  (s.rows||[]).forEach(function(rw,ri){ var inRoster=have[rw.name]; var esn=esc(rw.name).replace(/'/g,"\\'");
+  order.forEach(function(o){ var rw=o.rw, ri=o.oi; var inRoster=have[rw.name]; var esn=esc(rw.name).replace(/'/g,"\\'");
     var ph=getPhoto(rw.name);
     var av=ph?'<img src="'+ph+'" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex:none;display:block">'
             :'<span style="width:22px;height:22px;border-radius:50%;background:'+kc+'18;color:'+kc+';display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none">'+esc((rw.name||' ').slice(0,1))+'</span>';
@@ -13779,7 +13799,7 @@ function renderMeasureDetail(s){
   });
   h+='<div style="overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:10px">'+
     '<table style="border-collapse:collapse;font-size:11.5px;white-space:nowrap;min-width:100%" class="measTable">'+
-    '<thead style="position:sticky;top:0;z-index:1">'+head1+head2+'</thead><tbody>'+body+'</tbody></table></div>';
+    '<thead style="position:sticky;top:0;z-index:5">'+head1+head2+'</thead><tbody>'+body+'</tbody></table></div>';
   var autoNote=(s.kind==="체력")?' · <b style="color:#1E7B3C">점수·종합점수·종합등급</b>은 등급을 넣으면 자동 계산됩니다(수정 불가)':'';
   h+='<div style="font-size:11.5px;color:var(--sub);margin-top:10px">✏️ 칸을 바로 <b>수정</b>할 수 있습니다. 수정하면 <b>향상왕·기록왕</b>에 자동 반영됩니다'+autoNote+'.</div></div>';
   return h;
