@@ -647,7 +647,12 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.99";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+/* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
+   옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
+var APP_VER = "v10.3";
+/* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
+   내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
+function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -1688,6 +1693,7 @@ function closeTopModal(){
   if(state.changePwDialog){ cancelChangePw(); return true; }             /* 비번 변경 */
   if(state.saveConfirm){ cancelSave(); return true; }                    /* 청구 저장 확인 */
   if(state.markM){ closeMark(); return true; }                           /* 출결 표시창 */
+  if(state.regM){ closeRegM(); return true; }                            /* 정규시간 변경 */
   if(state.absM){ closeAbsM(); return true; }                            /* 결석 예정 */
   if(state.addBox){ closeAdd(); return true; }                           /* 시간표 원생 추가 */
   if(state.tempM){ closeTempM(); return true; }                          /* 체험 등록 */
@@ -6803,8 +6809,75 @@ function todayTodoData(){
   var returning=[]; act.forEach(function(s){ (typeof liveHolds==="function"?liveHolds(s.n):[]).forEach(function(e){ if(!e.open && e.to>=addDays(td,-1) && e.to<=addDays(td,2)) returning.push({n:s.n,to:e.to,reason:e.reason||""}); }); });
   var bd=act.filter(function(s){ return isBdayDate(s, td); }).map(function(s){return s.n;});
   var expng=[]; act.forEach(function(s){ var e=effExpiry(s.n); var st=status(e); if(st.k==="over"||st.k==="now") expng.push({n:s.n,e:e||""}); });
-  return { absent:Object.keys(absent), returning:returning, bdays:bd, expiring:expng };
+  /* 🔀 정규시간 변경: 이번 주부터 적용(now) · 2주 내 예정(soon) */
+  var regCh=[]; var d14=addDays(td,14);
+  Object.keys(state.regMoves||{}).forEach(function(nm){
+    if(state.closedMap[nm]||isQuit(nm)) return;
+    (regMovesFor(nm)||[]).forEach(function(e){ var ew=mondayOf(e.from);
+      if(ew===wkT) regCh.push({n:nm,from:e.from,slots:e.slots||[],when:'now'});
+      else if(ew>wkT && e.from<=d14) regCh.push({n:nm,from:e.from,slots:e.slots||[],when:'soon'});
+    });
+  });
+  return { absent:Object.keys(absent), returning:returning, bdays:bd, expiring:expng, regChanges:regCh };
 }
+/* 특정 주(wk)에 정규변경이 이미 반영됐는지 — 새 슬롯 전부에 있고 다른 정규 칸엔 없어야 '적용됨' */
+function regApplied(nm, mv, wk){
+  var wd=state.weeks[wk]; if(!wd||!wd.cells) return false;
+  var slots=mv.slots||[]; if(!slots.length) return true;
+  var inAll=true;
+  slots.forEach(function(k){ var c=wd.cells[k]; var present=false; if(c&&c.lv){ for(var li=0;li<3;li++){ if((c.lv[li]||[]).indexOf(nm)>-1) present=true; } } if(!present) inAll=false; });
+  if(!inAll) return false;
+  var stray=false;
+  Object.keys(wd.cells).forEach(function(k){ if(slots.indexOf(k)>-1) return; var c=wd.cells[k]; if(!c||!c.lv) return; for(var li=0;li<3;li++){ var idx=(c.lv[li]||[]).indexOf(nm); if(idx>-1){ var mk=(c.marks||{})[nm]||{}; if(!(mk.k==="보강"||mk.k==="체험"||mk.k==="심사"||c.cat==="심사")) stray=true; } } });
+  return !stray;
+}
+/* 그 주에 이미 출석 배치가 있는지(=복사되어 있는지) */
+function weekHasPlacements(wk){
+  var wd=state.weeks[wk]; if(!wd||!wd.cells) return false;
+  var keys=Object.keys(wd.cells);
+  for(var i=0;i<keys.length;i++){ var c=wd.cells[keys[i]]; if(c&&c.lv){ for(var li=0;li<3;li++){ if((c.lv[li]||[]).length) return true; } } }
+  return false;
+}
+/* 결석 등록 시: 이미 복사된 주에 그 학생이 배치돼 있는데 결석 처리 안 된 날짜들(→직접 처리 필요) */
+function absenceCopiedConflicts(name, from, to, open){
+  var out=[]; if(!/^\d{4}-\d{2}-\d{2}$/.test(from)) return out;
+  var endW = open ? mondayOf(addDays(today(),28)) : mondayOf((to&&/^\d{4}-\d{2}-\d{2}$/.test(to))?to:from);
+  var w = mondayOf(from), guard=0;
+  while(w<=endW && guard<70){
+    var wd=state.weeks[w];
+    if(wd && wd.cells){
+      Object.keys(wd.cells).forEach(function(key){
+        var c=wd.cells[key]; if(!c||!c.lv) return;
+        var placed=false; for(var li=0;li<3;li++){ if((c.lv[li]||[]).indexOf(name)>-1) placed=true; }
+        if(!placed) return;
+        var d=dateOfKey(key, w);
+        if(d<from) return; if(!open && to && /^\d{4}-\d{2}-\d{2}$/.test(to) && d>to) return;
+        var mk=(c.marks||{})[name]||{};
+        if(mk.s!=="결석") out.push(d);
+      });
+    }
+    w=addDays(w,7); guard++;
+  }
+  return out.filter(function(v,i,a){return a.indexOf(v)===i;}).sort();
+}
+/* 이번(보는) 주에 적용이 필요한(아직 반영 안 된) 정규변경 목록 */
+function pendingRegChanges(wk){
+  var out=[];
+  Object.keys(state.regMoves||{}).forEach(function(nm){
+    if(state.closedMap[nm]||isQuit(nm)) return;
+    var mv=effectiveRegMove(nm, wk); if(!mv||!(mv.slots||[]).length) return;
+    if(!regApplied(nm, mv, wk)) out.push({n:nm, slots:mv.slots, from:mv.from});
+  });
+  return out;
+}
+window.applyRegMovesNow=function(){
+  var wk=curWeek();
+  if(weekHasPlacements(wk)){ alert("이미 그 주간에는 출석이 배치되어 있습니다. 그곳에서 직접 변경하시기 바랍니다."); return; }
+  var res=applyRegMoves(wk); touchWeek();
+  if(res.length){ alert("🔀 정규시간 변경을 이번 주에 적용했습니다 ("+res.length+"명)\n· "+res.map(function(r){return r.name+" → "+r.slots.map(_slotLabel).join(", ");}).join("\n· ")); }
+  else { alert("이번 주에 적용할 정규시간 변경이 없습니다."); }
+  render();
+};
 /* 주간 날짜 범위: 반복되는 연·월은 한 번만 (월·연이 걸치면 그 부분만 다시 표기) */
 function fmtWeekRange(s, e){
   var sy=s.slice(0,4), sm=s.slice(5,7), ey=e.slice(0,4), em=e.slice(5,7), ed=e.slice(8,10);
@@ -6829,6 +6902,7 @@ function renderWeekTab(){
       pill('▶','복귀 예정',TD.returning.length,'#1E7B3C')+
       pill('🎂','생일',TD.bdays.length,'#B45309')+
       pill('💳','만료 임박',TD.expiring.length,'var(--blue)')+
+      pill('🔀','정규변경',(TD.regChanges||[]).length,'#0E7C86')+
       '<span style="flex:1"></span><span style="font-size:11.5px;color:var(--sub)">'+(state.todoOpen?'▲ 접기':'▼ 펼치기')+'</span></div>';
     if(state.todoOpen){
       var esN=function(n){return esc(n).replace(/'/g,"\\'");};
@@ -6844,9 +6918,41 @@ function renderWeekTab(){
           TD.bdays.map(function(n){ return '<span style="margin:0 12px 5px 0">'+nameBtn(n)+' 🎉</span>'; }).join(''))+
         sec('💳 재등록 만료 임박 <span style="font-weight:400">(자세한 처리는 회계관리)</span>',
           TD.expiring.slice(0,20).map(function(o){ return '<span style="display:inline-flex;align-items:center;gap:5px;margin:0 12px 5px 0">'+nameBtn(o.n)+'<span style="font-size:11.5px;color:var(--sub)">'+esc(o.e)+'</span></span>'; }).join('')+(TD.expiring.length>20?'<span style="font-size:11.5px;color:var(--sub)">외 '+(TD.expiring.length-20)+'명</span>':''))+
+        sec('🔀 정규시간 변경 <span style="font-weight:400">(이번 주부터 · 예정)</span>',
+          (TD.regChanges||[]).map(function(o){ var tag=o.when==='now'?'<span style="font-size:10.5px;font-weight:800;color:#fff;background:#0E7C86;border-radius:6px;padding:1px 7px;margin-left:2px">이번 주부터</span>':'<span style="font-size:10.5px;font-weight:800;color:#0E7C86;background:#E7F6F7;border:1px solid #9BD3D8;border-radius:6px;padding:1px 7px;margin-left:2px">'+esc(o.from)+' 예정</span>'; return '<span style="display:inline-flex;align-items:center;gap:5px;margin:0 14px 6px 0">'+nameBtn(o.n)+tag+'<span style="font-size:11.5px;color:var(--sub)">'+esc((o.slots||[]).map(_slotLabel).join(', '))+'</span></span>'; }).join(''))+
         '</div>';
     }
     x+='</div>';
+  })();
+  /* 🔀 이번(보는) 주 정규시간 변경 알림 배너 — 아직 반영 안 됐을 때만 */
+  (function(){
+    var pend=pendingRegChanges(wk);
+    if(!pend.length) return;
+    var names=pend.map(function(o){return esc(o.n)+' → '+esc((o.slots||[]).map(_slotLabel).join(', '));}).join(' · ');
+    if(weekHasPlacements(wk)){
+      /* 이미 복사(배치)된 주 → 자동 적용하지 않고 경고 */
+      x+='<div class="card" style="padding:11px 15px;margin-bottom:10px;background:linear-gradient(90deg,#FFF3E0,#FFFBF3);border:1.5px solid #F0C36D">'+
+        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+          '<b style="font-size:13.5px;color:#B45309">⚠️ 정규시간 변경 대상 '+pend.length+'명</b>'+
+          '<span style="font-size:12px;color:#8A5A10">'+names+'</span>'+
+          '<span style="flex:1;min-width:8px"></span>'+
+          '<button onclick="openRegM()" style="background:#fff;border:1px solid #F0C36D;color:#8A5A10;border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">관리</button>'+
+        '</div>'+
+        '<div style="font-size:11.5px;color:#8A5A10;font-weight:700;margin-top:6px">이미 그 주간에는 출석이 배치되어 있습니다. 그곳에서 직접 변경하시기 바랍니다.</div>'+
+      '</div>';
+    } else {
+      /* 아직 복사 안 된 주 → 지금 적용 가능 */
+      x+='<div class="card" style="padding:11px 15px;margin-bottom:10px;background:linear-gradient(90deg,#E7F6F7,#F3FBFB);border:1.5px solid #9BD3D8">'+
+        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+          '<b style="font-size:13.5px;color:#0A6068">🔀 이번 주부터 정규시간 변경 '+pend.length+'명</b>'+
+          '<span style="font-size:12px;color:#33707A">'+names+'</span>'+
+          '<span style="flex:1;min-width:8px"></span>'+
+          '<button onclick="applyRegMovesNow()" style="background:#0E7C86;color:#fff;border:none;border-radius:9px;padding:7px 15px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">지금 적용</button>'+
+          '<button onclick="openRegM()" style="background:#fff;border:1px solid #9BD3D8;color:#0A6068;border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">관리</button>'+
+        '</div>'+
+        '<div style="font-size:11px;color:#6B8A8F;margin-top:5px">＊ 아직 이 주는 복사 전입니다. <b>지금 적용</b>을 누르거나, 지난주·2주전 <b>복사</b>를 하면 자동 반영됩니다.</div>'+
+      '</div>';
+    }
   })();
   x+='<div class="card" style="padding:14px 16px">'+
    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+
@@ -6862,6 +6968,7 @@ function renderWeekTab(){
    '<button class="tool hasTip" data-tip="2주 전 시간표를 이번 주로 복사\n심사 주간 다음 주에 정규 반원을 되살릴 때 유용" onclick="copyWeeksAgo(2)">📋<b style="font-size:11.5px;margin-left:1px">2</b></button>'+
         (state.dayView?'':'<button class="tool hasTip'+(state.fitW?' on':'')+'" data-tip="'+(state.fitW?'화면 너비에 맞춰 보기 (현재 켜짐)':'표를 넓게 펼쳐서 보기')+'" onclick="toggleFitW()" style="padding:6px 9px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 7 3 12 8 17"></polyline><polyline points="16 7 21 12 16 17"></polyline><line x1="3" y1="12" x2="21" y2="12"></line></svg></button>')+
    '<button class="tool hasTip" data-tip="결석 예정 등록·관리" onclick="openAbsM()" style="background:var(--red);border-color:var(--red);color:#fff;font-weight:800;font-size:12px;padding:6px 13px;box-shadow:0 1px 3px rgba(210,51,42,.28)">🗓 결석 관리</button>'+
+   '<button class="tool hasTip" data-tip="정규 수업 요일·시간 변경 등록\n등록한 주부터 복사 시 새 시간표로 자동 적용" onclick="openRegM()" style="background:#0E7C86;border-color:#0E7C86;color:#fff;font-weight:800;font-size:12px;padding:6px 13px;box-shadow:0 1px 3px rgba(14,124,134,.28)">🔀 정규변경</button>'+
    '<button class="tool hasTip'+(state.pastEdit?' warn':'')+'" data-tip="지난 날짜 출결 수정 잠금/해제'+(state.pastEdit?'\n현재: 수정 켜짐':'\n현재: 잠김')+'" onclick="togglePastEdit()">'+(state.pastEdit?'🔓':'🔒')+'</button>'+
    /* ⚙ 시간표 설정 — 아이콘만 · 마우스 올리면 툴팁 팝업 */
    '<button class="tool schedGear hasTip" data-tip="시간표 설정 (수업유형·반 이름·사범 등)" aria-label="시간표 설정" onclick="setAttTab(\'시간표 설정\')" style="padding:6px 9px;display:inline-flex;align-items:center;justify-content:center">'+
@@ -7352,6 +7459,12 @@ window.saveAbs=function(){
     addHold(nm, m.from, to, open, m.reason);
     state.absDone="'"+nm+"' 결석 예정을 추가했습니다.";
   }
+  /* 이미 복사(배치)된 주에 걸리면 → 자동 반영 안 되므로 직접 처리하라고 경고 */
+  var _conf=absenceCopiedConflicts(nm, m.from, to, open);
+  if(_conf.length){
+    var _shown=_conf.slice(0,8).join(", ")+(_conf.length>8?" 외 "+(_conf.length-8)+"일":"");
+    alert("⚠️ 이미 그 주간에는 출석이 배치되어 있습니다.\n그 주간에 가서 결석 처리 바랍니다.\n\n해당 날짜: "+_shown);
+  }
   /* 모달 유지(연속 관리) · 폼만 초기화 · 원생 선택은 유지 */
   state.absM.editHid=null; state.absM.from=today(); state.absM.to=""; state.absM.reason="";
   persistAtt(); persist(); render();
@@ -7389,6 +7502,68 @@ window.cycleLvT=function(key,li){
 };
 window.setCellCat=function(key,v){ wcell(key).cat=v; touchWeek(); };
 window.setCellTch=function(key,v){ wcell(key).tch=v; touchWeek(); };
+/* ══════════ 정규시간 변경 (regMoves) ══════════ */
+function regMovesFor(name){ return ((state.regMoves||{})[name]||[]).filter(function(e){return !e.del;}); }
+function effectiveRegMove(name, wkMon){
+  var best=null;
+  regMovesFor(name).forEach(function(e){ var ew=mondayOf(e.from); if(ew<=wkMon){ if(!best){best=e;} else { var bw=mondayOf(best.from); if(ew>bw || (ew===bw && (e.t||0)>(best.t||0))) best=e; } } });
+  return best;
+}
+function _slotLabel(key){ var p=String(key).split('-'); var dn=(W_DAYS.find(function(x){return x[0]===p[0];})||["","?"])[1]; return dn+' '+p[1]+':00'; }
+window.openRegM=function(){ state.regM={ q:"", pick:"", from:today(), slots:[], editHid:null, _d:"mon", _h:"14" }; state.regDone=null; render(); };
+window.closeRegM=function(){ state.regM=null; state.regDone=null; render(); };
+window.regNewMode=function(){ if(!state.regM)return; state.regM.editHid=null; state.regM.from=today(); state.regM.slots=[]; state.regDone=null; render(); };
+window.regQ=function(v){ state.regM.q=v; state.regM.pick=""; state.regM.editHid=null; var el=document.getElementById('regList'); if(el) el.innerHTML=regListHtml(v); };
+window.regPick=function(n){ state.regM.pick=n; state.regM.q=n; state.regM.editHid=null; render(); };
+window.regF=function(k,v){ state.regM[k]=v; };
+window.regSetDH=function(k,v){ state.regM[k]=v; };
+window.regAddSlot=function(){ var key=(state.regM._d||"mon")+"-"+(state.regM._h||"14"); if((state.regM.slots||[]).indexOf(key)<0){ state.regM.slots.push(key); state.regM.slots.sort(function(a,b){ var A=a.split('-'),B=b.split('-'); var di=function(d){return ["mon","tue","wed","thu","fri","sat"].indexOf(d);}; return di(A[0])-di(B[0]) || (Number(A[1])-Number(B[1])); }); } render(); };
+window.regDelSlot=function(key){ state.regM.slots=(state.regM.slots||[]).filter(function(k){return k!==key;}); render(); };
+window.startEditReg=function(name,hid){ var e=((state.regMoves||{})[name]||[]).filter(function(x){return x.hid===hid;})[0]; if(!e) return; state.regM.pick=name; state.regM.q=name; state.regM.editHid=hid; state.regM.from=e.from; state.regM.slots=(e.slots||[]).slice(); render(); };
+window.delRegHid=function(name,hid){ if(!confirm(name+" 님의 이 정규시간 변경을 삭제할까요?")) return; var arr=(state.regMoves||{})[name]||[]; arr.forEach(function(e){ if(e.hid===hid){ e.del=true; e.t=Date.now(); } }); persistAtt(); persist(); render(); };
+window.saveReg=function(){
+  var m=state.regM; var nm=m.pick||(m.q||"").trim();
+  if(!STUDENTS.some(function(s){return s.n===nm;})){ alert("명단에서 원생을 먼저 선택해 주세요."); return; }
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(m.from)){ alert("변경 시작날짜를 입력해 주세요."); return; }
+  if(!(m.slots||[]).length){ alert("새 요일·시간을 하나 이상 추가해 주세요."); return; }
+  if(!state.regMoves) state.regMoves={};
+  if(!state.regMoves[nm]) state.regMoves[nm]=[];
+  if(m.editHid){ var e=state.regMoves[nm].filter(function(x){return x.hid===m.editHid;})[0]; if(e){ e.from=m.from; e.slots=m.slots.slice(); e.del=false; e.t=Date.now(); } state.regDone="'"+nm+"' 정규시간 변경을 수정했습니다."; }
+  else { state.regMoves[nm].push({ hid:_newHid(), from:m.from, slots:m.slots.slice(), t:Date.now() }); state.regDone="'"+nm+"' 정규시간 변경을 등록했습니다."; }
+  state.regM.editHid=null; state.regM.from=today(); state.regM.slots=[];
+  persistAtt(); persist(); render();
+};
+function regListHtml(q){
+  q=(q||"").trim();
+  var list=STUDENTS.filter(function(s){ if(state.closedMap&&state.closedMap[s.n])return false; try{if(typeof isQuit==="function"&&isQuit(s.n))return false;}catch(e){} return !q||s.n.indexOf(q)>-1; }).slice(0,10);
+  if(!list.length) return '<div style="font-size:12px;color:var(--sub);padding:6px 2px">일치하는 원생이 없습니다.</div>';
+  return list.map(function(s){ var sel=state.regM&&state.regM.pick===s.n; return '<button onclick="regPick(\''+esc(s.n).replace(/'/g,"\\'")+'\')" style="border:1px solid '+(sel?"var(--blue)":"var(--line)")+';background:'+(sel?"var(--blueSoft)":"#fff")+';color:'+(sel?"var(--blue)":"var(--ink)")+';border-radius:9px;padding:5px 11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;margin:0 4px 4px 0">'+esc(s.n)+'</button>'; }).join('');
+}
+/* 복사 시: 이 주(wk)에 정규시간 변경 적용 — 전체 교체(기존 정규 비우고 새 슬롯에 배치), 레벨 유지 */
+function applyRegMoves(wk){
+  var applied=[]; var wd=state.weeks[wk]; if(!wd||!wd.cells) return applied;
+  Object.keys(state.regMoves||{}).forEach(function(name){
+    var mv=effectiveRegMove(name, wk); if(!mv || !(mv.slots||[]).length) return;
+    if(state.closedMap && state.closedMap[name]) return;
+    try{ if(typeof isQuit==="function" && isQuit(name)) return; }catch(e){}
+    var lvFound=null;
+    Object.keys(wd.cells).forEach(function(key){ var c=wd.cells[key]; if(!c||!c.lv) return;
+      for(var li=0; li<3; li++){ var idx=(c.lv[li]||[]).indexOf(name);
+        if(idx>-1){ var mk=(c.marks||{})[name]||{}; if(mk.k==="보강"||mk.k==="체험"||mk.k==="심사"||c.cat==="심사") continue;
+          if(lvFound==null) lvFound=li; c.lv[li].splice(idx,1); if(c.marks) delete c.marks[name]; } }
+    });
+    if(lvFound==null) lvFound=0;
+    (mv.slots||[]).forEach(function(key){ var c=wcell(key); if(!c.lv) c.lv=[[],[],[]];
+      if(c.cat==="심사") return;
+      var dup=false; for(var q=0;q<3;q++){ if((c.lv[q]||[]).indexOf(name)>-1) dup=true; } if(dup) return;
+      c.lv[lvFound].push(name);
+      var ab=absOf(name, dateOfKey(key, wk));
+      if(ab){ var reason=(ab.reason?ab.reason+' · ':'')+(ab.open?'결석예정 '+ab.from+'~미정':'결석예정 '+ab.from+'~'+ab.to); c.marks[name]={ k:"정규", s:"결석", m:reason, t:Date.now() }; }
+    });
+    applied.push({ name:name, slots:(mv.slots||[]).slice() });
+  });
+  return applied;
+}
 window.copyPrevWeek=function(){ copyWeeksAgo(1); };
 window.copyWeeksAgo=function(n){
   n=n||1;
@@ -7462,9 +7637,25 @@ window.copyWeeksAgo=function(n){
       });
     }
   }
+  var regApplied=applyRegMoves(wk);
   touchWeek();
-  alert("✅ "+lbl+" 복사 완료 — "+added+"명 배치"+(heldMarked?" · 결석 예정 "+heldMarked+"건 자동 결석 처리":"")+(absCarried?" · 직접 결석 "+absCarried+"명 결석 유지":"")+
-        "\n(수업유형·지도진·사범 이니셜 포함 · 미리 배치한 이름 유지 · 그 외 출석 표시는 새로 시작)");
+  /* 이번 주 적용 요약: 결석·보강 스캔 */
+  var absList=[], bogList=[]; var _seenA={}, _seenB={};
+  var _wc=(state.weeks[wk]||{}).cells||{};
+  Object.keys(_wc).forEach(function(key){ var c=_wc[key]; if(!c||!c.lv) return; var mks=c.marks||{};
+    Object.keys(mks).forEach(function(nm){ var mk=mks[nm]||{};
+      var placed=false; for(var li=0;li<3;li++){ if((c.lv[li]||[]).indexOf(nm)>-1){placed=true;break;} }
+      if(!placed) return;
+      if(mk.s==="결석" && !_seenA[nm+"|"+key]){ _seenA[nm+"|"+key]=1; absList.push(nm+" ("+_slotLabel(key)+")"+(mk.m?" · "+mk.m:"")); }
+      if(mk.k==="보강" && !_seenB[nm+"|"+key]){ _seenB[nm+"|"+key]=1; bogList.push(nm+" ("+_slotLabel(key)+")"); }
+    });
+  });
+  var msg="✅ "+lbl+" 복사 완료 — "+added+"명 배치";
+  if(regApplied.length){ msg+="\n\n🔀 정규시간 변경 적용 ("+regApplied.length+"명)\n· "+regApplied.map(function(r){return r.name+" → "+r.slots.map(_slotLabel).join(", ");}).join("\n· "); }
+  if(absList.length){ msg+="\n\n🚫 결석 적용 ("+absList.length+"건)\n· "+absList.join("\n· "); }
+  if(bogList.length){ msg+="\n\n🔁 보강 적용 ("+bogList.length+"건)\n· "+bogList.join("\n· "); }
+  if(!regApplied.length && !absList.length && !bogList.length){ msg+="\n(수업유형·지도진·사범 이니셜 포함 · 미리 배치한 이름 유지 · 그 외 출석 표시는 새로 시작)"; }
+  alert(msg);
   render();
 };
 window.moveWeek=function(n){ state.weekSel=addDays(curWeek(), n*7); render(); };
@@ -9264,6 +9455,7 @@ function attState(){
        (기존 출석 창고에 남아 있던 심사데이터는 applyAtt에서 계속 읽어 exam으로 합쳐짐 = 유실 없음) */
     deletedStudents: state.deletedStudents||{},   /* 삭제 묘비를 출석 창고에도 → 사범 기기 유령 부활 방지 */
     reopenLog: state.reopenLog||{},               /* 복관 기록도 동기화 → 사범 기기 휴관 고착 방지 */
+    regMoves: state.regMoves||{},                 /* 정규시간 변경 (이름별 변경 이력) */
     rosterFileV: state.rosterFileV||0, savedAt: Date.now() };
 }
 function persistAtt(){
@@ -9496,7 +9688,11 @@ function mergeAtt(a, b){
       if(!_rl[_r].some(function(x){ return ((x.closed&&x.closed.start||"")+"|"+(x.reopenDate||""))===sig; })) _rl[_r].push(lg); }); } });
   /* 마지막 심사일: 이름별로 더 나중 날짜가 이김 (통-블롭이면 동시 갱신 유실) */
   var _lx={}; [ (a.lastExam||{}).map||{}, (b.lastExam||{}).map||{} ].forEach(function(src){ for(var _e in src){ if(!_lx[_e]||src[_e]>_lx[_e]) _lx[_e]=src[_e]; } });
-  return { absences:abs, contactLog:_cl, dunLog:_dl, laManual:_lm, acctHold:_ah, attV:1, roster:roster, schedule:schedule, tempStudents:temps, weeks:weeks,
+  /* 정규시간 변경: 이름별 변경건(hid) 최신(t) 병합 — del 묘비 유지 */
+  var _rm={}; [a.regMoves||{}, b.regMoves||{}].forEach(function(src){ for(var _rn2 in src){ if(!_rm[_rn2]) _rm[_rn2]=[];
+    (src[_rn2]||[]).forEach(function(e){ var hit=_rm[_rn2].find(function(x){ return e.hid&&x.hid?x.hid===e.hid:x.from===e.from; });
+      if(!hit) _rm[_rn2].push(e); else if((e.t||0)>(hit.t||0)) _rm[_rn2][_rm[_rn2].indexOf(hit)]=e; }); } });
+  return { absences:abs, contactLog:_cl, dunLog:_dl, laManual:_lm, acctHold:_ah, attV:1, roster:roster, schedule:schedule, tempStudents:temps, weeks:weeks, regMoves:_rm,
            deletedStudents:_ds, closedTomb:_ct, reopenLog:_rl,
            rosterFileV:Math.max(a.rosterFileV||0, b.rosterFileV||0),
            quitMapAtt:mergeStamped(a.quitMapAtt,b.quitMapAtt), closedMapAtt:mergeStamped(a.closedMapAtt,b.closedMapAtt),
@@ -9519,6 +9715,7 @@ function applyAtt(m){
         if(!state.reopenLog[_rn].some(function(x){ return ((x.closed&&x.closed.start||"")+"|"+(x.reopenDate||""))===sig; })) state.reopenLog[_rn].push(lg); }); } }
   if(m.rosterFileV) state.rosterFileV = Math.max(state.rosterFileV||0, m.rosterFileV);   /* 시드 명단 재적용 방지 */
   if(m.absences) state.absences = m.absences;
+  if(m.regMoves) state.regMoves = m.regMoves;
   if(m.contactLog) state.contactLog = m.contactLog;
   if(m.dunLog) state.dunLog = m.dunLog;
   if(m.acctHold) state.acctHold = m.acctHold;
@@ -12080,7 +12277,7 @@ function collectBackup(){
     var work=JSON.parse(stores["naracha-work"]||"{}"); counts.events=Object.keys(work.events||{}).length;
     var exam=JSON.parse(stores["naracha-exam"]||"{}"); counts.exam=Object.keys((exam.examData&&exam.examData.students)||exam.students||{}).length;
   }catch(e){}
-  return JSON.stringify({ narachaBackup:2, savedAt:new Date().toISOString(), device:(state.device||""), appVer:(typeof APP_VER!=="undefined"?APP_VER:""), counts:counts, storeKeys:Object.keys(stores), stores:stores });
+  return JSON.stringify({ narachaBackup:2, savedAt:new Date().toISOString(), device:(state.device||""), appVer:(typeof APP_VER!=="undefined"?APP_VER:""), appLabel:(typeof appLabel==="function"?appLabel():""), counts:counts, storeKeys:Object.keys(stores), stores:stores });
 }
 function backupFileName(){ return "나라차백업_"+today()+".json"; }
 function lastBackupT(){ try{ return Number(localStorage.getItem("naracha_last_backup"))||0; }catch(e){ return 0; } }
@@ -14074,7 +14271,7 @@ function render(){
     root.innerHTML='<div style="max-width:400px;margin:60px auto;padding:24px;background:#fff;border-radius:10px;border:1px solid var(--line)">'+
       '<div style="text-align:center;margin-bottom:10px"><img src="'+LOGO_FULL+'" alt="나라차태권도" style="width:132px;height:auto"></div>'+
       '<div style="text-align:center;font-size:20px;font-weight:900;color:var(--ink);margin-bottom:5px">비밀번호 잠금</div>'+
-      '<div style="text-align:center;font-size:13.5px;color:var(--sub);margin-bottom:20px">비밀번호를 입력하세요 <span style="color:#94A3B8;font-weight:700">'+APP_VER+'</span></div>'+
+      '<div style="text-align:center;font-size:13.5px;color:var(--sub);margin-bottom:20px">비밀번호를 입력하세요 <span style="color:#94A3B8;font-weight:700">'+appLabel()+'</span></div>'+
       '<input type="text" class="input pwbox" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" value="'+esc(state.pwInput||"")+'" oninput="setPwInput(pwGuard(this))" style="margin-bottom:16px" onkeydown="if(event.isComposing||event.keyCode===229)return; if(event.key===\'Enter\')submitPwLogin()" autofocus>'+
       '<div id="pwHint" style="color:var(--red);font-size:11.5px;font-weight:700;min-height:16px;margin-bottom:6px"></div>'+
       '<button class="big" onclick="submitPwLogin()" style="margin-bottom:5px">잠금 해제</button>'+
@@ -14244,6 +14441,53 @@ function render(){
     h+='<div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeBulkM()">'+
       '<div style="background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:88vh;overflow:auto;padding:20px">'+inner+'</div></div>';
   }
+  if(state.regM){
+    var rm=state.regM;
+    var rpicked = rm.pick && STUDENTS.some(function(s){return s.n===rm.pick;}) ? rm.pick : "";
+    var rexist = rpicked ? regMovesFor(rpicked).slice().sort(function(a,b){return a.from<b.from?-1:1;}) : [];
+    var rDayOpts=W_DAYS.map(function(d){return '<option value="'+d[0]+'"'+((rm._d||"mon")===d[0]?" selected":"")+'>'+d[1]+'요일</option>';}).join('');
+    var rHourOpts=[10,11,12,13,14,15,16,17,18,19,20,21].map(function(hh){return '<option value="'+hh+'"'+(String(rm._h||"14")===String(hh)?" selected":"")+'>'+hh+':00</option>';}).join('');
+    var rSlotChips=(rm.slots||[]).length? rm.slots.map(function(k){return '<span style="display:inline-flex;align-items:center;gap:5px;border:1px solid #9BD3D8;background:#E7F6F7;color:#0A6068;border-radius:14px;padding:4px 6px 4px 12px;font-size:12.5px;font-weight:800;margin:0 5px 5px 0">'+esc(_slotLabel(k))+'<button onclick="regDelSlot(\''+k+'\')" title="빼기" style="border:none;background:none;color:#0A6068;cursor:pointer;font-size:14px;font-weight:900;line-height:1;padding:0 2px">×</button></span>';}).join('') : '<span style="font-size:12px;color:var(--sub)">아직 추가된 시간이 없습니다. 아래에서 요일·시간을 골라 <b>＋ 시간 추가</b>를 누르세요. (수업 횟수만큼 여러 개 가능)</span>';
+    var rbody=
+      '<div style="font-size:13.5px;font-weight:900;margin-bottom:6px">① 원생 검색</div>'+
+      '<input class="input" value="'+esc(rm.q||"")+'" placeholder="이름 입력 (예: 문지성)" oninput="regQ(this.value)" onkeydown="if(event.isComposing||event.keyCode===229)return;" autocomplete="off" style="margin-bottom:6px">'+
+      '<div id="regList">'+regListHtml(rm.q)+'</div>'+
+      (rpicked?
+        '<div style="border:1.5px solid #9BD3D8;background:#F3FBFB;border-radius:11px;padding:12px;margin-top:10px">'+
+          '<div style="font-size:13.5px;font-weight:800;color:#0A6068;margin-bottom:9px">'+(rm.editHid?'✏️ 변경 수정 중':'＋ 새 정규시간 변경')+' — '+esc(rpicked)+'</div>'+
+          '<div style="margin-bottom:9px"><span class="label" style="font-size:11.5px">변경 시작날짜 <span style="color:var(--sub);font-weight:400">(이 날짜가 속한 주부터 적용)</span></span><input type="date" class="input" value="'+esc(rm.from||"")+'" onchange="regF(\'from\',this.value)" style="padding:7px 9px;font-size:13.5px;border-radius:10px;max-width:180px"></div>'+
+          '<span class="label" style="font-size:11.5px">새 요일·시간 <span style="color:var(--sub);font-weight:400">(여러 개 = 주 수업 횟수)</span></span>'+
+          '<div style="margin:5px 0 7px">'+rSlotChips+'</div>'+
+          '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+
+            '<select onchange="regSetDH(\'_d\',this.value)" style="padding:6px 8px;font-size:13px;border:1px solid var(--line);border-radius:9px;font-family:inherit">'+rDayOpts+'</select>'+
+            '<select onchange="regSetDH(\'_h\',this.value)" style="padding:6px 8px;font-size:13px;border:1px solid var(--line);border-radius:9px;font-family:inherit">'+rHourOpts+'</select>'+
+            '<button onclick="regAddSlot()" style="background:#0E7C86;color:#fff;border:none;border-radius:9px;padding:7px 14px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">＋ 시간 추가</button>'+
+          '</div>'+
+          '<div style="display:flex;gap:8px;margin-top:13px">'+
+            '<button onclick="saveReg()" style="background:#0E7C86;color:#fff;border:none;border-radius:10px;padding:9px 20px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">'+(rm.editHid?'수정 저장':'등록')+'</button>'+
+            (rm.editHid?'<button onclick="regNewMode()" style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 14px;font-size:13px;cursor:pointer;font-family:inherit">새로 등록</button>':'')+
+          '</div>'+
+          (rexist.length?
+            '<div style="margin-top:13px;border-top:1px dashed #CDE7E9;padding-top:10px"><div style="font-size:11.5px;font-weight:800;color:#0A6068;margin-bottom:6px">🔎 '+esc(rpicked)+' 의 변경 이력 ('+rexist.length+')</div>'+
+            rexist.map(function(e){ return '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 0;border-top:1px dashed #E2EEEF">'+
+              '<span style="font-size:11.5px;font-weight:700;color:#24509A;background:#EAF2FF;border:1px solid #CFE0FA;border-radius:10px;padding:2px 8px;white-space:nowrap">'+esc(e.from)+' 주부터</span>'+
+              '<span style="font-size:12px;color:var(--ink)">'+(e.slots||[]).map(_slotLabel).map(esc).join(", ")+'</span><span style="flex:1"></span>'+
+              '<button onclick="startEditReg(\''+esc(rpicked).replace(/'/g,"\\'")+'\',\''+e.hid+'\')" style="border:1px solid #0E7C86;background:'+(rm.editHid===e.hid?'#0E7C86':'#fff')+';color:'+(rm.editHid===e.hid?'#fff':'#0E7C86')+';border-radius:9px;padding:3px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit">수정</button>'+
+              '<button onclick="delRegHid(\''+esc(rpicked).replace(/'/g,"\\'")+'\',\''+e.hid+'\')" style="border:1px solid #F1C0C0;background:#fff;color:var(--red);border-radius:9px;padding:3px 9px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit">삭제</button>'+
+              '</div>'; }).join('')+'</div>'
+          :'')+
+        '</div>'
+      :'<div style="font-size:12px;color:var(--sub);margin-top:8px">원생을 선택하면 변경 시작날짜와 새 요일·시간을 등록할 수 있습니다.</div>')+
+      (state.regDone?'<div style="margin-top:10px;background:#E7F6EF;border:1px solid #A9DEC3;color:#1E7B3C;border-radius:9px;padding:8px 12px;font-size:12.5px;font-weight:700">✓ '+esc(state.regDone)+'</div>':'')+
+      '<div style="margin-top:12px;font-size:11px;color:var(--sub);line-height:1.55">＊ 등록하면 <b>지난주·2주전 복사</b>를 할 때, 그 주부터 이 수련생을 <b>새 요일·시간으로 전체 교체</b>해서 배치합니다. 상·중·초는 기존 그대로 유지됩니다.</div>';
+    h+='<div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:12px" onclick="if(event.target===this)closeRegM()">'+
+      '<div style="background:#F5F5F7;border-radius:16px;max-width:460px;width:100%;max-height:90vh;display:flex;flex-direction:column" onclick="event.stopPropagation()">'+
+      '<div style="padding:16px 18px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px">'+
+        '<span style="font-size:17px;font-weight:900">🔀 정규시간 변경</span><span style="font-size:11.5px;color:var(--sub)">등록한 주부터 복사 시 적용</span><span style="flex:1"></span>'+
+        '<button class="chip" onclick="closeRegM()">닫기</button></div>'+
+      '<div style="overflow:auto;padding:14px 18px 18px">'+rbody+'</div>'+
+      '</div></div>';
+  }
   if(state.absM){
     var am=state.absM;
     var _td=today();
@@ -14407,7 +14651,7 @@ function render(){
      '<div class="dbar" style="display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:18px 24px;background:#0F172A">'+
        '<div style="display:flex;align-items:center;gap:12px"><img src="'+LOGO_SYM+'" alt="" onclick="goTimetable()" title="수련시간표로 이동" style="height:44px;width:auto;cursor:pointer"><div><div onclick="goTimetable()" title="수련시간표로 이동" style="font-size:20px;font-weight:800;letter-spacing:-.4px;color:#fff;cursor:pointer;display:inline-block">나라차태권도 분당도장</div>'+
        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px">'+
-       '<span style="font-size:13.5px;color:#94A3B8">수련생 관리 · 재원생 '+activeCount+'명'+(function(){ var hc=Object.keys(state.closedMap).filter(function(n){return !isQuit(n);}).length; return hc?' · 휴관 '+hc+'명':''; })()+' · <span style="color:#64748B;font-weight:700">'+APP_VER+'</span></span>'+
+       '<span style="font-size:13.5px;color:#94A3B8">수련생 관리 · 재원생 '+activeCount+'명'+(function(){ var hc=Object.keys(state.closedMap).filter(function(n){return !isQuit(n);}).length; return hc?' · 휴관 '+hc+'명':''; })()+' · <span style="color:#64748B;font-weight:700">'+appLabel()+'</span></span>'+
        (state.syncStatus?'<span id="syncBadge" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#86EFAC;background:rgba(34,197,94,.12);padding:2px 9px;border-radius:16px"><span style="width:6px;height:6px;border-radius:50%;background:#22C55E"></span>'+esc(state.syncStatus)+'</span>':'<span id="syncBadge"></span>')+
        '</div></div></div>'+
        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
