@@ -646,7 +646,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.88";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.89";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -13118,16 +13118,153 @@ function studentMeasureCard(name){
     h+='<div style="font-size:11px;color:var(--sub);font-weight:700;margin:2px 0 4px">줄넘기 · '+esc(jr.s.title)+'</div><div style="margin-bottom:6px">'+(parts||'<span style="font-size:12px;color:var(--sub)">기록 없음</span>')+'</div>'; }
   return h;
 }
+/* ════════ 측정 직접 입력 · 엑셀 양식(2026) 저장 ════════ */
+var _MSEP=String.fromCharCode(1);
+var MEAS_TPL={
+  "줄넘기":[
+    {name:"앞으로뛰기",subs:["기록","등급"]},{name:"뒤로뛰기",subs:["기록","등급"]},
+    {name:"엇걸어뛰기",subs:["기록","등급"]},{name:"2중뛰기",subs:["기록","등급"]},
+    {name:"엇걸어2중뛰기",subs:["기록","등급"]},{name:"뒤2중뛰기",subs:["기록","등급"]}
+  ],
+  "체력":[
+    {name:"비만도(비만도정밀)",subs:["신장","몸무게","기록","점수","등급"]},
+    {name:"심폐지구력(15m왕복오래달리기)",subs:["기록","점수","등급"]},
+    {name:"상지근력(악력검사)",subs:["기록","점수","등급"]},
+    {name:"근지구력(윗몸일으키기)",subs:["기록","점수","등급"]},
+    {name:"유연성(앉아윗몸앞으로굽히기)",subs:["기록","점수","등급"]},
+    {name:"순발력(제자리멀리뛰기)",subs:["기록","점수","등급"]},
+    {name:"종합점수",subs:[""]},{name:"종합등급",subs:[""]},{name:"비고",subs:[""]}
+  ]
+};
+function _measKey(cat,sub){ return cat+_MSEP+(sub||"값"); }
+function _measTplCats(kind){ return (MEAS_TPL[kind]||[]).map(function(c){ return {name:c.name, subs:c.subs.map(function(su){ return {sub:su, key:_measKey(c.name,su)}; })}; }); }
+function _measAge(st){ if(!st||!st.by) return ""; var by=Number(String(st.by).slice(0,4)); if(!by) return ""; return String(Number(today().slice(0,4))-by+1); }
+function _measCls(st){ if(!st) return ""; var b=st.b||""; if(/킨더/.test(b))return "킨더반"; if(/성인/.test(b))return "성인부"; if(/청소년/.test(b))return "청소년부"; if(/초/.test(b))return "초등부"; return ""; }
+var _measDeb=null;
+function measSaveDebounced(){ if(_measDeb) clearTimeout(_measDeb); _measDeb=setTimeout(function(){ measPersist(); _measDeb=null; }, 700); }
+window.openMeasInput=function(kind){
+  var m=measuresData();
+  var yv=prompt("측정 연도를 입력하세요 (예: "+today().slice(0,4)+")", today().slice(0,4)); if(yv===null) return;
+  var year=Number((yv||"").replace(/[^0-9]/g,"")); if(!year){ alert("연도를 인식하지 못했습니다."); return; }
+  var hv=prompt("몇 차 측정인가요?\n상반기(전반기)=1 · 하반기(후반기)=2", "1"); if(hv===null) return;
+  var half=(String(hv).indexOf("2")>=0)?"H2":"H1";
+  var id=year+"-"+half+"-"+kind;
+  if(!m[id]){ m[id]={ id:id, year:year, half:half, kind:kind, title:year+"년 "+(half==="H1"?"전반기":"후반기")+" "+kind, cats:_measTplCats(kind), rows:[], n:0, matched:0, date:today(), _t:Date.now() }; state.measT=Date.now(); measPersist(); }
+  else if(!m[id].cats||!m[id].cats.length){ m[id].cats=_measTplCats(kind); }
+  state.measSel=id; state.measInput=true; state.measView=null; state.measFocusRow=null; render();
+};
+window.closeMeasInput=function(){ state.measInput=false; state.measFocusRow=null; render(); };
+window.openMeasInputExisting=function(id){ var s=measuresData()[id]; if(!s) return; if(!s.cats||!s.cats.length) s.cats=_measTplCats(s.kind); state.measSel=id; state.measInput=true; state.measView=null; state.measFocusRow=null; render(); };
+window.measSetCell=function(id,ri,ci,si,v){ var s=measuresData()[id]; if(!s||!s.rows[ri])return; var cat=(s.cats||[])[ci]; if(!cat)return; var su=cat.subs[si]; if(!su)return; v=String(v); if(v.trim()==="") delete s.rows[ri].cells[su.key]; else s.rows[ri].cells[su.key]=v.trim(); s._t=Date.now(); state.measT=Date.now(); measSaveDebounced(); };
+window.measSetField=function(id,ri,f,v){ var s=measuresData()[id]; if(!s||!s.rows[ri])return; s.rows[ri][f]=String(v).trim(); s._t=Date.now(); state.measT=Date.now(); measSaveDebounced(); };
+window.measDelRow=function(id,ri){ var s=measuresData()[id]; if(!s||!s.rows[ri])return; if(!confirm('"'+(s.rows[ri].name||"이 줄")+'" 을(를) 이 회차에서 지울까요?')) return; s.rows.splice(ri,1); s.n=s.rows.length; s._t=Date.now(); state.measT=Date.now(); measPersist(); render(); };
+window.measAddStudent=function(id){
+  var s=measuresData()[id]; if(!s) return;
+  var el=document.getElementById("measAddNameInput"); var nm=(el?el.value:"").trim(); if(!nm){ if(el) el.focus(); return; }
+  var cand=(STUDENTS||[]).filter(function(x){return x.n===nm;});
+  var chosen=null;
+  if(cand.length>1){
+    var opts=cand.map(function(x,i){ return (i+1)+". "+x.n+" ("+((x.b||"").replace(/^\d/,'').replace(/\(.*\)/,'')||'반?')+(x.grade?' · '+x.grade:'')+")"; }).join("\n");
+    var pk=prompt("명단에 '"+nm+"' 이(가) "+cand.length+"명 있습니다. 어떤 수련생인가요?\n번호를 입력하세요:\n"+opts, "1");
+    if(pk===null) return; var ix=Number(pk)-1; if(!(ix>=0&&ix<cand.length)){ alert("번호가 올바르지 않습니다."); return; } chosen=cand[ix];
+  } else if(cand.length===1){ chosen=cand[0]; }
+  var exist=[]; s.rows.forEach(function(r,i){ if(r.name===nm) exist.push(i); });
+  if(exist.length){
+    if(confirm("'"+nm+"' 은(는) 이미 이 회차에 입력되어 있습니다.\n\n[확인] 같은 수련생입니다 → 기존 줄로 이동\n[취소] 동명이인입니다 → 새 줄로 따로 추가")){
+      state.measFocusRow=exist[exist.length-1]; if(el){ el.value=""; } render(); return;
+    }
+  }
+  s.rows.push({ name:nm, gender:(chosen?chosen.g||"":""), age:(chosen?_measAge(chosen):""), time:"", cls:(chosen?_measCls(chosen):""), cells:{} });
+  s.n=s.rows.length; s.matched=s.rows.filter(function(r){return (STUDENTS||[]).some(function(x){return x.n===r.name;});}).length; s._t=Date.now(); state.measT=Date.now(); measPersist();
+  state.measFocusRow=s.rows.length-1; if(el){ el.value=""; } render();
+};
+/* 이 회차를 업로드 엑셀과 같은 표 구성으로 변환 */
+function _measToAoa(s){
+  var cats=s.cats||[];
+  var row0=["이름","성별","나이","타임","부/반"], row1=["","","","",""];
+  cats.forEach(function(cat){ (cat.subs.length?cat.subs:[{sub:"",key:_measKey(cat.name,"")}]).forEach(function(su,i){ row0.push(i===0?cat.name:null); row1.push(su.sub||""); }); });
+  var aoa=[row0,row1];
+  (s.rows||[]).forEach(function(r){ var line=[r.name,r.gender,r.age,r.time,r.cls]; cats.forEach(function(cat){ cat.subs.forEach(function(su){ var v=r.cells[su.key]; line.push(v!=null?v:""); }); }); aoa.push(line); });
+  return aoa;
+}
+function _measMerges(s){
+  var cats=s.cats||[]; var merges=[], col=5;
+  for(var i=0;i<5;i++) merges.push({s:{r:0,c:i},e:{r:1,c:i}});
+  cats.forEach(function(cat){ var sp=cat.subs.length||1; if(sp>1){ merges.push({s:{r:0,c:col},e:{r:0,c:col+sp-1}}); } else { merges.push({s:{r:0,c:col},e:{r:1,c:col}}); } col+=sp; });
+  return merges;
+}
+window.exportMeasXlsx=function(id){
+  var s=measuresData()[id]; if(!s){ return; }
+  if(typeof XLSX==="undefined"){ alert("엑셀 저장 모듈을 불러오지 못했습니다.\n인터넷 연결을 확인하고 새로고침(⌘+Shift+R) 후 다시 시도해 주세요."); return; }
+  try{
+    var aoa=_measToAoa(s);
+    var ws=XLSX.utils.aoa_to_sheet(aoa); ws['!merges']=_measMerges(s);
+    var wb=XLSX.utils.book_new(); var sheetNm="나라차태권도분당도장_"+s.year+"년"+(s.half==="H1"?"1차":"2차");
+    XLSX.utils.book_append_sheet(wb, ws, sheetNm.slice(0,31));
+    XLSX.writeFile(wb, sheetNm+"_"+s.kind+".xlsx");
+  }catch(e){ alert("엑셀 저장 중 오류: "+e); }
+};
+function renderMeasInput(s){
+  var kc=(s.kind==="줄넘기")?'#2B5FB8':(s.kind==="체력")?'#1E7B3C':'#7C3AED';
+  var cats=s.cats||[]; var id=s.id;
+  var names=(STUDENTS||[]).map(function(x){return '<option value="'+esc(x.n)+'">';}).join('');
+  var h='<div class="card">'+
+    '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px">'+
+      '<button onclick="closeMeasInput()" style="background:#EAF1FB;border:1.5px solid #2B5FB8;color:#2B5FB8;border-radius:10px;padding:7px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">← 회차 목록</button>'+
+      '<span style="background:'+kc+'1f;color:'+kc+';border-radius:8px;padding:3px 10px;font-size:11.5px;font-weight:800">'+esc(s.kind)+'</span>'+
+      '<b style="font-size:15px">'+esc(s.title)+' · 측정입력</b>'+
+      '<span style="font-size:12px;color:var(--sub)">'+s.rows.length+'명</span><span style="flex:1"></span>'+
+      '<button style="background:#E7F5EE;border:1.5px solid #9BD9B4;color:#1E7B3C;border-radius:10px;padding:7px 13px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit" onclick="exportMeasXlsx(\''+id+'\')">⬇ 엑셀파일 저장</button>'+
+    '</div>'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#F4F7FA;border:1px solid var(--line);border-radius:11px;padding:10px 12px;margin-bottom:11px">'+
+      '<b style="font-size:12.5px;color:var(--ink)">＋ 수련생 추가</b>'+
+      '<input id="measAddNameInput" list="measRosterNames" placeholder="이름 입력 후 Enter" onkeydown="if(event.key===\'Enter\'){event.preventDefault();measAddStudent(\''+id+'\');}" style="height:34px;border:1px solid var(--line);border-radius:9px;padding:0 11px;font-size:13.5px;font-family:inherit;min-width:150px">'+
+      '<datalist id="measRosterNames">'+names+'</datalist>'+
+      '<button onclick="measAddStudent(\''+id+'\')" style="background:var(--blue);color:#fff;border:none;border-radius:9px;padding:8px 15px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">추가</button>'+
+      '<span style="font-size:11px;color:var(--sub)">명단에 있으면 성별·나이 자동 채움 · 동명이인은 확인 후 추가</span>'+
+    '</div>';
+  if(!s.rows.length){ return h+'<div style="text-align:center;padding:26px 12px;color:var(--sub);font-size:13px">아직 입력된 수련생이 없습니다. 위 <b>＋ 수련생 추가</b>로 시작하세요.</div></div>'; }
+  var head1='<tr><th rowspan="2" style="position:sticky;left:0;background:#F4F6FA;z-index:3;min-width:92px">이름</th><th rowspan="2">성별</th><th rowspan="2">나이</th><th rowspan="2">타임</th><th rowspan="2">부/반</th>';
+  var head2='<tr>';
+  cats.forEach(function(cat){ head1+='<th colspan="'+(cat.subs.length||1)+'" style="background:'+kc+'14;color:'+kc+';white-space:nowrap">'+esc(cat.name)+'</th>'; cat.subs.forEach(function(su){ head2+='<th style="font-weight:600;color:var(--sub);font-size:10px">'+esc(su.sub||'값')+'</th>'; }); });
+  head1+='<th rowspan="2" style="min-width:34px"></th></tr>'; head2+='</tr>';
+  function ip(v,oninput,w){ return '<input value="'+esc(v||"")+'" oninput="'+oninput+'" style="width:'+(w||'46px')+';height:28px;border:1px solid #DCE3EC;border-radius:6px;padding:0 4px;font-size:12px;font-family:inherit;text-align:center">'; }
+  var body='';
+  s.rows.forEach(function(rw,ri){ var hl=(state.measFocusRow===ri); var bg=hl?'#FFFDF0':'#fff';
+    body+='<tr style="'+(hl?'background:#FFFDF0':'')+'">'+
+      '<td style="position:sticky;left:0;background:'+bg+';z-index:2;text-align:left;font-weight:700;white-space:nowrap">'+esc(rw.name)+'</td>'+
+      '<td>'+ip(rw.gender,"measSetField('"+id+"',"+ri+",'gender',this.value)","32px")+'</td>'+
+      '<td>'+ip(rw.age,"measSetField('"+id+"',"+ri+",'age',this.value)","32px")+'</td>'+
+      '<td>'+ip(rw.time,"measSetField('"+id+"',"+ri+",'time',this.value)","54px")+'</td>'+
+      '<td>'+ip(rw.cls,"measSetField('"+id+"',"+ri+",'cls',this.value)","60px")+'</td>';
+    cats.forEach(function(cat,ci){ cat.subs.forEach(function(su,si){ body+='<td>'+ip(rw.cells[su.key],"measSetCell('"+id+"',"+ri+","+ci+","+si+",this.value)")+'</td>'; }); });
+    body+='<td><button onclick="measDelRow(\''+id+'\','+ri+')" style="border:none;background:none;color:var(--red);cursor:pointer;font-size:14px" title="이 줄 삭제">✕</button></td></tr>';
+  });
+  h+='<div style="overflow:auto;max-height:66vh;border:1px solid var(--line);border-radius:10px">'+
+    '<table style="border-collapse:collapse;font-size:11.5px;white-space:nowrap;min-width:100%" class="measTable"><thead style="position:sticky;top:0;z-index:1">'+head1+head2+'</thead><tbody>'+body+'</tbody></table></div>'+
+    '<div style="font-size:11.5px;color:var(--sub);margin-top:9px">입력은 자동 저장됩니다. 완료 후 <b>⬇ 엑셀파일 저장</b>으로 같은 양식의 엑셀을 받을 수 있어요.</div></div>';
+  return h;
+}
 function renderMeasureTab(){
   var m=measuresData(); var ids=Object.keys(m);
   var fileInput='<input type="file" id="measFileInput" accept=".xlsx,.xls" style="display:none" onchange="importMeasureXlsx(this)">';
+  if(state.measInput && m[state.measSel]) return fileInput+renderMeasInput(m[state.measSel]);
   if(state.measView && m[state.measView.id]) return fileInput+(state.measView.type==="improve"?renderImproveKing(m[state.measView.id]):renderRecordKing(m[state.measView.id]));
   if(state.measSel && m[state.measSel]) return fileInput+renderMeasureDetail(m[state.measSel]);
   var sessions=measSort(ids.map(function(k){return m[k];}));
-  var h=fileInput+'<div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
-    '<b style="font-size:15px">📏 측정관리</b><span style="font-size:11.5px;color:var(--sub)">'+sessions.length+'개 회차</span><span style="flex:1"></span>'+
-    '<button onclick="triggerMeasImport()" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">⬆ 엑셀 불러오기</button></div>'+
-    '<div style="font-size:12px;color:var(--sub);margin-top:8px;line-height:1.6">체력·체격, 줄넘기 측정 엑셀을 불러와 저장·분석합니다. 파일 이름의 연도·차수(예: 2026년1차)를 자동 인식하고, 항목은 자동으로 구분합니다.</div></div>';
+  var h=fileInput+'<div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">'+
+    '<b style="font-size:15px">📏 측정관리</b><span style="font-size:11.5px;color:var(--sub)">'+sessions.length+'개 회차</span></div>'+
+    /* ① 직접 입력 (기본 · 위계 높음) */
+    '<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:8px">'+
+      '<button onclick="openMeasInput(\'줄넘기\')" style="flex:1;min-width:150px;background:#2B5FB8;color:#fff;border:none;border-radius:12px;padding:13px 16px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 6px rgba(43,95,184,.25)">✏️ 줄넘기 측정입력</button>'+
+      '<button onclick="openMeasInput(\'체력\')" style="flex:1;min-width:150px;background:#1E7B3C;color:#fff;border:none;border-radius:12px;padding:13px 16px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 6px rgba(30,123,60,.25)">✏️ 체력·체격 측정입력</button>'+
+    '</div>'+
+    '<div style="font-size:11.5px;color:var(--sub);margin-top:7px;line-height:1.55">이 프로그램에서 <b>직접 입력</b>하고, 입력한 데이터는 <b>⬇ 엑셀파일 저장</b>으로 같은 양식의 엑셀로 받을 수 있습니다.</div>'+
+    /* ② 엑셀 추가 (예전 기록 · 위계 낮음) */
+    '<div style="margin-top:12px;padding-top:11px;border-top:1px dashed var(--line);display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+      '<button onclick="triggerMeasImport()" style="background:#F4F6FA;color:#556;border:1px solid var(--line);border-radius:9px;padding:6px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">⬆ 엑셀 추가(불러오기)</button>'+
+      '<span style="font-size:11px;color:var(--sub)">다른 프로그램에서 예전에 기록한 자료를 추가할 때만 사용하세요.</span>'+
+    '</div></div>';
   if(!sessions.length){
     h+='<div class="card" style="text-align:center;padding:26px 16px"><div style="font-size:34px;margin-bottom:8px">📥</div><div style="font-size:14px;font-weight:700;margin-bottom:6px">아직 불러온 측정 자료가 없습니다.</div><div style="font-size:12.5px;color:var(--sub);margin-bottom:14px">엑셀 파일을 불러오면 회차별로 정리되고, 학적부에도 자동으로 표시됩니다.</div><button onclick="triggerMeasImport()" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">⬆ 첫 엑셀 불러오기</button></div>';
     return h;
@@ -13142,9 +13279,11 @@ function renderMeasureTab(){
         '<b style="font-size:14px">'+esc(s.half==="H1"?"전반기":"후반기")+'</b>'+
         '<span style="font-size:12px;color:var(--sub)">'+s.n+'명'+(s.matched!=null?' · 명단일치 '+s.matched+'명':'')+'</span>'+
         '<span style="flex:1"></span>'+
+        '<button class="chip sm" style="color:'+kc+';border-color:'+kc+'66;font-weight:800" onclick="openMeasInputExisting(\''+s.id+'\')">✏️ 입력</button>'+
         '<button class="chip sm" style="color:#B45309;border-color:#F0C36D" onclick="openMeasView(\'improve\',\''+s.id+'\')">🏅 향상왕</button>'+
         '<button class="chip sm" style="color:#B45309;border-color:#F0C36D" onclick="openMeasView(\'record\',\''+s.id+'\')">🥇 기록왕</button>'+
         '<button class="chip sm" style="color:var(--blue)" onclick="setMeasSel(\''+s.id+'\')">보기</button>'+
+        '<button class="chip sm" style="color:#1E7B3C" onclick="exportMeasXlsx(\''+s.id+'\')">⬇ 엑셀</button>'+
         '<button class="chip sm" style="color:var(--red)" onclick="delMeasureSession(\''+s.id+'\')">삭제</button>'+
       '</div>';
     });
@@ -13168,8 +13307,14 @@ function renderMeasureDetail(s){
   cats.forEach(function(cat){ var sp=cat.subs.length||1; head1+='<th colspan="'+sp+'" style="background:'+kc+'14;color:'+kc+'">'+esc(cat.name)+'</th>'; cat.subs.forEach(function(su){ head2+='<th style="font-weight:600;color:var(--sub);font-size:10.5px">'+esc(su.sub||'값')+'</th>'; }); });
   head1+='</tr>'; head2+='</tr>';
   var body='';
-  (s.rows||[]).forEach(function(rw){ var inRoster=have[rw.name]; var nmCol=inRoster?'<b>'+esc(rw.name)+'</b>':'<span style="color:#AAB2C0">'+esc(rw.name)+'</span>';
-    body+='<tr><td style="position:sticky;left:0;background:#fff;text-align:left;font-weight:700">'+nmCol+'</td><td>'+esc(rw.gender)+'</td><td>'+esc(rw.age)+'</td><td style="font-size:10.5px">'+esc(rw.cls)+'</td>';
+  (s.rows||[]).forEach(function(rw){ var inRoster=have[rw.name]; var esn=esc(rw.name).replace(/'/g,"\\'");
+    var ph=getPhoto(rw.name);
+    var av=ph?'<img src="'+ph+'" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex:none;display:block">'
+            :'<span style="width:22px;height:22px;border-radius:50%;background:'+kc+'18;color:'+kc+';display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none">'+esc((rw.name||' ').slice(0,1))+'</span>';
+    var nameTxt=inRoster?'<b style="color:var(--blue);cursor:pointer" title="학적부 열기" onclick="openStuM(\''+esn+'\')">'+esc(rw.name)+'</b>'
+                        :'<span style="color:#AAB2C0">'+esc(rw.name)+'</span>';
+    var nmCell='<span style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap;line-height:1">'+demoSlot(rw.name,13)+av+nameTxt+'</span>';
+    body+='<tr><td style="position:sticky;left:0;background:#fff;text-align:left;font-weight:700">'+nmCell+'</td><td>'+esc(rw.gender)+'</td><td>'+esc(rw.age)+'</td><td style="font-size:10.5px">'+esc(rw.cls)+'</td>';
     cats.forEach(function(cat){ cat.subs.forEach(function(su){ var v=rw.cells[su.key]||''; body+='<td>'+esc(v)+'</td>'; }); });
     body+='</tr>';
   });
