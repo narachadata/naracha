@@ -647,7 +647,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.98";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.99";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -1568,6 +1568,14 @@ function cloudPull(){
     });
 }
 function timeStr(t){ var d=new Date(t); return p2(d.getHours())+":"+p2(d.getMinutes()); }
+/* 저장 상태 배지만 갱신 (전체 화면을 다시 그리지 않아 시간표 튐 방지) */
+function updateAttStatusPill(){
+  var el=document.getElementById("attStatusPill"); if(!el) return;
+  var st=state.attStatus||"";
+  if(!st){ el.innerHTML=""; return; }
+  if(st.indexOf('⚠')>-1||st.indexOf('실패')>-1||st.indexOf('오프라인')>-1) el.innerHTML='<span class="warnPill">'+esc(st)+'</span>';
+  else el.innerHTML='<span style="font-size:11.5px;color:var(--sub);font-weight:700">'+esc(st)+'</span>';
+}
 function renderSyncBadge(){
   /* 동기화가 끝났으면(성공/실패 모두) 워치독 해제 */
   if(!state.syncing && state.syncWatchdog){ clearTimeout(state.syncWatchdog); state.syncWatchdog=null; }
@@ -9611,6 +9619,7 @@ function attSync(){
     .catch(function(){ return attState(); })   /* 가져오기 실패 시 내 것으로 진행(서버 복구) */
     .then(function(payload){
   var s=JSON.stringify(payload);
+  state.__attPushedRaw=s;   /* 방금 올린 내용 → 다음 pull에서 같은 데이터면 다시 그리지 않도록 기준 갱신 */
   var rows=[["JSON"]];
   for(var i=0;i<s.length;i+=45000) rows.push([s.slice(i,i+45000)]);
   return fetch(GSHEET_URL, {method:"POST", body:JSON.stringify({key:accessKey(), store:"att", rows:rows})});
@@ -9619,14 +9628,15 @@ function attSync(){
     .then(function(txt){
       state.attSyncing=false;
       state.attStatus = (txt==="OK") ? "저장됨" : "저장 실패";
-      if(typeof syncRender==="function") syncRender();   /* 실제 저장 결과를 상태 배지에 반영 */
+      if(txt==="OK" && state.__attPushedRaw) state.__lastAttRaw=state.__attPushedRaw;   /* 내 저장분은 원격 변경으로 치지 않음 */
+      updateAttStatusPill();   /* 상태 배지만 갱신 — 전체 화면 다시 그리지 않음 */
       if(state.attPending){ state.attPending=false; attSync(); }
       else if(txt==="OK" && !state.attEchoed){
         state.attEchoed=true;
         setTimeout(function(){ state.attEchoed=false; attSync(); }, 2000);
       }
     })
-    .catch(function(){ state.attSyncing=false; state.attStatus="오프라인 (컴퓨터에만 저장됨)"; if(typeof syncRender==="function") syncRender(); if(state.attPending){ state.attPending=false; setTimeout(attSync, 3000); } });
+    .catch(function(){ state.attSyncing=false; state.attStatus="오프라인 (컴퓨터에만 저장됨)"; updateAttStatusPill(); if(state.attPending){ state.attPending=false; setTimeout(attSync, 3000); } });
 }
 function attPull(){
   if(!state.unlocked) return;      /* 잠금 화면에서는 백그라운드 동기화 금지 → 입력 튕김 방지 */
@@ -9652,13 +9662,16 @@ function attPull(){
       try{ remote=JSON.parse(joined); }catch(e){}
       if(!remote) return;
       /* 옛 구글 코드 감지: 회계 데이터가 넘어오면 절대 전송하지 않음 (덮어쓰기 방지) */
-      if(!remote.attV){ state.attStatus="⚠️ 구글 코드 업데이트 필요"; render(); return; }
+      if(!remote.attV){ state.attStatus="⚠️ 구글 코드 업데이트 필요"; updateAttStatusPill(); return; }
+      /* 서버 데이터가 이전과 같으면(원격 변경 없음) 전체 화면을 다시 그리지 않는다 → 시간표 튐 방지 */
+      var changedRemote=(joined!==state.__lastAttRaw);
+      state.__lastAttRaw=joined;
       var merged=mergeAtt(attState(), remote);
       applyAtt(merged);
       try{ localStorage.setItem("naracha-att", JSON.stringify(merged)); }catch(e){}
       state.attPulledOnce=true;
       state.attStatus="동기화됨";
-      syncRender();
+      if(changedRemote) syncRender(); else updateAttStatusPill();
       setTimeout(attSync, 400);
     })
     .catch(function(){ state.attStatus="오프라인"; });
@@ -14428,11 +14441,11 @@ function render(){
           (myRole()==="admin"?'<button onclick="openBackupM()" class="catOff" title="전체 데이터 백업·복구" style="cursor:pointer;font-family:inherit'+(backupAgeDays()>=BACKUP_INTERVAL_DAYS?';border-color:#F0C36D;color:#B45309;background:#FFF9EC':'')+'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>백업'+(backupAgeDays()>=BACKUP_INTERVAL_DAYS?' ⚠':'')+'</button>':'')+
           catBtn('회계', icAcct, '회계관리'+(myRole()!=="admin"?' 🔒':''), myRole()!=="admin");
       })()+
-      (state.attStatus?   /* 저장 상태를 모든 탭에서 상시 표시 (실패·오프라인은 경고색) */
+      '<span id="attStatusPill">'+(state.attStatus?   /* 저장 상태를 모든 탭에서 상시 표시 (실패·오프라인은 경고색) */
         ((state.attStatus.indexOf('⚠')>-1||state.attStatus.indexOf('실패')>-1||state.attStatus.indexOf('오프라인')>-1)
           ? '<span class="warnPill">'+esc(state.attStatus)+'</span>'
           : '<span style="font-size:11.5px;color:var(--sub);font-weight:700">'+esc(state.attStatus)+'</span>')
-        :'')+
+        :'')+'</span>'+
       '</div>'+
       __tabsHtml + '</div>';
     /* ── 자동 백업 안내 배너 (관장 기기 · 7일 초과 & 조용한 백업 실패 시) ── */
