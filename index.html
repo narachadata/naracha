@@ -666,7 +666,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v10.6";
+var APP_VER = "v10.9";
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -5151,6 +5151,7 @@ function normalizeYmData(){
 function renderAttContent(){
   var t=state.attTab, x="";
   if(t==="수련생 명단") return renderRosterTab();
+  if(t==="관리수련생") return renderManageStudentsTab();
   if(t==="시간표 설정") return renderScheduleTab();
   if(t==="심사대상"){ state.attTab="출석 현황"; return renderStatusTab(); }   /* 심사대상 탭은 출석 현황에 통합됨 */
   if(t==="수련시간표") return renderWeekTab();
@@ -5605,6 +5606,17 @@ function isKkwReady(grade){
   if(p.t==="품단" && p.s==="2") return true;         /* 유품자·유단자 각 품·단 2급 */
   return false;
 }
+/* 필터(추천·확정·국기원 등) 화면에서도 그룹(급수별·반별) 정렬·역순을 적용.
+   그룹 미선택(전체/시범단) 또는 특정 급수-띠·반 선택 시엔 defCmp(그 화면 기본 정렬) 사용 */
+function _statGroupSort(rows, defCmp){
+  var grp=state.statGroup||"전체", rev=!!state.statRev;
+  if(grp==="급수별" && !state.statGF){
+    rows.sort(function(a,b){ var ga=gradeRank(a.s.grade), gb=gradeRank(b.s.grade); if((ga<0)!==(gb<0)) return ga<0?1:-1; if(ga!==gb) return rev?(ga-gb):(gb-ga); return defCmp(a,b); });
+  } else if(grp==="반별" && !state.statBanF){
+    rows.sort(function(a,b){ var ba=a.s.b||"", bb=b.s.b||""; if(!!ba!==!!bb) return ba?-1:1; if(ba!==bb) return rev?bb.localeCompare(ba):ba.localeCompare(bb); return defCmp(a,b); });
+  } else { rows.sort(defCmp); }
+  return rows;
+}
 /* 검색어·상태필터까지 적용한 최종 표시 목록 */
 function statViewRows(){
   var rows=statBaseRows();
@@ -5613,23 +5625,19 @@ function statViewRows(){
   if(q) rows=rows.filter(function(r){ return r.s.n.indexOf(q)>-1; });
   if(f==="추천"){                                   /* 심사추천: 누적횟수 많은 순 유지 (준비도 판단용) */
     rows=rows.filter(function(r){ return r.ready; });
-    rows.sort(function(a,b){ return b.acc-a.acc || cmpName(a,b); });
-    return rows;
+    return _statGroupSort(rows, function(a,b){ return b.acc-a.acc || cmpName(a,b); });
   }
   if(f==="국기원"){                                 /* 국기원추천: 유급자 1급 · 유품자·유단자 각 품·단 2급 · 지도진 수동 추천 */
     rows=rows.filter(function(r){ return isKkwReady(r.s.grade) || r.manKkw; });
-    rows.sort(function(a,b){ return gradeRank(b.s.grade)-gradeRank(a.s.grade) || cmpName(a,b); });
-    return rows;
+    return _statGroupSort(rows, function(a,b){ return gradeRank(b.s.grade)-gradeRank(a.s.grade) || cmpName(a,b); });
   }
   if(f==="국기원확정"){                             /* 국기원확정: 국기원추천에서 확정 처리된 수련생 */
     rows=rows.filter(function(r){ return isKkwConf(r.s.n); });
-    rows.sort(function(a,b){ return gradeRank(b.s.grade)-gradeRank(a.s.grade) || cmpName(a,b); });
-    return rows;
+    return _statGroupSort(rows, function(a,b){ return gradeRank(b.s.grade)-gradeRank(a.s.grade) || cmpName(a,b); });
   }
   if(f==="확정"){                                   /* 심사확정: 확정 체크된 수련생만 */
     rows=rows.filter(function(r){ return isExamConf(r.s.n); });
-    rows.sort(function(a,b){ return b.acc-a.acc || cmpName(a,b); });
-    return rows;
+    return _statGroupSort(rows, function(a,b){ return b.acc-a.acc || cmpName(a,b); });
   }
   if(f) rows=rows.filter(function(r){ return r.st===f; });
 
@@ -5806,6 +5814,7 @@ function renderStatusTab(){
     '<button class="chip" onclick="moveStatYm(-1)">◀</button><b style="font-size:15px;min-width:78px;text-align:center">'+ym+'</b><button class="chip" onclick="moveStatYm(1)">▶</button>'+
     '<input class="input" style="max-width:150px;padding:8px 12px;font-size:13.5px" placeholder="🔍 이름 검색" value="'+esc(state.statQ||"")+'" oninput="setStatQ(this.value)">'+
     '<span style="width:6px"></span>'+sfBtns+
+    ((state.statF==="확정")?'<span style="flex:1;min-width:8px"></span><button onclick="toggleExamCbLock()" title="심사신청서·테이프전달 체크박스 잠금/해제" style="border:1.5px solid '+(state.examCbUnlock?"#B45309":"#CBD5E1")+';background:'+(state.examCbUnlock?"#FFF7ED":"#fff")+';color:'+(state.examCbUnlock?"#B45309":"#64748B")+';border-radius:10px;padding:7px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap">'+(state.examCbUnlock?"🔓 수동 입력 중 — 다시 잠그기":"🔒 자동 잠금 — 해제하면 수동")+'</button>':'')+
     '</div>'+
     /* 2줄: 그룹 + 하위선택 */
     '<div style="border-top:1px solid var(--line);padding-top:8px">'+
@@ -5814,7 +5823,6 @@ function renderStatusTab(){
     /* 선택 인원 (크게) */
     '<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:12px 2px 6px">'+
     '<div id="statCountArea">'+statCountHtml(view.length)+'</div>'+
-    ((state.statF==="확정")?'<button onclick="toggleExamCbLock()" title="심사신청서·테이프전달 체크박스 잠금/해제" style="border:1.5px solid '+(state.examCbUnlock?"#B45309":"#CBD5E1")+';background:'+(state.examCbUnlock?"#FFF7ED":"#fff")+';color:'+(state.examCbUnlock?"#B45309":"#64748B")+';border-radius:10px;padding:5px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;align-self:center">'+(state.examCbUnlock?"🔓 수동 입력 중 — 다시 잠그기":"🔒 자동 잠금 — 수동 체크하려면 해제")+'</button>':'')+
     '<span style="font-size:11.5px;color:var(--sub)">날짜 숫자 색: <b style="color:#1A1A1A;font-size:13.5px">7</b> 횟수 포함(출석·보강·관리) · <b style="color:#D0332A;font-size:13.5px">10</b> 미포함(체험·심사·국기원·대회연습) · <b style="font-size:13.5px;background:linear-gradient(100deg,#1A1A1A 0%,#1A1A1A 46%,#D0332A 54%,#D0332A 100%);-webkit-background-clip:text;background-clip:text;color:transparent">8</b> 혼합(둘 다) · <b style="color:var(--ink)">×2</b> 같은 날 2회 — 미포함은 출석 표시만 되고 수련횟수(기준 대비 실제·심사 누적)에는 포함되지 않습니다</span>'+
     '</div>'+
     '<div id="statListArea">'+statListHtml(view)+'</div></div>';
@@ -10255,6 +10263,8 @@ function workData(){
   /* 완료 이력 로그 (유실 방지 · 매일 처리한 일 기록) */
   if(!state.work.doneLog) state.work.doneLog={};
   if(!state.work.tombDoneLog) state.work.tombDoneLog={};
+  /* 이탈방지: 관리수련생 연락 상태·재접촉일 (이름별) */
+  if(!state.work.mgContact) state.work.mgContact={};
   /* ── 주유 기록: 주행거리(계기판)와 분리해 별도 저장 · 여러 건/일 가능 ── */
   if(!state.work.carFuel) state.work.carFuel={};
   if(!state.work.tombFuel) state.work.tombFuel={};
@@ -10335,7 +10345,7 @@ function applyWorkTomb(w, coll, tk){
 function mergeWork(local, remote){
   if(!remote||!remote.workV) return local;
   var out=JSON.parse(JSON.stringify(local));
-  ["manage","flags","events","logs","tasks","routines","rchecks","staff","car","carFuel","carMaint","typeColors","holidays","holHidden","signupDone","measures","doneLog"].forEach(function(coll){
+  ["manage","flags","events","logs","tasks","routines","rchecks","staff","car","carFuel","carMaint","typeColors","holidays","holHidden","signupDone","measures","doneLog","mgContact"].forEach(function(coll){
     var rc=remote[coll]||{}, oc=out[coll]||(out[coll]={});
     for(var k in rc){ if(!oc[k] || (rc[k]._t||0)>(oc[k]._t||0)) oc[k]=rc[k]; }
   });
@@ -10483,6 +10493,18 @@ window.setWorkFlagInput=function(v){ state.workFlagInput=v; };
 window.setWorkFlagReason=function(v){ state.workFlagReason=v; };
 window.addWorkFlag=function(){ var v=(state.workFlagInput||"").trim(); if(!v){ alert("관리대상으로 추가할 수련생 이름을 입력하세요."); return; } var w=workData(); w.flags[v]={ reason:(state.workFlagReason||""), dev:workDev(), _t:Date.now() }; state.workFlagInput=""; state.workFlagReason=""; workPersist(); render(); };
 window.removeWorkFlag=function(name){ if(!confirm(name+" 님을 수동 관리대상에서 뺄까요? (기존 관리 메모는 남습니다)")) return; var w=workData(); if(!w.tombFlags)w.tombFlags={}; w.tombFlags[name]=Date.now(); delete w.flags[name]; workPersist(); render(); };
+/* ── 이탈방지: 레이더에서 원탭 관리대상 추가 ── */
+window.addWatchFlag=function(name,reason){ var w=workData(); if(!w.flags[name]){ w.flags[name]={ reason:reason||"", dev:workDev(), _t:Date.now() }; } workPersist(); try{ toast(name+" 관리대상 추가됨"); }catch(e){} render(); };
+/* ── 이탈방지: 연락 상태·재접촉일 (이름별) ── */
+window.setMgContact=function(name,st){ var w=workData(); if(!w.mgContact[name]) w.mgContact[name]={}; var c=w.mgContact[name]; c.status=(c.status===st?"":st); c.dev=workDev(); c._t=Date.now();
+  if(c.status==="연락완료"){ try{ var s=(STUDENTS||[]).find(function(x){return x.n===name;}); if(s){ s.note=(s.note?s.note+"\n":"")+"["+today()+"] 이탈방지 연락 완료"; if(state.stuM&&state.stuM.n===name) state.stuM.note=s.note; rosterSave(); if(myRole()==="admin"&&typeof persist==="function") persist(); } }catch(e){} }
+  workPersist(); render(); };
+window.setMgNext=function(name,v){ var w=workData(); if(!w.mgContact[name]) w.mgContact[name]={}; w.mgContact[name].next=v; w.mgContact[name].dev=workDev(); w.mgContact[name]._t=Date.now(); workPersist(); render(); };
+/* ── 반복 루틴 주기 설정 (매일 / 특정 요일 / 매월 N일) ── */
+window.toggleRoutineDow=function(id,dow){ var w=workData(); var r=w.routines[id]; if(!r) return; var cur=(r.freq&&/^dow:/.test(r.freq))?r.freq.slice(4).split(",").filter(function(x){return x!=="";}):[]; var i=cur.indexOf(String(dow)); if(i>-1) cur.splice(i,1); else cur.push(String(dow)); r.freq=cur.length?("dow:"+cur.map(Number).sort(function(a,b){return a-b;}).join(",")):"daily"; r._t=Date.now(); workPersist(); render(); };
+window.setRoutineDaily=function(id){ var w=workData(); var r=w.routines[id]; if(!r) return; r.freq="daily"; r._t=Date.now(); workPersist(); render(); };
+window.setRoutineMonthDay=function(id,v){ var w=workData(); var r=w.routines[id]; if(!r) return; var n=Number(v); r.freq=(n>=1&&n<=31)?("month:"+n):"daily"; r._t=Date.now(); workPersist(); render(); };
+window.setJournalWho=function(v){ state.journalWho=v; render(); };
 
 /* ══════════ 업무관리 화면 ══════════ */
 function wEsn(n){ return esc(n).replace(/\\/g,"\\\\").replace(/'/g,"\\'"); }   /* onclick JS 문자열 안전 이스케이프 */
@@ -11132,6 +11154,27 @@ function renderWorkJournal(){
     '<div style="font-size:11px;color:var(--sub);margin-top:7px">이 화면의 목적은 기록이 아니라 <b>실행</b>입니다 — 기한 있는 일은 전부 맨 위 ⏰ 간트에 모이고, 끝나기 전까지 계속 표시됩니다.</div>'+
     '</div>';
 
+  /* 📥 담당자 인박스 (재설계: 중복 섹션 대신 이름 필터 하나) */
+  (function(){
+    var names=[].concat(journalStaffTokens('행정'),journalStaffTokens('교육')).filter(function(x,i,a){return x&&a.indexOf(x)===i;});
+    var who=state.journalWho||"";
+    var opts='<option value="">— 담당자 선택 —</option>'+names.map(function(nm){return '<option value="'+esc(nm)+'"'+(who===nm?' selected':'')+'>'+esc(nm)+'</option>';}).join('');
+    h+='<div class="card" style="border-top:3px solid #7C3AED"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:'+(who?'8px':'0')+'">'+
+      '<b style="font-size:14.5px">📥 내 앞으로 온 일</b>'+
+      '<span style="font-size:11px;color:var(--sub)">담당자를 고르면 관리수련생·행사·업무에서 그 사람 앞으로 온 일만 모아 보여줍니다</span>'+
+      '<span style="flex:1"></span>'+
+      '<select onchange="setJournalWho(this.value)" style="height:32px;border:1px solid var(--line);border-radius:8px;padding:0 8px;font-size:12.5px;font-family:inherit;background:#fff">'+opts+'</select></div>';
+    if(who){
+      var pd=personInboxData(who);
+      if(!pd.todos.length && !pd.noDue.length){ h+='<div style="font-size:12.5px;color:var(--sub)">'+esc(who)+' 앞으로 온 미완료 일이 없어요. 👍</div>'; }
+      else {
+        if(pd.todos.length) h+=renderTodoGantt(pd.todos);
+        pd.noDue.forEach(function(t){ var kc2=workKindColor(t.kind); h+='<div style="display:flex;align-items:center;gap:7px;padding:4px 2px;font-size:12px"><span style="background:'+kc2+'1f;color:'+kc2+';border-radius:7px;padding:1px 7px;font-size:10px;font-weight:800">'+t.kind+'</span><b style="color:var(--blue);cursor:pointer;text-decoration:underline" onclick="'+t.openFn+'">'+esc(t.label)+'</b><span style="font-size:10.5px;color:#B45309;font-weight:700">기한 미정</span><span style="flex:1"></span><button class="chip sm" style="color:#1E7B3C" onclick="'+t.doneFn+'">완료</button></div>'; });
+      }
+    }
+    h+='</div>';
+  })();
+
   /* 🎂 다가오는 생일 (명단 생년월일 자동 연동) */
   (function(){
     var bd2=upcomingBdays(14), bmon=upcomingBdays(400).filter(function(x){return x.thisMonth;});
@@ -11151,64 +11194,51 @@ function renderWorkJournal(){
   function teamBlock(team){
     var col=(team==='행정')?'#1F3A5F':'#1E7B3C';
     var icon=(team==='행정')?'🗂':'🥋';
-    var pd=journalPersonData(team);
-    var openCnt=pd.todos.filter(function(t){return !t.done;}).length+pd.noDue.filter(function(t){return !t.done;}).length;
-    var list=rts[team], doneR=rcnt(team), ed=!!state['rEdit_'+team];
+    var ed=!!state['rEdit_'+team];
     var tok0=esc(journalStaffTokens(team)[0]||'이름');
+    var allR=rts[team];
+    var todayR=allR.filter(function(r){ return routineFreqApplies(r, td); });
+    var doneToday=0; todayR.forEach(function(r){ var c=w.rchecks[td+'|'+r.id]; if(c&&c.done)doneToday++; });
+    var showR = ed ? allR : todayR;
     var s='<div class="card" style="border-top:3px solid '+col+'">'+
       '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+
         '<b style="font-size:15px;color:'+col+'">'+icon+' '+team+'팀 — '+esc(journalStaff(team))+'</b>'+
-        '<span style="font-size:11.5px;color:var(--sub)">내 앞으로 온 일 '+openCnt+'건 · 오늘 루틴 '+doneR+'/'+list.length+'</span>'+
-        '<span style="flex:1"></span></div>';
-    s+='<div style="font-size:12px;font-weight:800;color:'+col+';margin:2px 0 6px">📌 내 앞으로 온 일 <span style="font-weight:600;color:var(--sub)">— 관리수련생·행사·업무에서 @'+tok0+' 담당으로 지정된 것 (자동)</span></div>';
-    if(!pd.todos.length && !pd.noDue.length && !pd.evInfo.length){
-      s+='<div style="font-size:12.5px;color:var(--sub);padding:2px 0 6px">아직 없습니다. 다른 화면에서 담당자로 @'+tok0+'을 지정하면 여기에 자동으로 모입니다.</div>';
-    } else {
-      pd.evInfo.forEach(function(ei){ var ev=ei.ev;
-        s+='<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:7px 10px;margin-bottom:5px;background:#FBFAF6">'+
-          '<span style="background:#7C3AED1f;color:#7C3AED;border-radius:7px;padding:1px 7px;font-size:10.5px;font-weight:800">행사</span>'+
-          '<b style="font-size:12.5px;color:var(--blue);cursor:pointer;text-decoration:underline" onclick="openEvent(\''+ev.id+'\')">'+esc(ev.title||'(제목 없음)')+'</b>'+
-          (ev.date?'<span style="font-size:11px;color:var(--sub)">🗓 '+esc(ev.date)+(ev.time?' '+esc(ev.time):'')+'</span>'+workDueBadge(ev.date):'')+
-          (ev.place?'<span style="font-size:11px;color:var(--sub)">📍 '+esc(ev.place)+'</span>':'')+
-          '<span style="flex:1"></span><span style="font-size:11px;color:var(--sub)">내 준비 '+ei.preps.length+'건</span></div>';
-      });
-      if(pd.todos.length) s+=renderTodoGantt(pd.todos);
-      pd.noDue.filter(function(t){return !t.done;}).forEach(function(t){
-        var kc2=workKindColor(t.kind);
-        s+='<div style="display:flex;align-items:center;gap:7px;padding:4px 2px;font-size:12px">'+
-          '<span style="background:'+kc2+'1f;color:'+kc2+';border-radius:7px;padding:1px 7px;font-size:10px;font-weight:800">'+t.kind+'</span>'+
-          '<b style="color:var(--blue);cursor:pointer;text-decoration:underline" title="클릭하면 내용을 수정합니다" onclick="'+t.openFn+'">'+esc(t.label)+'</b>'+
-          '<span style="font-size:10.5px;color:#B45309;font-weight:700">기한 미정</span>'+
-          '<span style="flex:1"></span>'+
-          (t.editFn?'<button class="chip sm" style="color:var(--blue)" title="업무 내용 수정" onclick="'+t.editFn+'">✎ 수정</button>':'')+
-          '<button class="chip sm" style="color:#1E7B3C" onclick="'+t.doneFn+'">완료</button></div>';
-      });
-    }
-    s+='<div style="display:flex;align-items:center;gap:8px;margin:12px 0 5px;border-top:1px solid var(--line);padding-top:10px">'+
-      '<span style="font-size:12px;font-weight:800;color:'+col+'">☑ 오늘 루틴</span>'+
-      '<span style="font-size:11px;color:var(--sub)">매일 새로 시작 · 체크한 기기 기록</span>'+
-      '<span style="flex:1"></span>'+
-      '<button class="chip sm" onclick="toggleRoutineEdit(\''+team+'\')">'+(ed?'수정 끝':'루틴 수정')+'</button>'+
-      (ed?'<button class="chip sm" style="color:var(--blue)" onclick="addRoutine(\''+team+'\')">＋ 추가</button>':'')+'</div>';
-    if(!list.length) s+='<div style="font-size:12px;color:var(--sub)">루틴이 없습니다. [루틴 수정 → ＋추가]로 만드세요.</div>';
-    list.forEach(function(r){
-      var c=w.rchecks[td+'|'+r.id], on=!!(c&&c.done);
-      s+='<div style="display:flex;align-items:center;gap:8px;padding:4px 2px">'+
-        '<input type="checkbox" '+(on?'checked':'')+' onchange="toggleRoutine(\''+r.id+'\')" style="width:16px;height:16px;accent-color:'+col+'">'+
-        '<span style="font-size:12.5px;'+(on?'text-decoration:line-through;color:var(--sub)':'color:var(--ink)')+'">'+esc(r.text)+'</span>'+
-        (on&&c.dev?'<span style="font-size:10px;color:var(--sub)">🖥 '+esc(c.dev)+'</span>':'')+
+        '<span style="font-size:11.5px;color:var(--sub)">오늘 루틴 '+doneToday+'/'+todayR.length+'</span>'+
         '<span style="flex:1"></span>'+
-        (ed?'<button class="chip sm" onclick="editRoutine(\''+r.id+'\')">✎</button><b style="color:var(--red);cursor:pointer;font-size:14px;padding:0 4px" onclick="delRoutine(\''+r.id+'\')">×</b>':'')+
-        '</div>';
-    });
-    s+='<div style="display:flex;gap:6px;align-items:center;margin-top:10px;border-top:1px solid var(--line);padding-top:10px">'+
+        '<button class="chip sm" onclick="setStaffName(\''+team+'\')">담당 변경</button></div>';
+    /* ⚡ 업무 빠른 추가 (제목 바로 아래) */
+    s+='<div style="display:flex;gap:6px;align-items:center">'+
       '<input class="input" placeholder="⚡ 업무 빠른 추가 — 예: 현수막 견적 받기 @'+tok0+' #7/15 (Enter)" style="flex:1;height:38px;padding:0 11px;font-size:12.5px" value="'+esc(state['qadd_'+team]||'')+'" oninput="setQadd(\''+team+'\',this.value)" onkeydown="if(event.isComposing||event.keyCode===229)return;if(event.key===\'Enter\'){event.preventDefault();quickAddTask(\''+team+'\')}">'+
       '<button onclick="quickAddTask(\''+team+'\')" style="height:38px;padding:0 14px;background:'+col+';color:#fff;border:none;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">추가</button></div>';
+    /* 📝 오늘 메모 */
     var lg=(w.logs||{})[td+'|'+team]||{};
     s+='<div style="margin-top:8px"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">📝 오늘 메모 (보고·특이사항 — 실행할 일은 위 ⚡로)</div>'+
       '<textarea class="input" placeholder="오늘 보고·특이사항을 간단히 기록" style="width:100%;min-height:42px;resize:vertical;font-family:inherit;font-size:12.5px" oninput="setTeamLog(\''+team+'\',this.value)" onchange="commitTeamLog(\''+team+'\')">'+esc(lg.text||'')+'</textarea>'+
       (lg.text?'<div style="font-size:12px;color:var(--ink);margin-top:3px;line-height:1.5">'+workHi(lg.text)+'</div>':'')+
       (lg.dev?'<div style="margin-top:2px">'+workStamp(lg.dev,lg._t)+'</div>':'')+'</div>';
+    /* ☑ 오늘 루틴 (주기별 자동 표시) */
+    s+='<div style="display:flex;align-items:center;gap:8px;margin:12px 0 5px;border-top:1px solid var(--line);padding-top:10px">'+
+      '<span style="font-size:12px;font-weight:800;color:'+col+'">☑ 오늘 루틴</span>'+
+      '<span style="font-size:11px;color:var(--sub)">'+(ed?'주기를 정하면 그 날만 자동으로 떠요':'매일·요일·매월 주기별 자동 표시')+'</span>'+
+      '<span style="flex:1"></span>'+
+      '<button class="chip sm" onclick="toggleRoutineEdit(\''+team+'\')">'+(ed?'수정 끝':'루틴 수정')+'</button>'+
+      (ed?'<button class="chip sm" style="color:var(--blue)" onclick="addRoutine(\''+team+'\')">＋ 추가</button>':'')+'</div>';
+    if(!showR.length) s+='<div style="font-size:12px;color:var(--sub)">'+(ed?'루틴이 없습니다. [＋추가]로 만드세요.':'오늘 예정된 루틴이 없어요. [루틴 수정]에서 주기를 확인·변경하세요.')+'</div>';
+    showR.forEach(function(r){
+      var c=w.rchecks[td+'|'+r.id], on=!!(c&&c.done);
+      var fl=routineFreqLabel(r);
+      s+='<div style="padding:4px 2px">'+
+        '<div style="display:flex;align-items:center;gap:8px">'+
+          '<input type="checkbox" '+(on?'checked':'')+' onchange="toggleRoutine(\''+r.id+'\')" style="width:16px;height:16px;accent-color:'+col+'">'+
+          '<span style="font-size:12.5px;'+(on?'text-decoration:line-through;color:var(--sub)':'color:var(--ink)')+'">'+esc(r.text)+'</span>'+
+          (fl!=="매일"?'<span style="font-size:10px;font-weight:800;color:'+col+';background:'+col+'14;border-radius:6px;padding:1px 6px">'+esc(fl)+'</span>':'')+
+          (on&&c.dev?'<span style="font-size:10px;color:var(--sub)">🖥 '+esc(c.dev)+'</span>':'')+
+          '<span style="flex:1"></span>'+
+          (ed?'<button class="chip sm" onclick="editRoutine(\''+r.id+'\')">✎</button><b style="color:var(--red);cursor:pointer;font-size:14px;padding:0 4px" onclick="delRoutine(\''+r.id+'\')">×</b>':'')+
+        '</div>'+
+        (ed?routineFreqControls(r,col):'')+
+      '</div>';
+    });
     s+='</div>';
     return s;
   }
@@ -11268,7 +11298,7 @@ function renderWorkJournal(){
 
 /* ── 업무관리 디스패처 ── */
 function renderWorkTab(){
-  var wt=state.workTab||"관리";
+  var wt=state.workTab||"일지"; if(wt==="관리") wt="일지";
   function tabBtn(idk,label){ var on=(wt===idk); return '<button class="chip'+(on?' on':'')+'" style="font-weight:'+(on?'800':'600')+'" onclick="setWorkTab(\''+idk+'\')">'+label+'</button>'; }
   var h='<div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">'+
     '<b style="font-size:17px">🗂 업무관리</b>'+
@@ -11276,12 +11306,11 @@ function renderWorkTab(){
     '<span style="flex:1"></span>'+
     '<span style="font-size:11.5px;color:var(--sub)">🖥 이 기기: <b>'+esc(state.device||"미지정")+'</b>'+(state.device?'':' — 우상단 [기기 선택]에서 지정')+'</span></div>'+
     '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
-      tabBtn('관리','관리수련생 현황')+tabBtn('행사','행사 관리')+tabBtn('일지','업무일지')+
+      tabBtn('일지','업무일지')+tabBtn('행사','행사 관리')+
     '</div></div>';
-  h+=renderSignupBanner();
   h+=renderWorkDashboard();      /* 상단 대시보드: 오늘 완료 · 오늘 할 일 */
   h+=renderWorkTodoBoard();
-  h+=(wt==="행사")?renderWorkEvents():(wt==="일지")?renderWorkJournal():renderWorkManageBody();
+  h+=(wt==="행사")?renderWorkEvents():renderWorkJournal();
   return h;
 }
 /* 팀 색 (일관 표기): 공동=슬레이트 · 행정=파랑 · 교육=초록 */
@@ -11634,6 +11663,119 @@ window.undoDone=function(srcId){
 };
 
 /* ── 관리수련생 현황 ── */
+/* ── 반복 루틴 주기 판정·표시 ── */
+function routineFreqApplies(r, dateStr){
+  var f=(r&&r.freq)||"daily";
+  if(f==="daily") return true;
+  if(/^dow:/.test(f)){ var arr=f.slice(4).split(",").filter(function(x){return x!=="";}).map(Number); var dow=new Date(dateStr+"T00:00:00").getDay(); return arr.indexOf(dow)>-1; }
+  if(/^month:/.test(f)){ var n=Number(f.slice(6)); var dd=Number(dateStr.slice(8,10)); var y=Number(dateStr.slice(0,4)), mo=Number(dateStr.slice(5,7)); var last=new Date(y,mo,0).getDate(); return dd===Math.min(n,last); }
+  return true;
+}
+function routineFreqLabel(r){
+  var f=(r&&r.freq)||"daily";
+  if(f==="daily") return "매일";
+  if(/^dow:/.test(f)){ var K=["일","월","화","수","목","금","토"]; return "매주 "+f.slice(4).split(",").filter(function(x){return x!=="";}).map(function(d){return K[Number(d)];}).join("·"); }
+  if(/^month:/.test(f)) return "매월 "+f.slice(6)+"일";
+  return "매일";
+}
+function routineFreqControls(r, col){
+  var f=(r&&r.freq)||"daily";
+  var dowSel=(/^dow:/.test(f))?f.slice(4).split(",").filter(function(x){return x!=="";}).map(Number):[];
+  var K=["일","월","화","수","목","금","토"];
+  var mday=(/^month:/.test(f))?Number(f.slice(6)):"";
+  var s='<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:5px 0 3px 24px">'+
+    '<span style="font-size:10.5px;color:var(--sub);font-weight:700">주기</span>'+
+    '<button class="chip sm" style="padding:2px 8px;'+(f==="daily"?'background:'+col+';border-color:'+col+';color:#fff;font-weight:800':'')+'" onclick="setRoutineDaily(\''+r.id+'\')">매일</button>';
+  for(var d=0;d<7;d++){ var on=dowSel.indexOf(d)>-1; s+='<button class="chip sm" style="padding:2px 7px;'+(on?'background:#2B5FB8;border-color:#2B5FB8;color:#fff;font-weight:800':'')+'" onclick="toggleRoutineDow(\''+r.id+'\','+d+')">'+K[d]+'</button>'; }
+  s+='<span style="font-size:10.5px;color:var(--sub);margin-left:2px">매월</span>'+
+    '<input type="number" min="1" max="31" value="'+(mday||"")+'" placeholder="일" style="width:54px;height:28px;border:1px solid var(--line);border-radius:7px;padding:0 6px;font-size:11.5px;font-family:inherit" onchange="setRoutineMonthDay(\''+r.id+'\',this.value)">';
+  s+='</div>';
+  return s;
+}
+/* ── 담당자 인박스: 이름 하나로 그 사람 앞으로 온 일 모으기 ── */
+function personInboxData(nm){
+  var w=workData(); var todos=[], noDue=[];
+  function hit(str){ return !!(str && String(str).indexOf(nm)>-1); }
+  for(var n in (w.manage||{})){ var m=w.manage[n]; if(!m||!m.memo) continue; var tg=workTags(m.memo); if(!tg.mentions.some(hit)) continue; var it={kind:'수련생',label:n,due:tg.due||null,start:null,done:!!m.done,openFn:"editManageInline('"+wEsn(n)+"')",doneFn:"toggleManageDone('"+wEsn(n)+"')",editFn:"editManageInline('"+wEsn(n)+"')"}; (it.due?todos:noDue).push(it); }
+  for(var eid in (w.events||{})){ var ev=w.events[eid]; if(!ev||ev.status==='취소') continue; (ev.prep||[]).forEach(function(p){ if(!(hit(p.owner)||workTags(p.item||'').mentions.some(hit))) return; var it2={kind:'행사',label:(ev.title||'행사')+' · '+(p.item||'(준비)'),due:p.due||null,start:p.start||null,done:!!p.done,openFn:"editPrepInline('"+eid+"','"+p.id+"')",doneFn:"toggleEventPrep('"+eid+"','"+p.id+"')",editFn:"editPrepInline('"+eid+"','"+p.id+"')"}; (it2.due?todos:noDue).push(it2); }); }
+  for(var tid in (w.tasks||{})){ var t=w.tasks[tid]; if(!t) continue; if(!(hit(t.owner)||hit(t.title))) continue; var it3={kind:'업무',label:t.title||'(제목 없음)',due:t.due||null,start:t.start||null,done:!!t.done,openFn:"editTaskInline('"+tid+"')",doneFn:"toggleTask('"+tid+"')",editFn:"editTaskInline('"+tid+"')"}; (it3.due?todos:noDue).push(it3); }
+  todos.sort(function(a,b){ return a.due<b.due?-1:1; });
+  return {todos:todos.filter(function(t){return !t.done;}), noDue:noDue.filter(function(t){return !t.done;})};
+}
+/* ── 이탈방지 계산 ── */
+function absentStreak(name){
+  var td=today(), sess=[];
+  for(var wk in state.weeks){ var w=state.weeks[wk]; if(!w||!w.cells) continue;
+    for(var key in w.cells){ var day=key.split("-")[0];
+      if(typeof dayIsOff==="function" && dayIsOff(wk,day)) continue;
+      var mk=(w.cells[key].marks||{})[name]; if(!mk) continue;
+      if(mk.s!=="출석" && mk.s!=="결석") continue;
+      var md=addDays(wk, DAY_IDX[day]||0); if(md>td) continue;
+      sess.push({d:md, ab:(mk.s==="결석")});
+    }
+  }
+  sess.sort(function(a,b){ return a.d<b.d?1:-1; });
+  var n=0; for(var i=0;i<sess.length;i++){ if(sess[i].ab) n++; else break; }
+  return n;
+}
+function daysToExpiry(name){
+  var e=(typeof effExpiryDate==="function")?effExpiryDate(name):null;
+  if(!e || !/^\d{4}-\d{2}-\d{2}$/.test(e)) return null;
+  return Math.round((new Date(e+"T00:00:00")-new Date(today()+"T00:00:00"))/86400000);
+}
+function mgActiveStudents(){
+  return (STUDENTS||[]).filter(function(s){ return !isQuit(s.n) && (typeof stuStatusOf!=="function"||stuStatusOf(s.n)!=="휴관"); });
+}
+/* ── 관리수련생 탭 (수련생관리) = 이탈방지 레이더 + 관리 목록 ── */
+function renderManageStudentsTab(){
+  return '<div style="font-size:16px;font-weight:900;margin:2px 0 10px">👤 관리수련생 <span style="font-size:12px;color:var(--sub);font-weight:600">— 이탈방지 · 장기결석(1개월+) · 관리대상</span></div>'+
+    renderRetentionRadar()+renderWorkManageBody();
+}
+function renderRetentionRadar(){
+  var act=mgActiveStudents(), w=workData(), td=today();
+  var warn=[]; act.forEach(function(s){ if(isLongAbsent(s.n)) return; var st=absentStreak(s.n); if(st>=2) warn.push({n:s.n,st:st}); });
+  warn.sort(function(a,b){ return b.st-a.st || a.n.localeCompare(b.n); });
+  var exp=[]; act.forEach(function(s){ var d=daysToExpiry(s.n); if(d==null) return; if(d<=14) exp.push({n:s.n,d:d}); });
+  exp.sort(function(a,b){ return a.d-b.d; });
+  var due=[]; for(var nm in (w.mgContact||{})){ var c=w.mgContact[nm]; if(!c||!c.next) continue; if(isQuit(nm)) continue; if(c.next<=td) due.push({n:nm,next:c.next,status:c.status||""}); }
+  due.sort(function(a,b){ return a.next<b.next?-1:1; });
+  var h='';
+  if(due.length){
+    h+='<div class="card" style="border-top:3px solid #C8342A;background:#FFF7F6">'+
+      '<div style="font-size:14.5px;font-weight:900;color:#C8342A;margin-bottom:6px">📞 오늘 연락 대상 <span style="font-size:11.5px;font-weight:600;color:var(--sub)">— 재접촉일이 된 수련생 '+due.length+'명</span></div>';
+    due.forEach(function(o){
+      h+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding:7px 0">'+
+        '<b style="font-size:14px;color:var(--blue);cursor:pointer;text-decoration:underline" onclick="openStuM(\''+wEsn(o.n)+'\')">'+esc(o.n)+'</b>'+
+        (o.status?'<span style="font-size:11px;background:#EFEFEF;border-radius:7px;padding:1px 7px">'+esc(o.status)+'</span>':'')+
+        '<span style="font-size:11.5px;color:#C8342A;font-weight:700">재접촉 '+esc(o.next.slice(5))+(o.next<td?' (지남)':' (오늘)')+'</span>'+
+        '<span style="flex:1"></span>'+
+        '<button class="chip sm" style="color:#1E7B3C;font-weight:800" onclick="setMgContact(\''+wEsn(o.n)+'\',\'연락완료\')">☑ 연락완료</button></div>';
+    });
+    h+='</div>';
+  }
+  h+='<div class="card" style="border-top:3px solid #E0A020"><div style="font-size:14.5px;font-weight:900;margin-bottom:3px">🟡 결석 조기경보 <span style="font-size:11.5px;font-weight:600;color:var(--sub)">'+warn.length+'명 — 아직 장기결석 전, 지금이 골든타임</span></div>'+
+    '<div style="font-size:11px;color:var(--sub);margin-bottom:8px">최근 연속 <b>결석</b> 2회=주의(🟡), 3회 이상=경고(🔴). 이름=학적부 · [＋관리]=아래 목록에서 관리</div>';
+  if(!warn.length){ h+='<div style="font-size:12.5px;color:var(--sub)">연속 결석 중인 재원생이 없어요. 👍</div>'; }
+  else { h+='<div style="display:flex;flex-wrap:wrap;gap:7px">'+warn.map(function(o){ var red=o.st>=3; var c=red?'#C8342A':'#B4820A'; var bg=red?'#FDECEA':'#FCF6E5';
+      return '<span style="display:inline-flex;align-items:center;gap:6px;background:'+bg+';border:1px solid '+c+'44;border-radius:10px;padding:5px 9px">'+
+        '<b style="font-size:13px;color:var(--blue);cursor:pointer;text-decoration:underline" onclick="openStuM(\''+wEsn(o.n)+'\')">'+esc(o.n)+'</b>'+
+        '<span style="font-size:11px;font-weight:800;color:'+c+'">'+(red?'🔴':'🟡')+' 연속 '+o.st+'회</span>'+
+        ((w.flags||{})[o.n]?'<span style="font-size:10.5px;color:#1E7B3C;font-weight:700">관리중</span>':'<button class="chip sm" style="color:#2B5FB8;font-weight:700" onclick="addWatchFlag(\''+wEsn(o.n)+'\',\'연속 '+o.st+'회 결석\')">＋관리</button>')+
+        '</span>';
+    }).join('')+'</div>'; }
+  h+='</div>';
+  h+='<div class="card" style="border-top:3px solid #2B5FB8"><div style="font-size:14.5px;font-weight:900;margin-bottom:3px">💳 재등록 만료 임박 <span style="font-size:11.5px;font-weight:600;color:var(--sub)">'+exp.length+'명 — D-14 이내 (자세한 처리는 회계관리)</span></div>';
+  if(!exp.length){ h+='<div style="font-size:12.5px;color:var(--sub)">2주 내 만료 예정이 없어요.</div>'; }
+  else { h+='<div style="display:flex;flex-wrap:wrap;gap:7px">'+exp.map(function(o){ var over=o.d<0, urg=o.d<=7; var c=over?'#C8342A':(urg?'#B4820A':'#2B5FB8');
+      return '<span style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid '+c+'55;border-radius:10px;padding:5px 9px">'+
+        '<b style="font-size:13px;color:var(--blue);cursor:pointer;text-decoration:underline" onclick="openStuM(\''+wEsn(o.n)+'\')">'+esc(o.n)+'</b>'+
+        '<span style="font-size:11px;font-weight:800;color:'+c+'">'+(over?('만료 '+(-o.d)+'일 지남'):('D-'+o.d))+'</span>'+
+        ((w.flags||{})[o.n]?'<span style="font-size:10.5px;color:#1E7B3C;font-weight:700">관리중</span>':'<button class="chip sm" style="color:#2B5FB8;font-weight:700" onclick="addWatchFlag(\''+wEsn(o.n)+'\',\'재등록 상담(만료 임박)\')">＋관리</button>')+
+        '</span>';
+    }).join('')+'</div>'; }
+  h+='</div>';
+  return h;
+}
 function renderWorkManageBody(){
   var w=workData();
   var isAdmin=(myRole()==="admin");
@@ -11642,7 +11784,8 @@ function renderWorkManageBody(){
   function addTag(n,t,c){ if(!rows[n]) rows[n]=[]; if(!rows[n].some(function(x){return x.t===t;})) rows[n].push({t:t,c:c}); }
   (STUDENTS||[]).forEach(function(s){ if(isQuit(s.n)) return; var st=(typeof stuStatusOf==="function")?stuStatusOf(s.n):''; if(st==='휴관') return; if(typeof isLongAbsent==="function"&&isLongAbsent(s.n)) addTag(s.n,'장기결석','#B23A48'); });
   for(var fn in (w.flags||{})){ if(isQuit(fn)) continue; addTag(fn,'관리대상','#2B5FB8'); }
-  var names=Object.keys(rows).sort(function(a,b){ var da=(w.manage[a]&&w.manage[a].done)?1:0, db=(w.manage[b]&&w.manage[b].done)?1:0; return (da-db)||a.localeCompare(b); });
+  function _dueRank(n){ var c=(w.mgContact||{})[n]; return (c&&c.next&&c.next<=today()&&!(w.manage[n]&&w.manage[n].done))?0:1; }
+  var names=Object.keys(rows).sort(function(a,b){ var dr=_dueRank(a)-_dueRank(b); if(dr) return dr; var da=(w.manage[a]&&w.manage[a].done)?1:0, db=(w.manage[b]&&w.manage[b].done)?1:0; return (da-db)||a.localeCompare(b); });
   var cntActive=(STUDENTS||[]).filter(function(s){ return !isQuit(s.n)&&(typeof stuStatusOf!=="function"||stuStatusOf(s.n)!=="휴관"); }).length;
   var cntLA=(STUDENTS||[]).filter(function(s){ return !isQuit(s.n)&&(typeof stuStatusOf!=="function"||stuStatusOf(s.n)!=="휴관")&&typeof isLongAbsent==="function"&&isLongAbsent(s.n); }).length;
   var cntFlag=Object.keys(w.flags||{}).filter(function(n){return !isQuit(n);}).length;
@@ -11660,17 +11803,21 @@ function renderWorkManageBody(){
   if(!names.length){ h+='<div style="font-size:13.5px;color:var(--sub);padding:8px 0">현재 관리 대상 수련생이 없습니다. 👍</div>'; }
   names.forEach(function(n){
     var m=w.manage[n]||{};
+    var m2=(w.mgContact||{})[n]||{};
     var tg=workTags(m.memo||"");
     var badges=(rows[n]||[]).map(function(b){ return '<span style="background:'+b.c+'22;color:'+b.c+';border-radius:8px;padding:2px 8px;font-size:11px;font-weight:800">'+b.t+'</span>'; }).join(' ');
     var flag=(w.flags||{})[n];
     var att=(typeof stuAttendSummary==="function")?stuAttendSummary(n):{};
+    var _strk=absentStreak(n), _dte=daysToExpiry(n);
+    var extraBadge=(!isLongAbsent(n)&&_strk>=2?'<span style="background:'+(_strk>=3?"#C8342A":"#B4820A")+'22;color:'+(_strk>=3?"#C8342A":"#B4820A")+';border-radius:8px;padding:2px 8px;font-size:11px;font-weight:800">'+(_strk>=3?"🔴":"🟡")+' 연속결석 '+_strk+'회</span>':'')+
+      (_dte!=null&&_dte<=14?'<span style="background:#2B5FB822;color:#2B5FB8;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:800">💳 '+(_dte<0?("만료 "+(-_dte)+"일 지남"):("D-"+_dte))+'</span>':'');
     var done=!!m.done;
     h+='<div style="border-top:1px solid var(--line);padding:12px 0;'+(done?'opacity:.62;':'')+'">'+
        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">'+
          '<label style="display:inline-flex;align-items:center;cursor:pointer" title="후속 관리 완료 체크"><input type="checkbox" '+(done?'checked':'')+' onchange="toggleManageDone(\''+esn(n)+'\')" style="width:17px;height:17px;accent-color:#1E7B3C"></label>'+
          demoTag(n,17)+
          '<b style="font-size:15px;color:var(--blue);cursor:pointer;text-decoration:underline" onclick="openStuM(\''+esn(n)+'\')">'+esc(n)+'</b>'+
-         badges+
+         badges+extraBadge+
          (tg.due?workDueBadge(tg.due):'')+
          (tg.mentions.length?'<span style="font-size:11.5px;color:#2B5FB8;font-weight:800">담당 @'+esc(tg.mentions.join(' @'))+'</span>':'')+
          '<span style="flex:1"></span>'+
@@ -11682,6 +11829,13 @@ function renderWorkManageBody(){
          '<textarea class="input" placeholder="관찰 내용·후속 관리 방법을 적으세요. @담당자 #기한(예: @김나영 #6/15)" style="width:100%;min-height:52px;resize:vertical;font-family:inherit;font-size:13px" oninput="setManageMemo(\''+esn(n)+'\',this.value)" onchange="commitManage(\''+esn(n)+'\')">'+esc(m.memo||"")+'</textarea>'+
          (m.memo?'<div style="font-size:12.5px;color:var(--ink);margin-top:4px;line-height:1.5">'+workHi(m.memo)+'</div>':'')+
          '<div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">'+(m.dev?workStamp(m.dev,m._t):'<span style="font-size:10.5px;color:var(--sub)">아직 기록 없음</span>')+'</div>'+
+         '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;background:#F5F8FC;border:1px solid #DCE6F2;border-radius:10px;padding:8px 10px">'+
+           '<span style="font-size:11px;font-weight:800;color:#2B5FB8">📞 연락 상태</span>'+
+           ['연락완료','복귀예정','상담필요','퇴관예정'].map(function(op){ var on=(m2.status===op); var c=(op==='퇴관예정')?'#C8342A':(op==='연락완료')?'#1E7B3C':'#2B5FB8'; return '<button class="chip sm" style="'+(on?'background:'+c+';border-color:'+c+';color:#fff;font-weight:800':'color:'+c)+'" onclick="setMgContact(\''+esn(n)+'\',\''+op+'\')">'+op+'</button>'; }).join('')+
+           '<span style="flex:1"></span>'+
+           '<span style="font-size:11px;color:var(--sub)">재접촉일</span>'+
+           '<input class="input" type="date" style="flex:0 0 140px;height:32px;padding:0 7px;font-size:11.5px'+((m2.next&&m2.next<=today()&&!done)?';border-color:#C8342A;background:#FFF7F6':'')+'" value="'+esc(m2.next||'')+'" onchange="setMgNext(\''+esn(n)+'\',this.value)">'+
+         '</div>'+
          '<div style="margin-top:8px;background:#FFFDF5;border:1px solid #F0E4C0;border-radius:10px;padding:8px 10px">'+
            '<div style="font-size:11.5px;font-weight:800;color:#8A6D1B;margin-bottom:4px">👑 관장 코멘트'+(m.gwanDev?' <span style="font-weight:600;color:var(--sub)">· '+workStamp(m.gwanDev,m.gwanT)+'</span>':'')+'</div>'+
            (isAdmin
@@ -14764,7 +14918,7 @@ function render(){
   var __tabsHtml = (state.topCat==="심사"||state.topCat==="업무"||state.topCat==="측정")
     ? ''
     : state.topCat==="출석"
-    ? '<div class="tabs">'+["수련시간표","출석 현황","수련생 명단","인원현황","📊 브리핑"].map(function(t){
+    ? '<div class="tabs">'+["수련시간표","출석 현황","수련생 명단","관리수련생","인원현황","📊 브리핑"].map(function(t){
         return '<button class="tab'+(state.attTab===t?' on':'')+'" onclick="setAttTab(\''+t+'\')">'+t.replace("📊 ","")+'</button>';
       }).join('')+'</div>'
     : '<div class="tabs">'+["회계입력","납부내역","납부집계","장기등록관리","회계백업","연간브리핑"].map(function(t){
