@@ -646,7 +646,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.89";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.90";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -13307,21 +13307,26 @@ function renderMeasureDetail(s){
   cats.forEach(function(cat){ var sp=cat.subs.length||1; head1+='<th colspan="'+sp+'" style="background:'+kc+'14;color:'+kc+'">'+esc(cat.name)+'</th>'; cat.subs.forEach(function(su){ head2+='<th style="font-weight:600;color:var(--sub);font-size:10.5px">'+esc(su.sub||'값')+'</th>'; }); });
   head1+='</tr>'; head2+='</tr>';
   var body='';
-  (s.rows||[]).forEach(function(rw){ var inRoster=have[rw.name]; var esn=esc(rw.name).replace(/'/g,"\\'");
+  function _av(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+  function _dinp(val,call,w){ return '<input value="'+_av(val)+'" oninput="'+call+'" style="width:'+(w||46)+'px;border:1px solid var(--line);border-radius:5px;padding:3px 4px;font-size:11px;font-family:inherit;text-align:center;background:#fff;box-sizing:border-box">'; }
+  (s.rows||[]).forEach(function(rw,ri){ var inRoster=have[rw.name]; var esn=esc(rw.name).replace(/'/g,"\\'");
     var ph=getPhoto(rw.name);
     var av=ph?'<img src="'+ph+'" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex:none;display:block">'
             :'<span style="width:22px;height:22px;border-radius:50%;background:'+kc+'18;color:'+kc+';display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none">'+esc((rw.name||' ').slice(0,1))+'</span>';
     var nameTxt=inRoster?'<b style="color:var(--blue);cursor:pointer" title="학적부 열기" onclick="openStuM(\''+esn+'\')">'+esc(rw.name)+'</b>'
                         :'<span style="color:#AAB2C0">'+esc(rw.name)+'</span>';
     var nmCell='<span style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap;line-height:1">'+demoSlot(rw.name,13)+av+nameTxt+'</span>';
-    body+='<tr><td style="position:sticky;left:0;background:#fff;text-align:left;font-weight:700">'+nmCell+'</td><td>'+esc(rw.gender)+'</td><td>'+esc(rw.age)+'</td><td style="font-size:10.5px">'+esc(rw.cls)+'</td>';
-    cats.forEach(function(cat){ cat.subs.forEach(function(su){ var v=rw.cells[su.key]||''; body+='<td>'+esc(v)+'</td>'; }); });
+    body+='<tr><td style="position:sticky;left:0;background:#fff;text-align:left;font-weight:700">'+nmCell+'</td>'+
+      '<td>'+_dinp(rw.gender,"measSetField('"+s.id+"',"+ri+",'gender',this.value)",32)+'</td>'+
+      '<td>'+_dinp(rw.age,"measSetField('"+s.id+"',"+ri+",'age',this.value)",32)+'</td>'+
+      '<td>'+_dinp(rw.cls,"measSetField('"+s.id+"',"+ri+",'cls',this.value)",90)+'</td>';
+    cats.forEach(function(cat,ci){ cat.subs.forEach(function(su,si){ var v=rw.cells[su.key]||''; body+='<td>'+_dinp(v,"measSetCell('"+s.id+"',"+ri+","+ci+","+si+",this.value)",52)+'</td>'; }); });
     body+='</tr>';
   });
   h+='<div style="overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:10px">'+
     '<table style="border-collapse:collapse;font-size:11.5px;white-space:nowrap;min-width:100%" class="measTable">'+
     '<thead style="position:sticky;top:0;z-index:1">'+head1+head2+'</thead><tbody>'+body+'</tbody></table></div>';
-  h+='<div style="font-size:11.5px;color:var(--sub);margin-top:10px">다음 단계에서 이 자료로 <b>향상왕·기록왕 자동생성</b>과 <b>개인 전문 브리핑</b>이 붙습니다.</div></div>';
+  h+='<div style="font-size:11.5px;color:var(--sub);margin-top:10px">✏️ 칸을 바로 <b>수정</b>할 수 있습니다. 수정하면 <b>향상왕·기록왕</b>에 자동 반영됩니다.</div></div>';
   return h;
 }
 
