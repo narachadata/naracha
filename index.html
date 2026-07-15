@@ -646,7 +646,7 @@ function checkGradeAdvance(){ try{
 var HISTORY = {};   /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 비움 */
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
-var APP_VER = "v9.90";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
+var APP_VER = "v9.91";   /* 화면 우측 상단에 표시 — 새 파일이 적용됐는지 한눈에 확인용 */
 var CATS = ["수련비","승급심사","국기원심사","용품구입","대회출전","행사참여","기타","해외행사","시범단연회비"];
 var BIZ = { name:"NARACHA나라차 분당태권도장", no:"639-91-01542", owner:"임미화",
             addr:"경기도 성남시 분당구 정자일로 55, 99동 제지1층 101호(금곡동, 분당두산위브아파트)",
@@ -13101,7 +13101,7 @@ window.importMeasureXlsx=function(input){
   };
   reader.readAsArrayBuffer(f);
 };
-window.setMeasSel=function(id){ state.measSel=id||null; state.measView=null; render(); };
+window.setMeasSel=function(id){ state.measSel=id||null; state.measView=null; if(id&&measuresData()[id]) measAutoAll(measuresData()[id]); render(); };
 window.delMeasureSession=function(id){ var m=measuresData(); if(!m[id]) return; if(!confirm('"'+m[id].title+'" 측정 회차를 삭제할까요?\n(이 회차의 측정 기록이 모두 지워집니다)')) return; delete m[id]; if(!state.measTomb)state.measTomb={}; state.measTomb[id]=Date.now(); state.measT=Date.now(); measPersist(); state.measSel=null; render(); };
 window.openMeasFor=function(name){ state.topCat="측정"; state.measSel=null; render(); };
 function measCell(row,catKw,subKw){ for(var k in row.cells){ var parts=k.split(""); if(parts[0].indexOf(catKw)>=0 && (!subKw||parts[1].indexOf(subKw)>=0)) return row.cells[k]; } return ""; }
@@ -13154,9 +13154,41 @@ window.openMeasInput=function(kind){
   state.measSel=id; state.measInput=true; state.measView=null; state.measFocusRow=null; render();
 };
 window.closeMeasInput=function(){ state.measInput=false; state.measFocusRow=null; render(); };
-window.openMeasInputExisting=function(id){ var s=measuresData()[id]; if(!s) return; if(!s.cats||!s.cats.length) s.cats=_measTplCats(s.kind); state.measSel=id; state.measInput=true; state.measView=null; state.measFocusRow=null; render(); };
-window.measSetCell=function(id,ri,ci,si,v){ var s=measuresData()[id]; if(!s||!s.rows[ri])return; var cat=(s.cats||[])[ci]; if(!cat)return; var su=cat.subs[si]; if(!su)return; v=String(v); if(v.trim()==="") delete s.rows[ri].cells[su.key]; else s.rows[ri].cells[su.key]=v.trim(); s._t=Date.now(); state.measT=Date.now(); measSaveDebounced(); };
+window.openMeasInputExisting=function(id){ var s=measuresData()[id]; if(!s) return; if(!s.cats||!s.cats.length) s.cats=_measTplCats(s.kind); measAutoAll(s); state.measSel=id; state.measInput=true; state.measView=null; state.measFocusRow=null; render(); };
+window.measSetCell=function(id,ri,ci,si,v){ var s=measuresData()[id]; if(!s||!s.rows[ri])return; var cat=(s.cats||[])[ci]; if(!cat)return; var su=cat.subs[si]; if(!su)return; v=String(v); if(v.trim()==="") delete s.rows[ri].cells[su.key]; else s.rows[ri].cells[su.key]=v.trim(); s._t=Date.now(); state.measT=Date.now(); if(s.kind==="체력"){ measAutoRow(s,ri); measSyncAutoDom(s,ri); } measSaveDebounced(); };
 window.measSetField=function(id,ri,f,v){ var s=measuresData()[id]; if(!s||!s.rows[ri])return; s.rows[ri][f]=String(v).trim(); s._t=Date.now(); state.measT=Date.now(); measSaveDebounced(); };
+/* ── 체력·체격 표준 점수 자동환산 (PAPS 공식 배점) ──
+   항목 등급→점수: 1등급=16.6(100%),2등급=15(90%),3등급=13.3(80%),4등급=11.6(70%),5등급=10(60%)
+   비만도만 별도: 1등급=16.6,2·3등급=15.8(95%),4·5등급=15(90%)
+   종합점수=6항목 점수 합계(반올림), 종합등급=90a+·80a·70b+·60b·50c+·40c·30d·그이하f */
+var _MEAS_FIT={ "1":16.6,"2":15,"3":13.3,"4":11.6,"5":10 };
+var _MEAS_BMI={ "1":16.6,"2":15.8,"3":15.8,"4":15,"5":15 };
+function _measCompGrade(t){ return t>=90?"a+":t>=80?"a":t>=70?"b+":t>=60?"b":t>=50?"c+":t>=40?"c":t>=30?"d":"f"; }
+function _measIsAuto(kind,catName,sub){ if(kind==="체력"){ return sub==="점수" || catName.indexOf("종합점수")>=0 || catName.indexOf("종합등급")>=0; } return false; }
+function measAutoRow(s,ri,fillOnly){
+  if(!s||s.kind!=="체력") return false;
+  var row=s.rows[ri]; if(!row) return false; var changed=false;
+  var tot=0, any=false;
+  (s.cats||[]).forEach(function(cat){
+    var gKey=null,sKey=null;
+    cat.subs.forEach(function(su){ if(su.sub==="등급") gKey=su.key; else if(su.sub==="점수") sKey=su.key; });
+    if(gKey&&sKey){
+      var g=String(row.cells[gKey]||"").trim().replace(/[^0-9]/g,"");
+      var tbl=(cat.name.indexOf("비만도")>=0)?_MEAS_BMI:_MEAS_FIT;
+      if(tbl[g]!=null){ var nv=String(tbl[g]); if(row.cells[sKey]!==nv){ row.cells[sKey]=nv; changed=true; } }
+      else if(!fillOnly && row.cells[sKey]!=null){ delete row.cells[sKey]; changed=true; }  /* 라이브 편집: 등급 지우면 점수도 지움 (불러온 옛 데이터는 보존) */
+      var sv=parseFloat(row.cells[sKey]); if(!isNaN(sv)){ tot+=sv; any=true; }
+    }
+  });
+  (s.cats||[]).forEach(function(cat){
+    var k=cat.subs[0]&&cat.subs[0].key; if(!k) return;
+    if(cat.name.indexOf("종합점수")>=0){ var nv=any?String(Math.round(tot)):null; if(nv==null){ if(row.cells[k]!=null){delete row.cells[k];changed=true;} } else if(row.cells[k]!==nv){ row.cells[k]=nv; changed=true; } }
+    else if(cat.name.indexOf("종합등급")>=0){ var gv=any?_measCompGrade(Math.round(tot)):null; if(gv==null){ if(row.cells[k]!=null){delete row.cells[k];changed=true;} } else if(row.cells[k]!==gv){ row.cells[k]=gv; changed=true; } }
+  });
+  return changed;
+}
+function measAutoAll(s){ if(!s||s.kind!=="체력") return false; var ch=false; (s.rows||[]).forEach(function(r,i){ if(measAutoRow(s,i,true)) ch=true; }); if(ch){ s._t=Date.now(); measPersist(); } return ch; }
+function measSyncAutoDom(s,ri){ if(!s) return; var row=s.rows[ri]; if(!row) return; (s.cats||[]).forEach(function(cat,ci){ cat.subs.forEach(function(su,si){ var el=document.getElementById('mac_'+ri+'_'+ci+'_'+si); if(el) el.textContent=row.cells[su.key]||''; }); }); }
 window.measDelRow=function(id,ri){ var s=measuresData()[id]; if(!s||!s.rows[ri])return; if(!confirm('"'+(s.rows[ri].name||"이 줄")+'" 을(를) 이 회차에서 지울까요?')) return; s.rows.splice(ri,1); s.n=s.rows.length; s._t=Date.now(); state.measT=Date.now(); measPersist(); render(); };
 window.measAddStudent=function(id){
   var s=measuresData()[id]; if(!s) return;
@@ -13237,12 +13269,12 @@ function renderMeasInput(s){
       '<td>'+ip(rw.age,"measSetField('"+id+"',"+ri+",'age',this.value)","32px")+'</td>'+
       '<td>'+ip(rw.time,"measSetField('"+id+"',"+ri+",'time',this.value)","54px")+'</td>'+
       '<td>'+ip(rw.cls,"measSetField('"+id+"',"+ri+",'cls',this.value)","60px")+'</td>';
-    cats.forEach(function(cat,ci){ cat.subs.forEach(function(su,si){ body+='<td>'+ip(rw.cells[su.key],"measSetCell('"+id+"',"+ri+","+ci+","+si+",this.value)")+'</td>'; }); });
+    cats.forEach(function(cat,ci){ cat.subs.forEach(function(su,si){ if(_measIsAuto(s.kind,cat.name,su.sub)){ body+='<td style="background:#EAF5EE"><span id="mac_'+ri+'_'+ci+'_'+si+'" style="font-weight:800;color:#1E7B3C;font-size:12px">'+esc(rw.cells[su.key]||'')+'</span></td>'; } else { body+='<td>'+ip(rw.cells[su.key],"measSetCell('"+id+"',"+ri+","+ci+","+si+",this.value)")+'</td>'; } }); });
     body+='<td><button onclick="measDelRow(\''+id+'\','+ri+')" style="border:none;background:none;color:var(--red);cursor:pointer;font-size:14px" title="이 줄 삭제">✕</button></td></tr>';
   });
   h+='<div style="overflow:auto;max-height:66vh;border:1px solid var(--line);border-radius:10px">'+
     '<table style="border-collapse:collapse;font-size:11.5px;white-space:nowrap;min-width:100%" class="measTable"><thead style="position:sticky;top:0;z-index:1">'+head1+head2+'</thead><tbody>'+body+'</tbody></table></div>'+
-    '<div style="font-size:11.5px;color:var(--sub);margin-top:9px">입력은 자동 저장됩니다. 완료 후 <b>⬇ 엑셀파일 저장</b>으로 같은 양식의 엑셀을 받을 수 있어요.</div></div>';
+    '<div style="font-size:11.5px;color:var(--sub);margin-top:9px">입력은 자동 저장됩니다.'+(s.kind==="체력"?' <b style="color:#1E7B3C">등급</b>을 넣으면 <b>점수·종합점수·종합등급</b>이 자동 계산됩니다.':'')+' 완료 후 <b>⬇ 엑셀파일 저장</b>으로 같은 양식의 엑셀을 받을 수 있어요.</div></div>';
   return h;
 }
 function renderMeasureTab(){
@@ -13320,13 +13352,14 @@ function renderMeasureDetail(s){
       '<td>'+_dinp(rw.gender,"measSetField('"+s.id+"',"+ri+",'gender',this.value)",32)+'</td>'+
       '<td>'+_dinp(rw.age,"measSetField('"+s.id+"',"+ri+",'age',this.value)",32)+'</td>'+
       '<td>'+_dinp(rw.cls,"measSetField('"+s.id+"',"+ri+",'cls',this.value)",90)+'</td>';
-    cats.forEach(function(cat,ci){ cat.subs.forEach(function(su,si){ var v=rw.cells[su.key]||''; body+='<td>'+_dinp(v,"measSetCell('"+s.id+"',"+ri+","+ci+","+si+",this.value)",52)+'</td>'; }); });
+    cats.forEach(function(cat,ci){ cat.subs.forEach(function(su,si){ var v=rw.cells[su.key]||''; if(_measIsAuto(s.kind,cat.name,su.sub)){ body+='<td style="background:#EAF5EE"><span id="mac_'+ri+'_'+ci+'_'+si+'" style="font-weight:800;color:#1E7B3C">'+esc(v)+'</span></td>'; } else { body+='<td>'+_dinp(v,"measSetCell('"+s.id+"',"+ri+","+ci+","+si+",this.value)",52)+'</td>'; } }); });
     body+='</tr>';
   });
   h+='<div style="overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:10px">'+
     '<table style="border-collapse:collapse;font-size:11.5px;white-space:nowrap;min-width:100%" class="measTable">'+
     '<thead style="position:sticky;top:0;z-index:1">'+head1+head2+'</thead><tbody>'+body+'</tbody></table></div>';
-  h+='<div style="font-size:11.5px;color:var(--sub);margin-top:10px">✏️ 칸을 바로 <b>수정</b>할 수 있습니다. 수정하면 <b>향상왕·기록왕</b>에 자동 반영됩니다.</div></div>';
+  var autoNote=(s.kind==="체력")?' · <b style="color:#1E7B3C">점수·종합점수·종합등급</b>은 등급을 넣으면 자동 계산됩니다(수정 불가)':'';
+  h+='<div style="font-size:11.5px;color:var(--sub);margin-top:10px">✏️ 칸을 바로 <b>수정</b>할 수 있습니다. 수정하면 <b>향상왕·기록왕</b>에 자동 반영됩니다'+autoNote+'.</div></div>';
   return h;
 }
 
