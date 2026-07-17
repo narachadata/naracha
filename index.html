@@ -8168,6 +8168,21 @@ window.copyWeeksAgo=function(n){
   if(!prev || !prev.cells || !Object.keys(prev.cells).length){
     alert(lbl+"("+prevWk+")에 복사할 배치가 없습니다."); return;
   }
+  /* ── ⚠️ 심사 주간 보호 (R3.22): '한주전'(지난주)이 심사 수업 세팅 주간이면 복사 차단 → '이주전'(심사 전 정규 주간) 복사 안내.
+     월말에 심사 수업이 세팅되므로, 그다음 주는 심사 전 정규 시간표(이주전)를 복사해야 정규 수업이 살아남 ── */
+  if(n===1){
+    var _prevHasExam=false;
+    for(var _ek in prev.cells){ var _ec=prev.cells[_ek]; if(_ec && _ec.cat==="심사"){ _prevHasExam=true; break; } }
+    if(_prevHasExam){
+      var _go2=confirm("⚠️ 지난주("+prevWk+")는 '심사' 수업이 설정된 주간입니다.\n\n"+
+        "지난주(한주전)를 복사하면 심사 주간 설정이 그대로 넘어와 정규 수업이 어긋납니다.\n"+
+        "보통 월말 심사 주간 다음에는 심사 전 정규 주간인 '이주전'을 복사해야 합니다.\n\n"+
+        "[확인] 을 누르면 '이주전(2주 전)' 시간표를 복사합니다.\n"+
+        "[취소] 를 누르면 복사하지 않습니다.");
+      if(_go2){ copyWeeksAgo(2); }
+      return;   /* '한주전' 복사는 실행하지 않음 */
+    }
+  }
   /* 복사 대상 계산: 보강·체험 제외, 출석 표시는 비움, 관리는 메모 유지 */
   var total=0, skipped=0, setCells=0;
   for(var key in prev.cells){
