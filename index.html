@@ -11361,10 +11361,10 @@ window.sendKakaoToday=function(){
       state.kakaoSending=false;
       var m;
       if(/^KAKAO:2/.test(t)) m='✅ 카카오워크로 전송됐습니다.';
-      else if(t==='BAD_HOOK') m='⚠️ 웹훅 주소 형식이 올바르지 않습니다.';
+      else if(t==='BAD_HOOK') m='⚠️ 웹훅 주소 형식 오류 — URL을 다시 확인하세요.';
       else if(t==='AUTH_FAIL') m='⚠️ 접속키 오류 — 다시 로그인해 주세요.';
-      else if(t==='KAKAO_ERR'||/^KAKAO:[45]/.test(t)) m='⚠️ 카카오워크가 받지 못했어요(웹훅 확인). 응답: '+t;
-      else m='⚠️ 서버 응답: '+t+' — 구글 서버(Code.gs)에 카카오 전달 기능이 추가됐는지 확인하세요.';
+      else if(/권한|permission|authoriz/i.test(t)) m='⚠️ 구글 서버 권한 미승인 — Apps Script에서 testKakaoAuth 실행 후 [허용]하세요. (상세: '+t+')';
+      else m='⚠️ 전송 실패 · 서버 응답: '+t;
       state.kakaoMsg=m; render();
     })
     .catch(function(e){ state.kakaoSending=false; state.kakaoMsg='⚠️ 전송 실패(인터넷 확인): '+((e&&e.message)||e); render(); });
