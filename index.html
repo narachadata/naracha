@@ -11516,8 +11516,8 @@ function _kakaoComposeModal(){
       '<div style="font-size:12px;font-weight:800;color:var(--sub);margin-bottom:4px">보낼 방</div>'+
       '<select onchange="setKakaoComposeRoom(this.value)" style="width:100%;height:44px;border:1px solid var(--line);border-radius:10px;padding:0 11px;font-size:13.5px;font-family:inherit;background:#fff;margin-bottom:12px">'+
         rooms.map(function(r){return '<option'+(r===sel?' selected':'')+'>'+esc(r)+'</option>';}).join('')+'</select>'+
-      '<div style="font-size:12px;font-weight:800;color:var(--sub);margin-bottom:4px">메시지</div>'+
-      '<textarea class="input" placeholder="보낼 내용을 입력하세요" style="width:100%;min-height:96px;resize:vertical;font-family:inherit;font-size:13.5px;line-height:1.5" oninput="setKakaoComposeMsg(this.value)">'+esc(state.kakaoComposeMsg||'')+'</textarea>'+
+      '<div style="font-size:12px;font-weight:800;color:var(--sub);margin-bottom:4px">메시지 <span style="font-weight:600;color:var(--mut,#9AA1AC)">— Enter 전송 · Shift+Enter 줄바꿈</span></div>'+
+      '<textarea class="input" placeholder="보낼 내용을 입력하세요 (Enter=전송, Shift+Enter=줄바꿈)" style="width:100%;min-height:96px;resize:vertical;font-family:inherit;font-size:13.5px;line-height:1.5" oninput="setKakaoComposeMsg(this.value)" onkeydown="if(event.isComposing||event.keyCode===229)return;if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendKakaoCompose();}">'+esc(state.kakaoComposeMsg||'')+'</textarea>'+
       '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">'+
         '<button onclick="sendKakaoCompose()" '+(sending?'disabled':'')+' style="background:var(--brand);color:#fff;border:none;border-radius:10px;padding:11px 22px;font-size:13.5px;font-weight:800;cursor:'+(sending?'default':'pointer')+';font-family:inherit;min-height:44px;opacity:'+(sending?'.6':'1')+'">'+(sending?'전송 중…':'📤 보내기')+'</button>'+
         (st?'<span style="font-size:12.5px;font-weight:700;color:'+(/✅/.test(st)?'var(--green)':'var(--red)')+'">'+esc(st)+'</span>':'')+
@@ -16320,7 +16320,7 @@ function render(){
        '<div style="display:flex;align-items:center;gap:12px"><img src="'+LOGO_SYM+'" alt="" onclick="goTimetable()" title="수련시간표로 이동" style="height:44px;width:auto;cursor:pointer"><div><div onclick="goTimetable()" title="수련시간표로 이동" style="font-size:20px;font-weight:800;letter-spacing:-.4px;color:#fff;cursor:pointer;display:inline-block">나라차태권도 분당도장</div>'+
        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px">'+
        '<span style="font-size:13.5px;color:#94A3B8">수련생 관리 · 재원생 '+activeCount+'명'+(function(){ var hc=Object.keys(state.closedMap).filter(function(n){return !isQuit(n);}).length; return hc?' · 휴관 '+hc+'명':''; })()+' · <span style="color:#64748B;font-weight:700">'+appLabel()+'</span></span>'+
-       '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;padding:3px 11px;border-radius:16px;'+(myRole()==="admin"?'background:rgba(52,211,120,.16);color:#86EFAC':'background:rgba(147,197,253,.20);color:#BFDBFE')+'">'+(myRole()==="admin"?'🔑 관리자(관장)':'🧑‍🏫 사범')+'</span>'+
+       '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;padding:3px 11px;border-radius:16px;'+(myRole()==="admin"?'background:rgba(52,211,120,.16);color:#86EFAC':'background:rgba(147,197,253,.20);color:#BFDBFE')+'">'+(myRole()==="admin"?'🔑 관리자':'🧑‍🏫 사범')+'</span>'+
        (state.syncStatus?'<span id="syncBadge" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#86EFAC;background:rgba(34,197,94,.12);padding:2px 9px;border-radius:16px"><span style="width:6px;height:6px;border-radius:50%;background:#22C55E"></span>'+esc(state.syncStatus)+'</span>':'<span id="syncBadge"></span>')+
        '</div></div></div>'+
        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
