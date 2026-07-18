@@ -11334,6 +11334,41 @@ window.toggleRoutineEdit=function(team){ state['rEdit_'+team]=!state['rEdit_'+te
 /* 업무(단기/중장기) */
 window.setQadd=function(team,v){ state['qadd_'+team]=v; };
 window.toggleJwWrite=function(team){ state['jwWrite_'+team]=!state['jwWrite_'+team]; render(); };   /* 업무일지: 작성(빠른추가·메모) 입력 펼침/접힘 */
+
+/* ══════════ 카카오워크 알림 (R3.22) — 오늘 요약을 구글 서버(Apps Script) 릴레이 통해 카카오워크 웹훅으로 전송 ══════════ */
+function _kakaoTodayText(){
+  var TD; try{ TD=todayTodoData(); }catch(e){ TD={absent:[],returning:[],bdays:[],expiring:[],regChanges:[]}; }
+  var L=['📢 나라차태권도 오늘 알림 ('+today()+')',''];
+  var any=false;
+  if(TD.absent&&TD.absent.length){ L.push('❗ 오늘 결석 '+TD.absent.length+'명: '+TD.absent.slice(0,25).join(', ')); any=true; }
+  if(TD.returning&&TD.returning.length){ L.push('▶ 복귀 예정: '+TD.returning.map(function(o){return o.n;}).join(', ')); any=true; }
+  if(TD.bdays&&TD.bdays.length){ L.push('🎂 오늘 생일: '+TD.bdays.join(', ')); any=true; }
+  if(TD.expiring&&TD.expiring.length){ L.push('💳 재등록 임박 '+TD.expiring.length+'명: '+TD.expiring.slice(0,25).map(function(o){return o.n;}).join(', ')); any=true; }
+  try{ var w=workData(), td=today(), evs=[]; for(var id in (w.events||{})){ var ev=w.events[id]; if(!ev||ev.status==='취소'||!ev.date) continue; var dd=workDueDays(ev.date); if(dd!==null&&dd>=0&&dd<=7) evs.push({t:(ev.title||'행사'),dd:dd}); }
+    evs.sort(function(a,b){return a.dd-b.dd;}); if(evs.length){ L.push('🎪 다가오는 행사: '+evs.map(function(o){return o.t+'(D-'+o.dd+')';}).join(', ')); any=true; } }catch(e){}
+  if(!any) L.push('오늘 특이사항 없습니다 👍');
+  return L.join('\n');
+}
+window.setKakaoHook=function(v){ var w=workData(); if(!w.kakaoCfg)w.kakaoCfg={}; w.kakaoCfg.hook=(v||'').trim(); w.kakaoCfg._t=Date.now(); workSaveDebounced(); };
+window.sendKakaoToday=function(){
+  var w=workData(); var hook=(w.kakaoCfg&&w.kakaoCfg.hook)||'';
+  if(!/^https:\/\/(kakaowork\.com\/bots\/hook\/|api\.kakaowork\.com\/)/.test(hook)){ alert('먼저 카카오워크 Incoming Webhook URL을 정확히 붙여넣어 주세요.\n(https://kakaowork.com/bots/hook/... 형식)'); return; }
+  var msg=_kakaoTodayText();
+  state.kakaoSending=true; state.kakaoMsg=''; render();
+  fetch(GSHEET_URL, {method:'POST', body:JSON.stringify({action:'kakaohook', key:accessKey(), hook:hook, text:msg})})
+    .then(function(r){return r.text();})
+    .then(function(t){
+      state.kakaoSending=false;
+      var m;
+      if(/^KAKAO:2/.test(t)) m='✅ 카카오워크로 전송됐습니다.';
+      else if(t==='BAD_HOOK') m='⚠️ 웹훅 주소 형식이 올바르지 않습니다.';
+      else if(t==='AUTH_FAIL') m='⚠️ 접속키 오류 — 다시 로그인해 주세요.';
+      else if(t==='KAKAO_ERR'||/^KAKAO:[45]/.test(t)) m='⚠️ 카카오워크가 받지 못했어요(웹훅 확인). 응답: '+t;
+      else m='⚠️ 서버 응답: '+t+' — 구글 서버(Code.gs)에 카카오 전달 기능이 추가됐는지 확인하세요.';
+      state.kakaoMsg=m; render();
+    })
+    .catch(function(e){ state.kakaoSending=false; state.kakaoMsg='⚠️ 전송 실패(인터넷 확인): '+((e&&e.message)||e); render(); });
+};
 window.quickAddTask=function(team){
   var v=(state['qadd_'+team]||'').trim();
   if(!v){ alert("업무 내용을 입력하세요.\n(예: 현수막 견적 받기 @임요한 #7/15)"); return; }
@@ -12019,6 +12054,21 @@ function renderHome(){
      (isAdmin?qbtn("setTopCat('회계')",'💳','수납 입력','회비·행사비'):'')+
      qbtn("setTopCat('업무');setWorkTab('행사')",'🎪','행사 만들기','심사·대회·공연');
   h+='</div>';
+  /* 📢 카카오워크 알림 */
+  var _kc=(workData().kakaoCfg&&workData().kakaoCfg.hook)||'';
+  h+='<div class="card" style="border-top:3px solid var(--brand);margin-top:18px">'+
+    '<div style="font-size:15.5px;font-weight:800;margin-bottom:3px">📢 카카오워크 알림</div>'+
+    '<div style="font-size:12px;color:var(--sub);margin-bottom:11px">오늘의 결석·재등록 임박·생일·행사 요약을 카카오워크 방(채널)에 보냅니다. 아래는 지금 보낼 내용 미리보기예요.</div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:9px">'+
+      '<input class="input" placeholder="카카오워크 Incoming Webhook URL 붙여넣기 (https://kakaowork.com/bots/hook/...)" style="flex:1 1 320px;height:42px;padding:0 12px;font-size:12.5px" value="'+esc(_kc)+'" oninput="setKakaoHook(this.value)">'+
+      '<span style="font-size:11.5px;color:'+(_kc?'var(--green)':'var(--sub)')+';font-weight:700">'+(_kc?'URL 저장됨':'URL 미입력')+'</span>'+
+    '</div>'+
+    '<div style="background:#FAFAF7;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:12.5px;white-space:pre-wrap;color:var(--ink);line-height:1.55;margin-bottom:11px">'+esc(_kakaoTodayText())+'</div>'+
+    '<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">'+
+      '<button onclick="sendKakaoToday()" '+(state.kakaoSending?'disabled':'')+' style="background:var(--brand);color:#fff;border:none;border-radius:10px;padding:11px 20px;font-size:13.5px;font-weight:800;cursor:'+(state.kakaoSending?'default':'pointer')+';font-family:inherit;min-height:44px;opacity:'+(state.kakaoSending?'.6':'1')+'">'+(state.kakaoSending?'전송 중…':'📤 오늘 알림 보내기')+'</button>'+
+      (state.kakaoMsg?'<span style="font-size:12.5px;font-weight:700;color:'+(/✅/.test(state.kakaoMsg)?'var(--green)':'var(--red)')+'">'+esc(state.kakaoMsg)+'</span>':'')+
+    '</div>'+
+  '</div>';
   return h;
 }
 
