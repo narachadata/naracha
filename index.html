@@ -11380,15 +11380,27 @@ window.sendKakaoToday=function(){
 };
 
 /* ── 방별(업무관련·행사) 카카오워크 알림 (R3.22) ── */
+/* 담당자(mentions)별로 기한 있는 업무를 묶음 */
+function _todosByOwner(){
+  var todos=[]; try{ todos=workAllTodos().filter(function(t){return !t.done;}); }catch(e){}
+  var map={}, order=[];
+  todos.forEach(function(t){
+    var owners=(t.mentions&&t.mentions.length)?t.mentions:['(담당 미지정)'];
+    owners.forEach(function(o){ o=(o||'(담당 미지정)'); if(!map[o]){ map[o]=[]; order.push(o); } map[o].push(t); });
+  });
+  order.forEach(function(o){ map[o].sort(function(a,b){ return workDueDays(a.due)-workDueDays(b.due); }); });
+  order.sort(function(a,b){ if(a==='(담당 미지정)') return 1; if(b==='(담당 미지정)') return -1; return 0; });
+  return {map:map, order:order};
+}
 function _kakaoWorkText(){
   var base=_kakaoTodayText();   /* 오늘 브리핑(결석·복귀·생일·재등록·행사) */
   var extra=[];
-  try{ var all=(typeof workAllTodos==='function')?workAllTodos():[];
-    var over=all.filter(function(t){return !t.done && workDueDays(t.due)<0;});
-    var tdy=all.filter(function(t){return !t.done && workDueDays(t.due)===0;});
-    if(tdy.length||over.length){ extra.push(''); extra.push('🗂 업무:');
-      if(tdy.length) extra.push(' ⏰ 오늘 마감: '+tdy.slice(0,10).map(function(t){return t.label||t.title||t.text||'(업무)';}).join(', '));
-      if(over.length) extra.push(' ⚠️ 기한 지남: '+over.slice(0,10).map(function(t){return t.label||t.title||t.text||'(업무)';}).join(', '));
+  try{ var tbo=_todosByOwner();
+    if(tbo.order.length){ extra.push(''); extra.push('🧑‍🏫 담당자별 업무:');
+      tbo.order.forEach(function(o){
+        var items=tbo.map[o].slice(0,6).map(function(t){ var dd=workDueDays(t.due); var dl=(dd<0?('D+'+(-dd)):(dd===0?'오늘':'D-'+dd)); return (t.label||'(업무)')+'('+dl+')'; });
+        extra.push(' • '+o+': '+items.join(', ')+(tbo.map[o].length>6?(' 외 '+(tbo.map[o].length-6)+'건'):''));
+      });
     }
   }catch(e){}
   return base + (extra.length?('\n'+extra.join('\n')):'');
@@ -12159,6 +12171,26 @@ function renderHome(){
        '</div></div>';
   }
   h+='</div>';
+  /* 🧑‍🏫 담당자별 업무 (기한 있는 일) */
+  var _tbo=_todosByOwner();
+  if(_tbo.order.length){
+    h+='<div class="card" style="margin-top:18px"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">'+
+      '<div style="font-size:15.5px;font-weight:800">🧑‍🏫 담당자별 업무</div>'+
+      '<button onclick="setTopCat(\'업무\');setWorkTab(\'일지\')" style="background:none;border:none;color:var(--brand);font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer">업무일지 →</button></div>';
+    _tbo.order.forEach(function(o,i){ var list=_tbo.map[o];
+      h+='<div style="padding:9px 0'+(i?';border-top:1px solid var(--line)':'')+'">'+
+        '<div style="font-size:13.5px;font-weight:800;margin-bottom:5px">'+esc(o)+' <span style="font-size:11.5px;color:var(--sub);font-weight:600">'+list.length+'건</span></div>'+
+        '<div style="display:flex;flex-direction:column;gap:5px">'+
+        list.slice(0,6).map(function(t){ var dd=_homeDday(t.due);
+          return '<div style="display:flex;align-items:center;gap:9px;font-size:12.5px">'+
+            (dd.t?'<span style="font-size:11px;font-weight:900;padding:2px 8px;border-radius:7px;background:'+dd.bg+';color:'+dd.c+';flex:0 0 auto;white-space:nowrap">'+dd.t+'</span>':'')+
+            '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.label)+'</span></div>';
+        }).join('')+
+        (list.length>6?'<div style="font-size:11px;color:var(--sub);margin-top:2px">외 '+(list.length-6)+'건</div>':'')+
+        '</div></div>';
+    });
+    h+='</div>';
+  }
   /* 빠른 실행 */
   h+='<div style="font-size:13px;font-weight:800;color:var(--sub);margin:24px 0 11px">빠른 실행</div>';
   h+='<div style="display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">';
