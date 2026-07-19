@@ -11114,6 +11114,20 @@ function mergeWork(local, remote){
   if(remote.signupCfg && (remote.signupCfg._t||0) > ((out.signupCfg&&out.signupCfg._t)||0)) out.signupCfg=remote.signupCfg;
   /* 구분별 기준금액(단일 객체): 최신본 우선 → 모든 PC 자동 동기화 */
   if(remote.feeCfg && (remote.feeCfg._t||0) > ((out.feeCfg&&out.feeCfg._t)||0)) out.feeCfg=remote.feeCfg;
+  /* 카카오워크 설정(방 주소·자동전송·시나리오): 최신본 우선 + 방 주소는 양쪽 합집합 보존
+     → 어느 PC에서 설정해도 모든 PC에 반영, 어느 방 주소도 실수로 사라지지 않음 */
+  if(remote.kakaoCfg){
+    var _lk=out.kakaoCfg||{}, _rk=remote.kakaoCfg;
+    var _base=((_rk._t||0) > (_lk._t||0)) ? _rk : _lk;
+    var _oth =(_base===_rk) ? _lk : _rk;
+    var _mg=JSON.parse(JSON.stringify(_base));
+    _mg.rooms=_mg.rooms||{};
+    var _or=_oth.rooms||{};
+    for(var _rn in _or){ if((!_mg.rooms[_rn] || !_mg.rooms[_rn].hook) && _or[_rn] && _or[_rn].hook) _mg.rooms[_rn]=_or[_rn]; }
+    if(!_mg.hook && _oth.hook) _mg.hook=_oth.hook;   /* 옛 단일 주소(업무관련)도 보존 */
+    if(_oth.roomList && _oth.roomList.length){ _mg.roomList=_mg.roomList||[]; _oth.roomList.forEach(function(x){ if(_mg.roomList.indexOf(x)===-1) _mg.roomList.push(x); }); }
+    out.kakaoCfg=_mg;
+  }
   out.t=Math.max(local.t||0, remote.t||0);
   return out;
 }
