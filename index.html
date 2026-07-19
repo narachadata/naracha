@@ -10104,16 +10104,24 @@ function _consultStColor(st){
 }
 window.openConsultM=function(id){
   var w=workData();
+  /* 목록·검색 창에서 열었다면: 목록을 닫아 두 창이 겹치지 않게 하고, 닫을 때 목록으로 되돌아감 */
+  var fromList=!!state.consultListM;
+  state.consultListM=false;
   if(id!=null && w.consult && w.consult[id]){
     var s=w.consult[id];
-    state.consultM={ id:id, name:s.name||"", phone:s.phone||"", via:s.via||"전화", memo:s.memo||"", date:s.date||today(), status:s.status||"", isNew:false };
+    state.consultM={ id:id, name:s.name||"", phone:s.phone||"", via:s.via||"전화", memo:s.memo||"", date:s.date||today(), status:s.status||"", isNew:false, fromList:fromList };
   } else {
-    state.consultM={ id:null, name:"", phone:"", via:"전화", memo:"", date:today(), status:"", isNew:true };
+    state.consultM={ id:null, name:"", phone:"", via:"전화", memo:"", date:today(), status:"", isNew:true, fromList:fromList };
   }
   render();
 };
 window.consultMF=function(k,v){ if(state.consultM) state.consultM[k]=v; };
-window.closeConsultM=function(){ state.consultM=null; render(); };
+window.closeConsultM=function(){
+  var back=state.consultM && state.consultM.fromList;
+  state.consultM=null;
+  if(back) state.consultListM=true;   /* 목록에서 왔으면 목록으로 복귀 */
+  render();
+};
 window.saveConsultM=function(){
   var m=state.consultM; if(!m) return;
   var nm=(m.name||"").trim();
@@ -10124,9 +10132,10 @@ window.saveConsultM=function(){
   w.consult[id]={ id:id, name:nm, phone:(m.phone||"").trim(), via:m.via||"전화", memo:(m.memo||"").trim(), date:m.date||today(), status:m.status||"", dev:workDev(), _t:now };
   if(w.tombConsult) delete w.tombConsult[id];
   workPersist();
-  var wasNew=m.isNew;
+  var wasNew=m.isNew, backToList=m.fromList;
   var rec=w.consult[id];
   state.consultM=null; state.rosterF="상담";
+  if(backToList) state.consultListM=true;   /* 목록에서 왔으면 저장한 기록이 보이는 목록으로 복귀 */
   render();
   if(wasNew){
     var txt="📞 상담·문의\n• 이름: "+rec.name+(rec.phone?"\n• 연락처: "+rec.phone:"")+"\n• 유입: "+rec.via+"\n• 상담일: "+rec.date+(rec.memo?"\n• 내용: "+rec.memo:"");
@@ -10193,7 +10202,7 @@ function _consultModal(){
 }
 
 /* ══════════ 상담·문의 목록·검색·다운로드 창 ══════════ */
-window.openConsultList=function(){ state.consultListM=true; render(); };
+window.openConsultList=function(){ state.consultM=null; state.consultListM=true; render(); };
 window.closeConsultList=function(){ state.consultListM=false; render(); };
 function _consultF(){ if(!state.consultF) state.consultF={q:"",y:"",mo:"",st:"",via:""}; return state.consultF; }
 window.resetConsultF=function(){ state.consultF={q:"",y:"",mo:"",st:"",via:""}; render(); };
