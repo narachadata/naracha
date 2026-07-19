@@ -5200,6 +5200,7 @@ function saveRoleKey(k, role){
   if(role==="admin") cloudPull();
   attPull();
   photoPull();   /* 로그인 시 서버 사진도 받아오기 (동기화) */
+  try{ if(typeof workPull==="function") workPull(function(){ try{ render(); }catch(e){} }); }catch(e){}   /* 공유설정(카카오알림 등)도 즉시 */
 }
 /* 개발 단계 스위치: true면 모든 사용자에게 전체 자료 공개 (운영 배포 시 false로 변경) */
 var DEV_OPEN_ALL = false;
@@ -11167,6 +11168,9 @@ setInterval(function(){
   if(document.activeElement && (document.activeElement.tagName==="INPUT"||document.activeElement.tagName==="TEXTAREA"||document.activeElement.tagName==="SELECT")) return;
   if(document.activeElement && document.activeElement.id==="examFrame" && examIframeEditing()) return;   /* 심사 iframe 입력 중 스킵 */
   attPull();
+  /* 공유설정·상담기록(work 창고)은 2분에 한 번 자동 수신 — 어느 PC에서 바꿔도 저절로 퍼짐 */
+  window.__workPullTick=(window.__workPullTick||0)+1;
+  if(window.__workPullTick>=4){ window.__workPullTick=0; try{ if(typeof workPull==="function") workPull(); }catch(e){} }
   try{ if(typeof checkAutoBackup==="function") checkAutoBackup(); }catch(e){}   /* 7일 주기 자동 백업 점검 */
 }, 30000);
 
@@ -14978,6 +14982,7 @@ window.submitPwLogin=function(){
     /* 잠금 해제 후 최신 데이터 가져오기 (출석 창고 포함) */
     setTimeout(function(){ attPull(); }, 700);
     setTimeout(function(){ if(typeof cloudPull==="function") cloudPull(); }, 500);
+    setTimeout(function(){ try{ if(typeof workPull==="function") workPull(function(){ try{ render(); }catch(e){} }); }catch(e){} }, 900);   /* 공유설정(카카오알림·상담기록 등)도 즉시 */
   } else {
     state.pwFailCount=(state.pwFailCount||0)+1;
     alert("비밀번호가 틀렸습니다. ("+state.pwFailCount+"회)");
@@ -18909,6 +18914,7 @@ function __isTabField(el){
 }
 document.addEventListener("keydown", function(e){
   if(e.key!=="Tab" || e.altKey || e.ctrlKey || e.metaKey) return;
+  if(e.isComposing || e.keyCode===229) return;   /* 한글 조합 중 — 가로채면 조합 글자가 다음 칸으로 딸려감 */
   var ae=document.activeElement; if(!__isTabField(ae)) return;
   var all=Array.prototype.slice.call(document.querySelectorAll("input,textarea,select"));
   var focusable=all.filter(__isTabField);
