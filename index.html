@@ -156,6 +156,14 @@
 /* 상단 카테고리 3버튼: 전역 회색 규칙보다 우선 */
 .header button.catOn{background:#EAF1FB!important;color:#2B5FB8!important;border:1px solid #C3D4EE!important;border-radius:10px;padding:9px 14px!important;font-size:13.5px!important;font-weight:700;display:inline-flex;align-items:center;gap:6px}
 .header button.catOff{background:#fff!important;color:#334155!important;border:1px solid #E2E8F0!important;border-radius:10px;padding:9px 14px!important;font-size:13.5px!important;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+/* 아이콘형 미니 버튼 (카카오알림 · 상담·문의) — 작고 아담하게 */
+.header button.miniBtn{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 10px 0 6px!important;
+  border-radius:15px;font-size:12px!important;font-weight:700;cursor:pointer;font-family:inherit;
+  background:#fff;border:1px solid #E2E8F0;color:#475569;line-height:1;transition:all .15s;white-space:nowrap}
+.header button.miniBtn:hover{border-color:#CBD5E1;background:#FBFCFD;transform:translateY(-1px)}
+.header button.miniBtn:active{transform:translateY(0)}
+.header button.miniBtn .mIco{display:inline-flex;width:20px;height:20px;border-radius:50%;
+  align-items:center;justify-content:center;font-size:11px;flex:0 0 auto}
 .header button.regBtn{background:#2B5FB8!important;color:#fff!important;border:none!important;border-radius:10px;padding:9px 16px!important;font-size:13.5px!important;font-weight:700;box-shadow:0 1px 2px rgba(43,95,184,.35);display:inline-flex;align-items:center;gap:6px}
 .header .dbar button{background:rgba(255,255,255,.06)!important;color:#CBD5E1!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:10px;padding:7px 11px!important;font-size:13.5px!important;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:background .15s}
 .header .dbar button:hover{background:rgba(255,255,255,.13)!important;color:#fff!important}
@@ -209,6 +217,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 @media (max-width:640px){
   .catOn, .catOff, .regBtn, .tab, .big, .qbtn { min-height:44px; }
   .catOn, .catOff, .regBtn { padding-top:10px !important; padding-bottom:10px !important; }
+  /* 미니 버튼도 휴대폰에서는 손가락으로 누를 수 있는 크기로 (PC에서는 그대로 작게) */
+  .header button.miniBtn{height:40px;border-radius:20px;padding:0 14px 0 8px!important;font-size:13px!important}
+  .header button.miniBtn .mIco{width:24px;height:24px;font-size:13px}
 }
 </style>
 </head>
@@ -10268,9 +10279,11 @@ window.consultDownloadCsv=function(){
   /* 엑셀에서 한글이 깨지지 않도록 BOM 을 붙임 */
   var blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
   var a=document.createElement("a");
-  a.href=URL.createObjectURL(blob); a.download=_consultDlName("csv");
+  var fn=_consultDlName("csv");
+  a.href=URL.createObjectURL(blob); a.download=fn;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(a.href); },2000);
+  toast("⬇ 다운로드 폴더에 저장했습니다 — "+fn);
 };
 window.consultDownloadXlsx=function(){
   var rows=_consultDlRows();
@@ -10280,7 +10293,9 @@ window.consultDownloadXlsx=function(){
   var ws=XLSX.utils.aoa_to_sheet(_consultDlAoa());
   ws['!cols']=[{wch:12},{wch:12},{wch:16},{wch:10},{wch:10},{wch:46}];
   XLSX.utils.book_append_sheet(wb, ws, "상담·문의");
-  XLSX.writeFile(wb, _consultDlName("xlsx"));
+  var fn=_consultDlName("xlsx");
+  XLSX.writeFile(wb, fn);
+  toast("⬇ 다운로드 폴더에 저장했습니다 — "+fn);
 };
 function _consultListModal(){
   if(!state.consultListM) return "";
@@ -16695,8 +16710,8 @@ function render(){
           catBtn('측정', icMeas, '측정관리', false)+
           catBtn('심사', icExam, '심사평가', false)+
           '<button onclick="openStuM()" class="regBtn" style="cursor:pointer;font-family:inherit">'+icPlus+'원생 등록</button>'+
-          '<button onclick="openKakaoCompose()" title="설정한 카카오워크 방에 메시지를 보냅니다" style="display:inline-flex;align-items:center;gap:7px;background:#fff;border:1.5px solid #E7CE5C;color:var(--ink);border-radius:11px;padding:8px 14px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit"><span style="display:inline-flex;width:22px;height:22px;border-radius:7px;background:#FEE500;align-items:center;justify-content:center;font-size:12px">💬</span>카카오알림</button>'+
-          '<button onclick="openConsultM()" title="전화·방문 문의를 기록합니다 (목록·검색·다운로드는 창 안에서 열 수 있습니다)" style="display:inline-flex;align-items:center;gap:7px;background:#FFFBEF;border:1.5px solid #E7CE5C;color:#7A5C00;border-radius:11px;padding:8px 14px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">📞 상담·문의</button>'+
+          '<button onclick="openKakaoCompose()" class="miniBtn" title="설정한 카카오워크 방에 메시지를 보냅니다"><span class="mIco" style="background:#FEE500">💬</span>카카오알림</button>'+
+          '<button onclick="openConsultM()" class="miniBtn" title="전화·방문 문의를 기록합니다 (목록·검색·다운로드는 창 안에서 열 수 있습니다)"><span class="mIco" style="background:#FFF3C4">📞</span>상담·문의</button>'+
           '<span style="flex:1"></span>'+
           '<span id="attStatusPill" style="display:inline-flex;align-items:center;margin-right:6px">'+(state.attStatus?((state.attStatus.indexOf('⚠')>-1||state.attStatus.indexOf('실패')>-1||state.attStatus.indexOf('오프라인')>-1)?'<span class="warnPill">'+esc(state.attStatus)+'</span>':'<span style="font-size:12.5px;color:var(--sub);font-weight:700;white-space:nowrap">'+esc(state.attStatus)+'</span>'):'')+'</span>'+
           (myRole()==="admin"?'<button onclick="openBackupM()" class="catOff" title="전체 데이터 백업·복구" style="cursor:pointer;font-family:inherit'+(backupAgeDays()>=BACKUP_INTERVAL_DAYS?';border-color:#F0C36D;color:#B45309;background:#FFF9EC':'')+'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>백업'+(backupAgeDays()>=BACKUP_INTERVAL_DAYS?' ⚠':'')+'</button>':'')+
