@@ -138,6 +138,13 @@
 /* 회계 청구 입력폼: 촘촘하고 정돈된 배치 */
 .acctForm .input{padding:9px 12px;font-size:13.5px;border-radius:10px}
 .acctForm .label{font-size:11.5px;margin-bottom:4px}
+/* 상담·문의 창 — 입력칸을 아담하게 */
+.consultBox .input{font-size:13.5px;padding:8px 11px;border-radius:9px}
+.consultBox textarea.input{line-height:1.45}
+.consultBox .label{font-size:11.5px;margin-bottom:3px}
+.consultBox .big{padding:11px;font-size:14.5px;border-radius:11px}
+.consultBox .chip{padding:5px 11px;font-size:12.5px}
+.consultBox .chip.sm{padding:3px 9px;font-size:11.5px}
 .acctForm .grid2{gap:10px;margin-bottom:10px}
 .acctForm .chips .chip{padding:6px 11px;font-size:13.5px}
 /* 회계 원생 찾기: 1단계 primary 로 강조 */
@@ -5514,7 +5521,6 @@ function renderRosterTab(){
     '<span style="flex:1"></span>'+
     '<button class="chip" style="background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700" onclick="openStuM()">＋ 원생 등록</button>'+
     '<button class="chip" style="color:var(--blue);border-color:var(--blue);font-weight:700" onclick="openTempM()">＋ 임시(체험) 등록</button>'+
-    '<button class="chip" style="color:#7A5C00;border-color:#E7CE5C;background:#FFFBEF;font-weight:700" title="전화·방문 문의를 기록하고 상담 방으로 자동 알림" onclick="openConsultM()">📞 상담·문의 기록</button>'+
     (myRole()==="admin"?'<button class="chip sm" style="color:var(--sub);border-color:var(--line);font-weight:600;background:#FBFBFA" title="이름·전화번호가 겹치는 중복 인원을 찾아 정리합니다" onclick="openDupTool()">🧹 중복 정리'+(function(){var n=dupCount();return n?' <span style="background:#F0A8A8;color:#7A1F1F;border-radius:10px;padding:0 5px;font-size:11.5px;font-weight:800">'+n+'</span>':'';})()+'</button>':'')+
     (myRole()==="admin"?'<button class="chip sm" style="color:var(--sub);border-color:var(--line);font-weight:600;background:#FBFBFA" title="구글폼 신규등록 자동연동을 설정합니다" onclick="openSignupSetup()">📝 폼연동'+(function(){var n=signupForms().length;return n?' <span style="background:#DCF0E3;color:#1E7B3C;border-radius:10px;padding:0 5px;font-size:11.5px;font-weight:800">'+n+'</span>':'';})()+'</button>':'')+
     '</div>'+
@@ -5577,7 +5583,7 @@ function rosterListHtml(){
   if(f==="상담"){
     var crows=_consultRows().filter(function(s){ return !q || (s.name||"").indexOf(q)>-1 || (s.phone||"").indexOf(q)>-1; });
     x+='<div style="font-size:13.5px;color:var(--sub);margin-bottom:8px">상담·문의 '+crows.length+'건 — 전화·방문 문의 기록 (영구 보관)</div>';
-    if(!crows.length) x+='<div style="font-size:13.5px;color:var(--sub);padding:16px 0">기록된 상담·문의가 없습니다. 위의 [＋ 상담·문의 기록] 버튼으로 추가하세요.</div>';
+    if(!crows.length) x+='<div style="font-size:13.5px;color:var(--sub);padding:16px 0">기록된 상담·문의가 없습니다. 상단의 [📞 상담·문의] 버튼으로 추가하세요.</div>';
     crows.forEach(function(s){
       x+='<div style="border-top:1px solid var(--line);padding:10px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
         '<b style="font-size:15px">'+esc(s.name)+'</b>'+
@@ -10137,8 +10143,8 @@ window.consultToStu=function(id){
 function _consultModal(){
   var m=state.consultM; if(!m) return "";
   return '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px" onclick="closeConsultM()">'+
-   '<div style="background:#fff;border-radius:16px;padding:22px;max-width:420px;width:100%" onclick="event.stopPropagation()">'+
-   '<div style="font-size:17px;font-weight:900;margin-bottom:4px">'+(m.isNew?'📞 상담·문의 기록':'✏️ 상담 기록 수정')+'</div>'+
+   '<div class="consultBox" style="background:#fff;border-radius:16px;padding:18px 20px;max-width:400px;width:100%" onclick="event.stopPropagation()">'+
+   '<div style="font-size:16px;font-weight:900;margin-bottom:3px">'+(m.isNew?'📞 상담·문의 기록':'✏️ 상담 기록 수정')+'</div>'+
    '<div style="font-size:11.5px;color:var(--sub);margin-bottom:8px">전화·방문 문의를 기록합니다. 새로 저장하면 상담 방으로 자동 알림이 갑니다.</div>'+
    '<span class="label" style="font-size:11.5px">이름 / 문의자</span><input class="input" value="'+esc(m.name)+'" oninput="consultMF(\'name\',this.value)" style="margin-bottom:5px">'+
    '<span class="label" style="font-size:11.5px">연락처 (선택)</span><input class="input" inputmode="tel" value="'+esc(m.phone)+'" oninput="consultMF(\'phone\',this.value)" style="margin-bottom:5px">'+
@@ -10148,10 +10154,176 @@ function _consultModal(){
    '</div>'+
    '<span class="label" style="font-size:11.5px;margin-top:5px;display:block">상태</span>'+
    '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">'+CONSULT_ST.map(function(st){var on=(m.status===st);return '<button class="chip sm'+(on?' on':'')+'" onclick="consultMF(\'status\',\''+st+'\');render()">'+st+'</button>';}).join('')+'</div>'+
-   '<span class="label" style="font-size:11.5px">문의 내용 / 메모</span><textarea class="input" rows="3" oninput="consultMF(\'memo\',this.value)" style="margin-bottom:8px;resize:vertical">'+esc(m.memo)+'</textarea>'+
+   '<span class="label" style="font-size:11.5px">문의 내용 / 메모</span><textarea class="input" rows="2" oninput="consultMF(\'memo\',this.value)" style="margin-bottom:8px;resize:vertical">'+esc(m.memo)+'</textarea>'+
    '<div style="display:flex;gap:8px">'+
    '<button class="big" style="flex:1;background:#eee;color:var(--ink)" onclick="closeConsultM()">취소</button>'+
    '<button class="big" style="flex:2" onclick="saveConsultM()">'+(m.isNew?'저장 + 상담 방 알림':'저장')+'</button></div>'+
+   /* 최근 기록 미리보기 — 전체 목록·검색·다운로드는 별도 창 */
+   (m.isNew?(function(){
+     var rec=_consultRows().slice(0,3);
+     var inner=rec.length
+       ? rec.map(function(s){
+           return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;flex-wrap:wrap">'+
+             '<b style="font-size:13px">'+esc(s.name)+'</b>'+
+             '<span style="border-radius:9px;padding:1px 7px;font-size:11px;font-weight:800;'+_consultStColor(s.status)+'">'+esc(s.status||"문의")+'</span>'+
+             '<span style="font-size:12px;color:var(--sub)">'+esc(s.date||"")+' · '+esc(s.via||"")+'</span>'+
+             '<span style="flex:1"></span>'+
+             '<button class="chip sm" onclick="openConsultM(\''+s.id+'\')">수정</button></div>';
+         }).join('')
+       : '<div style="font-size:12.5px;color:var(--sub);padding:4px 0">아직 기록이 없습니다.</div>';
+     return '<div style="border-top:1px solid var(--line);margin-top:14px;padding-top:10px">'+
+       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'+
+       '<span style="font-size:12px;font-weight:800;color:var(--sub)">🕘 최근 기록</span>'+
+       '<button class="chip sm" style="color:#7A5C00;border-color:#E7CE5C;background:#FFFBEF;font-weight:700" onclick="openConsultList()">📋 전체 목록·검색</button></div>'+
+       inner+'</div>';
+   })():'')+
+   '</div></div>';
+}
+
+/* ══════════ 상담·문의 목록·검색·다운로드 창 ══════════ */
+window.openConsultList=function(){ state.consultListM=true; render(); };
+window.closeConsultList=function(){ state.consultListM=false; render(); };
+function _consultF(){ if(!state.consultF) state.consultF={q:"",y:"",mo:"",st:"",via:""}; return state.consultF; }
+window.resetConsultF=function(){ state.consultF={q:"",y:"",mo:"",st:"",via:""}; render(); };
+window.setConsultF=function(k,v){
+  _consultF()[k]=v;
+  /* 검색어는 결과 영역만 갈아끼워 입력 포커스가 끊기지 않게 함 (명단 검색과 같은 방식) */
+  if(k==="q"){
+    var a=document.getElementById("consultCountArea"), b=document.getElementById("consultRowsArea");
+    if(a&&b){ a.innerHTML=_consultCountHtml(); b.innerHTML=_consultRowsHtml(); return; }
+  }
+  render();
+};
+/* 기록에 실제로 존재하는 연도 목록 (최근 연도가 위) */
+function _consultYears(){
+  var seen={}, out=[];
+  _consultRows().forEach(function(s){ var y=(s.date||"").slice(0,4); if(y&&!seen[y]){ seen[y]=1; out.push(y); } });
+  return out.sort().reverse();
+}
+/* 검색 조건이 적용된 결과 */
+function _consultFiltered(){
+  var f=_consultF(), q=(f.q||"").trim();
+  return _consultRows().filter(function(s){
+    var d=s.date||"";
+    if(f.y && d.slice(0,4)!==f.y) return false;
+    if(f.mo && d.slice(5,7)!==f.mo) return false;
+    if(f.st && (s.status||"문의")!==f.st) return false;
+    if(f.via && (s.via||"")!==f.via) return false;
+    if(q && (s.name||"").indexOf(q)<0 && (s.phone||"").indexOf(q)<0 && (s.memo||"").indexOf(q)<0) return false;
+    return true;
+  });
+}
+function _consultIsFiltered(){ var f=_consultF(); return !!(f.q||f.y||f.mo||f.st||f.via); }
+/* 화면에 그릴 목록 — 조건이 없으면 최근 20건만 (화면이 무거워지지 않도록) */
+function _consultShown(){ var r=_consultFiltered(); return _consultIsFiltered()?r:r.slice(0,20); }
+function _consultCountHtml(){
+  var rows=_consultFiltered(), total=_consultRows().length, shown=_consultShown();
+  return _consultIsFiltered()
+    ? ('검색 결과 '+rows.length+'건 / 전체 '+total+'건')
+    : ('최근 '+shown.length+'건 표시 · 전체 '+total+'건 — 이전 기록은 위 조건으로 검색하세요');
+}
+function _consultRowsHtml(){
+  var shown=_consultShown();
+  var rowsHtml=shown.map(function(s){
+      return '<div style="border-top:1px solid var(--line);padding:10px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+        '<b style="font-size:15px">'+esc(s.name)+'</b>'+
+        '<span style="border-radius:10px;padding:2px 8px;font-size:11.5px;font-weight:800;'+_consultStColor(s.status)+'">'+esc(s.status||"문의")+'</span>'+
+        '<span style="font-size:13px;color:var(--sub)">'+esc(s.date||"")+' · '+esc(s.via||"")+(s.phone?' · '+esc(s.phone):'')+'</span>'+
+        (s.memo?'<div style="flex-basis:100%;font-size:13px;color:var(--ink);padding:2px 0 0 2px">'+esc(s.memo)+'</div>':'')+
+        '<span style="flex:1"></span>'+
+        '<button class="chip sm" onclick="openConsultM(\''+s.id+'\')">수정</button>'+
+        '<button class="chip sm" style="background:var(--blue);border-color:var(--blue);color:#fff;font-weight:800" title="이 상담자를 정식 원생으로 등록합니다" onclick="consultToStu(\''+s.id+'\')">＋ 원생 등록</button>'+
+        '<button class="chip sm" style="color:var(--red)" onclick="delConsult(\''+s.id+'\')">삭제</button></div>';
+    }).join('');
+  if(!shown.length) rowsHtml='<div style="font-size:13.5px;color:var(--sub);padding:16px 0">'+(_consultIsFiltered()?'조건에 맞는 기록이 없습니다.':'기록된 상담·문의가 없습니다.')+'</div>';
+  return rowsHtml;
+}
+/* 다운로드 — 현재 검색 조건이 걸린 전체 결과를 내려받음 (화면의 최근 20건 제한과 무관) */
+function _consultDlRows(){ return _consultIsFiltered()?_consultFiltered():_consultRows(); }
+function _consultDlName(ext){
+  var f=_consultF(), tag="전체";
+  if(_consultIsFiltered()){
+    var p=[];
+    if(f.y) p.push(f.y+"년");
+    if(f.mo) p.push(parseInt(f.mo,10)+"월");
+    if(f.st) p.push(f.st);
+    if(f.via) p.push(f.via);
+    if(f.q) p.push("검색_"+f.q);
+    tag=p.join("_")||"검색";
+  }
+  return "나라차_상담문의_"+tag+"_"+today()+"."+ext;
+}
+var CONSULT_DL_HEAD=["상담일","이름","연락처","유입경로","상태","문의내용/메모"];
+function _consultDlAoa(){
+  return [CONSULT_DL_HEAD].concat(_consultDlRows().map(function(s){
+    return [s.date||"", s.name||"", s.phone||"", s.via||"", s.status||"문의", s.memo||""];
+  }));
+}
+window.consultDownloadCsv=function(){
+  var rows=_consultDlRows();
+  if(!rows.length){ alert("내려받을 기록이 없습니다."); return; }
+  var lines=_consultDlAoa().map(function(r){
+    return r.map(function(c){ return '"'+String(c==null?"":c).replace(/"/g,'""')+'"'; }).join(",");
+  });
+  /* 엑셀에서 한글이 깨지지 않도록 BOM 을 붙임 */
+  var blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=_consultDlName("csv");
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },2000);
+};
+window.consultDownloadXlsx=function(){
+  var rows=_consultDlRows();
+  if(!rows.length){ alert("내려받을 기록이 없습니다."); return; }
+  if(typeof XLSX==="undefined"){ alert("엑셀 모듈을 불러오지 못했습니다. 인터넷 연결 확인 후 새로고침해 주세요. (CSV 받기는 그대로 사용할 수 있습니다)"); return; }
+  var wb=XLSX.utils.book_new();
+  var ws=XLSX.utils.aoa_to_sheet(_consultDlAoa());
+  ws['!cols']=[{wch:12},{wch:12},{wch:16},{wch:10},{wch:10},{wch:46}];
+  XLSX.utils.book_append_sheet(wb, ws, "상담·문의");
+  XLSX.writeFile(wb, _consultDlName("xlsx"));
+};
+function _consultListModal(){
+  if(!state.consultListM) return "";
+  var f=_consultF(), isFiltered=_consultIsFiltered(), dlN=_consultDlRows().length;
+  var selStyle='padding:8px 10px;font-size:13px;max-width:130px';
+  return '<div onclick="if(event.target===this)closeConsultList()" style="position:fixed;inset:0;background:rgba(27,37,52,.55);z-index:9998;display:flex;align-items:flex-start;justify-content:center;padding:44px 16px;overflow:auto">'+
+   '<div class="consultBox" style="background:#fff;border-radius:16px;padding:18px 20px;max-width:640px;width:100%" onclick="event.stopPropagation()">'+
+   '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-size:16px;font-weight:800;display:inline-flex;align-items:center;gap:8px"><span style="display:inline-flex;width:24px;height:24px;border-radius:8px;background:#FFF3C4;align-items:center;justify-content:center;font-size:13px">📋</span>상담·문의 목록·검색</div><button onclick="closeConsultList()" style="background:none;border:none;font-size:24px;color:var(--sub);cursor:pointer;font-family:inherit;line-height:1">×</button></div>'+
+   /* 검색어 + 기록 추가 */
+   '<div style="display:flex;gap:8px;align-items:center;margin-bottom:7px">'+
+     '<input class="input" style="flex:1" placeholder="이름 · 연락처 · 메모 검색" value="'+esc(f.q||"")+'" oninput="setConsultF(\'q\',this.value)">'+
+     '<button class="chip" style="color:#7A5C00;border-color:#E7CE5C;background:#FFFBEF;font-weight:700;white-space:nowrap" onclick="openConsultM()">＋ 기록 추가</button>'+
+   '</div>'+
+   /* 연도 · 월 · 유입경로 */
+   '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:7px">'+
+     '<select class="input" style="'+selStyle+'" onchange="setConsultF(\'y\',this.value)">'+
+       ['<option value=""'+(!f.y?' selected':'')+'>전체 연도</option>'].concat(_consultYears().map(function(y){
+         return '<option value="'+y+'"'+(f.y===y?' selected':'')+'>'+y+'년</option>'; })).join('')+'</select>'+
+     '<select class="input" style="'+selStyle+'" onchange="setConsultF(\'mo\',this.value)">'+
+       ['<option value=""'+(!f.mo?' selected':'')+'>전체 월</option>'].concat(["01","02","03","04","05","06","07","08","09","10","11","12"].map(function(mo){
+         return '<option value="'+mo+'"'+(f.mo===mo?' selected':'')+'>'+parseInt(mo,10)+'월</option>'; })).join('')+'</select>'+
+     '<select class="input" style="'+selStyle+'" onchange="setConsultF(\'via\',this.value)">'+
+       ['<option value=""'+(!f.via?' selected':'')+'>전체 유입경로</option>'].concat(CONSULT_VIA.map(function(v){
+         return '<option value="'+v+'"'+(f.via===v?' selected':'')+'>'+v+'</option>'; })).join('')+'</select>'+
+     (isFiltered?'<button class="chip sm" style="color:var(--sub);font-weight:700" onclick="resetConsultF()">↺ 조건 초기화</button>':'')+
+   '</div>'+
+   /* 상태 */
+   '<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:8px">'+
+     '<span style="font-size:11.5px;color:var(--sub)">상태:</span>'+
+     '<button class="chip sm'+(!f.st?' on':'')+'" onclick="setConsultF(\'st\',\'\')">전체</button>'+
+     CONSULT_ST.map(function(st){
+       return '<button class="chip sm'+(f.st===st?' on':'')+'" onclick="setConsultF(\'st\',\''+st+'\')">'+st+'</button>'; }).join('')+
+   '</div>'+
+   /* 다운로드 — 지금 조건이 걸린 결과 그대로 저장 */
+   '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;padding:8px 10px;background:#FBFBFA;border:1px solid var(--line);border-radius:10px">'+
+     '<span style="font-size:11.5px;color:var(--sub);font-weight:700">⬇ 내려받기</span>'+
+     '<span style="font-size:11.5px;color:var(--sub)">'+(isFiltered?'현재 검색 조건':'전체')+' '+dlN+'건</span>'+
+     '<span style="flex:1"></span>'+
+     '<button class="chip sm" style="color:#1E7B3C;border-color:#9FD3B0;background:#F4FBF6;font-weight:800" title="엑셀에서 바로 열 수 있는 파일로 저장합니다" onclick="consultDownloadXlsx()">📗 엑셀(xlsx)</button>'+
+     '<button class="chip sm" style="color:var(--sub);font-weight:700" title="가벼운 표 파일로 저장합니다" onclick="consultDownloadCsv()">📄 CSV</button>'+
+   '</div>'+
+   '<div id="consultCountArea" style="font-size:12.5px;color:var(--sub);margin-bottom:4px">'+_consultCountHtml()+'</div>'+
+   '<div id="consultRowsArea" style="max-height:52vh;overflow:auto">'+_consultRowsHtml()+'</div>'+
    '</div></div>';
 }
 
@@ -15953,6 +16125,8 @@ function render(){
   if(state.addBox){ h+=renderAddModal(); }
   /* 출석: 임시(체험) 등록 창 */
   if(state.tempM){ h+=renderTempModal(); }
+  /* 상담·문의 목록·검색 창 (등록·수정 창보다 먼저 그려 아래에 깔리도록 함) */
+  if(state.consultListM){ h+=_consultListModal(); }
   /* 상담·문의 기록 창 */
   if(state.consultM){ h+=_consultModal(); }
 
@@ -16522,6 +16696,7 @@ function render(){
           catBtn('심사', icExam, '심사평가', false)+
           '<button onclick="openStuM()" class="regBtn" style="cursor:pointer;font-family:inherit">'+icPlus+'원생 등록</button>'+
           '<button onclick="openKakaoCompose()" title="설정한 카카오워크 방에 메시지를 보냅니다" style="display:inline-flex;align-items:center;gap:7px;background:#fff;border:1.5px solid #E7CE5C;color:var(--ink);border-radius:11px;padding:8px 14px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit"><span style="display:inline-flex;width:22px;height:22px;border-radius:7px;background:#FEE500;align-items:center;justify-content:center;font-size:12px">💬</span>카카오알림</button>'+
+          '<button onclick="openConsultM()" title="전화·방문 문의를 기록합니다 (목록·검색·다운로드는 창 안에서 열 수 있습니다)" style="display:inline-flex;align-items:center;gap:7px;background:#FFFBEF;border:1.5px solid #E7CE5C;color:#7A5C00;border-radius:11px;padding:8px 14px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">📞 상담·문의</button>'+
           '<span style="flex:1"></span>'+
           '<span id="attStatusPill" style="display:inline-flex;align-items:center;margin-right:6px">'+(state.attStatus?((state.attStatus.indexOf('⚠')>-1||state.attStatus.indexOf('실패')>-1||state.attStatus.indexOf('오프라인')>-1)?'<span class="warnPill">'+esc(state.attStatus)+'</span>':'<span style="font-size:12.5px;color:var(--sub);font-weight:700;white-space:nowrap">'+esc(state.attStatus)+'</span>'):'')+'</span>'+
           (myRole()==="admin"?'<button onclick="openBackupM()" class="catOff" title="전체 데이터 백업·복구" style="cursor:pointer;font-family:inherit'+(backupAgeDays()>=BACKUP_INTERVAL_DAYS?';border-color:#F0C36D;color:#B45309;background:#FFF9EC':'')+'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>백업'+(backupAgeDays()>=BACKUP_INTERVAL_DAYS?' ⚠':'')+'</button>':'')+
