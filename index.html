@@ -5598,7 +5598,7 @@ function rosterListHtml(){
     crows.forEach(function(s){
       x+='<div style="border-top:1px solid var(--line);padding:10px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
         '<b style="font-size:15px">'+esc(s.name)+'</b>'+
-        '<span style="border-radius:10px;padding:2px 8px;font-size:11.5px;font-weight:800;'+_consultStColor(s.status)+'">'+esc(s.status||"문의")+'</span>'+
+        '<span style="border-radius:10px;padding:2px 8px;font-size:11.5px;font-weight:800;'+_consultStColor(_consultSt(s))+'">'+esc(_consultSt(s))+'</span>'+
         '<span style="font-size:13px;color:var(--sub)">'+esc(s.date||"")+' · '+esc(s.via||"")+(s.phone?' · '+esc(s.phone):'')+'</span>'+
         (s.memo?'<div style="flex-basis:100%;font-size:13px;color:var(--ink);padding:2px 0 0 2px">'+esc(s.memo)+'</div>':'')+
         '<span style="flex:1"></span>'+
@@ -10085,7 +10085,10 @@ function renderTempModal(){
 
 /* ══════════ 상담·문의 기록 (전화·방문 문의 누적 · 상담 방 자동 알림) ══════════ */
 var CONSULT_VIA=["전화","방문","소개","온라인","기타"];
-var CONSULT_ST=["문의","상담예약","체험","등록","미등록"];
+var CONSULT_ST=["체험","등록","미등록"];
+/* 상태는 기록 후 '이 학생이 어떻게 되었는지'를 표시하는 값 — 처음 저장할 때는 비워 둔다.
+   예전에 저장된 문의·상담예약 값은 '미정'으로 보여 준다 (기록 자체는 건드리지 않음). */
+function _consultSt(s){ var v=(s&&s.status)||""; return CONSULT_ST.indexOf(v)>-1 ? v : "미정"; }
 function _consultRows(){
   var w=workData(); var o=w.consult||{};
   return Object.keys(o).map(function(k){return o[k];}).filter(Boolean).sort(function(a,b){
@@ -10096,16 +10099,15 @@ function _consultStColor(st){
   if(st==="등록") return 'background:#DCF0E3;color:#1E7B3C';
   if(st==="미등록") return 'background:#F0E0E0;color:#8A2A2A';
   if(st==="체험") return 'background:#FFF3C4;color:#7A5C00';
-  if(st==="상담예약") return 'background:#E2E8F5;color:#243B6B';
-  return 'background:#EFEDE7;color:#555';   /* 문의 */
+  return 'background:#EFEDE7;color:#777';   /* 미정 — 아직 결과가 정해지지 않음 */
 }
 window.openConsultM=function(id){
   var w=workData();
   if(id!=null && w.consult && w.consult[id]){
     var s=w.consult[id];
-    state.consultM={ id:id, name:s.name||"", phone:s.phone||"", via:s.via||"전화", memo:s.memo||"", date:s.date||today(), status:s.status||"문의", isNew:false };
+    state.consultM={ id:id, name:s.name||"", phone:s.phone||"", via:s.via||"전화", memo:s.memo||"", date:s.date||today(), status:s.status||"", isNew:false };
   } else {
-    state.consultM={ id:null, name:"", phone:"", via:"전화", memo:"", date:today(), status:"문의", isNew:true };
+    state.consultM={ id:null, name:"", phone:"", via:"전화", memo:"", date:today(), status:"", isNew:true };
   }
   render();
 };
@@ -10118,7 +10120,7 @@ window.saveConsultM=function(){
   var w=workData();
   var id=(m.id!=null)?m.id:("c"+Date.now());
   var now=Date.now();
-  w.consult[id]={ id:id, name:nm, phone:(m.phone||"").trim(), via:m.via||"전화", memo:(m.memo||"").trim(), date:m.date||today(), status:m.status||"문의", dev:workDev(), _t:now };
+  w.consult[id]={ id:id, name:nm, phone:(m.phone||"").trim(), via:m.via||"전화", memo:(m.memo||"").trim(), date:m.date||today(), status:m.status||"", dev:workDev(), _t:now };
   if(w.tombConsult) delete w.tombConsult[id];
   workPersist();
   var wasNew=m.isNew;
@@ -10157,15 +10159,13 @@ function _consultModal(){
    '<div class="consultBox" style="background:#fff;border-radius:16px;padding:18px 20px;max-width:400px;width:100%" onclick="event.stopPropagation()">'+
    '<div style="font-size:16px;font-weight:900;margin-bottom:3px">'+(m.isNew?'📞 상담·문의 기록':'✏️ 상담 기록 수정')+'</div>'+
    '<div style="font-size:11.5px;color:var(--sub);margin-bottom:8px">전화·방문 문의를 기록합니다. 새로 저장하면 상담 방으로 자동 알림이 갑니다.</div>'+
-   '<span class="label" style="font-size:11.5px">이름 / 문의자</span><input class="input" value="'+esc(m.name)+'" oninput="consultMF(\'name\',this.value)" style="margin-bottom:5px">'+
-   '<span class="label" style="font-size:11.5px">연락처 (선택)</span><input class="input" inputmode="tel" value="'+esc(m.phone)+'" oninput="consultMF(\'phone\',this.value)" style="margin-bottom:5px">'+
+   '<span class="label" style="font-size:11.5px">이름 / 문의자</span><input id="consultName" class="input" autocomplete="off" value="'+esc(m.name)+'" oninput="consultMF(\'name\',this.value)" onkeydown="if(event.isComposing||event.keyCode===229)return;" style="margin-bottom:5px">'+
+   '<span class="label" style="font-size:11.5px">연락처 (선택)</span><input id="consultPhone" class="input" inputmode="tel" autocomplete="off" value="'+esc(m.phone)+'" oninput="consultMF(\'phone\',this.value)" onkeydown="if(event.isComposing||event.keyCode===229)return;" style="margin-bottom:5px">'+
    '<div style="display:flex;gap:8px">'+
-     '<div style="flex:1"><span class="label" style="font-size:11.5px">유입경로</span><select class="input" onchange="consultMF(\'via\',this.value)">'+CONSULT_VIA.map(function(v){return '<option'+(m.via===v?' selected':'')+'>'+v+'</option>';}).join('')+'</select></div>'+
-     '<div style="flex:1"><span class="label" style="font-size:11.5px">상담일</span><input class="input" type="date" value="'+esc(m.date)+'" onchange="consultMF(\'date\',this.value)"></div>'+
+     '<div style="flex:1"><span class="label" style="font-size:11.5px">유입경로</span><select id="consultVia" class="input" onchange="consultMF(\'via\',this.value)">'+CONSULT_VIA.map(function(v){return '<option'+(m.via===v?' selected':'')+'>'+v+'</option>';}).join('')+'</select></div>'+
+     '<div style="flex:1"><span class="label" style="font-size:11.5px">상담일</span><input id="consultDate" class="input" type="date" value="'+esc(m.date)+'" onchange="consultMF(\'date\',this.value)"></div>'+
    '</div>'+
-   '<span class="label" style="font-size:11.5px;margin-top:5px;display:block">상태</span>'+
-   '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">'+CONSULT_ST.map(function(st){var on=(m.status===st);return '<button class="chip sm'+(on?' on':'')+'" onclick="consultMF(\'status\',\''+st+'\');render()">'+st+'</button>';}).join('')+'</div>'+
-   '<span class="label" style="font-size:11.5px">문의 내용 / 메모</span><textarea class="input" rows="2" oninput="consultMF(\'memo\',this.value)" style="margin-bottom:8px;resize:vertical">'+esc(m.memo)+'</textarea>'+
+   '<span class="label" style="font-size:11.5px">문의 내용 / 메모</span><textarea id="consultMemo" class="input" rows="2" oninput="consultMF(\'memo\',this.value)" onkeydown="if(event.isComposing||event.keyCode===229)return;" style="margin-bottom:8px;resize:vertical">'+esc(m.memo)+'</textarea>'+
    '<div style="display:flex;gap:8px">'+
    '<button class="big" style="flex:1;background:#eee;color:var(--ink)" onclick="closeConsultM()">취소</button>'+
    '<button class="big" style="flex:2" onclick="saveConsultM()">'+(m.isNew?'저장 + 상담 방 알림':'저장')+'</button></div>'+
@@ -10176,7 +10176,7 @@ function _consultModal(){
        ? rec.map(function(s){
            return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;flex-wrap:wrap">'+
              '<b style="font-size:13px">'+esc(s.name)+'</b>'+
-             '<span style="border-radius:9px;padding:1px 7px;font-size:11px;font-weight:800;'+_consultStColor(s.status)+'">'+esc(s.status||"문의")+'</span>'+
+             '<span style="border-radius:9px;padding:1px 7px;font-size:11px;font-weight:800;'+_consultStColor(_consultSt(s))+'">'+esc(_consultSt(s))+'</span>'+
              '<span style="font-size:12px;color:var(--sub)">'+esc(s.date||"")+' · '+esc(s.via||"")+'</span>'+
              '<span style="flex:1"></span>'+
              '<button class="chip sm" onclick="openConsultM(\''+s.id+'\')">수정</button></div>';
@@ -10218,7 +10218,7 @@ function _consultFiltered(){
     var d=s.date||"";
     if(f.y && d.slice(0,4)!==f.y) return false;
     if(f.mo && d.slice(5,7)!==f.mo) return false;
-    if(f.st && (s.status||"문의")!==f.st) return false;
+    if(f.st && _consultSt(s)!==f.st) return false;
     if(f.via && (s.via||"")!==f.via) return false;
     if(q && (s.name||"").indexOf(q)<0 && (s.phone||"").indexOf(q)<0 && (s.memo||"").indexOf(q)<0) return false;
     return true;
@@ -10236,15 +10236,24 @@ function _consultCountHtml(){
 function _consultRowsHtml(){
   var shown=_consultShown();
   var rowsHtml=shown.map(function(s){
+      var cur=_consultSt(s);
+      /* 상태는 이 줄에서 바로 눌러 바꾼다 — 상담 이후 어떻게 됐는지 추적하는 값 */
+      var stBtns=CONSULT_ST.map(function(st){
+        var on=(cur===st);
+        return '<button class="chip sm" title="상태를 '+st+'(으)로 바꿉니다" style="'+(on?_consultStColor(st)+';border-color:transparent;font-weight:800':'color:var(--sub)')+'" onclick="setConsultStatus(\''+s.id+'\',\''+(on?'':st)+'\')">'+st+'</button>';
+      }).join('');
       return '<div style="border-top:1px solid var(--line);padding:10px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
         '<b style="font-size:15px">'+esc(s.name)+'</b>'+
-        '<span style="border-radius:10px;padding:2px 8px;font-size:11.5px;font-weight:800;'+_consultStColor(s.status)+'">'+esc(s.status||"문의")+'</span>'+
+        (cur==="미정"?'<span style="border-radius:10px;padding:2px 8px;font-size:11.5px;font-weight:800;'+_consultStColor("")+'">미정</span>':'')+
         '<span style="font-size:13px;color:var(--sub)">'+esc(s.date||"")+' · '+esc(s.via||"")+(s.phone?' · '+esc(s.phone):'')+'</span>'+
         (s.memo?'<div style="flex-basis:100%;font-size:13px;color:var(--ink);padding:2px 0 0 2px">'+esc(s.memo)+'</div>':'')+
-        '<span style="flex:1"></span>'+
-        '<button class="chip sm" onclick="openConsultM(\''+s.id+'\')">수정</button>'+
-        '<button class="chip sm" style="background:var(--blue);border-color:var(--blue);color:#fff;font-weight:800" title="이 상담자를 정식 원생으로 등록합니다" onclick="consultToStu(\''+s.id+'\')">＋ 원생 등록</button>'+
-        '<button class="chip sm" style="color:var(--red)" onclick="delConsult(\''+s.id+'\')">삭제</button></div>';
+        '<div style="flex-basis:100%;display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding-top:5px">'+
+          '<span style="font-size:11px;color:var(--sub)">상담 결과:</span>'+stBtns+
+          '<span style="flex:1"></span>'+
+          '<button class="chip sm" onclick="openConsultM(\''+s.id+'\')">수정</button>'+
+          '<button class="chip sm" style="background:var(--blue);border-color:var(--blue);color:#fff;font-weight:800" title="이 상담자를 정식 원생으로 등록합니다" onclick="consultToStu(\''+s.id+'\')">＋ 원생 등록</button>'+
+          '<button class="chip sm" style="color:var(--red)" onclick="delConsult(\''+s.id+'\')">삭제</button>'+
+        '</div></div>';
     }).join('');
   if(!shown.length) rowsHtml='<div style="font-size:13.5px;color:var(--sub);padding:16px 0">'+(_consultIsFiltered()?'조건에 맞는 기록이 없습니다.':'기록된 상담·문의가 없습니다.')+'</div>';
   return rowsHtml;
@@ -10267,7 +10276,7 @@ function _consultDlName(ext){
 var CONSULT_DL_HEAD=["상담일","이름","연락처","유입경로","상태","문의내용/메모"];
 function _consultDlAoa(){
   return [CONSULT_DL_HEAD].concat(_consultDlRows().map(function(s){
-    return [s.date||"", s.name||"", s.phone||"", s.via||"", s.status||"문의", s.memo||""];
+    return [s.date||"", s.name||"", s.phone||"", s.via||"", _consultSt(s), s.memo||""];
   }));
 }
 window.consultDownloadCsv=function(){
@@ -10306,7 +10315,7 @@ function _consultListModal(){
    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-size:16px;font-weight:800;display:inline-flex;align-items:center;gap:8px"><span style="display:inline-flex;width:24px;height:24px;border-radius:8px;background:#FFF3C4;align-items:center;justify-content:center;font-size:13px">📋</span>상담·문의 목록·검색</div><button onclick="closeConsultList()" style="background:none;border:none;font-size:24px;color:var(--sub);cursor:pointer;font-family:inherit;line-height:1">×</button></div>'+
    /* 검색어 + 기록 추가 */
    '<div style="display:flex;gap:8px;align-items:center;margin-bottom:7px">'+
-     '<input class="input" style="flex:1" placeholder="이름 · 연락처 · 메모 검색" value="'+esc(f.q||"")+'" oninput="setConsultF(\'q\',this.value)">'+
+     '<input id="consultSearch" class="input" style="flex:1" placeholder="이름 · 연락처 · 메모 검색" autocomplete="off" value="'+esc(f.q||"")+'" oninput="setConsultF(\'q\',this.value)" onkeydown="if(event.isComposing||event.keyCode===229)return;">'+
      '<button class="chip" style="color:#7A5C00;border-color:#E7CE5C;background:#FFFBEF;font-weight:700;white-space:nowrap" onclick="openConsultM()">＋ 기록 추가</button>'+
    '</div>'+
    /* 연도 · 월 · 유입경로 */
@@ -10324,9 +10333,9 @@ function _consultListModal(){
    '</div>'+
    /* 상태 */
    '<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:8px">'+
-     '<span style="font-size:11.5px;color:var(--sub)">상태:</span>'+
+     '<span style="font-size:11.5px;color:var(--sub)">상담 결과:</span>'+
      '<button class="chip sm'+(!f.st?' on':'')+'" onclick="setConsultF(\'st\',\'\')">전체</button>'+
-     CONSULT_ST.map(function(st){
+     ["미정"].concat(CONSULT_ST).map(function(st){
        return '<button class="chip sm'+(f.st===st?' on':'')+'" onclick="setConsultF(\'st\',\''+st+'\')">'+st+'</button>'; }).join('')+
    '</div>'+
    /* 다운로드 — 지금 조건이 걸린 결과 그대로 저장 */
