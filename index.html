@@ -724,6 +724,14 @@ window.pullSignups=function(cb){
   })).then(function(lists){
     var all=[], seen={}; lists.forEach(function(a){ all=all.concat(a||[]); });
     state.newSignups=all.filter(function(o){ if(!o||!o.name) return false; var k=signupKey(o); if(done[k]||have[o.name]||seen[k]) return false; seen[k]=1; return true; });
+    /* [R3.73] 새로 발견된 신청 → 어느 화면에 있든 알림 (세션 중 1회) */
+    try{
+      window.__signupNotified=window.__signupNotified||{};
+      var fresh=(state.newSignups||[]).filter(function(o){ var k=signupKey(o); if(window.__signupNotified[k]) return false; window.__signupNotified[k]=1; return true; });
+      if(fresh.length && typeof toast==="function"){
+        toast('🎉 신규 등록 신청 '+fresh.length+'건 도착 — [수련생관리 → 수련생명단] 상단에서 확인·등록하세요', 6500);
+      }
+    }catch(e){}
     try{ render(); }catch(e){}
     if(cb)cb();
   }).catch(function(){ if(cb)cb(); });
@@ -789,7 +797,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v12.70";   /* R3.62: 심사추천 수련횟수 정렬 · 심사완료 자동반영(급수+횟수0) · 응심버튼 제거 · 확정자 결정적 id */
+var APP_VER = "v12.73";   /* R3.62: 심사추천 수련횟수 정렬 · 심사완료 자동반영(급수+횟수0) · 응심버튼 제거 · 확정자 결정적 id */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -1257,6 +1265,17 @@ function loadAll(){
       return;
     }
     setTimeout(function(){ photoPullWhenReady(tries+1); }, 500);
+  })(0);
+  /* [R3.73] 구글폼 신규 등록 신청 자동 불러오기 —
+     시작 시 1회(잠금 해제 대기) + 10분마다 자동 확인 → 새 신청이 오면 알림 */
+  (function signupPullWhenReady(tries){
+    if(tries>60) return;
+    if(state.unlocked && accessKey()){
+      try{ if(typeof pullSignups==="function") pullSignups(); }catch(e){}
+      setInterval(function(){ try{ if(state.unlocked && typeof pullSignups==="function") pullSignups(); }catch(e){} }, 10*60*1000);
+      return;
+    }
+    setTimeout(function(){ signupPullWhenReady(tries+1); }, 500);
   })(0);
   /* 카카오워크 자동 전송: 데이터 로드(출석 수신) 후 1회 시도 — 실제 발송 여부는 설정·lastSent 날짜로 판단 */
   (function kakaoAutoWhenReady(tries){
@@ -7784,6 +7803,7 @@ function renderWeekTab(){
    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--sub);margin-bottom:4px">'+
    ATT_KINDS.map(function(kk){ return '<span style="display:inline-flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:'+kk.c+'"></span>'+kindLabel(kk.k)+'</span>'; }).join('')+
    '<span>· 이름 클릭=출석→결석→미정 순환 · 길게 누르면 설정 창 · 🎂 생일(그 날짜)</span>'+
+   '<button class="chip sm" onclick="openTtImg()" style="font-weight:800;color:var(--brand);border-color:var(--brand);white-space:nowrap">🖼 시간표보기</button>'+
    '<span style="flex:1;min-width:8px"></span>'+
    /* ── ✨ 이번 주 시그니처 질문 (생일 범례 오른쪽 · 컴팩트) ── */
    '<span style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#EAF1FB 0%,#F3F0FF 100%);border:1px solid #D8D6F5;border-radius:10px;padding:4px 6px 4px 9px;box-shadow:0 1px 3px rgba(67,56,202,.08)">'+
@@ -12177,16 +12197,86 @@ window.setKakaoSenderName=function(v){ var w=workData(); if(!w.kakaoCfg)w.kakaoC
 window.setKakaoTitleBrief=function(v){ var w=workData(); if(!w.kakaoCfg)w.kakaoCfg={}; w.kakaoCfg.titleBrief=(v||'').trim(); w.kakaoCfg._t=Date.now(); if(typeof workSaveDebounced==='function')workSaveDebounced(); };
 window.setKakaoTitleEvent=function(v){ var w=workData(); if(!w.kakaoCfg)w.kakaoCfg={}; w.kakaoCfg.titleEvent=(v||'').trim(); w.kakaoCfg._t=Date.now(); if(typeof workSaveDebounced==='function')workSaveDebounced(); };
 /* ══════════ 카카오워크 알림 (R3.22) — 오늘 요약을 구글 서버(Apps Script) 릴레이 통해 카카오워크 웹훅으로 전송 ══════════ */
+/* [R3.73] 최근 10주 마지막 출석일 맵 (이탈주의 판정용) */
+function _briefLastAttend(){
+  var td=today(), map={};
+  try{
+    for(var k=0;k<10;k++){
+      var wk=mondayOf(addDays(td,-7*k)); var w=state.weeks[wk]; if(!w||!w.cells) continue;
+      for(var key in w.cells){
+        var day=key.split('-')[0]; var idx=DAY_IDX[day]; if(idx==null) continue;
+        var dt=addDays(wk, idx); if(dt>td) continue;
+        var mks=w.cells[key].marks||{};
+        for(var nm in mks){ var st=mks[nm]&&mks[nm].s; if(st==='출석'||st==='보강'){ if(!map[nm]||dt>map[nm]) map[nm]=dt; } }
+      }
+    }
+  }catch(e){}
+  return map;
+}
+/* [R3.73] 연속결석 이탈주의 3분류 —
+   ① 결석관리 미등록 장기결석(2주 이상, 등록 없음) ② 복귀예정 지났는데 미출석 ③ 한 달 이상 결석 */
+function _briefChurnRisk(){
+  var td=today(), la=_briefLastAttend();
+  var d14=addDays(td,-14), d30=addDays(td,-30);
+  var out={unreg:[], overdue:[], month:[]};
+  try{
+    var act=STUDENTS.filter(function(s){return !state.closedMap[s.n]&&!isQuit(s.n);});
+    act.forEach(function(s){
+      var nm=s.n, l=la[nm]||null;
+      var holds=(typeof liveHolds==='function')?liveHolds(nm):[];
+      var covered=holds.some(function(e){ return e.from<=td && (e.open || (e.to&&e.to>=td)); });   /* 지금 결석관리로 커버 중 = 관리되고 있음 */
+      if(covered) return;
+      var gapTxt = l ? (' — 마지막 출석 '+l.slice(5).replace('-','/')+' ('+Math.round((new Date(td)-new Date(l))/86400000)+'일째)') : ' — 최근 10주 출석 없음';
+      /* ② 복귀예정이 지났는데 그 후 출석 없음 (최근 3주 내 종료건) */
+      var over=holds.filter(function(e){ return !e.open && e.to && e.to<td && e.to>=addDays(td,-21) && (!l || l<=e.to); })
+                    .sort(function(a,b){ return b.to<a.to?-1:1; })[0];
+      if(!l || l<=d30){ out.month.push(nm+gapTxt); return; }         /* ③ 한 달 이상 */
+      if(over){ out.overdue.push(nm+' — 복귀예정 '+over.to.slice(5).replace('-','/')+' 지남'+(l?(' · 마지막 출석 '+l.slice(5).replace('-','/')):'')); return; }
+      if(l<=d14){ out.unreg.push(nm+gapTxt); }                        /* ① 미등록 2주+ */
+    });
+  }catch(e){}
+  return out;
+}
 function _kakaoTodayText(){
   var TD; try{ TD=todayTodoData(); }catch(e){ TD={absent:[],returning:[],bdays:[],expiring:[],regChanges:[]}; }
-  var L=['📢 '+kakaoSenderName()+' '+kakaoTitleBrief()+' ('+today()+')',''];
+  var td=today();
+  var L=['📢 '+kakaoSenderName()+' '+kakaoTitleBrief()+' ('+td+' '+['일','월','화','수','목','금','토'][new Date(td+'T00:00:00').getDay()]+')'];
   var any=false;
-  if(TD.absent&&TD.absent.length){ L.push('❗ 오늘 결석 '+TD.absent.length+'명: '+TD.absent.slice(0,25).join(', ')); any=true; }
-  if(TD.returning&&TD.returning.length){ L.push('▶ 복귀 예정: '+TD.returning.map(function(o){return o.n;}).join(', ')); any=true; }
-  if(TD.bdays&&TD.bdays.length){ L.push('🎂 오늘 생일: '+TD.bdays.join(', ')); any=true; }
-  if(TD.expiring&&TD.expiring.length){ L.push('💳 재등록 임박 '+TD.expiring.length+'명: '+TD.expiring.slice(0,25).map(function(o){return o.n;}).join(', ')); any=true; }
+  var SEC=function(title){ L.push(''); L.push(title); };
+  /* ❗ 오늘 결석 */
+  if(TD.absent&&TD.absent.length){ SEC('❗ 오늘 결석 ('+TD.absent.length+'명)'); L.push(TD.absent.slice(0,30).join(', ')); any=true; }
+  /* 🎂 오늘 생일 */
+  if(TD.bdays&&TD.bdays.length){ SEC('🎂 오늘 생일'); L.push(TD.bdays.join(', ')); any=true; }
+  /* 🔙 복관 예정 (오늘 ~ 1주 내) — 날짜별로 한 줄씩 */
+  try{
+    var d7=addDays(td,7), retMap={}, retDates=[];
+    STUDENTS.filter(function(s){return !state.closedMap[s.n]&&!isQuit(s.n);}).forEach(function(s){
+      (typeof liveHolds==='function'?liveHolds(s.n):[]).forEach(function(e){
+        if(e.open||!e.to) return;
+        if(e.to>=td && e.to<=d7){ if(!retMap[e.to]){ retMap[e.to]=[]; retDates.push(e.to); } if(retMap[e.to].indexOf(s.n)<0) retMap[e.to].push(s.n); }
+      });
+    });
+    if(retDates.length){
+      retDates.sort(); SEC('🔙 복관 예정 (오늘~1주)'); any=true;
+      retDates.forEach(function(dt){
+        var lbl=(dt===td)?'· 오늘':('· '+dt.slice(5).replace('-','/')+'('+['일','월','화','수','목','금','토'][new Date(dt+'T00:00:00').getDay()]+')');
+        L.push(lbl+': '+retMap[dt].join(', '));
+      });
+    }
+  }catch(e){}
+  /* ⚠️ 연속결석 이탈주의 — 결석관리로 관리 중인 수련생은 제외 */
+  try{
+    var cr=_briefChurnRisk();
+    if(cr.unreg.length||cr.overdue.length||cr.month.length){
+      SEC('⚠️ 연속결석 이탈주의'); any=true;
+      if(cr.unreg.length){ L.push('〈결석관리 미등록 장기결석〉'); cr.unreg.slice(0,10).forEach(function(t){L.push('· '+t);}); }
+      if(cr.overdue.length){ L.push('〈복귀예정 지남·미출석〉'); cr.overdue.slice(0,10).forEach(function(t){L.push('· '+t);}); }
+      if(cr.month.length){ L.push('〈한 달 이상 결석〉'); cr.month.slice(0,10).forEach(function(t){L.push('· '+t);}); }
+    }
+  }catch(e){}
+  if(TD.expiring&&TD.expiring.length){ L.push(''); L.push('💳 재등록 임박 ('+TD.expiring.length+'명)'); L.push(TD.expiring.slice(0,25).map(function(o){return o.n;}).join(', ')); any=true; }
   try{ var w=workData(), td=today(), evs=[]; for(var id in (w.events||{})){ var ev=w.events[id]; if(!ev||ev.status==='취소'||!ev.date) continue; var dd=workDueDays(ev.date); if(dd!==null&&dd>=0&&dd<=7) evs.push({t:(ev.title||'행사'),dd:dd}); }
-    evs.sort(function(a,b){return a.dd-b.dd;}); if(evs.length){ L.push('🎪 다가오는 행사: '+evs.map(function(o){return o.t+'(D-'+o.dd+')';}).join(', ')); any=true; } }catch(e){}
+    evs.sort(function(a,b){return a.dd-b.dd;}); if(evs.length){ L.push(''); L.push('🎪 다가오는 행사'); L.push(evs.map(function(o){return o.t+' (D-'+o.dd+')';}).join(', ')); any=true; } }catch(e){}
   if(!any) L.push('오늘 특이사항 없습니다 👍');
   return L.join('\n');
 }
@@ -12228,10 +12318,17 @@ function _kakaoWorkText(){
   var base=_kakaoTodayText();   /* 오늘 브리핑(결석·복귀·생일·재등록·행사) */
   var extra=[];
   try{ var tbo=_todosByOwner();
-    if(tbo.order.length){ extra.push(''); extra.push('🧑‍🏫 담당자별 업무:');
+    if(tbo.order.length){
+      extra.push(''); extra.push('━━━━━━━━━━'); extra.push('🧑\u200d🏫 담당자별 업무');
       tbo.order.forEach(function(o){
-        var items=tbo.map[o].slice(0,6).map(function(t){ var dd=workDueDays(t.due); var dl=(dd<0?('D+'+(-dd)):(dd===0?'오늘':'D-'+dd)); return (t.label||'(업무)')+'('+dl+')'; });
-        extra.push(' • '+o+': '+items.join(', ')+(tbo.map[o].length>6?(' 외 '+(tbo.map[o].length-6)+'건'):''));
+        extra.push('');
+        extra.push('['+o+']');
+        /* [R3.73] 담당자 이름 아래, 업무를 한 행씩 */
+        tbo.map[o].slice(0,8).forEach(function(t){
+          var dd=workDueDays(t.due); var dl=(dd<0?('D+'+(-dd)):(dd===0?'오늘':'D-'+dd));
+          extra.push('· '+(t.label||'(업무)')+' — '+dl);
+        });
+        if(tbo.map[o].length>8) extra.push('· … 외 '+(tbo.map[o].length-8)+'건');
       });
     }
   }catch(e){}
@@ -12701,7 +12798,183 @@ function busData(){
   BUS_DAYS.forEach(function(d){ if(!w.bus[d]) w.bus[d]={courses:[]}; if(!w.bus[d].courses) w.bus[d].courses=[]; });
   return w.bus;
 }
-function busDay(){ var d=state.busDay||BUS_DAYS[0]; return (BUS_DAYS.indexOf(d)>-1)?d:BUS_DAYS[0]; }
+function busDay(){
+  var d=state.busDay;
+  if(!d){ var wd=new Date().getDay(); d=BUS_DAYS[(wd>=1&&wd<=5)?wd-1:0]; }   /* [R3.71] 첫 진입은 오늘 요일 (주말엔 월) */
+  return (BUS_DAYS.indexOf(d)>-1)?d:BUS_DAYS[0];
+}
+
+/* ══════════ [R3.71] 학부모 전달용 시간표 이미지 (디자인팀 검토안) ══════════
+   시간표 설정(state.schedule.cells)을 한 장짜리 고해상 이미지로 그린다.
+   구성: 로고 + NARACHA T.K.D Class Schedule 타이틀 + 평일 표 + 토요일 표 + 반 색상 범례 */
+var _ttLogoImg=null;
+try{ _ttLogoImg=new Image(); _ttLogoImg.src=LOGO_FULL; }catch(e){}
+function _ttRR(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function _ttTimeLabel(hh){ var h1=hh>12?hh-12:hh, ap=hh>=12?'':' AM'; return h1+':00~'+h1+':50'; }
+function ttImgDraw(cv){
+  var SC=2;
+  var showH13 = !(state.schedule&&state.schedule.hide13);
+  var hs=[]; for(var hh=(showH13?13:14);hh<=21;hh++) hs.push(hh);
+  var sats=[10,11,12,13,14];
+  var F='"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+  var W=1560*SC, headH=132*SC, legH=46*SC, rowH=64*SC, thH=40*SC, pad=26*SC;
+  var H=headH + thH + hs.length*rowH + legH + pad*2 + 16*SC;
+  cv.width=W; cv.height=H;
+  var ctx=cv.getContext('2d');
+  ctx.imageSmoothingEnabled=true; try{ ctx.imageSmoothingQuality='high'; }catch(e){}
+  /* 배경 */
+  ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#F6F8FB'; ctx.fillRect(0,0,W,headH);
+  ctx.strokeStyle='#E3E8F0'; ctx.lineWidth=1*SC;
+  ctx.beginPath(); ctx.moveTo(0,headH); ctx.lineTo(W,headH); ctx.stroke();
+  /* 로고 (원본보다 작게 = 선명) */
+  if(_ttLogoImg && _ttLogoImg.complete && _ttLogoImg.width){
+    var lw=_ttLogoImg.width, lh=_ttLogoImg.height;
+    var loH=88*SC, loW=loH*(lw/lh);
+    ctx.drawImage(_ttLogoImg, pad, (headH-loH)/2, loW, loH);
+  }
+  /* 타이틀 */
+  ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+  ctx.fillStyle='#1F3A73'; ctx.font='900 '+(46*SC)+'px '+F;
+  ctx.fillText('NARACHA T.K.D  Class Schedule', W/2, headH*0.52);
+  ctx.fillStyle='#7A8699'; ctx.font='700 '+(17*SC)+'px '+F;
+  ctx.fillText('나라차태권도 분당도장 수련시간표', W/2, headH*0.78);
+  /* 기준일 */
+  ctx.textAlign='right'; ctx.fillStyle='#B45309'; ctx.font='800 '+(16*SC)+'px '+F;
+  var td=new Date(), ds=td.getFullYear()+'.'+String(td.getMonth()+1).padStart(2,'0')+'.'+String(td.getDate()).padStart(2,'0');
+  ctx.fillText(ds+' 기준', W-pad, headH*0.40);
+  ctx.fillStyle='#8B93A3'; ctx.font='600 '+(13*SC)+'px '+F;
+  ctx.fillText('상담 문의 환영합니다', W-pad, headH*0.62);
+
+  /* 표 좌표: 평일(시간 열 + 5일) | 간격 | 토요일(시간 열 + 1일) */
+  var top=headH+14*SC;
+  var tLeft=pad, gap=18*SC;
+  var wkTimeW=104*SC, satTimeW=104*SC;
+  var satColW=150*SC;
+  var wkColW=Math.floor((W - pad*2 - gap - wkTimeW - satTimeW - satColW)/5);
+  var wkW=wkTimeW+wkColW*5;
+  var satLeft=tLeft+wkW+gap;
+  var DAYS_EN=['MON','TUE','WED','THU','FRI'];
+  var DAY_TOK=['mon','tue','wed','thu','fri'];
+  /* 헤더 행 (검정) */
+  function th(x,w,txt){
+    ctx.fillStyle='#181B22'; ctx.fillRect(x,top,w,thH);
+    ctx.fillStyle='#FFFFFF'; ctx.font='900 '+(17*SC)+'px '+F; ctx.textAlign='center';
+    ctx.fillText(txt, x+w/2, top+thH*0.68);
+  }
+  th(tLeft,wkTimeW,'Time');
+  for(var di=0;di<5;di++) th(tLeft+wkTimeW+wkColW*di, wkColW, DAYS_EN[di]);
+  th(satLeft,satTimeW,'Time'); th(satLeft+satTimeW,satColW,'SAT');
+  /* 셀 그리기 */
+  var cells=(state.schedule&&state.schedule.cells)||{};
+  function drawCell(x,y,w,h,label,cat){
+    ctx.strokeStyle='#D8DEE8'; ctx.lineWidth=1*SC; ctx.strokeRect(x,y,w,h);
+    if(!label){ ctx.fillStyle='#FAFBFD'; ctx.fillRect(x+1,y+1,w-2,h-2); return; }
+    /* 반 그룹 파스텔 (두 그룹이면 상하 이분) */
+    var g=banGroup(label);
+    if(g.length>=2){
+      ctx.fillStyle=BAN_BG[g[0]]||'#F4F5F7'; ctx.fillRect(x+1,y+1,w-2,(h-2)/2);
+      ctx.fillStyle=BAN_BG[g[1]]||'#F4F5F7'; ctx.fillRect(x+1,y+1+(h-2)/2,w-2,(h-2)/2);
+    } else {
+      ctx.fillStyle=(g.length?BAN_BG[g[0]]:'#EFF3EE')||'#F4F5F7'; ctx.fillRect(x+1,y+1,w-2,h-2);
+    }
+    /* 반 이름 — '·' 구분은 두 줄로 */
+    ctx.fillStyle='#23262E'; ctx.textAlign='center';
+    var parts=String(label).split('·');
+    if(parts.length>=2 && (parts[0]+parts[1]).length>7){
+      ctx.font='800 '+(16*SC)+'px '+F;
+      ctx.fillText(parts[0], x+w/2, y+h*0.44);
+      ctx.fillText(parts.slice(1).join('·'), x+w/2, y+h*0.78);
+    } else {
+      ctx.font='800 '+(17*SC)+'px '+F;
+      ctx.fillText(label, x+w/2, y+h*0.62);
+    }
+    /* 종류 태그 (수업 외) */
+    if(cat && cat!=='수업'){
+      ctx.fillStyle='rgba(43,95,184,0.85)'; ctx.font='800 '+(11*SC)+'px '+F; ctx.textAlign='right';
+      ctx.fillText(cat, x+w-5*SC, y+14*SC);
+    }
+  }
+  for(var r=0;r<hs.length;r++){
+    var y=top+thH+r*rowH, hh2=hs[r];
+    /* 시간 열 */
+    ctx.fillStyle=(r%2?'#FFFFFF':'#F3F6FA'); ctx.fillRect(tLeft,y,wkTimeW,rowH);
+    ctx.strokeStyle='#D8DEE8'; ctx.strokeRect(tLeft,y,wkTimeW,rowH);
+    ctx.fillStyle='#33475F'; ctx.font='900 '+(16*SC)+'px '+F; ctx.textAlign='center';
+    ctx.fillText(_ttTimeLabel(hh2), tLeft+wkTimeW/2, y+rowH*0.62);
+    for(var di2=0;di2<5;di2++){
+      var c=cells[DAY_TOK[di2]+'-'+hh2]||{};
+      drawCell(tLeft+wkTimeW+wkColW*di2, y, wkColW, rowH, (c.l||'').trim(), c.c||'수업');
+    }
+    /* 토요일: 위쪽 5행에만 (10~14시) */
+    if(r<sats.length){
+      var sh=sats[r], sy=top+thH+r*rowH;
+      ctx.fillStyle=(r%2?'#FFFFFF':'#F3F6FA'); ctx.fillRect(satLeft,sy,satTimeW,rowH);
+      ctx.strokeStyle='#D8DEE8'; ctx.strokeRect(satLeft,sy,satTimeW,rowH);
+      ctx.fillStyle='#33475F'; ctx.font='900 '+(16*SC)+'px '+F; ctx.textAlign='center';
+      ctx.fillText(_ttTimeLabel(sh), satLeft+satTimeW/2, sy+rowH*0.62);
+      var sc2=cells['sat-'+sh]||{};
+      drawCell(satLeft+satTimeW, sy, satColW, rowH, (sc2.l||'').trim(), sc2.c||'수업');
+    } else if(r===sats.length){
+      /* 토요일 표 아래 남는 영역: 안내 박스 */
+      var ry=top+thH+sats.length*rowH, rh=(hs.length-sats.length)*rowH;
+      if(rh>rowH){
+        ctx.fillStyle='#181B22'; ctx.fillRect(satLeft,ry,satTimeW+satColW,rh);
+        ctx.fillStyle='#F5D9A8'; ctx.font='900 '+(16*SC)+'px '+F; ctx.textAlign='center';
+        ctx.fillText('나라차태권도', satLeft+(satTimeW+satColW)/2, ry+rh/2-12*SC);
+        ctx.fillStyle='#FFFFFF'; ctx.font='700 '+(13*SC)+'px '+F;
+        ctx.fillText('분당도장', satLeft+(satTimeW+satColW)/2, ry+rh/2+12*SC);
+      }
+    }
+  }
+  /* 하단 범례 */
+  var ly=top+thH+hs.length*rowH+18*SC;
+  ctx.textAlign='left';
+  var lx=tLeft;
+  Object.keys(BAN_BG).forEach(function(k){
+    _ttRR(ctx,lx,ly,16*SC,16*SC,4*SC); ctx.fillStyle=BAN_BG[k]; ctx.fill();
+    ctx.strokeStyle='#C9CFDA'; ctx.lineWidth=1*SC; ctx.stroke();
+    ctx.fillStyle='#4A5568'; ctx.font='700 '+(14*SC)+'px '+F;
+    ctx.fillText(k, lx+22*SC, ly+13*SC);
+    lx += 22*SC + ctx.measureText(k).width + 26*SC;
+  });
+  ctx.fillStyle='#9AA2B1'; ctx.font='600 '+(12.5*SC)+'px '+F; ctx.textAlign='right';
+  ctx.fillText('NARACHA TAEKWONDO · '+ds, W-pad, ly+13*SC);
+}
+window.openTtImg=function(){
+  /* [R3.71] render 사이클과 독립된 오버레이 — 어느 화면에서든 열리고, 재렌더에도 유지 */
+  var old=document.getElementById('ttImgOverlay'); if(old) old.remove();
+  var ov=document.createElement('div'); ov.id='ttImgOverlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(20,22,28,0.55);z-index:900;display:flex;align-items:center;justify-content:center;padding:16px';
+  ov.innerHTML='<div style="background:#fff;border-radius:18px;max-width:min(1160px,96vw);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.35)">'+
+      '<div style="display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid #E4E7EC;flex-wrap:wrap">'+
+        '<b style="font-size:15px">🖼 수련시간표 — 학부모 전달용</b>'+
+        '<span style="font-size:11.5px;color:#8A8F98">시간표 설정 내용을 한 장 이미지로 만들었습니다</span>'+
+        '<span style="flex:1"></span>'+
+        '<button onclick="downloadTtImg()" style="font-weight:800;color:#fff;background:#2B5FB8;border:1px solid #2B5FB8;border-radius:10px;padding:7px 14px;font-size:13px;cursor:pointer">⬇ PNG 다운로드</button>'+
+        '<button onclick="closeTtImg()" style="border:1px solid #E4E7EC;background:#fff;border-radius:10px;padding:7px 14px;font-size:13px;cursor:pointer">닫기</button>'+
+      '</div>'+
+      '<div style="overflow:auto;padding:14px;background:#EEF1F6">'+
+        '<img id="ttImgPrev" style="display:block;width:100%;height:auto;border-radius:8px;box-shadow:0 6px 22px rgba(0,0,0,.12)" alt="시간표 미리보기">'+
+        '<canvas id="ttImgCv" style="display:none"></canvas>'+
+      '</div>'+
+    '</div>';
+  ov.addEventListener('click', function(ev){ if(ev.target===ov) closeTtImg(); });
+  document.body.appendChild(ov);
+  var go=function(){ try{ var cv=document.getElementById('ttImgCv'); if(cv){ ttImgDraw(cv); var im=document.getElementById('ttImgPrev'); if(im) im.src=cv.toDataURL('image/png'); } }catch(e){} };
+  if(_ttLogoImg && !_ttLogoImg.complete){ _ttLogoImg.onload=go; setTimeout(go,700); } else setTimeout(go,30);
+};
+window.closeTtImg=function(){ var ov=document.getElementById('ttImgOverlay'); if(ov) ov.remove(); };
+window.downloadTtImg=function(){
+  try{
+    var cv=document.getElementById('ttImgCv'); if(!cv) return;
+    var a=document.createElement('a');
+    var td=new Date(), ds=td.getFullYear()+'-'+String(td.getMonth()+1).padStart(2,'0')+'-'+String(td.getDate()).padStart(2,'0');
+    a.download='나라차태권도_시간표_'+ds+'.png';
+    a.href=cv.toDataURL('image/png');
+    a.click();
+  }catch(e){ alert('다운로드에 실패했습니다.'); }
+};
 function busCourses(){ return busData()[busDay()].courses; }
 function busTouch(){ var w=workData(); w.bus._t=Date.now(); if(typeof workSaveDebounced==='function') workSaveDebounced(); }
 function busNewId(){ return 'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -13398,6 +13671,45 @@ function renderBusTab(mobile){
         '</div>'+
         '<button class="chip sm" onclick="state.busTimeWarn=\'\';render()" style="flex:0 0 auto">닫기</button>'+
       '</div></div>';
+  }
+
+  /* [R3.71] 수정모드(PC): 오른쪽 여백에 당일 시간표 요약 — 배정 작업하며 바로 참고 */
+  if(edit && !mob){
+    try{
+      var _pd=busDay(), _ptok=BUS_DAYTOK[_pd];
+      var _pwk=state.weeks && state.weeks[busWeekKey()];
+      var _prows='';
+      for(var _ph=13;_ph<=21;_ph++){
+        var _pc=_pwk&&_pwk.cells?(_pwk.cells[_ptok+'-'+_ph]||null):null;
+        var _pnames=[]; if(_pc&&_pc.lv){ for(var _pl=0;_pl<3;_pl++) (_pc.lv[_pl]||[]).forEach(function(n){ if(_pnames.indexOf(n)<0)_pnames.push(n); }); }
+        var _pcls=(state.schedule&&state.schedule.cells&&state.schedule.cells[_ptok+'-'+_ph])||{};
+        if(!_pnames.length && !(_pcls.l||'').trim()) continue;
+        _prows+='<div style="padding:7px 9px;border-top:1px solid #EDF0F4">'+
+          '<div style="display:flex;align-items:baseline;gap:6px">'+
+            '<b style="font-size:12.5px;color:#2B5FB8">'+(_ph>12?_ph-12:_ph)+'시</b>'+
+            '<span style="font-size:11px;font-weight:800;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc((_pcls.l||'').trim())+'</span>'+
+            '<span style="margin-left:auto;font-size:10.5px;color:var(--sub)">'+(_pnames.length? _pnames.length+'명':'')+'</span>'+
+          '</div>'+
+          (_pnames.length?'<div style="font-size:11px;color:#55617A;line-height:1.65;margin-top:2px;word-break:keep-all">'+_pnames.map(esc).join(', ')+'</div>':'')+
+        '</div>';
+      }
+      if(state.busPanelFold){
+        /* 접힌 상태: 오른쪽 가장자리에 작은 탭만 (스크롤해도 고정) */
+        h+='<button onclick="state.busPanelFold=false;render()" title="당일 시간표 패널 펴기" '+
+          'style="position:fixed;right:0;top:45%;z-index:400;background:var(--brand);color:#fff;border:none;border-radius:10px 0 0 10px;padding:12px 7px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:-3px 3px 12px rgba(0,0,0,.15);writing-mode:vertical-rl">📋 '+_pd+'요일 시간표</button>';
+      } else {
+        h+='<div style="position:fixed;right:10px;top:76px;bottom:12px;width:236px;z-index:400;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.10);display:flex;flex-direction:column;overflow:hidden">'+
+          '<div style="display:flex;align-items:flex-start;gap:6px;padding:9px 11px;background:#F6F8FB;border-bottom:1px solid var(--line)">'+
+            '<div style="flex:1;min-width:0">'+
+              '<b style="font-size:12.5px">📋 '+_pd+'요일 시간표</b>'+
+              '<div style="font-size:10.5px;color:var(--sub);margin-top:1px">이번 주 배치 기준 · 참고용</div>'+
+            '</div>'+
+            '<button onclick="state.busPanelFold=true;render()" title="접기" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:3px 8px;font-size:11px;cursor:pointer;flex:0 0 auto">접기 ▸</button>'+
+          '</div>'+
+          '<div style="flex:1;overflow:auto">'+(_prows||'<div style="padding:16px;font-size:11.5px;color:var(--sub);text-align:center">이번 주 시간표에 배치가 없습니다</div>')+'</div>'+
+        '</div>';
+      }
+    }catch(e){}
   }
 
   /* 편집 모드 안내 */
