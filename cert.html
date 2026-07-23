@@ -70,12 +70,19 @@ function _certFace(ctx,cx,cy,r,D,onDone){
   var ringR=r+gap+ringW/2;
   ctx.save();
   if(B.type==='poom'){
-    var seg=12;
-    for(var k=0;k<seg;k++){
-      ctx.beginPath();
-      ctx.arc(cx,cy,ringR, (k/seg)*Math.PI*2-Math.PI/2, ((k+1)/seg)*Math.PI*2-Math.PI/2);
-      ctx.strokeStyle=(k%2? B.sub : B.main); ctx.lineWidth=ringW; ctx.stroke();
+    /* [v8.7] 품수별 링: 1품 = 빨/검 반반 세그먼트, 2품 이상 = 검정을 빨강보다 길게 (실물 띠 비율) */
+    var pairs=6, ratio=(B.pn||1)>=2?0.18:0.5;   /* 한 쌍에서 빨강이 차지하는 비율 */
+    for(var k=0;k<pairs;k++){
+      var a0=(k/pairs)*Math.PI*2-Math.PI/2;
+      var aw=(1/pairs)*Math.PI*2;
+      ctx.beginPath(); ctx.arc(cx,cy,ringR, a0, a0+aw*(1-ratio));
+      ctx.strokeStyle=B.sub; ctx.lineWidth=ringW; ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx,cy,ringR, a0+aw*(1-ratio), a0+aw);
+      ctx.strokeStyle=B.main; ctx.lineWidth=ringW; ctx.stroke();
     }
+    /* 검정 구간 가독용 밝은 헤어라인 */
+    ctx.beginPath(); ctx.arc(cx,cy,ringR+ringW*0.72,0,Math.PI*2);
+    ctx.strokeStyle='rgba(216,222,232,0.5)'; ctx.lineWidth=1.1*SC; ctx.stroke();
   } else {
     ctx.beginPath(); ctx.arc(cx,cy,ringR,0,Math.PI*2);
     ctx.strokeStyle=B.main; ctx.lineWidth=ringW; ctx.stroke();
@@ -254,7 +261,7 @@ function _certBeltTied(ctx,cx,cy,bw,B,SC){
   function subQuad(q,t0,t1){ return [lerp(q[0],q[3],t0), lerp(q[1],q[2],t0), lerp(q[1],q[2],t1), lerp(q[0],q[3],t1)]; }
   /* 품띠 채색: 사변형(두께방향 t 0~1) — 1품 반반 / 2품+ 검정+중앙줄 */
   function poomFillQuad(q){
-    if(pn===1){ poly(subQuad(q,0,0.5), RED, null); poly(subQuad(q,0.5,1), BLK, null); }
+    if(pn===1){ poly(subQuad(q,0,0.5), BLK, null); poly(subQuad(q,0.5,1), RED, null); }   /* [v8.7] 실물처럼 위=검정, 아래=빨강 */
     else { poly(q, BLK, null); poly(subQuad(q,0.375,0.625), RED, null); }
   }
   /* ── ① 수평 띠 ── */
@@ -294,7 +301,7 @@ function _certBeltTied(ctx,cx,cy,bw,B,SC){
     ctx.restore();
     if(isPoom){
       /* 법선 s=+1이 아래쪽 → 위쪽 절반(-1~0) 빨강 = 수평 띠의 위 빨강과 이어짐 */
-      if(pn===1){ poly(tailBand(T,0,T.L,-1,0), RED, null); poly(tailBand(T,0,T.L,0,1), BLK, null); }
+      if(pn===1){ poly(tailBand(T,0,T.L,-1,0), BLK, null); poly(tailBand(T,0,T.L,0,1), RED, null); }   /* 위=검정, 아래=빨강 */
       else { poly(tailBand(T,0,T.L,-0.25,0.25), RED, null); }
       clipFill(body, function(){
         var hi=tailBand(T,0,20,-1,1);
@@ -322,7 +329,7 @@ function _certBeltTied(ctx,cx,cy,bw,B,SC){
   ctx.restore();
   if(isPoom){
     clipFill(sil, function(){
-      if(pn===1){ ctx.fillStyle=RED; ctx.fillRect(-16*SC, -18*SC, 32*SC, 20.5*SC); }   /* 위 절반 빨강 (경계 y=2.5) */
+      if(pn===1){ ctx.fillStyle=RED; ctx.fillRect(-16*SC, 2.5*SC, 32*SC, 21*SC); }     /* 아래 절반 빨강 (위=검정 바탕) */
       else { ctx.fillStyle=RED; ctx.fillRect(-16*SC, -1.5*SC, 32*SC, 8*SC); }          /* 중앙 가로줄 */
     });
     /* 입체 음영: 색 위에 얹는 반투명 면 */
