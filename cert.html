@@ -213,20 +213,24 @@ function _certBeltTied(ctx,cx,cy,bw,B,SC){
     var f=t>0?function(v){return Math.round(v+(255-v)*t);}:function(v){return Math.round(v*(1+t));};
     return 'rgb('+f(r)+','+f(g)+','+f(b)+')'; }
   var isDark=(B.type==='black');
+  var isPoom=(B.type==='poom');
+  var pn=isPoom?(B.pn||1):0;
+  var RED='#C8342A', BLK='#16181D';
   var isLight=(main==='#E8EAED'||main==='#F3C614');
-  /* 톤 세트 — 참고 로고: 수평띠(가장 어두움) < 매듭 < 자락(밝음), 면마다 음영 */
   var band, knotMid, knotDark, knotLight, tailC, tailHi, tipC, ink;
   if(isDark){
     band='#14171D'; knotMid='#262B33'; knotDark='#161A20'; knotLight='#3C434E';
     tailC='#2A2F38'; tailHi='#3C434E'; tipC='#0C0E12';
     ink='rgba(216,222,232,0.6)';
+  } else if(isPoom){
+    ink='rgba(216,222,232,0.55)';          /* 검정 면적이 커서 밝은 윤곽으로 가독 확보 */
   } else {
     band=shade(main,-0.30); knotMid=main; knotDark=shade(main,-0.38); knotLight=shade(main,0.24);
     tailC=shade(main,0.06); tailHi=shade(main,0.26); tipC=shade(main,-0.52);
     ink=isLight?'rgba(0,0,0,0.55)':shade(main,-0.68);
   }
-  /* 검은띠 받침 글로우 (배경 분리) */
-  if(isDark){
+  /* 검은띠·품띠: 배경 분리용 받침 글로우 */
+  if(isDark||isPoom){
     ctx.save();
     ctx.shadowColor='rgba(143,166,200,0.4)'; ctx.shadowBlur=26*SC; ctx.shadowOffsetY=0;
     ctx.fillStyle='rgba(143,166,200,0.10)';
@@ -237,105 +241,106 @@ function _certBeltTied(ctx,cx,cy,bw,B,SC){
   ctx.translate(cx,cy);
   ctx.lineJoin='round'; ctx.lineCap='round';
   var LW=2.2*SC;
-  function poly(pts,fill,stroke){
-    ctx.beginPath();
+  function path(pts){ ctx.beginPath();
     ctx.moveTo(pts[0][0]*SC, pts[0][1]*SC);
     for(var k=1;k<pts.length;k++) ctx.lineTo(pts[k][0]*SC, pts[k][1]*SC);
-    ctx.closePath();
+    ctx.closePath(); }
+  function poly(pts,fill,stroke){ path(pts);
     if(fill){ ctx.fillStyle=fill; ctx.fill(); }
-    if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=LW; ctx.stroke(); }
+    if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=LW; ctx.stroke(); } }
+  function clipFill(pts,fn){ ctx.save(); path(pts); ctx.clip(); fn(); ctx.restore(); }
+  function lerp(p,q,t){ return [p[0]+(q[0]-p[0])*t, p[1]+(q[1]-p[1])*t]; }
+  /* 사변형(탑좌·탑우·바텀우·바텀좌)의 두께방향 t0~t1 구간 폴리곤 */
+  function subQuad(q,t0,t1){ return [lerp(q[0],q[3],t0), lerp(q[1],q[2],t0), lerp(q[1],q[2],t1), lerp(q[0],q[3],t1)]; }
+  /* 품띠 채색: 사변형(두께방향 t 0~1) — 1품 반반 / 2품+ 검정+중앙줄 */
+  function poomFillQuad(q){
+    if(pn===1){ poly(subQuad(q,0,0.5), RED, null); poly(subQuad(q,0.5,1), BLK, null); }
+    else { poly(q, BLK, null); poly(subQuad(q,0.375,0.625), RED, null); }
   }
-  function clipFill(pts,fn){
-    ctx.save(); ctx.beginPath();
-    ctx.moveTo(pts[0][0]*SC, pts[0][1]*SC);
-    for(var k=1;k<pts.length;k++) ctx.lineTo(pts[k][0]*SC, pts[k][1]*SC);
-    ctx.closePath(); ctx.clip(); fn(); ctx.restore();
-  }
-  /* ── ① 수평 띠 (좌우 날개, 중앙으로 살짝 기욺 — 바깥 끝이 높음) ── */
+  /* ── ① 수평 띠 ── */
   var bandL=[[-120,-16],[-12,-5],[-12,17],[-120,6]];
   var bandR=[[120,-16],[12,-5],[12,17],[120,6]];
-  ctx.save();
-  ctx.shadowColor='rgba(0,0,0,0.40)'; ctx.shadowBlur=9*SC; ctx.shadowOffsetY=4*SC;
-  poly(bandL, band, null); poly(bandR, band, null);
-  ctx.restore();
-  if(B.type==='poom'){
-    clipFill(bandL, function(){ ctx.fillStyle=B.sub; ctx.fillRect(-125*SC, 0*SC, 250*SC, 7*SC); });
-    clipFill(bandR, function(){ ctx.fillStyle=B.sub; ctx.fillRect(-125*SC, 0*SC, 250*SC, 7*SC); });
-  }
-  poly(bandL, null, ink); poly(bandR, null, ink);
-  /* ── ② 자락 2개 (대각선 교차, 짧은 변은 진행방향에 수직) ── */
-  function tailPts(dir){
+  [bandL,bandR].forEach(function(q){
+    ctx.save();
+    ctx.shadowColor='rgba(0,0,0,0.40)'; ctx.shadowBlur=9*SC; ctx.shadowOffsetY=4*SC;
+    poly(q, isPoom?BLK:band, null);   /* 그림자 겸 바탕 */
+    ctx.restore();
+    if(isPoom) poomFillQuad(q);
+    /* 위 하이라이트 살짝 */
+    clipFill(q, function(){
+      var hi=subQuad(q,0,0.16);
+      path(hi); ctx.fillStyle='rgba(255,255,255,'+((isDark||isPoom)?0.10:0.14)+')'; ctx.fill();
+    });
+    poly(q, null, ink);
+  });
+  /* ── ② 자락 2개 ── */
+  function tailGeo(dir){
     var a=34*Math.PI/180, L=62, h=10.5;
     var dx=dir*Math.cos(a), dy=Math.sin(a);
-    var nx=-dir*Math.sin(a)*-1, ny=Math.cos(a);   /* 법선 */
-    nx=dir*Math.sin(a); ny=-Math.cos(a); if(dir<0){ nx=Math.sin(a); ny=Math.cos(a); }
-    /* 간단·안정: 법선 = (-dy, dx)*dir 보정 대신 직접 계산 */
     var ndx=-dy*dir, ndy=dx*dir;
     var sx=dir*4, sy=2;
-    var ex=sx+dx*L, ey=sy+dy*L;
-    return { S:[sx,sy], E:[ex,ey], n:[ndx,ndy], h:h, a:a, dir:dir, dx:dx, dy:dy, L:L };
+    return { S:[sx,sy], dx:dx, dy:dy, n:[ndx,ndy], h:h, L:L, dir:dir };
   }
-  function tailPoly(T,t0,t1,inset){
-    inset=inset||0;
-    var p=function(t,side){ return [ T.S[0]+T.dx*t + T.n[0]*side*(T.h-inset),
-                                     T.S[1]+T.dy*t + T.n[1]*side*(T.h-inset) ]; };
-    return [ p(t0,1), p(t1,1), p(t1,-1), p(t0,-1) ];
+  function tailBand(T,t0,t1,s0,s1){
+    var p=function(t,sv){ return [ T.S[0]+T.dx*t + T.n[0]*sv*T.h, T.S[1]+T.dy*t + T.n[1]*sv*T.h ]; };
+    return [ p(t0,s0), p(t1,s0), p(t1,s1), p(t0,s1) ];
   }
   [ -1, 1 ].forEach(function(dir){
-    var T=tailPts(dir);
-    var body=tailPoly(T,0,T.L);
+    var T=tailGeo(dir);
+    var body=tailBand(T,0,T.L,-1,1);
     ctx.save();
     ctx.shadowColor='rgba(0,0,0,0.40)'; ctx.shadowBlur=8*SC; ctx.shadowOffsetY=4*SC;
-    poly(body, tailC, null);
+    poly(body, isPoom?BLK:tailC, null);
     ctx.restore();
-    /* 매듭 근처 밝은 면 (참고 로고의 상단 하이라이트 면) */
-    clipFill(body, function(){
-      var hi=tailPoly(T,0,20);
-      ctx.beginPath(); ctx.moveTo(hi[0][0]*SC,hi[0][1]*SC);
-      for(var k=1;k<hi.length;k++) ctx.lineTo(hi[k][0]*SC,hi[k][1]*SC);
-      ctx.closePath(); ctx.fillStyle=tailHi; ctx.fill();
-    });
-    /* 오른쪽 자락 끝 어두운 패치 (참고 로고) — 왼쪽도 대칭감 위해 좁게 */
-    if(dir===1){
+    if(isPoom){
+      /* 법선 s=+1이 아래쪽 → 위쪽 절반(-1~0) 빨강 = 수평 띠의 위 빨강과 이어짐 */
+      if(pn===1){ poly(tailBand(T,0,T.L,-1,0), RED, null); poly(tailBand(T,0,T.L,0,1), BLK, null); }
+      else { poly(tailBand(T,0,T.L,-0.25,0.25), RED, null); }
       clipFill(body, function(){
-        var tp=tailPoly(T, T.L-17, T.L-5, 2.2);
-        ctx.beginPath(); ctx.moveTo(tp[0][0]*SC,tp[0][1]*SC);
-        for(var k=1;k<tp.length;k++) ctx.lineTo(tp[k][0]*SC,tp[k][1]*SC);
-        ctx.closePath(); ctx.fillStyle=tipC; ctx.fill();
+        var hi=tailBand(T,0,20,-1,1);
+        path(hi); ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fill();
       });
-    }
-    if(B.type==='poom'){
+    } else {
       clipFill(body, function(){
-        var st=tailPoly(T, 28, 40);
-        ctx.beginPath(); ctx.moveTo(st[0][0]*SC,st[0][1]*SC);
-        for(var k=1;k<st.length;k++) ctx.lineTo(st[k][0]*SC,st[k][1]*SC);
-        ctx.closePath(); ctx.fillStyle=B.sub; ctx.fill();
+        var hi=tailBand(T,0,20,-1,1);
+        path(hi); ctx.fillStyle=tailHi; ctx.fill();
       });
+      if(dir===1){
+        clipFill(body, function(){
+          var tp=tailBand(T, T.L-17, T.L-5, -0.79, 0.79);
+          path(tp); ctx.fillStyle=tipC; ctx.fill();
+        });
+      }
     }
     poly(body, null, ink);
   });
-  /* ── ③ 매듭 (면분할 육각) — 맨 위 ── */
+  /* ── ③ 매듭 (면분할 육각) ── */
   var sil=[[-15,-10],[0,-17],[15,-10],[13,12],[0,22],[-13,12]];
   ctx.save();
   ctx.shadowColor='rgba(0,0,0,0.45)'; ctx.shadowBlur=10*SC; ctx.shadowOffsetY=4*SC;
-  poly(sil, knotMid, null);
+  poly(sil, isPoom?BLK:knotMid, null);
   ctx.restore();
-  /* 오른쪽 어두운 면 */
-  clipFill(sil, function(){
-    var rp=[[0,-17],[15,-10],[13,12],[0,22]];
-    ctx.beginPath(); ctx.moveTo(rp[0][0]*SC,rp[0][1]*SC);
-    for(var k=1;k<rp.length;k++) ctx.lineTo(rp[k][0]*SC,rp[k][1]*SC);
-    ctx.closePath(); ctx.fillStyle=knotDark; ctx.fill();
-  });
-  /* 왼쪽 위 밝은 면 */
-  clipFill(sil, function(){
-    var lp=[[-15,-10],[0,-17],[0,-2],[-10,-1]];
-    ctx.beginPath(); ctx.moveTo(lp[0][0]*SC,lp[0][1]*SC);
-    for(var k=1;k<lp.length;k++) ctx.lineTo(lp[k][0]*SC,lp[k][1]*SC);
-    ctx.closePath(); ctx.fillStyle=knotLight; ctx.fill();
-  });
-  if(B.type==='poom'){
-    clipFill(sil, function(){ ctx.fillStyle=B.sub; ctx.fillRect(-16*SC, 0*SC, 32*SC, 7*SC); });
+  if(isPoom){
+    clipFill(sil, function(){
+      if(pn===1){ ctx.fillStyle=RED; ctx.fillRect(-16*SC, -18*SC, 32*SC, 20.5*SC); }   /* 위 절반 빨강 (경계 y=2.5) */
+      else { ctx.fillStyle=RED; ctx.fillRect(-16*SC, -1.5*SC, 32*SC, 8*SC); }          /* 중앙 가로줄 */
+    });
+    /* 입체 음영: 색 위에 얹는 반투명 면 */
+    clipFill(sil, function(){
+      var rp=[[0,-17],[15,-10],[13,12],[0,22]];
+      path(rp); ctx.fillStyle='rgba(0,0,0,0.26)'; ctx.fill();
+      var lp=[[-15,-10],[0,-17],[0,-2],[-10,-1]];
+      path(lp); ctx.fillStyle='rgba(255,255,255,0.16)'; ctx.fill();
+    });
+  } else {
+    clipFill(sil, function(){
+      var rp=[[0,-17],[15,-10],[13,12],[0,22]];
+      path(rp); ctx.fillStyle=knotDark; ctx.fill();
+    });
+    clipFill(sil, function(){
+      var lp=[[-15,-10],[0,-17],[0,-2],[-10,-1]];
+      path(lp); ctx.fillStyle=knotLight; ctx.fill();
+    });
   }
   poly(sil, null, ink);
   ctx.restore();
