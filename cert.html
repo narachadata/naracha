@@ -1,5 +1,7 @@
 <!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://script.google.com">
+<link rel="dns-prefetch" href="https://script.googleusercontent.com">
 <title>전자승급증 — 나라차태권도</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -15,11 +17,11 @@ body{background:#0d0d12;min-height:100vh;display:flex;flex-direction:column;alig
 </style></head><body>
 <div id="ld">승급증을 불러오는 중…</div>
 <div id="err">승급증 정보를 찾을 수 없습니다.<br>도장에서 받은 링크 전체를 그대로 열어주세요.</div>
-<div id="wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px">
+<div id="wrap" style="display:none;flex-direction:column;align-items:center;gap:14px">
   <div class="t" id="tt"></div>
   <div class="w" id="flipWrap"><div class="i" id="flip">
-    <canvas id="cf" width="2160" height="2700"></canvas>
-    <canvas id="cb" width="2160" height="2700"></canvas>
+    <canvas id="cf" width="1080" height="1350"></canvas>
+    <canvas id="cb" width="1080" height="1350"></canvas>
   </div></div>
   <div class="h">카드를 누르면 뒷면(심사 결과)이 보입니다.<br>나라차태권도 분당도장</div>
 </div>
@@ -407,6 +409,8 @@ function certDrawBack(cv,D){
   ctx.fillText('나라차태권도 분당도장 · 운동-신경심리 관찰 기반 심사', W/2, H*0.965);
 }
 
+/* [v1.1 속도개선] 저장소 주소를 파일에 내장 → certcfg.json 왕복 1회 제거 (없으면 json으로 폴백) */
+var CFG_URL='https://script.google.com/macros/s/AKfycbycZY3AewbhGpFzoajRGs5AauplqgMEPE4ZsMid1zf4pnMqVo9ksv8H3gKgF9eH7M63/exec';
 var _certLogoImg=null,_certLogoWmImg=null,_certStampImg=null;
 try{ _certLogoWmImg=new Image(); _certLogoWmImg.src=CERT_LOGO_WM; }catch(e){}
 try{ _certStampImg=new Image(); _certStampImg.src=CERT_STAMP; }catch(e){}
@@ -417,6 +421,7 @@ function _fromB64(b64){
   while(b64.length%4) b64+='=';
   return JSON.parse(decodeURIComponent(escape(atob(b64))));
 }
+var _D=null, _backDrawn=false;
 function _renderP(p){
   var wrap=document.getElementById('wrap'), err=document.getElementById('err'), tt=document.getElementById('tt');
   var ld=document.getElementById('ld'); if(ld) ld.style.display='none';
@@ -427,13 +432,15 @@ function _renderP(p){
     photo:p.ph||'', s1:p.s1||0, s2:p.s2||0, tot:p.t||0, pass:(p.t||0)>=60,
     axes:p.ax||[], poomsae:p.ps||'', kick:p.k||'', breaking:p.br||'',
     s:{ id:p.id||'000000' }, belt:null };
+  _D=D;
   tt.textContent=D.name+' — '+D.gradeLabel+' 전자승급증';
   document.title=D.name+' 승급증 — 나라차태권도';
-  var f=document.getElementById('cf'), b=document.getElementById('cb');
-  certDrawBack(b,D);
+  var f=document.getElementById('cf');
+  /* 앞면만 즉시 렌더 — 뒷면은 처음 뒤집을 때 (초기 표시 2배 빠름) */
   certDrawFront(f,D,function(){ certDrawFront(f,D); });
   var flipped=false;
   document.getElementById('flipWrap').onclick=function(){
+    if(!_backDrawn){ _backDrawn=true; try{ certDrawBack(document.getElementById('cb'), _D); }catch(e){} }
     flipped=!flipped;
     document.getElementById('flip').style.transform=flipped?'rotateY(180deg)':'';
   };
@@ -447,14 +454,14 @@ function _fetchCode(api){
 function boot(){
   var h=(location.hash||'').replace(/^#/,'');
   if(!h){ _renderP(null); return; }
-  /* [v8.4] 초단축: #코드(영숫자 4~8자) → certcfg.json에서 저장소 주소를 읽어 조회 */
+  /* 초단축: #코드 → 내장 주소로 바로 조회 (왕복 1회) */
   if(/^[a-z0-9]{4,8}$/i.test(h)){
+    if(CFG_URL && CFG_URL.indexOf('script.google.com')>-1){
+      _fetchCode(CFG_URL+'?code='+encodeURIComponent(h)); return;
+    }
     var ld=document.getElementById('ld'); if(ld) ld.style.display='block';
-    fetch('certcfg.json', {cache:'no-store'}).then(function(r){ return r.json(); })
-      .then(function(cfg){
-        if(cfg && cfg.u){ _fetchCode(cfg.u+'?code='+encodeURIComponent(h)); }
-        else _renderP(null);
-      })
+    fetch('certcfg.json', {cache:'force-cache'}).then(function(r){ return r.json(); })
+      .then(function(cfg){ (cfg&&cfg.u) ? _fetchCode(cfg.u+'?code='+encodeURIComponent(h)) : _renderP(null); })
       .catch(function(){ _renderP(null); });
     return;
   }
@@ -464,7 +471,6 @@ function boot(){
     h.split('&').forEach(function(kv){ var i2=kv.indexOf('='); if(i2>0) qp[kv.slice(0,i2)]=decodeURIComponent(kv.slice(i2+1)); });
     if(qp.c && qp.s){ _fetchCode('https://script.google.com/macros/s/'+qp.s+'/exec?code='+encodeURIComponent(qp.c)); return; }
   }
-  /* 긴 링크: #<base64> */
   try{ _renderP(_fromB64(h)); }catch(e){ _renderP(null); }
 }
 window.addEventListener('DOMContentLoaded', boot);
