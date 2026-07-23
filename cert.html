@@ -69,7 +69,13 @@ function _certFace(ctx,cx,cy,r,D,onDone){
   var ringW=5*SC, gap=4*SC;
   var ringR=r+gap+ringW/2;
   ctx.save();
-  if(B.type==='poom'){
+  if(B.type==='bodo'){
+    /* [v8.8] 국기원보: 빨강 링 가운데로 검정 선이 도는 형태 (실물 빨+검+빨) */
+    ctx.beginPath(); ctx.arc(cx,cy,ringR,0,Math.PI*2);
+    ctx.strokeStyle=B.main; ctx.lineWidth=ringW; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,ringR,0,Math.PI*2);
+    ctx.strokeStyle=B.sub; ctx.lineWidth=ringW*0.34; ctx.stroke();
+  } else if(B.type==='poom'){
     /* [v8.7] 품수별 링: 1품 = 빨/검 반반 세그먼트, 2품 이상 = 검정을 빨강보다 길게 (실물 띠 비율) */
     var pairs=6, ratio=(B.pn||1)>=2?0.18:0.5;   /* 한 쌍에서 빨강이 차지하는 비율 */
     for(var k=0;k<pairs;k++){
@@ -171,9 +177,9 @@ function certDrawFront(cv,D,onDone){
   _certBeltTied(ctx, W/2, H*0.559, 280*SC, B, SC);
 
   /* ⑥ 급수 텍스트 */
-  var beltName = B.type==='black'?'검은띠': B.type==='poom'?'품띠'
-    : B.main==='#E8EAED'?'흰띠': B.main==='#F3C614'?'노란띠': B.main==='#1E8E3E'?'초록띠'
-    : B.main==='#2B5FB8'?'파란띠': B.main==='#C8342A'?'빨간띠': B.main==='#6B4A2B'?'밤띠':'띠';
+  var beltName = B.type==='black'?'검은띠': B.type==='poom'?'품띠': B.type==='bodo'?'국기원보띠'
+    : B.main==='#E8EAED'?'흰띠': B.main==='#F3C614'?'노란띠': B.main==='#F08C00'?'주황띠': B.main==='#1E8E3E'?'초록띠'
+    : B.main==='#2B5FB8'?'파란띠': B.main==='#7C3FAE'?'보라띠': B.main==='#C8342A'?'빨간띠': B.main==='#6B4A2B'?'밤띠':'띠';
   ctx.fillStyle=B.bright; ctx.font='800 '+(13.5*SC)+'px '+F; LS(1*SC);
   var _gl=String(D.certGradeLabel||D.gradeLabel||'').split(beltName).join('').replace(/\s+/g,' ').trim();   /* [v8.5] 라벨에 띠 이름이 이미 있으면 제거 */
   ctx.fillText(_gl+' '+beltName+' 승급', W/2, H*0.672); LS(0);
@@ -221,6 +227,7 @@ function _certBeltTied(ctx,cx,cy,bw,B,SC){
     return 'rgb('+f(r)+','+f(g)+','+f(b)+')'; }
   var isDark=(B.type==='black');
   var isPoom=(B.type==='poom');
+  var isBodo=(B.type==='bodo');   /* [v8.8] 유급자 1급 국기원보띠: 빨강+검정+빨강 */
   var pn=isPoom?(B.pn||1):0;
   var RED='#C8342A', BLK='#16181D';
   var isLight=(main==='#E8EAED'||main==='#F3C614');
@@ -229,7 +236,7 @@ function _certBeltTied(ctx,cx,cy,bw,B,SC){
     band='#14171D'; knotMid='#262B33'; knotDark='#161A20'; knotLight='#3C434E';
     tailC='#2A2F38'; tailHi='#3C434E'; tipC='#0C0E12';
     ink='rgba(216,222,232,0.6)';
-  } else if(isPoom){
+  } else if(isPoom||isBodo){
     ink='rgba(216,222,232,0.55)';          /* 검정 면적이 커서 밝은 윤곽으로 가독 확보 */
   } else {
     band=shade(main,-0.30); knotMid=main; knotDark=shade(main,-0.38); knotLight=shade(main,0.24);
@@ -237,7 +244,7 @@ function _certBeltTied(ctx,cx,cy,bw,B,SC){
     ink=isLight?'rgba(0,0,0,0.55)':shade(main,-0.68);
   }
   /* 검은띠·품띠: 배경 분리용 받침 글로우 */
-  if(isDark||isPoom){
+  if(isDark||isPoom||isBodo){
     ctx.save();
     ctx.shadowColor='rgba(143,166,200,0.4)'; ctx.shadowBlur=26*SC; ctx.shadowOffsetY=0;
     ctx.fillStyle='rgba(143,166,200,0.10)';
@@ -261,7 +268,8 @@ function _certBeltTied(ctx,cx,cy,bw,B,SC){
   function subQuad(q,t0,t1){ return [lerp(q[0],q[3],t0), lerp(q[1],q[2],t0), lerp(q[1],q[2],t1), lerp(q[0],q[3],t1)]; }
   /* 품띠 채색: 사변형(두께방향 t 0~1) — 1품 반반 / 2품+ 검정+중앙줄 */
   function poomFillQuad(q){
-    if(pn===1){ poly(subQuad(q,0,0.5), BLK, null); poly(subQuad(q,0.5,1), RED, null); }   /* [v8.7] 실물처럼 위=검정, 아래=빨강 */
+    if(isBodo){ poly(q, RED, null); poly(subQuad(q,0.34,0.66), BLK, null); }             /* [v8.8] 국기원보: 빨/검/빨 */
+    else if(pn===1){ poly(subQuad(q,0,0.5), BLK, null); poly(subQuad(q,0.5,1), RED, null); }   /* [v8.7] 실물처럼 위=검정, 아래=빨강 */
     else { poly(q, BLK, null); poly(subQuad(q,0.375,0.625), RED, null); }
   }
   /* ── ① 수평 띠 ── */
@@ -270,13 +278,13 @@ function _certBeltTied(ctx,cx,cy,bw,B,SC){
   [bandL,bandR].forEach(function(q){
     ctx.save();
     ctx.shadowColor='rgba(0,0,0,0.40)'; ctx.shadowBlur=9*SC; ctx.shadowOffsetY=4*SC;
-    poly(q, isPoom?BLK:band, null);   /* 그림자 겸 바탕 */
+    poly(q, (isPoom||isBodo)?BLK:band, null);   /* 그림자 겸 바탕 */
     ctx.restore();
-    if(isPoom) poomFillQuad(q);
+    if(isPoom||isBodo) poomFillQuad(q);
     /* 위 하이라이트 살짝 */
     clipFill(q, function(){
       var hi=subQuad(q,0,0.16);
-      path(hi); ctx.fillStyle='rgba(255,255,255,'+((isDark||isPoom)?0.10:0.14)+')'; ctx.fill();
+      path(hi); ctx.fillStyle='rgba(255,255,255,'+((isDark||isPoom||isBodo)?0.10:0.14)+')'; ctx.fill();
     });
     poly(q, null, ink);
   });
@@ -297,9 +305,16 @@ function _certBeltTied(ctx,cx,cy,bw,B,SC){
     var body=tailBand(T,0,T.L,-1,1);
     ctx.save();
     ctx.shadowColor='rgba(0,0,0,0.40)'; ctx.shadowBlur=8*SC; ctx.shadowOffsetY=4*SC;
-    poly(body, isPoom?BLK:tailC, null);
+    poly(body, (isPoom||isBodo)?BLK:tailC, null);
     ctx.restore();
-    if(isPoom){
+    if(isBodo){
+      poly(tailBand(T,0,T.L,-1,1), RED, null);
+      poly(tailBand(T,0,T.L,-0.32,0.32), BLK, null);
+      clipFill(body, function(){
+        var hi=tailBand(T,0,20,-1,1);
+        path(hi); ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fill();
+      });
+    } else if(isPoom){
       /* 법선 s=+1이 아래쪽 → 위쪽 절반(-1~0) 빨강 = 수평 띠의 위 빨강과 이어짐 */
       if(pn===1){ poly(tailBand(T,0,T.L,-1,0), BLK, null); poly(tailBand(T,0,T.L,0,1), RED, null); }   /* 위=검정, 아래=빨강 */
       else { poly(tailBand(T,0,T.L,-0.25,0.25), RED, null); }
@@ -325,9 +340,20 @@ function _certBeltTied(ctx,cx,cy,bw,B,SC){
   var sil=[[-15,-10],[0,-17],[15,-10],[13,12],[0,22],[-13,12]];
   ctx.save();
   ctx.shadowColor='rgba(0,0,0,0.45)'; ctx.shadowBlur=10*SC; ctx.shadowOffsetY=4*SC;
-  poly(sil, isPoom?BLK:knotMid, null);
+  poly(sil, (isPoom||isBodo)?BLK:knotMid, null);
   ctx.restore();
-  if(isPoom){
+  if(isBodo){
+    clipFill(sil, function(){
+      ctx.fillStyle=RED; ctx.fillRect(-16*SC,-18*SC,32*SC,42*SC);
+      ctx.fillStyle=BLK; ctx.fillRect(-16*SC,-2.5*SC,32*SC,10*SC);   /* 중앙 검정 줄 */
+    });
+    clipFill(sil, function(){
+      var rp=[[0,-17],[15,-10],[13,12],[0,22]];
+      path(rp); ctx.fillStyle='rgba(0,0,0,0.26)'; ctx.fill();
+      var lp=[[-15,-10],[0,-17],[0,-2],[-10,-1]];
+      path(lp); ctx.fillStyle='rgba(255,255,255,0.16)'; ctx.fill();
+    });
+  } else if(isPoom){
     clipFill(sil, function(){
       if(pn===1){ ctx.fillStyle=RED; ctx.fillRect(-16*SC, 2.5*SC, 32*SC, 21*SC); }     /* 아래 절반 빨강 (위=검정 바탕) */
       else { ctx.fillStyle=RED; ctx.fillRect(-16*SC, -1.5*SC, 32*SC, 8*SC); }          /* 중앙 가로줄 */
