@@ -53,8 +53,8 @@ function _certBase(ctx,W,H){
   var wm=(typeof _certLogoWmImg!=='undefined' && _certLogoWmImg && _certLogoWmImg.complete && _certLogoWmImg.width)?_certLogoWmImg:((typeof _certLogoImg!=='undefined')?_certLogoImg:null);
   if(wm && wm.width){
     var lw0=wm.width, lh0=wm.height;
-    var wmW=W*1.18, wmH=wmW*(lh0/lw0);
-    var wx=W+100*SC-wmW, wy=H*0.58-wmH/2;
+    var wmW=W*1.45, wmH=wmW*(lh0/lw0);   /* [v8.5] 더 크게 + 수평 중앙 정렬 */
+    var wx=W/2-wmW/2, wy=H*0.55-wmH/2;
     ctx.save(); ctx.globalAlpha=0.08;
     ctx.imageSmoothingEnabled=true; try{ ctx.imageSmoothingQuality='high'; }catch(e){}
     ctx.drawImage(wm, wx, wy, wmW, wmH);
@@ -168,7 +168,8 @@ function certDrawFront(cv,D,onDone){
     : B.main==='#E8EAED'?'흰띠': B.main==='#F3C614'?'노란띠': B.main==='#1E8E3E'?'초록띠'
     : B.main==='#2B5FB8'?'파란띠': B.main==='#C8342A'?'빨간띠': B.main==='#6B4A2B'?'밤띠':'띠';
   ctx.fillStyle=B.bright; ctx.font='800 '+(13.5*SC)+'px '+F; LS(1*SC);
-  ctx.fillText((D.certGradeLabel||D.gradeLabel)+' '+beltName+' 승급', W/2, H*0.672); LS(0);
+  var _gl=String(D.certGradeLabel||D.gradeLabel||'').split(beltName).join('').replace(/\s+/g,' ').trim();   /* [v8.5] 라벨에 띠 이름이 이미 있으면 제거 */
+  ctx.fillText(_gl+' '+beltName+' 승급', W/2, H*0.672); LS(0);
 
   /* ⑦ 수여 문구 2줄 */
   ctx.fillStyle='#B8C6DB'; ctx.font='400 '+(11*SC)+'px '+F;
@@ -189,7 +190,7 @@ function certDrawFront(cv,D,onDone){
   ctx.fillText('나라차태권도 분당도장', W/2, H*0.933);
   if(D.examiner){
     ctx.fillStyle='#B8C6DB'; ctx.font='500 '+(10*SC)+'px '+F;
-    ctx.fillText('심사관 '+D.examiner, W/2, H*0.961);
+    ctx.fillText('관장 '+D.examiner, W/2, H*0.961);
   }
   if(_certStampImg && _certStampImg.complete && _certStampImg.width){
     ctx.font='800 '+(15*SC)+'px '+F;
