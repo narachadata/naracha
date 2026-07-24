@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나라차태권도 캠프관리</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  :root { --bg:#F4F2ED; --ink:#1B2534; --sub:#6B7280; --line:#E7E2D8; --card:#FFFFFF;
+          --blue:#1E2D50; --blueSoft:#EDF0F6; --red:#C0392B; --redSoft:#FBEEEC;
+          --green:#1E7B3C; --greenSoft:#EAF6EE; --amber:#B07D1A; --amberSoft:#FBF3E2; }
+  * { box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font-family:'Pretendard',-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+         letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
+  .belt { height:4px; display:flex; }
+  .belt div:first-child { flex:1; background:var(--red); }
+  .belt div:last-child { flex:1; background:var(--blue); }
+  .header { background:#fff; border-bottom:1px solid var(--line); padding:14px 20px 0; }
+  .hTitle { font-size:18px; font-weight:800; }
+  .hSub { font-size:12px; color:var(--sub); margin-bottom:2px; }
+  .syncDot { display:inline-block; width:8px; height:8px; border-radius:99px; margin-right:5px; vertical-align:1px; }
+  .tabs { display:flex; gap:20px; overflow-x:auto; margin-top:8px; }
+  .tab { flex:0 0 auto; padding:12px 2px 11px; font-size:14.5px; background:none; border:none;
+         color:#64748B; border-bottom:2.5px solid transparent; cursor:pointer; font-family:inherit; font-weight:600; white-space:nowrap; }
+  .tab.on { color:#2B5FB8; font-weight:800; border-bottom-color:#2B5FB8; }
+  .wrap { max-width:680px; margin:0 auto; padding:18px 14px 60px; }
+  .card { background:var(--card); border-radius:16px; padding:18px; margin-bottom:12px;
+          box-shadow:0 1px 3px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04); }
+  .label { font-size:13px; font-weight:600; color:var(--sub); margin:10px 0 6px; display:block; }
+  .input { width:100%; font-size:16px; padding:12px 14px; border:1.5px solid var(--line);
+           border-radius:10px; background:#FAFAFC; outline:none; font-family:inherit; }
+  .input:focus { border-color:var(--blue); background:#fff; }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; }
+  .chip { padding:7px 13px; border-radius:10px; border:1.5px solid var(--line); background:#fff;
+          font-size:13.5px; cursor:pointer; font-family:inherit; font-weight:500; }
+  .chip.on { border-color:var(--blue); background:var(--blueSoft); color:var(--blue); font-weight:700; }
+  .dchips { display:flex; gap:7px; overflow-x:auto; padding-bottom:6px; margin-bottom:10px; }
+  .dchip { flex:0 0 auto; padding:8px 13px; border-radius:999px; font-size:12.5px; font-weight:700;
+           border:1.5px solid var(--line); background:#fff; color:var(--sub); cursor:pointer; font-family:inherit; white-space:nowrap; }
+  .dchip.on { background:var(--ink); border-color:var(--ink); color:#fff; }
+  .btn { border:none; border-radius:12px; padding:13px 16px; font-size:15px; font-weight:700;
+         cursor:pointer; font-family:inherit; color:#fff; background:var(--blue); }
+  .btn.red { background:var(--red); } .btn.gray { background:#8A8F98; } .btn.green { background:var(--green); }
+  .btn.line { background:#fff; color:var(--ink); border:1.5px solid var(--line); }
+  .btn.full { width:100%; }
+  .row { display:flex; gap:8px; }
+  .row > * { flex:1; }
+  .item { display:flex; justify-content:space-between; align-items:center; gap:8px;
+          background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:13px 14px; margin-bottom:8px; cursor:pointer; }
+  .item.on { border-color:var(--green); background:var(--greenSoft); }
+  .item .nm { font-weight:700; font-size:15.5px; }
+  .item .sb { font-size:12px; color:var(--sub); margin-top:2px; }
+  .mark { font-weight:800; font-size:16px; color:#D5D2C9; }
+  .item.on .mark { color:var(--green); }
+  .kpi { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px; }
+  .kpi .card { padding:13px 8px; text-align:center; margin:0; }
+  .kpi .v { font-size:15px; font-weight:800; margin-top:3px; }
+  .kpi .l { font-size:11.5px; color:var(--sub); }
+  .bar { height:14px; border-radius:99px; background:var(--blueSoft); overflow:hidden; }
+  .bar > div { height:100%; background:var(--blue); border-radius:99px; }
+  .small { font-size:12px; color:var(--sub); }
+  h2 { font-size:17px; margin:4px 0 12px; }
+  .fee { display:flex; justify-content:space-between; align-items:center; background:var(--blueSoft);
+         border-radius:12px; padding:13px 15px; margin:12px 0; }
+  .fee b { color:var(--blue); font-size:17px; }
+  .modalBg { position:fixed; inset:0; background:rgba(20,25,35,.45); display:flex; align-items:flex-end; justify-content:center; z-index:50; }
+  .modal { background:#fff; width:100%; max-width:680px; max-height:88vh; overflow-y:auto;
+           border-radius:20px 20px 0 0; padding:20px 18px 30px; }
+  .empty { text-align:center; color:var(--sub); font-size:13.5px; padding:26px 0; }
+  .tag { font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; background:var(--amberSoft); color:var(--amber); }
+</style>
+</head>
+<body>
+<div class="belt"><div></div><div></div></div>
+<div class="header">
+  <div class="hSub">나라차태권도 분당도장</div>
+  <div class="hTitle" id="hTitle">캠프관리</div>
+  <div class="hSub" style="margin-top:3px"><span class="syncDot" id="syncDot" style="background:#C7C7CC"></span><span id="syncTxt">동기화 대기</span></div>
+  <div class="tabs" id="tabs"></div>
+</div>
+<div class="wrap" id="view"></div>
+<div id="modalHost"></div>
+
+<script>
+/* ================= 기본 설정 ================= */
+var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwZmWHCEGwXoOs2omyAgWiOE3ds0zQCtRy-Ta7lLqk1lXQMNFPXCkrSvlgTTXGdlK9E/exec";
+var STORE = "camp";           /* 기존 프로그램과 같은 창고 방식, 캠프 전용 창고 이름 */
+var LS_KEY = "naracha-camp";  /* 이 기기 저장 키 */
+
+var PRICE = { eng:18000, pe:18000, rec:10000, meal:7500 };
+var PKG = {
+  full:    { label:"풀패키지 (영어+체육+레크+점심)", tuition:PRICE.eng+PRICE.pe+PRICE.rec, meal:true },
+  program: { label:"프로그램 (영어+체육)",           tuition:PRICE.eng+PRICE.pe,           meal:false },
+  single:  { label:"단과+점심 (체육or영어+레크+점심)", tuition:PRICE.eng+PRICE.rec,          meal:true }
+};
+var DISC = [ [0.2,"20% (나라차 등록원생)"], [0.1,"10% (지인·이전·형제)"], [0,"할인 없음"] ];
+
+/* ================= 데이터 (여러 해 캠프 보관) ================= */
+function newCamp(name,start,end){
+  return { id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+           set:{name:name,start:start,end:end}, students:[], att:{}, board:{}, meals:{} };
+}
+var DB = { meta:{updatedAt:0}, camps:[ newCamp("2026 여름 오전캠프","2026-07-27","2026-08-14") ] };
+var CAMP = DB.camps[0];   /* 현재 보고 있는 캠프 (아래 pickCamp가 지정) */
+var UI = { tab:"home", date:"", edit:null, syncStatus:"idle" };
+
+function migrate(o){  /* 예전 단일 캠프 구조 → 새 구조 자동 변환 */
+  if(o && o.camps) return o;
+  if(o && o.set) return { meta:o.meta||{updatedAt:Date.now()},
+    camps:[{ id:"c1", set:o.set, students:o.students||[], att:o.att||{}, board:o.board||{}, meals:o.meals||{} }] };
+  return null;
+}
+function curId(){ try{ return localStorage.getItem("naracha-camp-cur")||""; }catch(e){ return ""; } }
+function pickCamp(){
+  var found=null;
+  for(var i=0;i<DB.camps.length;i++) if(DB.camps[i].id===curId()) found=DB.camps[i];
+  CAMP = found || DB.camps[DB.camps.length-1];
+}
+function setCur(id){ try{ localStorage.setItem("naracha-camp-cur",id); }catch(e){} pickCamp(); UI.tab="home"; UI.date=""; render(); }
+function isLatest(){ return CAMP===DB.camps[DB.camps.length-1]; }
+
+function loadLocal(){ try{ var s=localStorage.getItem(LS_KEY); if(s){ var o=migrate(JSON.parse(s)); if(o) DB=o; } }catch(e){} pickCamp(); }
+function saveLocal(push){
+  DB.meta.updatedAt = Date.now();
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(DB)); }catch(e){}
+  if(push!==false) campSyncSoon();
+}
+function accessKey(){ try{ return localStorage.getItem("naracha_camp_key")||""; }catch(e){ return ""; } }
+function myRole(){ try{ return localStorage.getItem("naracha_camp_role")||""; }catch(e){ return ""; } }
+function isAdmin(){ return myRole()==="admin"; }
+/* 기존 프로그램과 동일: 키로 회계(acct) 창고가 열리면 관리자, 출석(att)만 열리면 사범 */
+function loginWithKey(){
+  var k=document.getElementById("loginKey").value.trim();
+  if(!k){ alert("접속키를 입력해 주세요."); return; }
+  var msg=document.getElementById("loginMsg"); msg.textContent="확인 중…";
+  fetch(GSHEET_URL+"?key="+encodeURIComponent(k)+"&store=acct")
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      if(rows && rows.error==="AUTH"){
+        return fetch(GSHEET_URL+"?key="+encodeURIComponent(k)+"&store=att")
+          .then(function(r){ return r.json(); })
+          .then(function(rows2){
+            if(rows2 && rows2.error==="AUTH"){ msg.textContent="접속키가 올바르지 않습니다."; return; }
+            finishLogin(k,"coach");
+          });
+      }
+      finishLogin(k,"admin");
+    })
+    .catch(function(){ msg.textContent="인터넷 연결을 확인해 주세요."; });
+}
+function finishLogin(k,role){
+  try{ localStorage.setItem("naracha_camp_key",k); localStorage.setItem("naracha_camp_role",role); }catch(e){}
+  render(); campPull(true);
+}
+function logout(){
+  if(!confirm("로그아웃할까요? 자료는 이 기기와 클라우드에 그대로 남습니다.")) return;
+  try{ localStorage.removeItem("naracha_camp_key"); localStorage.removeItem("naracha_camp_role"); }catch(e){}
+  UI.tab="home"; render();
+}
+
+/* ================= 동기화 (기존 프로그램과 동일 프로토콜) ================= */
+var syncTimer=null;
+function setSync(status, txt){
+  UI.syncStatus=status;
+  var dot=document.getElementById("syncDot"), t=document.getElementById("syncTxt");
+  if(!dot) return;
+  dot.style.background = status==="ok" ? "#1E7B3C" : status==="err" ? "#C0392B" : status==="busy" ? "#B07D1A" : "#C7C7CC";
+  t.textContent = txt;
+}
+function campSyncSoon(){ clearTimeout(syncTimer); syncTimer=setTimeout(campSync, 1200); }
+function campSync(){
+  if(!accessKey()){ setSync("idle","접속키 없음 (설정 탭에서 입력)"); return; }
+  setSync("busy","저장 중…");
+  var s=JSON.stringify(DB); var rows=[["JSON"]];
+  for(var k=0;k<s.length;k+=45000) rows.push([s.slice(k,k+45000)]);
+  fetch(GSHEET_URL, {method:"POST", body:JSON.stringify({key:accessKey(), store:STORE, rows:rows})})
+    .then(function(r){ return r.text(); })
+    .then(function(){ setSync("ok","동기화 완료 "+new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"})); })
+    .catch(function(){ setSync("err","저장 실패 (인터넷 확인)"); });
+}
+function campPull(first){
+  if(!accessKey()){ setSync("idle","접속키 없음 (설정 탭에서 입력)"); return; }
+  setSync("busy","불러오는 중…");
+  fetch(GSHEET_URL+"?key="+encodeURIComponent(accessKey())+"&store="+STORE)
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      if(rows && rows.error==="AUTH"){ setSync("err","접속키 오류"); return; }
+      if(!rows || rows.length<2){ setSync("ok","클라우드 비어있음 (첫 저장 대기)"); if(first&&DB.camps.some(function(c){return c.students.length;})) campSyncSoon(); return; }
+      var joined="";
+      for(var i=0;i<rows.length;i++){
+        if(rows[i][0]==="JSON" && i+1<rows.length){
+          for(var j=i+1;j<rows.length;j++) joined += (rows[j][0]!=null?String(rows[j][0]):"");
+          break;
+        }
+      }
+      var remote=null; try{ remote=migrate(JSON.parse(joined)); }catch(e){}
+      if(remote && remote.meta && remote.meta.updatedAt > (DB.meta.updatedAt||0)){
+        DB=remote; pickCamp(); saveLocalOnly(); render();
+        setSync("ok","최신 자료 반영 완료");
+      } else {
+        setSync("ok","동기화 완료");
+        if(remote && DB.meta.updatedAt > remote.meta.updatedAt) campSyncSoon();
+      }
+    })
+    .catch(function(){ setSync("err","불러오기 실패"); });
+}
+function saveLocalOnly(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(DB)); }catch(e){} }
+
+/* ================= 날짜/요금 ================= */
+function campDates(){
+  var out=[], s=CAMP.set.start, e=CAMP.set.end;
+  if(!s||!e) return out;
+  var d=new Date(s+"T00:00:00"), end=new Date(e+"T00:00:00");
+  while(d<=end){ var w=d.getDay(); if(w>=1&&w<=5) out.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); }
+  return out;
+}
+function fmtD(s){ var d=new Date(s+"T00:00:00"); return (d.getMonth()+1)+"/"+d.getDate()+"("+"일월화수목금토"[d.getDay()]+")"; }
+function calcFee(pkg,days,disc){
+  var p=PKG[pkg]; if(!p||!days) return 0;
+  return Math.round(p.tuition*(1-disc))*days + (p.meal?PRICE.meal*days:0);
+}
+function won(n){ return (n||0).toLocaleString("ko-KR")+"원"; }
+function attCnt(d){ return Object.keys(CAMP.att[d]||{}).length; }
+function esc(t){ return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+/* ================= 화면 ================= */
+var TABS=[["home","홈"],["stu","원생"],["att","출석"],["bus","차량"],["meal","식사"],["stat","정산"],["set","설정"]];
+function visibleTabs(){ return TABS.filter(function(t){ return t[0]!=="stat" || isAdmin(); }); }
+
+function vLogin(){
+  return '<div class="card" style="margin-top:26px"><h2>접속키 입력</h2>'+
+    '<div class="small" style="margin-bottom:12px;line-height:1.7">캠프 전용 접속키를 입력하세요. (수련생관리 키와 다릅니다)<br>'+
+    '<b>관리자 키</b>: 모든 화면 + 정산(돈 관련) 표시<br><b>선생님 키</b>: 출석·차량·식단 등 운영 화면만 표시</div>'+
+    '<input class="input pwbox" id="loginKey" placeholder="접속키">'+
+    '<div style="margin-top:12px"><button class="btn full" onclick="loginWithKey()">시작하기</button></div>'+
+    '<div class="small" id="loginMsg" style="margin-top:10px;color:var(--red)"></div></div>';
+}
+
+function render(){
+  document.getElementById("hTitle").textContent = CAMP.set.name || "캠프관리";
+  var v=document.getElementById("view");
+  if(!accessKey() || !myRole()){
+    document.getElementById("tabs").innerHTML="";
+    document.getElementById("syncTxt").textContent="로그인 필요";
+    v.innerHTML=vLogin(); return;
+  }
+  var ds=campDates();
+  pickCamp();
+  if(!UI.date || ds.indexOf(UI.date)<0){
+    var today=new Date().toISOString().slice(0,10);
+    UI.date = ds.indexOf(today)>=0 ? today : (ds[0]||"");
+  }
+  var th="";
+  visibleTabs().forEach(function(t){ th+='<button class="tab'+(UI.tab===t[0]?" on":"")+'" onclick="go(\''+t[0]+'\')">'+t[1]+'</button>'; });
+  document.getElementById("tabs").innerHTML=th;
+  if(UI.tab==="stat" && !isAdmin()) UI.tab="home";
+  var banner = isLatest() ? "" :
+    '<div class="card" style="background:var(--amberSoft);border:1.5px solid var(--amber);padding:12px 14px;display:flex;justify-content:space-between;align-items:center">'+
+    '<span class="small" style="color:var(--amber);font-weight:700">지난 캠프 열람 중: '+esc(CAMP.set.name)+'</span>'+
+    '<button class="btn" style="padding:8px 12px;font-size:13px" onclick="setCur(\''+DB.camps[DB.camps.length-1].id+'\')">최신 캠프로</button></div>';
+  v.innerHTML = banner + (UI.tab==="home"?vHome():UI.tab==="stu"?vStu():UI.tab==="att"?vAtt():
+                UI.tab==="bus"?vBus():UI.tab==="meal"?vMeal():UI.tab==="stat"?vStat():vSet());
+}
+function go(t){ UI.tab=t; UI.edit=null; render(); window.scrollTo(0,0); }
+
+function dateChips(){
+  var h='<div class="dchips">';
+  campDates().forEach(function(d){
+    h+='<button class="dchip'+(UI.date===d?" on":"")+'" onclick="pickDate(\''+d+'\')">'+fmtD(d)+'</button>';
+  });
+  return h+'</div>';
+}
+function pickDate(d){ UI.date=d; render(); }
+
+/* ---- 홈 ---- */
+function vHome(){
+  var ds=campDates(), today=new Date().toISOString().slice(0,10);
+  var isCampDay=ds.indexOf(today)>=0;
+  var riders=CAMP.students.filter(function(s){return s.vehicle;});
+  var m=CAMP.meals[today]||{};
+  var dday="";
+  if(ds.length){
+    if(today<ds[0]){ dday="개강까지 D-"+Math.round((new Date(ds[0])-new Date(today))/86400000); }
+    else if(today>ds[ds.length-1]){ dday="캠프 종료"; }
+    else dday=(ds.indexOf(UI.date)>=0?(ds.indexOf(today)+1)+"일차":"진행 중");
+  }
+  return '<div class="kpi">'+
+    '<div class="card"><div class="l">등록 원생</div><div class="v">'+CAMP.students.length+'명</div></div>'+
+    '<div class="card"><div class="l">오늘 출석</div><div class="v">'+(isCampDay?attCnt(today)+"명":"—")+'</div></div>'+
+    '<div class="card"><div class="l">진행</div><div class="v">'+(dday||"기간 미설정")+'</div></div></div>'+
+    '<div class="card"><h2>오늘 '+(isCampDay?fmtD(today):"")+'</h2>'+
+    (isCampDay
+      ? '<div class="small">차량 이용 '+riders.length+'명 · 식단: '+esc(m.main||"미입력")+'</div>'+
+        '<div class="row" style="margin-top:12px"><button class="btn" onclick="go(\'att\')">출석 체크</button>'+
+        '<button class="btn line" onclick="go(\'bus\')">차량 체크</button></div>'
+      : '<div class="small">오늘은 캠프일이 아닙니다. 설정 탭에서 캠프 기간을 확인하세요.</div>')+
+    '</div>'+
+    '<div class="card"><h2>사용 안내</h2><div class="small" style="line-height:1.7">'+
+    '① 설정 탭에서 <b>접속키</b>를 입력하면 지도진 모든 기기가 자동으로 같은 자료를 봅니다.<br>'+
+    '② 원생을 등록하면 출석·차량·정산 화면에 자동 연결됩니다.<br>'+
+    '③ 자료는 이 기기에 먼저 저장되고, 인터넷이 연결되면 클라우드 창고에 저장됩니다.</div></div>';
+}
+
+/* ---- 원생 ---- */
+function vStu(){
+  var h='<div class="row" style="margin-bottom:12px"><h2 style="flex:2;margin:0">원생 '+CAMP.students.length+'명</h2>'+
+        '<button class="btn" onclick="openStu()">＋ 등록</button></div>';
+  if(!CAMP.students.length) h+='<div class="empty">아직 등록된 원생이 없습니다.<br>‘＋ 등록’ 버튼으로 시작하세요.</div>';
+  CAMP.students.slice().sort(function(a,b){return a.name.localeCompare(b.name,"ko");}).forEach(function(s){
+    h+='<div class="item" onclick="openStu(\''+s.id+'\')"><div><div class="nm">'+esc(s.name)+
+       (s.vehicle?' <span class="tag">차량</span>':'')+'</div><div class="sb">'+esc(s.grade||"")+' · '+s.days+'일 · '+esc(s.guardian||"")+
+       (s.memo?'<br>'+esc(s.memo):'')+'</div></div>'+
+       (isAdmin()?'<div style="font-weight:800;color:var(--blue);font-size:14px">'+won(calcFee(s.pkg,s.days,s.disc))+'</div>':'')+'</div>';
+  });
+  return h;
+}
+function openStu(id){
+  UI.edit = id ? JSON.parse(JSON.stringify(CAMP.students.find(function(s){return s.id===id;}))) 
+               : { id:"", name:"", grade:"", school:"", gender:"남", guardian:"", phone:"",
+                   pkg:"full", days:campDates().length, disc:0.2, vehicle:false, stop:"", time:"", memo:"" };
+  renderStuModal();
+}
+function renderStuModal(){
+  var f=UI.edit;
+  var pkgOpts="", discOpts="";
+  Object.keys(PKG).forEach(function(k){ pkgOpts+='<option value="'+k+'"'+(f.pkg===k?" selected":"")+'>'+PKG[k].label+'</option>'; });
+  DISC.forEach(function(d){ discOpts+='<option value="'+d[0]+'"'+(Number(f.disc)===d[0]?" selected":"")+'>'+d[1]+'</option>'; });
+  document.getElementById("modalHost").innerHTML =
+  '<div class="modalBg" onclick="if(event.target===this)closeModal()"><div class="modal">'+
+  '<h2>'+(f.id?"원생 수정":"원생 등록")+'</h2>'+
+  '<div class="row"><div><span class="label">이름</span><input class="input" id="f_name" value="'+esc(f.name)+'"></div>'+
+  '<div><span class="label">학년</span><input class="input" id="f_grade" placeholder="초등 2학년" value="'+esc(f.grade)+'"></div></div>'+
+  '<div class="row"><div><span class="label">학교</span><input class="input" id="f_school" value="'+esc(f.school)+'"></div>'+
+  '<div><span class="label">성별</span><select class="input" id="f_gender"><option'+(f.gender==="남"?" selected":"")+'>남</option><option'+(f.gender==="여"?" selected":"")+'>여</option></select></div></div>'+
+  '<div class="row"><div><span class="label">보호자(관계)</span><input class="input" id="f_guardian" placeholder="홍길동(모)" value="'+esc(f.guardian)+'"></div>'+
+  '<div><span class="label">연락처</span><input class="input" id="f_phone" value="'+esc(f.phone)+'"></div></div>'+
+  '<span class="label">패키지</span><select class="input" id="f_pkg" onchange="feePrev()">'+pkgOpts+'</select>'+
+  (isAdmin()
+    ? '<div class="row"><div><span class="label">등록 일수</span><input class="input" id="f_days" type="number" value="'+f.days+'" oninput="feePrev()"></div>'+
+      '<div><span class="label">할인</span><select class="input" id="f_disc" onchange="feePrev()">'+discOpts+'</select></div></div>'
+    : '<span class="label">등록 일수</span><input class="input" id="f_days" type="number" value="'+f.days+'" oninput="feePrev()">')+
+  '<div style="margin-top:12px"><label><input type="checkbox" id="f_veh" '+(f.vehicle?"checked":"")+' onchange="document.getElementById(\'vehBox\').style.display=this.checked?\'flex\':\'none\'"> 차량 이용</label></div>'+
+  '<div class="row" id="vehBox" style="display:'+(f.vehicle?"flex":"none")+'">'+
+  '<div><span class="label">탑승 장소</span><input class="input" id="f_stop" value="'+esc(f.stop)+'"></div>'+
+  '<div><span class="label">탑승 시간</span><input class="input" id="f_time" placeholder="09:10" value="'+esc(f.time)+'"></div></div>'+
+  '<span class="label">메모 (결석 예정일 등)</span><input class="input" id="f_memo" value="'+esc(f.memo)+'">'+
+  (isAdmin()?'<div class="fee"><span class="small">캠프비 자동 계산</span><b id="feeOut"></b></div>':'<div style="height:12px"></div>')+
+  '<div class="row"><button class="btn full" onclick="saveStu()">저장</button><button class="btn gray full" onclick="closeModal()">취소</button></div>'+
+  (f.id?'<div style="text-align:center;margin-top:14px"><button class="btn red" onclick="delStu()">원생 삭제</button></div>':'')+
+  '</div></div>';
+  feePrev();
+}
+function feePrev(){
+  if(!isAdmin()) return;
+  var pkg=document.getElementById("f_pkg").value,
+      days=Number(document.getElementById("f_days").value)||0,
+      disc=Number(document.getElementById("f_disc").value)||0;
+  document.getElementById("feeOut").textContent = won(calcFee(pkg,days,disc));
+}
+function saveStu(){
+  var g=function(id){ return document.getElementById(id).value.trim(); };
+  var f=UI.edit;
+  f.name=g("f_name"); if(!f.name){ alert("이름을 입력해 주세요."); return; }
+  f.grade=g("f_grade"); f.school=g("f_school"); f.gender=document.getElementById("f_gender").value;
+  f.guardian=g("f_guardian"); f.phone=g("f_phone");
+  f.pkg=document.getElementById("f_pkg").value; f.days=Number(g("f_days"))||0;
+  if(isAdmin()) f.disc=Number(document.getElementById("f_disc").value);
+  /* 사범이 저장하면 할인값은 건드리지 않음 (신규는 기본 0.2, 관리자가 나중에 확정) */
+  f.vehicle=document.getElementById("f_veh").checked; f.stop=g("f_stop"); f.time=g("f_time"); f.memo=g("f_memo");
+  if(!f.id){ f.id=Date.now().toString(36); CAMP.students.push(f); }
+  else { CAMP.students = CAMP.students.map(function(s){ return s.id===f.id?f:s; }); }
+  saveLocal(); closeModal(); render();
+}
+function delStu(){
+  var f=UI.edit;
+  if(!confirm(f.name+" 원생을 삭제할까요? 출석 기록도 함께 지워집니다.")) return;
+  CAMP.students = CAMP.students.filter(function(s){ return s.id!==f.id; });
+  campDates().forEach(function(d){ if(CAMP.att[d]) delete CAMP.att[d][f.id]; if(CAMP.board[d]) delete CAMP.board[d][f.id]; });
+  saveLocal(); closeModal(); render();
+}
+function closeModal(){ UI.edit=null; document.getElementById("modalHost").innerHTML=""; }
+
+/* ---- 출석 / 차량 ---- */
+function toggleMark(kind,id){
+  var map = kind==="att"?CAMP.att:CAMP.board;
+  var day = map[UI.date]||{}; if(day[id]) delete day[id]; else day[id]=1;
+  map[UI.date]=day; saveLocal(); render();
+}
+function markList(list, kind){
+  if(!list.length) return '<div class="empty">'+(kind==="att"?"원생을 먼저 등록해 주세요.":"차량 이용 원생이 없습니다.<br>원생 정보에서 ‘차량 이용’을 체크하세요.")+'</div>';
+  var map = kind==="att"?CAMP.att:CAMP.board, h="";
+  list.forEach(function(s){
+    var on=!!((map[UI.date]||{})[s.id]);
+    h+='<div class="item'+(on?" on":"")+'" onclick="toggleMark(\''+kind+'\',\''+s.id+'\')"><div><div class="nm">'+esc(s.name)+'</div>'+
+       '<div class="sb">'+esc(s.grade||"")+(kind==="bus"&&s.time?' · '+esc(s.time)+' '+esc(s.stop):'')+
+       (s.memo?' · '+esc(s.memo):'')+'</div></div><div class="mark">'+(on?"✓":"—")+'</div></div>';
+  });
+  return h;
+}
+function vAtt(){
+  var list=CAMP.students.slice().sort(function(a,b){return a.name.localeCompare(b.name,"ko");});
+  return '<h2>출석 체크 <span class="small" style="color:var(--blue);font-weight:800">'+attCnt(UI.date)+'/'+CAMP.students.length+'명</span></h2>'+dateChips()+markList(list,"att");
+}
+function vBus(){
+  var riders=CAMP.students.filter(function(s){return s.vehicle;}).sort(function(a,b){return (a.time||"").localeCompare(b.time||"");});
+  var cnt=Object.keys(CAMP.board[UI.date]||{}).length;
+  return '<h2>차량 탑승 <span class="small" style="color:var(--blue);font-weight:800">'+cnt+'/'+riders.length+'명</span></h2>'+dateChips()+markList(riders,"bus");
+}
+
+/* ---- 식사 ---- */
+function vMeal(){
+  var m=CAMP.meals[UI.date]||{};
+  function fld(label,key,type){
+    return '<span class="label">'+label+'</span><input class="input" type="'+(type||"text")+'" value="'+esc(m[key]||"")+'" onblur="setMeal(\''+key+'\',this.value)">';
+  }
+  return '<h2>식단 · 식비</h2>'+dateChips()+
+    '<div class="card">'+fld("국","soup")+fld("메인 반찬","main")+fld("나물 / 샐러드","veg")+fld("마른 / 기타 반찬","side")+
+    (isAdmin()?fld("식비 지출 (원)","cost","number"):"")+
+    '<div class="small" style="margin-top:10px">이날 출석 인원: <b>'+attCnt(UI.date)+'명</b> (출석 탭과 자동 연동)</div></div>';
+}
+function setMeal(k,v){ var m=CAMP.meals[UI.date]||{}; m[k]=v; CAMP.meals[UI.date]=m; saveLocal(); }
+
+/* ---- 정산 ---- */
+function vStat(){
+  var income=0; CAMP.students.forEach(function(s){ income+=calcFee(s.pkg,s.days,s.disc); });
+  var mealCost=0; Object.keys(CAMP.meals).forEach(function(d){ mealCost+=Number(CAMP.meals[d].cost)||0; });
+  var ds=campDates(), mx=1; ds.forEach(function(d){ if(attCnt(d)>mx) mx=attCnt(d); });
+  var bars=""; ds.forEach(function(d){
+    bars+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'+
+      '<span class="small" style="width:56px">'+fmtD(d)+'</span>'+
+      '<div class="bar" style="flex:1"><div style="width:'+(attCnt(d)/mx*100)+'%"></div></div>'+
+      '<b style="width:26px;text-align:right;font-size:13px">'+attCnt(d)+'</b></div>';
+  });
+  return '<h2>정산 · 현황</h2>'+
+    '<div class="kpi"><div class="card"><div class="l">등록 인원</div><div class="v">'+CAMP.students.length+'명</div></div>'+
+    '<div class="card"><div class="l">예상 수입</div><div class="v" style="color:var(--blue)">'+won(income)+'</div></div>'+
+    '<div class="card"><div class="l">식비 지출</div><div class="v" style="color:var(--red)">'+won(mealCost)+'</div></div></div>'+
+    '<div class="card"><h2 style="font-size:15px">날짜별 출석 인원</h2>'+bars+'</div>'+
+    '<div class="card"><h2 style="font-size:15px">역대 캠프 요약</h2>'+
+    DB.camps.slice().reverse().map(function(c){
+      var inc=0; c.students.forEach(function(s){ inc+=calcFee(s.pkg,s.days,s.disc); });
+      var mc=0; Object.keys(c.meals).forEach(function(d){ mc+=Number(c.meals[d].cost)||0; });
+      return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)">'+
+        '<span style="font-size:13.5px;font-weight:'+(c===CAMP?'800':'500')+'">'+esc(c.set.name)+'</span>'+
+        '<span class="small">'+c.students.length+'명 · 수입 '+won(inc)+' · 식비 '+won(mc)+'</span></div>';
+    }).join("")+'</div>'+
+    '<div class="card"><h2 style="font-size:15px">자료 내보내기</h2>'+
+    '<div class="small" style="margin-bottom:10px">원생 명단·출석부·차량부·식단을 엑셀에서 열리는 파일 하나로 저장합니다.</div>'+
+    '<button class="btn full" onclick="exportCSV()">엑셀(CSV) 다운로드</button></div>';
+}
+function exportCSV(){
+  var e=function(v){ return '"'+String(v==null?"":v).replace(/"/g,'""')+'"'; };
+  var ds=campDates(), R=[];
+  R.push([CAMP.set.name+" 백업", new Date().toLocaleString("ko-KR")]); R.push([]);
+  R.push(["[원생 명단]"]);
+  R.push(["이름","학년","학교","성별","보호자","연락처","패키지","일수","할인","캠프비","차량","탑승장소","탑승시간","메모"]);
+  CAMP.students.forEach(function(s){ R.push([s.name,s.grade,s.school,s.gender,s.guardian,s.phone,PKG[s.pkg].label,s.days,(s.disc*100)+"%",calcFee(s.pkg,s.days,s.disc),s.vehicle?"O":"X",s.stop,s.time,s.memo]); });
+  R.push([]); R.push(["[출석부]"]); R.push(["이름"].concat(ds.map(fmtD)).concat(["합계"]));
+  CAMP.students.forEach(function(s){
+    var marks=ds.map(function(d){ return (CAMP.att[d]||{})[s.id]?1:""; });
+    R.push([s.name].concat(marks).concat([marks.filter(Boolean).length]));
+  });
+  R.push([]); R.push(["[차량 탑승부]"]); R.push(["이름"].concat(ds.map(fmtD)));
+  CAMP.students.filter(function(s){return s.vehicle;}).forEach(function(s){
+    R.push([s.name].concat(ds.map(function(d){ return (CAMP.board[d]||{})[s.id]?1:""; })));
+  });
+  R.push([]); R.push(["[식단·식비]"]); R.push(["날짜","국","메인","나물","반찬","출석인원","식비"]);
+  ds.forEach(function(d){ var m=CAMP.meals[d]||{}; R.push([fmtD(d),m.soup,m.main,m.veg,m.side,attCnt(d),m.cost]); });
+  var csv="\uFEFF"+R.map(function(r){ return r.map(e).join(","); }).join("\n");
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download=(CAMP.set.name||"캠프")+"_백업_"+new Date().toISOString().slice(0,10)+".csv";
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ---- 설정 ---- */
+function vSet(){
+  return '<h2>설정</h2>'+
+    '<div class="card"><h2 style="font-size:15px">캠프 기간</h2>'+
+    '<span class="label">캠프 이름</span><input class="input" value="'+esc(CAMP.set.name)+'" onblur="setConf(\'name\',this.value)">'+
+    '<div class="row"><div><span class="label">시작일</span><input class="input" type="date" value="'+CAMP.set.start+'" onchange="setConf(\'start\',this.value)"></div>'+
+    '<div><span class="label">종료일</span><input class="input" type="date" value="'+CAMP.set.end+'" onchange="setConf(\'end\',this.value)"></div></div>'+
+    '<div class="small" style="margin-top:8px">평일(월–금)만 캠프일로 자동 생성됩니다.</div></div>'+
+    '<div class="card"><h2 style="font-size:15px">캠프 목록 <span class="small">('+DB.camps.length+'개 보관 중)</span></h2>'+
+    DB.camps.slice().reverse().map(function(c){
+      var cur=(c===CAMP);
+      return '<div class="item" style="cursor:default"><div><div class="nm">'+esc(c.set.name)+(cur?' <span class="tag" style="background:var(--greenSoft);color:var(--green)">보는 중</span>':'')+'</div>'+
+        '<div class="sb">'+esc(c.set.start||"")+' ~ '+esc(c.set.end||"")+' · '+c.students.length+'명</div></div>'+
+        '<div style="display:flex;gap:6px">'+
+        (cur?'':'<button class="btn line" style="padding:8px 12px;font-size:13px" onclick="setCur(\''+c.id+'\')">보기</button>')+
+        (isAdmin()&&DB.camps.length>1?'<button class="btn red" style="padding:8px 12px;font-size:13px" onclick="delCamp(\''+c.id+'\')">삭제</button>':'')+
+        '</div></div>';
+    }).join("")+
+    (isAdmin()?'<button class="btn full" style="margin-top:6px" onclick="openNewCamp()">＋ 새 캠프 시작 (다음 방학)</button>':'')+
+    '</div>'+
+    '<div class="card"><h2 style="font-size:15px">내 계정</h2>'+
+    '<div class="small" style="margin-bottom:12px">현재 권한: <b>'+(isAdmin()?"관리자 (정산·돈 관련 표시)":"선생님 (운영 화면만 표시)")+'</b></div>'+
+    '<button class="btn line full" onclick="logout()">로그아웃 (접속키 변경)</button>'+
+    '<div class="small" style="margin-top:10px">동기화 상태: '+document.getElementById("syncTxt").textContent+'</div></div>';
+}
+function setConf(k,v){ CAMP.set[k]=v; saveLocal(); render(); }
+
+/* ---- 새 캠프 시작 / 삭제 ---- */
+function openNewCamp(){
+  var y=new Date().getFullYear();
+  document.getElementById("modalHost").innerHTML =
+  '<div class="modalBg" onclick="if(event.target===this)closeModal()"><div class="modal">'+
+  '<h2>새 캠프 시작</h2>'+
+  '<div class="small" style="margin-bottom:8px">지금 캠프는 그대로 보관되고, 새 캠프가 만들어집니다.</div>'+
+  '<span class="label">캠프 이름</span><input class="input" id="nc_name" placeholder="'+y+' 겨울 오전캠프">'+
+  '<div class="row"><div><span class="label">시작일</span><input class="input" id="nc_start" type="date"></div>'+
+  '<div><span class="label">종료일</span><input class="input" id="nc_end" type="date"></div></div>'+
+  '<div style="margin:14px 0"><label><input type="checkbox" id="nc_copy" checked> 현재 캠프 원생 명단 이어받기</label>'+
+  '<div class="small" style="margin-top:4px">이름·연락처·차량 정보를 복사합니다. 출석 기록은 새로 시작하며, 이어받은 원생은 메모에 "이전 캠프 참가"가 표시되어 재등록 할인 파악이 쉽습니다.</div></div>'+
+  '<div class="row"><button class="btn full" onclick="saveNewCamp()">만들기</button><button class="btn gray full" onclick="closeModal()">취소</button></div>'+
+  '</div></div>';
+}
+function saveNewCamp(){
+  var name=document.getElementById("nc_name").value.trim();
+  var start=document.getElementById("nc_start").value, end=document.getElementById("nc_end").value;
+  if(!name){ alert("캠프 이름을 입력해 주세요."); return; }
+  if(!start||!end){ alert("시작일과 종료일을 선택해 주세요."); return; }
+  var c=newCamp(name,start,end);
+  if(document.getElementById("nc_copy").checked){
+    var days=0, d=new Date(start+"T00:00:00"), e=new Date(end+"T00:00:00");
+    while(d<=e){ if(d.getDay()>=1&&d.getDay()<=5)days++; d.setDate(d.getDate()+1); }
+    CAMP.students.forEach(function(s){
+      c.students.push({ id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+        name:s.name, grade:s.grade, school:s.school, gender:s.gender, guardian:s.guardian, phone:s.phone,
+        pkg:s.pkg, days:days, disc:s.disc, vehicle:s.vehicle, stop:s.stop, time:s.time,
+        memo:"이전 캠프("+CAMP.set.name+") 참가" });
+    });
+  }
+  DB.camps.push(c);
+  saveLocal(); closeModal(); setCur(c.id);
+  alert("새 캠프가 시작되었습니다. 이어받은 원생 중 이번에 안 오는 원생은 목록에서 삭제하시면 됩니다.");
+}
+function delCamp(id){
+  var c=null; DB.camps.forEach(function(x){ if(x.id===id) c=x; });
+  if(!c) return;
+  if(!confirm('"'+c.set.name+'" 캠프를 삭제할까요? 이 캠프의 모든 기록이 사라집니다.')) return;
+  if(!confirm("정말 삭제합니까? 되돌릴 수 없습니다. (삭제 전 정산 탭에서 CSV 백업 권장)")) return;
+  DB.camps = DB.camps.filter(function(x){ return x.id!==id; });
+  saveLocal(); pickCamp(); render();
+}
+
+/* ================= 시작 ================= */
+loadLocal();
+render();
+campPull(true);
+setInterval(campPull, 60000);   /* 1분마다 다른 기기의 변경사항 확인 */
+</script>
+</body>
+</html>
