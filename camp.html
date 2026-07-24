@@ -178,7 +178,7 @@
 <script>
 /* ================= 기본 설정 ================= */
 /* ── 앱 버전: 새 파일을 만들 때마다 자동 갱신됨. 기기들이 이 값을 비교해 새 버전을 감지 ── */
-var APP_VER = "v20260724.1755";
+var APP_VER = "v20260724.1806";
 
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwZmWHCEGwXoOs2omyAgWiOE3ds0zQCtRy-Ta7lLqk1lXQMNFPXCkrSvlgTTXGdlK9E/exec";
 var STORE = "camp";           /* 기존 프로그램과 같은 창고 방식, 캠프 전용 창고 이름 */
@@ -449,6 +449,10 @@ function calcFee(s){ return feeParts(s).total; }
 /* 조정 내역(환불·추가등록 등): s.adj = [{t:"환불"|"추가", n:"사유", v:금액(음수 가능)}] */
 function ADJ(s){ if(!s.adj) s.adj=[]; return s.adj; }
 function adjTotal(s){ var t=0; ADJ(s).forEach(function(a){ t+=Number(a.v)||0; }); return t; }
+/* 납부 기록: s.pays = [{d:날짜, v:금액, n:메모}] — 여러 번 분할 납부 지원 */
+function PAYS(s){ if(!s.pays) s.pays=[]; return s.pays; }
+function paidTotalOf(s){ var t=0; PAYS(s).forEach(function(p){ t+=Number(p.v)||0; }); return t; }
+function balanceOf(s){ return billOf(s).total - paidTotalOf(s); }
 /* 청구금액(수업료+식비) / 차량비 / 조정 / 총금액 */
 function billOf(s){
   var p=feeParts(s);
@@ -463,6 +467,7 @@ function togglePaid(id){
   saveLocal(); render();
 }
 function openAdj(id){
+  if(!isAdmin()) return;
   var s=stuById(id); if(!s) return;
   UI.adjFor=id; renderAdjModal();
 }
@@ -501,32 +506,41 @@ function renderAdjModal(){
   document.getElementById("modalHost").innerHTML=h;
 }
 function setCharge(){
+  if(!isAdmin()) return;
   var s=stuById(UI.adjFor); if(!s) return;
   var v=document.getElementById("aj_charge").value.trim();
   if(v && Number(v)>0) s.chargeSet=Number(v); else delete s.chargeSet;
   saveLocal(); renderAdjModal();
 }
 function addAdj(){
+  if(!isAdmin()) return;
   var s=stuById(UI.adjFor); if(!s) return;
   var t=document.getElementById("aj_t").value;
   var n=document.getElementById("aj_n").value.trim();
   var v=Number(document.getElementById("aj_v").value);
   if(!v){ alert("금액을 입력해 주세요. (환불은 앞에 - 를 붙입니다)"); return; }
   if(t==="환불" && v>0) v=-v;   /* 환불은 자동으로 음수 처리 */
-  ADJ(s).push({t:t, n:n, v:v});
+  var dEl=document.getElementById("aj_d");
+  ADJ(s).push({d:(dEl&&dEl.value)||todayStr(), t:t, n:n, v:v});
+  s.paid=(balanceOf(s)<=0);
   saveLocal(); renderAdjModal();
 }
 function delAdj(i){
   var s=stuById(UI.adjFor); if(!s) return;
-  ADJ(s).splice(i,1); saveLocal(); renderAdjModal();
+  ADJ(s).splice(i,1); s.paid=(balanceOf(s)<=0); saveLocal(); renderAdjModal();
 }
 function won(n){ return (n||0).toLocaleString("ko-KR")+"원"; }
 function attCnt(d){ return Object.keys(CAMP.att[d]||{}).length; }
 function esc(t){ return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
 /* ================= 화면 ================= */
-var TABS=[["att","출석부"],["bus","차량"],["meal","식사"],["stu","캠프생"],["ops","운영"],["stat","정산"],["set","설정"]];
-function visibleTabs(){ return TABS.filter(function(t){ return t[0]!=="stat" || isAdmin(); }); }
+/* 관리자 전용 탭 (선생님 키로는 보이지 않음) */
+var ADMIN_TABS=["stu","ops","stat"];
+var TABS=[["att","출석부"],["bus","차량"],["meal","식사"],["set","설정"],
+          ["stu","캠프등록생"],["ops","운영"],["stat","정산"]];
+function visibleTabs(){
+  return TABS.filter(function(t){ return ADMIN_TABS.indexOf(t[0])<0 || isAdmin(); });
+}
 
 function vLogin(){
   return '<div class="card" style="margin-top:26px"><h2>접속키 입력</h2>'+
@@ -554,7 +568,7 @@ function render(){
   var th="";
   visibleTabs().forEach(function(t){ th+='<button class="tab'+(UI.tab===t[0]?" on":"")+'" onclick="go(\''+t[0]+'\')">'+t[1]+'</button>'; });
   document.getElementById("tabs").innerHTML=th;
-  if(UI.tab==="stat" && !isAdmin()) UI.tab="att";
+  if(ADMIN_TABS.indexOf(UI.tab)>=0 && !isAdmin()) UI.tab="att";
   var banner = isLatest() ? "" :
     '<div class="card" style="background:var(--amberSoft);border:1.5px solid var(--amber);padding:12px 14px;display:flex;justify-content:space-between;align-items:center">'+
     '<span class="small" style="color:var(--amber);font-weight:700">지난 캠프 열람 중: '+esc(CAMP.set.name)+'</span>'+
@@ -678,78 +692,98 @@ function vHistory(){
 /* ---- 캠프생 ---- */
 function vStu(){
   if(UI.stuView==="hist") return vHistory();
-  var noLevel=needLevel();
+  var noLevel=needLevel(), H=HIDE();
   var list=CAMP.students.slice().sort(function(a,b){return a.name.localeCompare(b.name,"ko");});
-  var sumCharge=0,sumAdj=0,sumBus=0,sumTot=0,paidTot=0,paidCnt=0;
+  var sumCharge=0,sumAdj=0,sumBus=0,sumTot=0,sumPaid=0,doneCnt=0;
   list.forEach(function(s){ var b=billOf(s); sumCharge+=b.charge; sumAdj+=b.adj; sumBus+=b.bus; sumTot+=b.total;
-    if(b.paid){ paidTot+=b.total; paidCnt++; } });
+    var pd=paidTotalOf(s); sumPaid+=pd; if(b.total-pd<=0 && b.total>0) doneCnt++; });
+  var maxAdj=Math.max(1, Math.max.apply(null, list.map(function(s){ return ADJ(s).length; })));
 
   var h='<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">'+
     '<h2 style="margin:0">캠프생 <span class="small" style="font-weight:600">'+list.length+'명</span></h2>'+
-    (isAdmin()?'<span class="small">납부 <b style="color:var(--green)">'+paidCnt+'명</b> / 미납 <b style="color:var(--red)">'+(list.length-paidCnt)+'명</b>'+
-      ' · 수납 <b>'+won(paidTot)+'</b> / 총 <b>'+won(sumTot)+'</b></span>':'')+
-    '<span style="margin-left:auto;display:flex;gap:6px">'+
+    (isAdmin()?'<span class="small">완납 <b style="color:var(--green)">'+doneCnt+'</b> / 미납 <b style="color:var(--red)">'+(list.length-doneCnt)+'</b>'+
+      ' · 수납 <b>'+won(sumPaid)+'</b> / 총 <b>'+won(sumTot)+'</b> · 잔액 <b style="color:'+((sumTot-sumPaid)>0?'var(--red)':'var(--green)')+'">'+won(sumTot-sumPaid)+'</b></span>':'')+
+    '<span style="margin-left:auto;display:flex;gap:6px;align-items:center">'+
+    '<span class="small" style="margin-right:2px">열 접기:</span>'+colBtns(["lv","id","gu","ph"])+
     '<button class="btn line" style="padding:7px 11px;font-size:12.5px" onclick="UI.stuView=\'hist\';render()">이력 · 영어레벨</button>'+
-    '<button class="btn line" style="padding:7px 11px;font-size:12.5px" onclick="copySurvey()">설문 링크</button>'+
     '<button class="btn" style="padding:7px 13px;font-size:12.5px" onclick="openStu()">＋ 등록</button></span></div>';
 
   if(noLevel.length) h+='<div class="card" style="background:var(--amberSoft);border:1.5px solid var(--amber);padding:10px 14px">'+
     '<b style="font-size:13.5px;color:var(--amber)">영어 레벨테스트 필요 '+noLevel.length+'명</b> '+
     '<span class="small">'+noLevel.map(function(s){return esc(s.name);}).join(" · ")+'</span></div>';
+  if(!list.length) return h+'<div class="empty">아직 등록된 캠프생이 없습니다.</div>';
 
-  if(!list.length) return h+'<div class="empty">아직 등록된 캠프생이 없습니다.<br>‘＋ 등록’ 버튼으로 시작하세요.</div>';
-
-  h+='<div class="card" style="padding:12px"><div style="overflow:auto;max-height:74vh"><table class="sheet">'+
-    '<thead><tr>'+
-    '<th style="position:sticky;left:0;z-index:3;background:#FBFAF7;min-width:96px">이름</th>'+
-    '<th>반</th><th>학년</th><th>학교</th><th>성별</th><th>생일</th><th>영레벨</th><th>RL_ID</th>'+
-    '<th>등록</th><th>배치</th><th>보강</th><th>할인</th><th>차량</th>'+
-    '<th class="lft">보호자</th><th class="lft">연락처</th>'+
-    (isAdmin()?'<th class="wk">청구금액</th><th class="lft" style="min-width:150px">환불 · 추가 내역</th>'+
-      '<th>차량비</th><th class="wk">총금액</th><th>납부</th>':'')+
+  h+='<div class="card" style="padding:12px"><div style="overflow:auto;max-height:74vh"><table class="sheet"><thead><tr>'+
+    '<th class="hdrInfo" style="position:sticky;left:0;z-index:3;min-width:96px">이름</th>'+
+    '<th class="hdrInfo">반</th><th class="hdrInfo">학년</th><th class="hdrInfo">학교</th>'+
+    '<th class="hdrInfo">성별</th><th class="hdrInfo">생일</th>'+
+    (H.lv?'':'<th class="hdrInfo">영레벨</th>')+(H.id?'':'<th class="hdrInfo">RL_ID</th>')+
+    '<th class="hdrDay">등록</th><th class="hdrDay">배치</th><th class="hdrDay">보강</th>'+
+    '<th class="hdrDay">할인</th><th class="hdrDay">차량</th>'+
+    (H.gu?'':'<th class="hdrInfo lft">보호자</th>')+(H.ph?'':'<th class="hdrInfo lft">연락처</th>')+
+    (isAdmin()?'<th class="wk hdrSum">청구금액</th>'+
+      '<th class="hdrSum lft" style="min-width:220px">환불 · 추가 내역 <span style="font-weight:500;font-size:10px">(여러 건 누적)</span></th>'+
+      '<th class="hdrSum">차량비</th><th class="wk hdrSum">총금액</th>'+
+      '<th class="hdrSum">납부</th><th class="hdrSum">잔액</th>':'')+
     '</tr></thead><tbody>';
-  list.forEach(function(s){
+  list.forEach(function(s,ri){
     var hist=historyOf(s), u=unplaced(s), m=makeupCnt(s), b=billOf(s);
-    h+='<tr'+(isAdmin()&&b.paid?' style="background:#F4FAF6"':'')+'>'+
-      '<td class="lft" data-sid="'+s.id+'" style="position:sticky;left:0;background:'+(isAdmin()&&b.paid?'#F4FAF6':'#fff')+';cursor:pointer;font-weight:700;z-index:1" onclick="openStu(\''+s.id+'\')">'+
+    var pd=paidTotalOf(s), bal=b.total-pd, done=(bal<=0 && b.total>0);
+    var needLv=(!s.level||/레테|모름|대기|첫날|테스트/.test(s.level));
+    var rowBg = isAdmin()? (done?'#F2FAF4':(pd>0?'#FFFBF0':'#fff')) : '#fff';
+    h+='<tr'+(ri%2?' class="stripe"':'')+' style="background:'+rowBg+'">'+
+      '<td class="lft" data-sid="'+s.id+'" style="position:sticky;left:0;background:'+rowBg+';cursor:pointer;font-weight:700;z-index:1" onclick="openStu(\''+s.id+'\')">'+
       busIcon(s)+esc(s.name)+(hist.length?' <span class="tag" style="background:var(--greenSoft);color:var(--green)">'+(hist.length+1)+'회</span>':'')+'</td>'+
       '<td>'+esc(s.cls||"—")+'</td><td>'+esc((s.grade||"").replace("초등 ",""))+'</td><td>'+esc(s.school||"")+'</td>'+
       '<td>'+esc(s.gender||"")+'</td><td class="small">'+esc((s.birth||"").slice(2))+'</td>'+
-      '<td>'+esc(s.level||"")+'</td><td style="font-family:monospace">'+esc(s.rlid||"")+'</td>'+
+      (H.lv?'':'<td'+(needLv?' class="warn"':'')+' style="cursor:pointer" onclick="editLevel(\''+s.id+'\')" title="클릭해서 수정'+(s.levelAt?' (최근 '+esc(s.levelAt)+')':'')+'">'+esc(s.level||"")+'</td>')+
+      (H.id?'':'<td style="font-family:monospace;cursor:pointer" onclick="editRlid(\''+s.id+'\')">'+esc(s.rlid||"")+'</td>')+
       '<td>'+s.days+'</td>'+
       '<td style="color:'+(u>0?'var(--amber)':'inherit')+';font-weight:'+(u>0?'800':'400')+'">'+plannedCnt(s)+'</td>'+
-      '<td style="color:'+(m>0?'var(--red)':'inherit')+';font-weight:'+(m>0?'800':'400')+'">'+(m||"")+'</td>'+
+      '<td class="'+(m>0?'mkCell':'')+'">'+(m||"")+'</td>'+
       '<td>'+(s.disc?Math.round(s.disc*100)+'%':'')+'</td>'+
       '<td>'+(s.bus?'O'+(s.busHalf?'½':''):'')+'</td>'+
-      '<td class="lft">'+esc(s.guardian||"")+'</td><td class="lft small">'+esc(s.phone||"")+'</td>';
+      (H.gu?'':'<td class="lft">'+esc(s.guardian||"")+'</td>')+
+      (H.ph?'':'<td class="lft small">'+esc(s.phone||"")+'</td>');
     if(isAdmin()){
-      var adjTxt=ADJ(s).map(function(a){
-        return '<span style="color:'+((Number(a.v)||0)<0?'var(--red)':'var(--green)')+'">'+
-          ((Number(a.v)||0)>0?'+':'')+(Number(a.v)||0).toLocaleString("ko-KR")+'</span>'+
-          (a.n?' <span class="small">'+esc(a.n.slice(0,14))+'</span>':'');
-      }).join("<br>");
-      h+='<td class="wk" style="text-align:right;font-weight:700">'+won(b.charge)+'</td>'+
-        '<td class="lft" style="cursor:pointer;font-size:11.5px;line-height:1.5" onclick="openAdj(\''+s.id+'\')" title="클릭해서 환불·추가 내역 편집">'+
-        (adjTxt||'<span style="color:#C9C5BC">＋ 내역 추가</span>')+'</td>'+
+      var adjTxt=ADJ(s).map(function(a,i){
+        var v=Number(a.v)||0;
+        return '<div style="white-space:nowrap;line-height:1.6">'+
+          '<span class="small" style="color:#9A958C">'+esc((a.d||"").slice(5))+'</span> '+
+          '<span style="color:'+(v<0?'var(--red)':'var(--green)')+';font-weight:700">'+(v>0?'+':'')+v.toLocaleString("ko-KR")+'</span> '+
+          '<span class="small">'+esc((a.t||"")+(a.n?" · "+a.n:"")).slice(0,22)+'</span></div>';
+      }).join("");
+      var payTxt=PAYS(s).length
+        ? PAYS(s).map(function(pp){ return '<div style="white-space:nowrap;line-height:1.5"><span class="small" style="color:#9A958C">'+esc((pp.d||"").slice(5))+'</span> <b style="color:var(--green)">'+(Number(pp.v)||0).toLocaleString("ko-KR")+'</b></div>'; }).join("")
+        : '<span style="color:var(--red);font-weight:700">미납</span>';
+      h+='<td class="wk" style="text-align:right;font-weight:700">'+won(b.charge)+
+         (s.chargeSet?'<div class="small" style="color:var(--amber)">지정</div>':'')+'</td>'+
+        '<td class="lft" style="cursor:pointer;font-size:11.5px" onclick="openAdj(\''+s.id+'\')" title="클릭해서 내역·납부 편집">'+
+        (adjTxt||'<span style="color:#C9C5BC">＋ 내역 추가</span>')+
+        (ADJ(s).length>1?'<div class="small" style="font-weight:800;border-top:1px dashed var(--line);margin-top:2px;padding-top:2px">계 '+(b.adj>0?'+':'')+b.adj.toLocaleString("ko-KR")+'</div>':'')+'</td>'+
         '<td style="text-align:right">'+(b.bus?won(b.bus):'')+'</td>'+
         '<td class="wk" style="text-align:right;font-weight:800;color:var(--blue);font-size:12.5px">'+won(b.total)+'</td>'+
-        '<td style="cursor:pointer" onclick="togglePaid(\''+s.id+'\')" title="클릭해서 납부 여부 변경">'+
-        (b.paid?'<span style="color:var(--green);font-weight:800">✓ 완납</span>':'<span style="color:var(--red);font-weight:700">미납</span>')+'</td>';
+        '<td class="lft" style="cursor:pointer;font-size:11.5px" onclick="openAdj(\''+s.id+'\')" title="클릭해서 납부 기록">'+payTxt+
+        (PAYS(s).length>1?'<div class="small" style="font-weight:800;border-top:1px dashed var(--line);margin-top:2px;padding-top:2px">계 '+pd.toLocaleString("ko-KR")+'</div>':'')+'</td>'+
+        '<td style="text-align:right;font-weight:800;color:'+(done?'var(--green)':'var(--red)')+'">'+(done?'✓ 완납':won(bal))+'</td>';
     }
     h+='</tr>';
   });
   if(isAdmin()){
-    h+='<tr style="background:#FBFAF7"><td class="lft" style="position:sticky;left:0;background:#FBFAF7;font-weight:800">합계</td>'+
-      '<td colspan="14"></td>'+
-      '<td class="wk" style="text-align:right;font-weight:800">'+won(sumCharge)+'</td>'+
-      '<td style="text-align:right;font-weight:800;color:'+(sumAdj<0?'var(--red)':'var(--green)')+'">'+(sumAdj>0?'+':'')+won(sumAdj)+'</td>'+
-      '<td style="text-align:right;font-weight:800">'+won(sumBus)+'</td>'+
-      '<td class="wk" style="text-align:right;font-weight:800;color:var(--blue)">'+won(sumTot)+'</td>'+
-      '<td style="font-weight:800">'+paidCnt+'/'+list.length+'</td></tr>';
+    var visible=6+(H.lv?0:1)+(H.id?0:1)+5+(H.gu?0:1)+(H.ph?0:1);
+    h+='<tr class="sumRow"><td class="lft" style="position:sticky;left:0;background:#F3F1EA">합계</td>'+
+      '<td colspan="'+(visible-1)+'"></td>'+
+      '<td class="wk" style="text-align:right">'+won(sumCharge)+'</td>'+
+      '<td style="text-align:right;color:'+(sumAdj<0?'var(--red)':'var(--green)')+'">'+(sumAdj>0?'+':'')+won(sumAdj)+'</td>'+
+      '<td style="text-align:right">'+won(sumBus)+'</td>'+
+      '<td class="wk" style="text-align:right;color:var(--blue)">'+won(sumTot)+'</td>'+
+      '<td style="text-align:right;color:var(--green)">'+won(sumPaid)+'</td>'+
+      '<td style="text-align:right;color:'+((sumTot-sumPaid)>0?'var(--red)':'var(--green)')+'">'+won(sumTot-sumPaid)+'</td></tr>';
   }
   h+='</tbody></table></div>'+
-     '<div class="small" style="margin-top:8px">이름 클릭 = 정보 수정 · <b>환불/추가 칸 클릭</b> = 내역 편집 · <b>납부 칸 클릭</b> = 완납/미납 전환'+
-     ' &nbsp;|&nbsp; 총금액 = 청구금액 + 환불·추가 + 차량비</div></div>';
+     '<div class="small" style="margin-top:8px">이름 클릭 = 정보 수정 · <b>환불/납부 칸 클릭</b> = 내역 편집(여러 건 누적 가능) · 영레벨/RL_ID 칸 클릭 = 바로 수정'+
+     ' &nbsp;|&nbsp; 총금액 = 청구금액 + 환불·추가 + 차량비 &nbsp;|&nbsp; <span style="background:#F2FAF4;padding:1px 6px;border-radius:4px">완납</span> '+
+     '<span style="background:#FFFBF0;padding:1px 6px;border-radius:4px">부분 납부</span></div></div>';
   return h;
 }
 function needLevel(){
@@ -907,6 +941,21 @@ function tapCell(id,d){
 /* 셀 메모: CAMP.notes[날짜][학생id] = "내용" */
 function NOTES(){ if(!CAMP.notes) CAMP.notes={}; return CAMP.notes; }
 function noteOf(sid,d){ var n=NOTES()[d]; return (n&&n[sid])||""; }
+function editLevel(sid){
+  var s=stuById(sid); if(!s) return;
+  var v=prompt(s.name+" — 영어 레벨\n(테스트 결과를 입력하면 가장 최근 값이 기준이 됩니다)", s.level||"");
+  if(v===null) return;
+  s.level=v.trim();
+  s.levelAt=todayStr();          /* 마지막 입력일 기록 */
+  saveLocal(); render();
+}
+function editRlid(sid){
+  var s=stuById(sid); if(!s) return;
+  var v=prompt(s.name+" — RL 아이디", s.rlid||"");
+  if(v===null) return;
+  s.rlid=v.trim(); s.rlidAt=todayStr();
+  saveLocal(); render();
+}
 function editNote(sid,d){
   var s=stuById(sid); if(!s) return;
   var cur=noteOf(sid,d);
@@ -929,6 +978,16 @@ function toggleHoliday(d){
 }
 /* 날짜 접기 */
 function COL(){ if(!UI.collapsed) UI.collapsed={}; return UI.collapsed; }
+/* 정보 열 접기 (영레벨·RL_ID·보호자·연락처) */
+function HIDE(){ if(!UI.hideCols) UI.hideCols={}; return UI.hideCols; }
+function toggleColGroup(k){ var H=HIDE(); if(H[k]) delete H[k]; else H[k]=1; render(); }
+function colBtns(keys){
+  var H=HIDE(), labels={lv:"영레벨",id:"RL_ID",gu:"보호자",ph:"연락처"};
+  return keys.map(function(k){
+    return '<button class="chip'+(H[k]?'':' on')+'" style="padding:4px 9px;font-size:11.5px" onclick="toggleColGroup(\''+k+'\')">'+
+      (H[k]?'▸ ':'▾ ')+labels[k]+'</button>';
+  }).join("");
+}
 function toggleCol(d){ var C=COL(); if(C[d]) delete C[d]; else C[d]=1; render(); }
 function toggleWeekCol(i){
   var g=weekGroups()[i]; if(!g) return;
@@ -1026,7 +1085,7 @@ function clsSheet(c){
   h+='<tr><th class="hdrInfo">반</th><th class="hdrInfo">번</th>'+
     '<th class="hdrInfo" style="position:sticky;left:0;z-index:3;min-width:92px">이름</th>'+
     '<th class="hdrInfo">생일</th><th class="hdrInfo">학교</th><th class="hdrInfo">학년</th>'+
-    '<th class="hdrInfo">성별</th><th class="hdrInfo">영레벨</th><th class="hdrInfo">RL_ID</th>';
+    '<th class="hdrInfo">성별</th><th class="hdrInfo lvCol">영레벨</th><th class="hdrInfo idCol">RL_ID</th>';
   ds.forEach(function(d){
     var dd=new Date(d+"T00:00:00"), hol=isHol(d), mon=dd.getDay()===1;
     if(C[d]){
@@ -1053,8 +1112,10 @@ function clsSheet(c){
        '<td class="idc">'+esc(s.school||"")+'</td>'+
        '<td class="idc">'+esc((s.grade||"").replace("초등 ",""))+'</td>'+
        '<td class="idc">'+esc(s.gender||"")+'</td>'+
-       '<td class="idc'+(needLv?' warn':'')+'">'+esc(s.level||"")+'</td>'+
-       '<td class="idc" style="font-family:monospace">'+esc(s.rlid||"")+'</td>';
+       '<td class="idc lvCol'+(needLv?' warn':'')+'" style="cursor:pointer" onclick="editLevel(\''+s.id+'\')" '+
+       'title="'+(s.levelAt?'최근 입력 '+esc(s.levelAt)+' · ':'')+'클릭해서 수정">'+esc(s.level||"")+
+       (s.levelAt?'<span style="color:#B0AA9E;font-size:9px;margin-left:3px">✎</span>':'')+'</td>'+
+       '<td class="idc idCol" style="font-family:monospace;cursor:pointer" onclick="editRlid(\''+s.id+'\')" title="클릭해서 수정">'+esc(s.rlid||"")+'</td>';
     ds.forEach(function(d){
       if(C[d]){ h+='<td class="'+(wstart[d]?'wk ':'')+'cPlan" style="min-width:16px"></td>'; return; }
       if(isHol(d)){ h+='<td class="'+(wstart[d]?'wk ':'')+'cHol">/</td>'; return; }
