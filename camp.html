@@ -18,7 +18,7 @@
   .belt div:first-child { flex:1; background:var(--red); }
   .belt div:last-child { flex:1; background:var(--blue); }
   .header { background:var(--navy); padding:13px 16px 0; }
-  .hTop { display:flex; align-items:center; gap:11px; max-width:680px; margin:0 auto; }
+  .hTop { display:flex; align-items:center; gap:11px; max-width:1560px; margin:0 auto; }
   .hBrand { flex:1; min-width:0; }
   .brandLine { font-size:12px; font-weight:700; color:#fff; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .brandLine .bx { color:var(--red); font-weight:800; margin:0 2px; }
@@ -30,11 +30,19 @@
   .hRight { text-align:right; }
   .syncDot { display:inline-block; width:7px; height:7px; border-radius:99px; margin-right:5px; vertical-align:1px; }
   .syncTxt { font-size:10.5px; color:var(--navyDim); }
-  .tabs { display:flex; gap:18px; overflow-x:auto; margin-top:10px; max-width:680px; margin-left:auto; margin-right:auto; }
+  .tabs { display:flex; gap:22px; overflow-x:auto; margin-top:10px; max-width:1560px; margin-left:auto; margin-right:auto; }
   .tab { flex:0 0 auto; padding:11px 2px 10px; font-size:14px; background:none; border:none;
          color:var(--navyDim); border-bottom:2.5px solid transparent; cursor:pointer; font-family:inherit; font-weight:600; white-space:nowrap; }
   .tab.on { color:#fff; font-weight:800; border-bottom-color:var(--red); }
-  .wrap { max-width:680px; margin:0 auto; padding:18px 14px 60px; }
+  .wrap { max-width:1560px; margin:0 auto; padding:20px 22px 60px; }
+  .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(430px,1fr)); gap:12px; align-items:start; }
+  .grid2 > .card { margin-bottom:0; }
+  .sheet { border-collapse:collapse; font-size:12px; white-space:nowrap; }
+  .sheet th { padding:5px 6px; border-bottom:2px solid var(--line); border-right:1px solid #F0EDE6; font-weight:700; text-align:center; background:#FBFAF7; position:sticky; top:0; }
+  .sheet td { padding:4px 6px; border-bottom:1px solid var(--line); border-right:1px solid #F4F1EA; text-align:center; }
+  .sheet .lft { text-align:left; }
+  .modal { border-radius:20px; max-width:760px; margin:auto; }
+  .modalBg { align-items:center; }
   .card { background:var(--card); border-radius:16px; padding:18px; margin-bottom:12px;
           box-shadow:0 1px 3px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04); }
   .label { font-size:13px; font-weight:600; color:var(--sub); margin:10px 0 6px; display:block; }
@@ -104,7 +112,7 @@
 <script>
 /* ================= 기본 설정 ================= */
 /* ── 앱 버전: 새 파일을 만들 때마다 자동 갱신됨. 기기들이 이 값을 비교해 새 버전을 감지 ── */
-var APP_VER = "v20260724.1607";
+var APP_VER = "v20260724.1649";
 
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwZmWHCEGwXoOs2omyAgWiOE3ds0zQCtRy-Ta7lLqk1lXQMNFPXCkrSvlgTTXGdlK9E/exec";
 var STORE = "camp";           /* 기존 프로그램과 같은 창고 방식, 캠프 전용 창고 이름 */
@@ -516,17 +524,31 @@ function vStu(){
   h+='<div class="row" style="margin-bottom:12px"><h2 style="flex:2;margin:0">원생 '+CAMP.students.length+'명</h2>'+
      '<button class="btn line" onclick="copySurvey()">설문 링크</button>'+
      '<button class="btn" onclick="openStu()">＋ 등록</button></div>';
-  if(!CAMP.students.length) h+='<div class="empty">아직 등록된 원생이 없습니다.<br>‘＋ 등록’ 버튼으로 시작하세요.</div>';
+  if(!CAMP.students.length){ h+='<div class="empty">아직 등록된 원생이 없습니다.<br>‘＋ 등록’ 버튼으로 시작하세요.</div>'; return h; }
+  h+='<div class="card" style="padding:12px"><div style="overflow:auto;max-height:75vh"><table class="sheet"><thead><tr>'+
+    '<th style="position:sticky;left:0;z-index:2;background:#FBFAF7;min-width:96px">이름</th>'+
+    '<th>반</th><th>학년</th><th>학교</th><th>성별</th><th>생일</th><th>영레벨</th><th>RL_ID</th>'+
+    '<th>등록</th><th>배치</th><th>보강</th><th class="lft">할인</th><th>차량</th>'+
+    '<th class="lft">보호자</th><th class="lft">연락처</th>'+
+    (isAdmin()?'<th>캠프비</th>':'')+'<th class="lft">메모</th></tr></thead><tbody>';
   CAMP.students.slice().sort(function(a,b){return a.name.localeCompare(b.name,"ko");}).forEach(function(s){
-    var hist=historyOf(s);
-    h+='<div class="item" onclick="openStu(\''+s.id+'\')"><div><div class="nm">'+busIcon(s)+esc(s.name)+
-       (s.cls?' <span class="tag" style="background:var(--blueSoft);color:var(--blue)">'+s.cls+'반</span>':'')+
-       (hist.length?' <span class="tag" style="background:var(--greenSoft);color:var(--green)">재등록 '+(hist.length+1)+'회</span>':'')+
-       '</div><div class="sb">'+esc(s.grade||"")+' · 등록 '+s.days+'일 · 배치 '+plannedCnt(s)+'일'+(makeupCnt(s)?' · 보강 '+makeupCnt(s)+'회':'')+
-       (s.level?' · 레벨 '+esc(s.level):'')+
-       (s.memo?'<br>'+esc(s.memo):'')+'</div></div>'+
-       (isAdmin()?'<div style="font-weight:800;color:var(--blue);font-size:14px">'+won(calcFee(s))+'</div>':'')+'</div>';
+    var hist=historyOf(s), u=unplaced(s), m=makeupCnt(s);
+    h+='<tr>'+
+      '<td class="lft" style="position:sticky;left:0;background:#fff;cursor:pointer;font-weight:700;z-index:1" onclick="openStu(\''+s.id+'\')">'+
+      busIcon(s)+esc(s.name)+(hist.length?' <span class="tag" style="background:var(--greenSoft);color:var(--green)">'+(hist.length+1)+'회</span>':'')+'</td>'+
+      '<td>'+esc(s.cls||"—")+'</td><td>'+esc((s.grade||"").replace("초등 ",""))+'</td><td>'+esc(s.school||"")+'</td>'+
+      '<td>'+esc(s.gender||"")+'</td><td>'+esc((s.birth||"").slice(2))+'</td>'+
+      '<td>'+esc(s.level||"")+'</td><td style="font-family:monospace">'+esc(s.rlid||"")+'</td>'+
+      '<td>'+s.days+'</td><td style="color:'+(u>0?'var(--amber)':'inherit')+';font-weight:'+(u>0?'800':'400')+'">'+plannedCnt(s)+'</td>'+
+      '<td style="color:'+(m>0?'var(--red)':'inherit')+';font-weight:'+(m>0?'800':'400')+'">'+(m||"")+'</td>'+
+      '<td class="lft">'+esc((s.discLabel||"").split(" ")[0]||"")+'</td>'+
+      '<td>'+(s.bus?'O'+(s.busHalf?'½':''):'')+'</td>'+
+      '<td class="lft">'+esc(s.guardian||"")+'</td><td class="lft">'+esc(s.phone||"")+'</td>'+
+      (isAdmin()?'<td style="text-align:right;font-weight:700;color:var(--blue)">'+won(calcFee(s))+'</td>':'')+
+      '<td class="lft small" style="max-width:230px;overflow:hidden;text-overflow:ellipsis">'+esc(s.memo||"")+'</td></tr>';
   });
+  h+='</tbody></table></div>'+
+     '<div class="small" style="margin-top:8px">이름을 클릭하면 수정 화면이 열립니다. 재등록 횟수는 초록 배지, 배치 부족은 노란색, 보강은 빨간색으로 표시됩니다.</div></div>';
   return h;
 }
 function needLevel(){
@@ -682,68 +704,79 @@ function clsList(c){
 function busIcon(s){ return s.bus? '<span title="차량 이용" style="color:var(--blue)">🚌</span> ' : ''; }
 
 function vAtt(){
-  var ds=campDates(), cls=UI.cls||"A";
-  var list=clsList(cls), unassigned=CAMP.students.filter(function(s){ return !(s.cls==="A"||s.cls==="B"); });
+  var ds=campDates();
   var warn=CAMP.students.filter(function(s){ return unplaced(s)>0; });
   var mk=CAMP.students.filter(function(s){ return makeupCnt(s)>0; });
-
-  var h='<div style="display:flex;gap:8px;margin-bottom:10px">'+
-    ['A','B'].map(function(c){
-      return '<button class="btn '+(cls===c?'':'line')+'" style="flex:1" onclick="setCls(\''+c+'\')">'+c+'반 <span style="opacity:.75;font-weight:600">'+clsList(c).length+'명</span></button>';
-    }).join('')+'</div>';
-  h+='<div class="small" style="margin-bottom:10px">'+(cls==="A"?"10시 체육 → 11시 영어":"10시 영어 → 11시 체육")+'</div>';
-
-  /* 경고: 추가 배치 필요 / 보강 필요 */
-  if(warn.length) h+='<div class="card" style="background:var(--amberSoft);border:1.5px solid var(--amber);padding:12px 14px">'+
-    '<div style="font-weight:800;font-size:14px;color:var(--amber);margin-bottom:5px">⚠ 추가 배치 필요 '+warn.length+'명</div>'+
-    '<div class="small">'+warn.map(function(s){ return esc(s.name)+' <b>+'+unplaced(s)+'일</b>'; }).join(" · ")+'</div>'+
-    '<div class="small" style="margin-top:6px">등록 일수보다 배치된 날짜가 적습니다. 이름을 눌러 날짜를 배치하세요.</div></div>';
-  if(mk.length) h+='<div class="card" style="background:var(--redSoft);border:1.5px solid var(--red);padding:12px 14px">'+
-    '<div style="font-weight:800;font-size:14px;color:var(--red);margin-bottom:5px">보강 필요 '+mk.length+'명</div>'+
-    '<div class="small">'+mk.map(function(s){ return esc(s.name)+' <b>'+makeupCnt(s)+'회</b>'; }).join(" · ")+'</div>'+
-    '<div class="small" style="margin-top:6px">결석한 날만큼 보강일을 추가 배치하면 숫자가 사라집니다.</div></div>';
-
-  /* 출석부 표 */
-  h+='<div class="card" style="padding:12px 10px"><div style="overflow-x:auto">'+
-     '<table style="border-collapse:collapse;font-size:12px;white-space:nowrap">'+
-     '<thead><tr><th style="position:sticky;left:0;background:#fff;text-align:left;padding:6px 8px;border-bottom:2px solid var(--line);min-width:104px">이름</th>';
+  var unassigned=CAMP.students.filter(function(s){ return !(s.cls==="A"||s.cls==="B"); });
+  var h='';
+  if(warn.length||mk.length){
+    h+='<div class="grid2" style="margin-bottom:12px">';
+    if(warn.length) h+='<div class="card" style="background:var(--amberSoft);border:1.5px solid var(--amber);padding:12px 14px">'+
+      '<b style="font-size:13.5px;color:var(--amber)">⚠ 추가 배치 필요 '+warn.length+'명</b> '+
+      '<span class="small">'+warn.map(function(s){ return esc(s.name)+' <b>+'+unplaced(s)+'일</b>'; }).join(" · ")+'</span>'+
+      '<div class="small" style="margin-top:4px">등록 일수보다 배치가 적습니다. 이름을 눌러 배치하세요.</div></div>';
+    if(mk.length) h+='<div class="card" style="background:var(--redSoft);border:1.5px solid var(--red);padding:12px 14px">'+
+      '<b style="font-size:13.5px;color:var(--red)">보강 필요 '+mk.length+'명</b> '+
+      '<span class="small">'+mk.map(function(s){ return esc(s.name)+' <b>'+makeupCnt(s)+'회</b>'; }).join(" · ")+'</span>'+
+      '<div class="small" style="margin-top:4px">보강일을 추가 배치하면 숫자가 사라집니다.</div></div>';
+    h+='</div>';
+  }
+  h+=clsSheet("A")+clsSheet("B");
+  if(unassigned.length){
+    h+='<div class="card"><h2 style="font-size:15px">반 미배치 '+unassigned.length+'명</h2><div class="grid2">'+
+      unassigned.map(function(s){
+        return '<div class="item" style="cursor:default;margin-bottom:0"><div><div class="nm">'+busIcon(s)+esc(s.name)+'</div><div class="sb">'+esc(s.grade||"")+' · '+s.days+'일 등록</div></div>'+
+          '<div style="display:flex;gap:6px"><button class="btn" style="padding:8px 12px;font-size:13px" onclick="setStuCls(\''+s.id+'\',\'A\')">A반</button>'+
+          '<button class="btn" style="padding:8px 12px;font-size:13px" onclick="setStuCls(\''+s.id+'\',\'B\')">B반</button></div></div>';
+      }).join("")+'</div></div>';
+  }
+  return h;
+}
+function clsSheet(c){
+  var ds=campDates(), list=clsList(c), today=new Date().toISOString().slice(0,10);
+  var h='<div class="card" style="padding:14px 14px 10px">'+
+    '<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:9px">'+
+    '<h2 style="margin:0">'+c+'반 <span class="small" style="font-weight:600">'+list.length+'명</span></h2>'+
+    '<span class="small">'+(c==="A"?"10시 체육 → 11시 영어":"10시 영어 → 11시 체육")+'</span>'+
+    '<span class="small" style="margin-left:auto">칸 클릭=출석 체크 · 이름 클릭=날짜 배치 · <b style="color:var(--green)">✓</b> 출석 · <b>·</b> 배치 예정 · <b style="color:var(--red)">－</b> 결석</span></div>'+
+    '<div style="overflow:auto;max-height:70vh"><table class="sheet"><thead><tr>'+
+    '<th>번</th><th style="position:sticky;left:0;z-index:2;background:#FBFAF7;min-width:96px">이름</th>'+
+    '<th>생일</th><th>학교</th><th>학년</th><th>성별</th><th>영레벨</th><th>RL_ID</th>';
   ds.forEach(function(d){
     var dd=new Date(d+"T00:00:00");
-    h+='<th style="padding:5px 3px;border-bottom:2px solid var(--line);font-weight:700;min-width:30px'+(d===UI.date?';background:var(--blueSoft)':'')+'">'+
-       (dd.getMonth()+1)+'/'+dd.getDate()+'<div style="font-weight:500;color:var(--sub);font-size:10px">'+"일월화수목금토"[dd.getDay()]+'</div></th>';
+    h+='<th'+(d===today?' style="background:var(--blueSoft)"':'')+'>'+(dd.getMonth()+1)+'/'+dd.getDate()+
+       '<div style="font-weight:500;color:var(--sub);font-size:10px">'+"일월화수목금토"[dd.getDay()]+'</div></th>';
   });
-  h+='<th style="padding:5px 8px;border-bottom:2px solid var(--line)">계</th></tr></thead><tbody>';
+  h+='<th>총계</th><th>등록</th><th>차량</th><th class="lft">승하차 장소</th><th class="lft">연락처</th></tr></thead><tbody>';
   list.forEach(function(s){
     var u=unplaced(s), m=makeupCnt(s);
-    h+='<tr><td style="position:sticky;left:0;background:#fff;padding:6px 8px;border-bottom:1px solid var(--line);cursor:pointer" onclick="openPlan(\''+s.id+'\')">'+
-       busIcon(s)+'<b>'+esc(s.name)+'</b>'+
+    h+='<tr><td>'+(s.no||"")+'</td>'+
+       '<td class="lft" style="position:sticky;left:0;background:#fff;cursor:pointer;font-weight:700;z-index:1" onclick="openPlan(\''+s.id+'\')">'+
+       busIcon(s)+esc(s.name)+
        (u>0?' <span class="tag" style="background:var(--amberSoft);color:var(--amber)">+'+u+'</span>':'')+
-       (m>0?' <span class="tag" style="background:var(--redSoft);color:var(--red)">보강'+m+'</span>':'')+
-       '</td>';
+       (m>0?' <span class="tag" style="background:var(--redSoft);color:var(--red)">보'+m+'</span>':'')+'</td>'+
+       '<td>'+esc((s.birth||"").slice(2))+'</td><td>'+esc(s.school||"")+'</td><td>'+esc((s.grade||"").replace("초등 ",""))+'</td>'+
+       '<td>'+esc(s.gender||"")+'</td><td>'+esc(s.level||"")+'</td><td style="font-family:monospace">'+esc(s.rlid||"")+'</td>';
     ds.forEach(function(d){
       var planned=planOf(s).indexOf(d)>=0, here=!!(CAMP.att[d]||{})[s.id];
-      var bg = here?'var(--green)' : planned?'var(--blueSoft)' : '#fff';
-      var fg = here?'#fff' : 'var(--sub)';
-      var mark = here?'✓' : planned?'·' : '';
-      h+='<td onclick="tapCell(\''+s.id+'\',\''+d+'\')" style="text-align:center;padding:6px 3px;border-bottom:1px solid var(--line);cursor:pointer;background:'+bg+';color:'+fg+';font-weight:700">'+mark+'</td>';
+      var absent=planned && d<today && !here;
+      var bg=here?'var(--green)':absent?'var(--redSoft)':planned?'var(--blueSoft)':'#fff';
+      var fg=here?'#fff':absent?'var(--red)':'var(--sub)';
+      var mark=here?'✓':absent?'－':planned?'·':'';
+      h+='<td onclick="tapCell(\''+s.id+'\',\''+d+'\')" style="cursor:pointer;background:'+bg+';color:'+fg+';font-weight:700;min-width:30px">'+mark+'</td>';
     });
-    h+='<td style="text-align:center;padding:6px 8px;border-bottom:1px solid var(--line);font-weight:800">'+actualCnt(s)+'</td></tr>';
+    h+='<td style="font-weight:800">'+actualCnt(s)+'</td><td>'+s.days+'</td><td>'+(s.bus?'O':'')+'</td>'+
+       '<td class="lft" style="max-width:190px;overflow:hidden;text-overflow:ellipsis">'+esc(s.stop||"")+'</td>'+
+       '<td class="lft">'+esc(s.phone||"")+'</td></tr>';
   });
-  /* 일자별 합계 */
-  h+='<tr><td style="position:sticky;left:0;background:#fff;padding:7px 8px;font-weight:800">합계</td>';
+  h+='<tr><td></td><td class="lft" style="position:sticky;left:0;background:#FBFAF7;font-weight:800">합계</td><td colspan="6"></td>';
   ds.forEach(function(d){
     var n=list.filter(function(s){ return (CAMP.att[d]||{})[s.id]; }).length;
-    h+='<td style="text-align:center;padding:7px 3px;font-weight:800;color:var(--blue)">'+n+'</td>';
+    h+='<td style="font-weight:800;color:var(--blue);background:#FBFAF7">'+n+'</td>';
   });
-  h+='<td></td></tr></tbody></table></div>'+
-     '<div class="small" style="margin-top:10px">칸을 누르면 <b>출석 체크</b>, 이름을 누르면 <b>날짜 배치</b> 화면이 열립니다. 연한 파랑 <b>·</b> 은 배치된 예정일입니다.</div></div>';
-
-  if(unassigned.length) h+='<div class="card"><h2 style="font-size:15px">반 미배치 '+unassigned.length+'명</h2>'+
-    unassigned.map(function(s){
-      return '<div class="item" style="cursor:default"><div><div class="nm">'+busIcon(s)+esc(s.name)+'</div><div class="sb">'+esc(s.grade||"")+' · '+s.days+'일 등록</div></div>'+
-        '<div style="display:flex;gap:6px"><button class="btn" style="padding:8px 12px;font-size:13px" onclick="setStuCls(\''+s.id+'\',\'A\')">A반</button>'+
-        '<button class="btn" style="padding:8px 12px;font-size:13px" onclick="setStuCls(\''+s.id+'\',\'B\')">B반</button></div></div>';
-    }).join("")+'</div>';
+  var riders=list.filter(function(s){return s.bus;}).length;
+  h+='<td style="background:#FBFAF7"></td><td style="background:#FBFAF7"></td><td style="font-weight:800;background:#FBFAF7">'+riders+'</td><td class="lft small" style="background:#FBFAF7">차량 신청 인원</td><td style="background:#FBFAF7"></td></tr>';
+  h+='</tbody></table></div></div>';
   return h;
 }
 function setCls(c){ UI.cls=c; render(); }
@@ -821,62 +854,82 @@ function ridesToday(d){ /* 그날 탑승 예정: 배치된 날 + 차량 이용 *
   return n;
 }
 function vBus(){
-  var d=UI.date, rts=ROUTES();
-  var h='<h2>차량 운행표</h2>'+dateChips();
-  var boardedAll=Object.keys(CAMP.board[d]||{}).length;
-  h+='<div class="card" style="background:var(--blueSoft);border:1.5px solid var(--blue);padding:13px 15px">'+
-     '<div style="display:flex;justify-content:space-between;align-items:center">'+
-     '<div><div class="small">'+fmtD(d)+'</div><div style="font-size:13.5px;font-weight:700;margin-top:2px">탑승 예정 '+ridesToday(d)+'명 · 확인 '+boardedAll+'명</div></div>'+
-     '<button class="btn line" style="padding:8px 12px;font-size:12.5px" onclick="addRoute()">＋ 노선</button></div></div>';
-  if(!rts.length) h+='<div class="empty">등록된 노선이 없습니다. ‘＋ 노선’으로 추가하세요.</div>';
+  var ds=campDates(), rts=ROUTES(), today=new Date().toISOString().slice(0,10);
+  var riders=CAMP.students.filter(function(s){return s.bus;});
+  var inRoute={}; rts.forEach(function(rt){ rt.stops.forEach(function(st){ if(st.sid) inRoute[st.sid]=1; }); });
+  var miss=riders.filter(function(s){ return !inRoute[s.id]; });
+
+  var h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">'+
+    '<h2 style="margin:0">차량 운행표</h2>'+
+    '<span class="small">차량 이용 <b>'+riders.length+'명</b> · 노선 <b>'+rts.length+'개</b></span>'+
+    '<span class="small" style="margin-left:auto">칸 클릭 = 탑승 확인 · 회색칸 = 그날 미배치</span>'+
+    '<button class="btn line" style="padding:8px 12px;font-size:12.5px" onclick="addRoute()">＋ 노선</button></div>';
+
+  if(miss.length) h+='<div class="card" style="background:var(--amberSoft);border:1.5px solid var(--amber);padding:11px 14px">'+
+    '<b style="font-size:13.5px;color:var(--amber)">⚠ 노선 미배정 '+miss.length+'명</b> '+
+    '<span class="small">'+miss.map(function(s){ return esc(s.name)+(s.stop?'('+esc(s.stop)+')':''); }).join(" · ")+'</span></div>';
+
+  if(!rts.length) return h+'<div class="empty">등록된 노선이 없습니다. ‘＋ 노선’으로 추가하세요.</div>';
+
   rts.forEach(function(rt,ri){
-    var cnt=rt.stops.filter(function(st){ return st.sid && (CAMP.board[d]||{})[st.sid]; }).length;
-    var plan=rt.stops.filter(function(st){ var s=st.sid&&stuById(st.sid); return s && planOf(s).indexOf(d)>=0; }).length;
-    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">'+
-       '<div><h2 style="font-size:15px;margin:0">'+esc(rt.name)+'</h2>'+
-       '<div class="small">'+esc(rt.dir)+' · 탑승 예정 '+plan+'명 / 확인 '+cnt+'명</div></div>'+
-       '<div style="display:flex;gap:5px">'+
-       '<button class="btn line" style="padding:6px 9px;font-size:11.5px" onclick="addStop('+ri+')">＋ 정류장</button>'+
-       (isAdmin()?'<button class="btn red" style="padding:6px 8px;font-size:11.5px" onclick="delRoute('+ri+')">삭제</button>':'')+
-       '</div></div>';
-    if(!rt.stops.length) h+='<div class="small">정류장이 없습니다.</div>';
+    h+='<div class="card" style="padding:13px 13px 10px">'+
+      '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">'+
+      '<h2 style="margin:0;font-size:15px">'+esc(rt.name)+'</h2>'+
+      '<span class="tag" style="background:'+(rt.dir==="등원"?'var(--blueSoft);color:var(--blue)':'var(--greenSoft);color:var(--green)')+'">'+esc(rt.dir)+'</span>'+
+      '<span class="small">정류장 '+rt.stops.filter(function(x){return x.name;}).length+'곳</span>'+
+      '<span style="margin-left:auto;display:flex;gap:5px">'+
+      '<button class="btn line" style="padding:6px 10px;font-size:12px" onclick="addStop('+ri+')">＋ 정류장</button>'+
+      (isAdmin()?'<button class="btn red" style="padding:6px 9px;font-size:12px" onclick="delRoute('+ri+')">노선 삭제</button>':'')+
+      '</span></div>'+
+      '<div style="overflow:auto;max-height:62vh"><table class="sheet"><thead><tr>'+
+      '<th>시간</th><th class="lft" style="min-width:190px">승하차 장소</th>'+
+      '<th style="position:sticky;left:0;z-index:2;background:#FBFAF7;min-width:88px">이름</th><th>학년</th>';
+    ds.forEach(function(d){
+      var dd=new Date(d+"T00:00:00");
+      h+='<th'+(d===today?' style="background:var(--blueSoft)"':'')+'>'+(dd.getMonth()+1)+'/'+dd.getDate()+
+         '<div style="font-weight:500;color:var(--sub);font-size:10px">'+"일월화수목금토"[dd.getDay()]+'</div></th>';
+    });
+    h+='<th>탑승계</th><th>수정</th></tr></thead><tbody>';
     rt.stops.forEach(function(st,si){
-      if(!st.name){  /* 도착 표시 행 */
-        h+='<div style="padding:7px 0;border-bottom:1px dashed var(--line);display:flex;gap:9px;align-items:center">'+
-           '<b style="font-size:12.5px;width:46px;color:var(--sub)">'+esc(st.t||"")+'</b>'+
-           '<span class="small" style="flex:1">'+esc(st.place||"도착")+'</span>'+
-           '<button class="btn red" style="padding:5px 7px;font-size:11px" onclick="delStop('+ri+','+si+')">×</button></div>';
+      if(!st.name){
+        h+='<tr style="background:#FAF9F5"><td style="color:var(--sub);font-weight:700">'+esc(st.t||"")+'</td>'+
+           '<td class="lft small" colspan="'+(ds.length+3)+'">'+esc(st.place||"도착")+'</td>'+
+           '<td><button class="btn red" style="padding:4px 7px;font-size:11px" onclick="delStop('+ri+','+si+')">×</button></td></tr>';
         return;
       }
       var stu=st.sid&&stuById(st.sid);
-      var planned = stu && planOf(stu).indexOf(d)>=0;
-      var on = st.sid && !!(CAMP.board[d]||{})[st.sid];
-      h+='<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);'+(planned?'':'opacity:.42')+'">'+
-         '<b style="font-size:12.5px;width:46px;color:var(--blue)">'+esc(st.t||"")+'</b>'+
-         '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(st.name)+
-         (stu?'':' <span class="small" style="color:var(--red)">(원생 연결 안 됨)</span>')+'</div>'+
-         '<div class="small" style="overflow:hidden;text-overflow:ellipsis">'+esc(st.grade||"")+(st.place?' · '+esc(st.place):'')+'</div></div>'+
-         (planned
-           ? '<button class="btn '+(on?'':'line')+'" style="padding:7px 11px;font-size:13px" onclick="toggleBoard(\''+st.sid+'\')">'+(on?'✓ 탑승':'탑승')+'</button>'
-           : '<span class="small" style="width:52px;text-align:center">미배치</span>')+
-         '<button class="btn line" style="padding:6px 8px;font-size:11px" onclick="editStop('+ri+','+si+')">수정</button>'+
-         '</div>';
+      var cnt=0;
+      var cells="";
+      ds.forEach(function(d){
+        var planned = stu && planOf(stu).indexOf(d)>=0;
+        var on = st.sid && !!(CAMP.board[d]||{})[st.sid];
+        if(on) cnt++;
+        var bg = on?'var(--green)' : planned?'#fff' : '#F3F1EC';
+        var fg = on?'#fff':'var(--sub)';
+        cells+='<td onclick="'+(st.sid?'toggleBoard(\''+st.sid+'\',\''+d+'\')':'')+'" style="cursor:'+(st.sid?'pointer':'default')+';background:'+bg+';color:'+fg+';font-weight:700;min-width:30px">'+(on?'✓':(planned?'':'·'))+'</td>';
+      });
+      h+='<tr><td style="font-weight:700;color:var(--blue)">'+esc(st.t||"")+'</td>'+
+         '<td class="lft" style="max-width:230px;overflow:hidden;text-overflow:ellipsis">'+esc(st.place||"")+'</td>'+
+         '<td class="lft" style="position:sticky;left:0;background:#fff;font-weight:700;z-index:1">'+esc(st.name)+
+         (stu?'':' <span class="small" style="color:var(--red)">(미연결)</span>')+'</td>'+
+         '<td>'+esc(st.grade||"")+'</td>'+cells+
+         '<td style="font-weight:800">'+cnt+'</td>'+
+         '<td><button class="btn line" style="padding:4px 8px;font-size:11px" onclick="editStop('+ri+','+si+')">수정</button></td></tr>';
     });
-    h+='</div>';
+    h+='<tr><td colspan="4" class="lft" style="font-weight:800;background:#FBFAF7">일자별 탑승인원</td>';
+    ds.forEach(function(d){
+      var n=rt.stops.filter(function(st){ return st.sid&&(CAMP.board[d]||{})[st.sid]; }).length;
+      h+='<td style="font-weight:800;color:var(--blue);background:#FBFAF7">'+n+'</td>';
+    });
+    h+='<td style="background:#FBFAF7"></td><td style="background:#FBFAF7"></td></tr></tbody></table></div></div>';
   });
-  /* 차량 이용인데 노선에 없는 학생 */
-  var inRoute={}; rts.forEach(function(rt){ rt.stops.forEach(function(st){ if(st.sid) inRoute[st.sid]=1; }); });
-  var miss=CAMP.students.filter(function(s){ return s.bus && !inRoute[s.id]; });
-  if(miss.length) h+='<div class="card" style="background:var(--amberSoft);border:1.5px solid var(--amber)">'+
-    '<div style="font-weight:800;font-size:14px;color:var(--amber);margin-bottom:6px">⚠ 노선 미배정 '+miss.length+'명</div>'+
-    '<div class="small" style="margin-bottom:8px">차량비를 내는데 아직 노선에 없는 학생입니다.</div>'+
-    miss.map(function(s){ return '<div class="small" style="padding:3px 0">· '+esc(s.name)+(s.stop?' — '+esc(s.stop):'')+'</div>'; }).join("")+'</div>';
   return h;
 }
-function toggleBoard(sid){
-  var day=CAMP.board[UI.date]||{};
+function toggleBoard(sid,d){
+  d=d||UI.date;
+  var day=CAMP.board[d]||{};
   if(day[sid]) delete day[sid]; else day[sid]=1;
-  CAMP.board[UI.date]=day; saveLocal(); render();
+  CAMP.board[d]=day; saveLocal(); render();
 }
 function addRoute(){
   var n=prompt("노선 이름 (예: 등원차량 운행 1)");
@@ -977,60 +1030,87 @@ function campMealTotal(c,d){
 }
 
 function vMeal(){
+  var ds=campDates(), today=new Date().toISOString().slice(0,10);
+  var total=mealAllTotal(), people=mealPeople();
+  var h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">'+
+    '<h2 style="margin:0">식단 · 주문</h2>'+
+    '<span class="small">캠프 '+ds.length+'일 · 식사 연인원 <b>'+people+'명</b>'+
+    (isAdmin()?' · 식비 누계 <b style="color:var(--red)">'+won(total)+'</b>':'')+'</span>'+
+    '<span class="small" style="margin-left:auto">날짜를 클릭하면 그날 주문을 편집합니다</span></div>';
+  /* 전체 기간 식단표 */
+  h+='<div class="card" style="padding:12px"><div style="overflow:auto;max-height:56vh"><table class="sheet" style="width:100%"><thead><tr>'+
+    '<th style="min-width:74px">날짜</th><th class="lft">국</th><th class="lft">단백질 메인</th>'+
+    '<th class="lft">나물 / 샐러드</th><th class="lft">마른 / 기타반찬</th>'+
+    '<th>식사<br>인원</th>'+(isAdmin()?'<th>식비</th>':'')+'<th class="lft">메모</th><th>편집</th></tr></thead><tbody>';
+  ds.forEach(function(d){
+    var m=CAMP.meals[d]||{}, isToday=(d===today);
+    var cell=function(k){
+      var pk=(m.pick||{})[k];
+      if(!pk||!pk.n) return '<span style="color:#C9C5BC">—</span>';
+      return esc(pk.n)+(pk.q?' <b style="color:var(--blue)">'+esc(pk.q)+'</b>':'')+(pk.note?' <span class="small">('+esc(pk.note)+')</span>':'');
+    };
+    h+='<tr'+(isToday?' style="background:var(--blueSoft)"':'')+' >'+
+      '<td style="font-weight:700;cursor:pointer" onclick="pickDate(\''+d+'\')">'+fmtD(d)+'</td>';
+    if(m.special){
+      h+='<td class="lft" colspan="4" style="color:var(--amber);font-weight:700">특식 '+esc(m.spNote||"")+
+         (m.spPer?' <span class="small">('+won(m.spPer)+' × '+(m.spCnt||0)+'명)</span>':'')+'</td>';
+    } else {
+      h+='<td class="lft">'+cell("soup")+'</td><td class="lft">'+cell("main")+'</td>'+
+         '<td class="lft">'+cell("veg")+'</td><td class="lft">'+cell("side")+'</td>';
+    }
+    h+='<td>'+(m.people||attCnt(d)||"")+'</td>'+
+       (isAdmin()?'<td style="text-align:right;font-weight:700">'+(mealTotal(d)?won(mealTotal(d)):"")+'</td>':'')+
+       '<td class="lft small" style="max-width:190px;overflow:hidden;text-overflow:ellipsis">'+esc(m.note||"")+'</td>'+
+       '<td><button class="btn line" style="padding:4px 9px;font-size:11px" onclick="pickDate(\''+d+'\')">편집</button></td></tr>';
+  });
+  h+='<tr><td class="lft" style="font-weight:800;background:#FBFAF7">합계</td><td colspan="4" style="background:#FBFAF7"></td>'+
+     '<td style="font-weight:800;background:#FBFAF7">'+people+'</td>'+
+     (isAdmin()?'<td style="text-align:right;font-weight:800;color:var(--red);background:#FBFAF7">'+won(total)+'</td>':'')+
+     '<td colspan="2" style="background:#FBFAF7"></td></tr>';
+  h+='</tbody></table></div></div>';
+
+  /* 선택한 날짜 편집 영역 */
   var m=mealDay(), day=mealTotal(UI.date);
-  var h='<h2>식단 · 주문</h2>'+dateChips();
-  /* 요약 카드 */
-  h+='<div class="card" style="background:var(--blueSoft);border:1.5px solid var(--blue)">'+
-     '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'+
-     '<div style="min-width:0"><div class="small">'+fmtD(UI.date)+' 주문</div>'+
-     '<div style="font-size:13.5px;margin-top:3px;font-weight:600">'+(mealSummary(UI.date)?esc(mealSummary(UI.date)):"아직 선택하지 않았습니다")+'</div></div>'+
-     (isAdmin()?'<b style="font-size:17px;color:var(--blue);white-space:nowrap">'+won(day)+'</b>':'')+'</div>'+
-     '<div class="small" style="margin-top:8px">출석 '+attCnt(UI.date)+'명'+
-     (isAdmin()?' · 캠프 식비 누계 <b>'+won(mealAllTotal())+'</b>':'')+'</div></div>';
-  /* 특식 전환 */
-  h+='<div class="card"><label style="display:flex;align-items:center;gap:8px">'+
+  h+='<div class="card" style="padding:14px"><div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px">'+
+     '<h2 style="margin:0;font-size:16px">'+fmtD(UI.date)+' 주문 편집</h2>'+
+     '<span class="small">출석 '+attCnt(UI.date)+'명</span>'+
+     (isAdmin()?'<b style="margin-left:auto;font-size:16px;color:var(--blue)">'+won(day)+'</b>':'')+'</div>'+
+     '<label style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'+
      '<input type="checkbox" '+(m.special?"checked":"")+' onchange="setMeal(\'special\',this.checked)">'+
-     '<span style="font-weight:700;font-size:14.5px">이 날은 특식 (수라청 외 주문)</span></label>';
+     '<span style="font-weight:700;font-size:13.5px">이 날은 특식 (수라청 외 주문)</span></label>';
   if(m.special){
-    h+='<div class="row" style="margin-top:10px"><div><span class="label">1인 단가 (원)</span>'+
-       '<input class="input" type="number" value="'+esc(m.spPer||"")+'" onblur="setMeal(\'spPer\',this.value)"></div>'+
-       '<div><span class="label">인원</span>'+
-       '<input class="input" type="number" value="'+esc(m.spCnt||attCnt(UI.date)||"")+'" onblur="setMeal(\'spCnt\',this.value)"></div></div>'+
-       '<span class="label">특식 내용 (예: 피자나라 치킨공주)</span>'+
-       '<input class="input" value="'+esc(m.spNote||"")+'" onblur="setMeal(\'spNote\',this.value)">'+
-       (isAdmin()?'<div class="fee" style="margin-top:12px"><span class="small">특식 합계</span><b>'+won(day)+'</b></div>':"");
-  }
-  h+='</div>';
-  /* 4칸 식단 선택 */
-  if(!m.special){
+    h+='<div class="grid2"><div class="card" style="margin:0;padding:12px"><div class="row">'+
+       '<div><span class="label">1인 단가 (원)</span><input class="input" type="number" value="'+esc(m.spPer||"")+'" onblur="setMeal(\'spPer\',this.value)"></div>'+
+       '<div><span class="label">인원</span><input class="input" type="number" value="'+esc(m.spCnt||attCnt(UI.date)||"")+'" onblur="setMeal(\'spCnt\',this.value)"></div></div>'+
+       '<span class="label">특식 내용</span><input class="input" placeholder="피자나라 치킨공주" value="'+esc(m.spNote||"")+'" onblur="setMeal(\'spNote\',this.value)"></div></div>';
+  } else {
+    h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">';
     SLOTS.forEach(function(sl){
       var pk=m.pick[sl.key]||{}, items=allItems(sl.cats);
       var opts='<option value="">— 선택 —</option>';
       items.forEach(function(it){ opts+='<option value="'+esc(it.n)+'"'+(pk.n===it.n?" selected":"")+'>'+esc(it.n)+'</option>'; });
       var base=pk.n?findItem(pk.n):null;
       var price=(pk.p!==undefined&&pk.p!=="")?Number(pk.p):(base?Number(base.p)||0:0);
-      h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
-         '<h2 style="font-size:15px;margin:0">'+sl.label+'</h2>'+
-         (isAdmin()&&pk.n?'<b style="font-size:14px;color:var(--blue)">'+won(price*(Number(pk.q)||0))+'</b>':'')+'</div>'+
-         '<select class="input" onchange="pickDish(\''+sl.key+'\',this.value)">'+opts+'</select>';
+      h+='<div style="border:1.5px solid var(--line);border-radius:12px;padding:11px">'+
+         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">'+
+         '<b style="font-size:13.5px">'+sl.label+'</b>'+
+         (isAdmin()&&pk.n?'<b style="font-size:13px;color:var(--blue)">'+won(price*(Number(pk.q)||0))+'</b>':'')+'</div>'+
+         '<select class="input" style="font-size:13px;padding:8px 10px" onchange="pickDish(\''+sl.key+'\',this.value)">'+opts+'</select>';
       if(pk.n){
-        h+='<div class="row" style="margin-top:10px"><div><span class="label">수량</span>'+
-           '<input class="input" type="number" value="'+esc(pk.q||"")+'" onblur="pickField(\''+sl.key+'\',\'q\',this.value)"></div>'+
-           (isAdmin()?'<div><span class="label">단가 (원)</span><input class="input" type="number" placeholder="'+(base?base.p:0)+'" value="'+esc(pk.p===undefined?"":pk.p)+'" onblur="pickField(\''+sl.key+'\',\'p\',this.value)"></div>':'')+
-           '</div>'+
-           '<span class="label">수량 메모 (예: 4팩+2만원, 10개들이)</span>'+
-           '<input class="input" value="'+esc(pk.note||"")+'" onblur="pickField(\''+sl.key+'\',\'note\',this.value)">';
+        h+='<div class="row" style="margin-top:7px"><div><span class="label">수량</span>'+
+           '<input class="input" style="padding:8px 10px" type="number" value="'+esc(pk.q||"")+'" onblur="pickField(\''+sl.key+'\',\'q\',this.value)"></div>'+
+           (isAdmin()?'<div><span class="label">단가</span><input class="input" style="padding:8px 10px" type="number" placeholder="'+(base?base.p:0)+'" value="'+esc(pk.p===undefined?"":pk.p)+'" onblur="pickField(\''+sl.key+'\',\'p\',this.value)"></div>':'')+'</div>'+
+           '<input class="input" style="margin-top:6px;padding:8px 10px;font-size:12.5px" placeholder="수량 메모 (4팩+2만원)" value="'+esc(pk.note||"")+'" onblur="pickField(\''+sl.key+'\',\'note\',this.value)">';
       }
-      h+='<div style="margin-top:10px"><button class="btn line" style="padding:7px 11px;font-size:12.5px" onclick="addDish(\''+sl.cats[0]+'\')">＋ 이 칸에 없는 반찬 추가</button></div></div>';
+      h+='<button class="btn line" style="width:100%;margin-top:7px;padding:6px;font-size:11.5px" onclick="addDish(\''+sl.cats[0]+'\')">＋ 반찬 추가</button></div>';
     });
+    h+='</div>';
   }
-  /* 인원·메모·실제지출 */
-  h+='<div class="card"><div class="row"><div><span class="label">식사 인원 (연인원 집계용)</span>'+
-     '<input class="input" type="number" placeholder="출석 '+attCnt(UI.date)+'명" value="'+esc(m.people||"")+'" onblur="setMeal(\'people\',this.value)"></div></div>'+
-     '<span class="label">메모</span><input class="input" value="'+esc(m.note||"")+'" onblur="setMeal(\'note\',this.value)">'+
-     (isAdmin()?'<span class="label">실제 지출액 직접 입력 (비우면 자동 계산 '+won(m.special?Math.round((Number(m.spPer)||0)*(Number(m.spCnt)||0)):day)+')</span>'+
-       '<input class="input" type="number" value="'+esc(m.cost===undefined?"":m.cost)+'" onblur="setMeal(\'cost\',this.value)">':"")+
-     '</div>';
+  h+='<div class="row" style="margin-top:12px">'+
+     '<div><span class="label">식사 인원</span><input class="input" type="number" placeholder="출석 '+attCnt(UI.date)+'명" value="'+esc(m.people||"")+'" onblur="setMeal(\'people\',this.value)"></div>'+
+     '<div style="flex:2"><span class="label">메모</span><input class="input" value="'+esc(m.note||"")+'" onblur="setMeal(\'note\',this.value)"></div>'+
+     (isAdmin()?'<div><span class="label">실제 지출액 (비우면 자동계산)</span><input class="input" type="number" value="'+esc(m.cost===undefined?"":m.cost)+'" onblur="setMeal(\'cost\',this.value)"></div>':'')+
+     '</div></div>';
   return h;
 }
 function pickDish(slot,name){
@@ -1054,47 +1134,64 @@ function setMeal(k,v){ var m=mealDay(); m[k]=v; CAMP.meals[UI.date]=m; saveLocal
 
 /* ---- 정산 ---- */
 function vStat(){
-  var income=0, sumT=0, sumM=0, sumB=0;
+  var ds=campDates();
+  var income=0,sumT=0,sumM=0,sumB=0;
   CAMP.students.forEach(function(s){ var p=feeParts(s); income+=p.total; sumT+=p.tuition; sumM+=p.meal; sumB+=p.bus; });
-  var mealCost=mealAllTotal();
-  var ds=campDates(), mx=1; ds.forEach(function(d){ if(attCnt(d)>mx) mx=attCnt(d); });
-  var bars=""; ds.forEach(function(d){
-    bars+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'+
-      '<span class="small" style="width:56px">'+fmtD(d)+'</span>'+
-      '<div class="bar" style="flex:1"><div style="width:'+(attCnt(d)/mx*100)+'%"></div></div>'+
-      '<b style="width:26px;text-align:right;font-size:13px">'+attCnt(d)+'</b></div>';
+  var mealCost=mealAllTotal(), extra=extraTotal(), net=income-mealCost-extra;
+  var mx=1; ds.forEach(function(d){ if(attCnt(d)>mx) mx=attCnt(d); });
+
+  var h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px"><h2 style="margin:0">정산 · 현황</h2>'+
+    '<span class="small">'+esc(CAMP.set.name)+' · 등록 '+CAMP.students.length+'명 · 캠프 '+ds.length+'일</span>'+
+    '<button class="btn line" style="margin-left:auto;padding:8px 12px;font-size:12.5px" onclick="exportCSV()">엑셀(CSV) 내보내기</button></div>';
+
+  /* 상단 지표 6칸 */
+  var kpi=[["등록 인원",CAMP.students.length+"명","var(--ink)"],["총 수입",won(income),"var(--blue)"],
+           ["식비 지출","-"+won(mealCost),"var(--red)"],["기타 지출","-"+won(extra),"var(--red)"],
+           ["순이익",won(net),net>=0?"var(--green)":"var(--red)"],["식사 연인원",mealPeople()+"명","var(--ink)"]];
+  h+='<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:12px">'+
+     kpi.map(function(k){ return '<div class="card" style="margin:0;padding:13px 10px;text-align:center">'+
+       '<div class="small">'+k[0]+'</div><div style="font-size:16px;font-weight:800;margin-top:3px;color:'+k[2]+'">'+k[1]+'</div></div>'; }).join("")+'</div>';
+
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">';
+  /* 왼쪽: 수입/지출 내역 + 기타지출 */
+  h+='<div><div class="card" style="padding:13px"><h2 style="margin:0 0 9px;font-size:15px">수입 내역</h2>'+
+     '<table class="sheet" style="width:100%"><tbody>'+
+     [["수업료 (할인 반영)",sumT],["식비",sumM],["차량비",sumB]].map(function(r){
+       return '<tr><td class="lft">'+r[0]+'</td><td style="text-align:right;font-weight:700">'+won(r[1])+'</td></tr>'; }).join("")+
+     '<tr style="background:#FBFAF7"><td class="lft" style="font-weight:800">수입 합계</td><td style="text-align:right;font-weight:800;color:var(--blue)">'+won(income)+'</td></tr>'+
+     '<tr><td class="lft">식비 지출</td><td style="text-align:right;color:var(--red)">-'+won(mealCost)+'</td></tr>'+
+     '<tr><td class="lft">기타 지출</td><td style="text-align:right;color:var(--red)">-'+won(extra)+'</td></tr>'+
+     '<tr style="background:var(--blueSoft)"><td class="lft" style="font-weight:800">순이익</td>'+
+     '<td style="text-align:right;font-weight:800;font-size:15px;color:'+(net>=0?'var(--green)':'var(--red)')+'">'+won(net)+'</td></tr>'+
+     '</tbody></table></div>'+extraCard()+'</div>';
+
+  /* 오른쪽: 출석 추이 + 역대 캠프 */
+  h+='<div><div class="card" style="padding:13px"><h2 style="margin:0 0 9px;font-size:15px">날짜별 출석</h2>'+
+     '<table class="sheet" style="width:100%"><thead><tr><th class="lft">날짜</th><th>A반</th><th>B반</th><th>합계</th><th class="lft" style="width:46%">추이</th><th>식비</th></tr></thead><tbody>';
+  ds.forEach(function(d){
+    var a=clsList("A").filter(function(s){return (CAMP.att[d]||{})[s.id];}).length;
+    var b=clsList("B").filter(function(s){return (CAMP.att[d]||{})[s.id];}).length;
+    h+='<tr><td class="lft">'+fmtD(d)+'</td><td>'+a+'</td><td>'+b+'</td><td style="font-weight:800">'+(a+b)+'</td>'+
+       '<td><div class="bar" style="height:11px"><div style="width:'+((a+b)/mx*100)+'%"></div></div></td>'+
+       '<td style="text-align:right">'+(mealTotal(d)?won(mealTotal(d)):"")+'</td></tr>';
   });
-  return '<h2>정산 · 현황</h2>'+
-    '<div class="kpi"><div class="card"><div class="l">등록 인원</div><div class="v">'+CAMP.students.length+'명</div></div>'+
-    '<div class="card"><div class="l">예상 수입</div><div class="v" style="color:var(--blue)">'+won(income)+'</div></div>'+
-    '<div class="card"><div class="l">식비 지출</div><div class="v" style="color:var(--red)">'+won(mealCost)+'</div></div></div>'+
-    '<div class="card"><h2 style="font-size:15px">수입 내역</h2>'+
-    '<div style="display:flex;justify-content:space-between;padding:6px 0"><span class="small">수업료 (할인 반영)</span><b style="font-size:14px">'+won(sumT)+'</b></div>'+
-    '<div style="display:flex;justify-content:space-between;padding:6px 0"><span class="small">식비</span><b style="font-size:14px">'+won(sumM)+'</b></div>'+
-    '<div style="display:flex;justify-content:space-between;padding:6px 0"><span class="small">차량비</span><b style="font-size:14px">'+won(sumB)+'</b></div>'+
-    '<div style="display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:8px;margin-top:4px"><span class="small" style="font-weight:700">합계</span><b style="color:var(--blue)">'+won(income)+'</b></div>'+
-    '</div>'+
-    extraCard()+
-    '<div class="card" style="background:var(--blueSoft);border:1.5px solid var(--blue)"><h2 style="font-size:15px">최종 손익</h2>'+
-    '<div style="display:flex;justify-content:space-between;padding:5px 0"><span class="small">총 수입</span><b style="font-size:14px">'+won(income)+'</b></div>'+
-    '<div style="display:flex;justify-content:space-between;padding:5px 0"><span class="small">식비 지출</span><b style="font-size:14px;color:var(--red)">-'+won(mealCost)+'</b></div>'+
-    '<div style="display:flex;justify-content:space-between;padding:5px 0"><span class="small">기타 지출</span><b style="font-size:14px;color:var(--red)">-'+won(extraTotal())+'</b></div>'+
-    '<div style="display:flex;justify-content:space-between;border-top:1.5px solid var(--blue);padding-top:9px;margin-top:5px">'+
-    '<span style="font-weight:700;font-size:14px">순이익</span>'+
-    '<b style="font-size:17px;color:'+((income-mealCost-extraTotal())>=0?'var(--green)':'var(--red)')+'">'+won(income-mealCost-extraTotal())+'</b></div>'+
-    '<div class="small" style="margin-top:8px">식사 연인원 '+mealPeople()+'명</div></div>'+
-    '<div class="card"><h2 style="font-size:15px">날짜별 출석 인원</h2>'+bars+'</div>'+
-    '<div class="card"><h2 style="font-size:15px">역대 캠프 요약</h2>'+
-    DB.camps.slice().reverse().map(function(c){
-      var inc=0; c.students.forEach(function(s){ inc+=calcFee(s); });
-      var mc=0; Object.keys(c.meals||{}).forEach(function(d){ mc+=campMealTotal(c,d); });
-      return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)">'+
-        '<span style="font-size:13.5px;font-weight:'+(c===CAMP?'800':'500')+'">'+esc(c.set.name)+'</span>'+
-        '<span class="small">'+c.students.length+'명 · 수입 '+won(inc)+' · 식비 '+won(mc)+'</span></div>';
-    }).join("")+'</div>'+
-    '<div class="card"><h2 style="font-size:15px">자료 내보내기</h2>'+
-    '<div class="small" style="margin-bottom:10px">원생 명단·출석부·차량부·식단을 엑셀에서 열리는 파일 하나로 저장합니다.</div>'+
-    '<button class="btn full" onclick="exportCSV()">엑셀(CSV) 다운로드</button></div>';
+  h+='</tbody></table></div>'+
+     '<div class="card" style="padding:13px"><h2 style="margin:0 0 9px;font-size:15px">역대 캠프 비교</h2>'+
+     '<table class="sheet" style="width:100%"><thead><tr><th class="lft">캠프</th><th class="lft">기간</th><th>인원</th><th>수입</th><th>식비</th><th>순이익</th></tr></thead><tbody>';
+  DB.camps.slice().reverse().forEach(function(c){
+    var inc=0; (c.students||[]).forEach(function(x){ inc+=calcFee(x); });
+    var mc=0; Object.keys(c.meals||{}).forEach(function(d){ mc+=campMealTotal(c,d); });
+    var cur=(c===CAMP);
+    h+='<tr'+(cur?' style="background:var(--blueSoft)"':'')+'>'+
+      '<td class="lft" style="font-weight:'+(cur?'800':'600')+';cursor:pointer" onclick="setCur(\''+c.id+'\')">'+esc(c.set.name)+'</td>'+
+      '<td class="lft small">'+esc((c.set.start||"").slice(2))+'~'+esc((c.set.end||"").slice(5))+'</td>'+
+      '<td>'+(c.students||[]).length+'</td>'+
+      '<td style="text-align:right">'+won(inc)+'</td><td style="text-align:right;color:var(--red)">'+won(mc)+'</td>'+
+      '<td style="text-align:right;font-weight:700;color:var(--green)">'+won(inc-mc)+'</td></tr>';
+  });
+  h+='</tbody></table><div class="small" style="margin-top:7px">캠프 이름을 클릭하면 해당 캠프로 이동합니다. 과거 캠프 수입은 현재 요금 기준 재계산값입니다.</div></div></div>';
+  h+='</div>';
+  return h;
 }
 function exportCSV(){
   var e=function(v){ return '"'+String(v==null?"":v).replace(/"/g,'""')+'"'; };
@@ -1166,29 +1263,37 @@ function exportCSV(){
 
 /* ---- 설정 ---- */
 function vSet(){
-  return '<h2>설정</h2>'+
-    '<div class="card"><h2 style="font-size:15px">캠프 기간</h2>'+
-    '<span class="label">캠프 이름</span><input class="input" value="'+esc(CAMP.set.name)+'" onblur="setConf(\'name\',this.value)">'+
-    '<div class="row"><div><span class="label">시작일</span><input class="input" type="date" value="'+CAMP.set.start+'" onchange="setConf(\'start\',this.value)"></div>'+
-    '<div><span class="label">종료일</span><input class="input" type="date" value="'+CAMP.set.end+'" onchange="setConf(\'end\',this.value)"></div></div>'+
-    '<div class="small" style="margin-top:8px">평일(월–금)만 캠프일로 자동 생성됩니다.</div></div>'+
-    (isAdmin()? rateCard() : '')+
-    '<div class="card"><h2 style="font-size:15px">캠프 목록 <span class="small">('+DB.camps.length+'개 보관 중)</span></h2>'+
-    DB.camps.slice().reverse().map(function(c){
-      var cur=(c===CAMP);
-      return '<div class="item" style="cursor:default"><div><div class="nm">'+esc(c.set.name)+(cur?' <span class="tag" style="background:var(--greenSoft);color:var(--green)">보는 중</span>':'')+'</div>'+
-        '<div class="sb">'+esc(c.set.start||"")+' ~ '+esc(c.set.end||"")+' · '+c.students.length+'명</div></div>'+
-        '<div style="display:flex;gap:6px">'+
-        (cur?'':'<button class="btn line" style="padding:8px 12px;font-size:13px" onclick="setCur(\''+c.id+'\')">보기</button>')+
-        (isAdmin()&&DB.camps.length>1?'<button class="btn red" style="padding:8px 12px;font-size:13px" onclick="delCamp(\''+c.id+'\')">삭제</button>':'')+
-        '</div></div>';
-    }).join("")+
-    (isAdmin()?'<button class="btn full" style="margin-top:6px" onclick="openNewCamp()">＋ 새 캠프 시작 (다음 방학)</button>':'')+
-    '</div>'+
-    '<div class="card"><h2 style="font-size:15px">내 계정</h2>'+
-    '<div class="small" style="margin-bottom:12px">현재 권한: <b>'+(isAdmin()?"관리자 (정산·돈 관련 표시)":"선생님 (운영 화면만 표시)")+'</b></div>'+
-    '<button class="btn line full" onclick="logout()">로그아웃 (접속키 변경)</button>'+
-    '<div class="small" style="margin-top:10px">동기화 상태: '+document.getElementById("syncTxt").textContent+'</div></div>';
+  var h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px"><h2 style="margin:0">설정</h2>'+
+    '<span class="small">권한: <b>'+(isAdmin()?"관리자 (정산·요금 표시)":"선생님 (운영 화면만)")+'</b> · 동기화: '+
+    esc(document.getElementById("syncTxt").textContent)+'</span>'+
+    '<button class="btn line" style="margin-left:auto;padding:8px 12px;font-size:12.5px" onclick="logout()">로그아웃 (접속키 변경)</button></div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1.15fr;gap:12px;align-items:start"><div>';
+  /* 캠프 기간 */
+  h+='<div class="card" style="padding:13px"><h2 style="margin:0 0 9px;font-size:15px">현재 캠프</h2>'+
+     '<span class="label">캠프 이름</span><input class="input" value="'+esc(CAMP.set.name)+'" onblur="setConf(\'name\',this.value)">'+
+     '<div class="row"><div><span class="label">시작일</span><input class="input" type="date" value="'+CAMP.set.start+'" onchange="setConf(\'start\',this.value)"></div>'+
+     '<div><span class="label">종료일</span><input class="input" type="date" value="'+CAMP.set.end+'" onchange="setConf(\'end\',this.value)"></div></div>'+
+     '<div class="small" style="margin-top:7px">평일(월–금) '+campDates().length+'일이 캠프일로 자동 생성됩니다.</div></div>';
+  /* 캠프 목록 표 */
+  h+='<div class="card" style="padding:13px"><div style="display:flex;align-items:center;margin-bottom:8px">'+
+     '<h2 style="margin:0;font-size:15px">캠프 목록 <span class="small">'+DB.camps.length+'개 보관</span></h2>'+
+     (isAdmin()?'<button class="btn" style="margin-left:auto;padding:6px 10px;font-size:12px" onclick="openNewCamp()">＋ 새 캠프</button>':'')+'</div>'+
+     '<table class="sheet" style="width:100%"><thead><tr><th class="lft">캠프</th><th class="lft">기간</th><th>인원</th><th></th></tr></thead><tbody>';
+  DB.camps.slice().reverse().forEach(function(c){
+    var cur=(c===CAMP);
+    h+='<tr'+(cur?' style="background:var(--blueSoft)"':'')+'><td class="lft" style="font-weight:'+(cur?'800':'600')+'">'+esc(c.set.name)+
+      (cur?' <span class="tag" style="background:var(--blue);color:#fff">보는 중</span>':'')+'</td>'+
+      '<td class="lft small">'+esc((c.set.start||"").slice(2))+'~'+esc((c.set.end||"").slice(5))+'</td>'+
+      '<td>'+(c.students||[]).length+'</td>'+
+      '<td><div style="display:flex;gap:4px;justify-content:center">'+
+      (cur?'':'<button class="btn line" style="padding:4px 9px;font-size:11px" onclick="setCur(\''+c.id+'\')">열기</button>')+
+      (isAdmin()&&DB.camps.length>1?'<button class="btn red" style="padding:4px 8px;font-size:11px" onclick="delCamp(\''+c.id+'\')">×</button>':'')+
+      '</div></td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  /* 오른쪽: 요금 기준 */
+  h+='<div>'+(isAdmin()?rateCard():'<div class="card"><div class="small">요금 기준은 관리자만 볼 수 있습니다.</div></div>')+'</div></div>';
+  return h;
 }
 function setConf(k,v){ CAMP.set[k]=v; saveLocal(); render(); }
 
@@ -1284,27 +1389,297 @@ function ltCard(){
   var need=needLevel();
   var assigned={}; LT().forEach(function(sl){ (sl.ids||[]).forEach(function(id){ assigned[id]=1; }); });
   var unass=need.filter(function(s){ return !assigned[s.id]; });
-  var h='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
-    '<h2 style="font-size:15px;margin:0">영어 레벨테스트 일정</h2>'+
-    '<button class="btn line" style="padding:6px 10px;font-size:12px" onclick="addLT()">＋ 시간대</button></div>'+
-    '<div class="small" style="margin-bottom:10px">테스트 필요 '+need.length+'명 중 미배정 <b style="color:'+(unass.length?'var(--amber)':'var(--green)')+'">'+unass.length+'명</b>'+
-    ' · SR test 1만원 (상담 포함 2만원) · 미배정자는 캠프 첫날 테스트</div>';
-  if(!LT().length) h+='<div class="small">시간대를 추가하세요. 예: 7/20(월) 오후 7:30, 정원 5</div>';
-  LT().forEach(function(sl,i){
-    var left=(Number(sl.cap)||0)-(sl.ids||[]).length;
+  var h='<div class="card" style="padding:13px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+
+    '<h2 style="margin:0;font-size:15px">영어 레벨테스트</h2>'+
+    '<span class="small">필요 <b>'+need.length+'명</b> · 미배정 <b style="color:'+(unass.length?'var(--amber)':'var(--green)')+'">'+unass.length+'명</b> · SR test 1만원(상담 2만원)</span>'+
+    '<button class="btn line" style="margin-left:auto;padding:6px 10px;font-size:12px" onclick="addLT()">＋ 시간대</button></div>';
+  if(!LT().length) h+='<div class="small">시간대를 추가하세요. 예: 7/20(월) 오후 7:30, 정원 5명</div>';
+  else {
+    h+='<table class="sheet" style="width:100%"><thead><tr><th class="lft">시간대</th><th>정원</th><th>배정</th><th>잔여</th><th class="lft" style="min-width:250px">배정 학생</th><th></th></tr></thead><tbody>';
+    LT().forEach(function(sl,i){
+      var used=(sl.ids||[]).length, left=(Number(sl.cap)||0)-used;
+      h+='<tr><td class="lft" style="font-weight:700">'+esc(sl.t)+'</td><td>'+sl.cap+'</td><td>'+used+'</td>'+
+        '<td style="font-weight:800;color:'+(left>0?'var(--green)':'var(--red)')+'">'+(left>0?left:'마감')+'</td>'+
+        '<td class="lft"><div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">'+
+        (sl.ids||[]).map(function(id){ var st=stuById(id); return st?'<button class="chip on" style="padding:4px 8px;font-size:11.5px" onclick="ltRemove('+i+',\''+id+'\')">'+esc(st.name)+' ×</button>':''; }).join("")+
+        (left>0&&unass.length?'<select class="input" style="width:auto;padding:5px 8px;font-size:11.5px" onchange="ltAssign('+i+',this.value)"><option value="">＋ 배정</option>'+
+          unass.map(function(st){ return '<option value="'+st.id+'">'+esc(st.name)+'</option>'; }).join("")+'</select>':'')+
+        '</div></td>'+
+        '<td><button class="btn red" style="padding:4px 7px;font-size:11px" onclick="delLT('+i+')">×</button></td></tr>';
+    });
+    h+='</tbody></table>';
+  }
+  if(unass.length) h+='<div class="small" style="margin-top:8px">미배정(첫날 테스트 대상): <b>'+unass.map(function(st){return esc(st.name);}).join(" · ")+'</b></div>';
+  h+='</div>';
+  return h;
+}
+function addLT(){
+  var t=prompt("시간대 (예: 7/20(월) 오후 7:30)"); if(!t||!t.trim()) return;
+  var c=prompt("정원 (명)","5");
+  LT().push({t:t.trim(), cap:Number(c)||5, ids:[]}); saveLocal(); render();
+}
+function delLT(i){ if(confirm("이 시간대를 삭제할까요?")){ LT().splice(i,1); saveLocal(); render(); } }
+function ltAssign(i,id){
+  if(!id) return; var sl=LT()[i]; if(!sl.ids) sl.ids=[];
+  if(sl.ids.length>=(Number(sl.cap)||0)){ alert("이 시간대는 정원이 찼습니다."); render(); return; }
+  if(sl.ids.indexOf(id)<0) sl.ids.push(id); saveLocal(); render();
+}
+function ltRemove(i,id){ var sl=LT()[i]; sl.ids=(sl.ids||[]).filter(function(x){return x!==id;}); saveLocal(); render(); }
+/* ---- 설문 응답 가져오기 (구글 시트에서 행 복사 → 붙여넣기) ---- */
+function openImport(){
+  document.getElementById("modalHost").innerHTML=
+  '<div class="modalBg" onclick="if(event.target===this)closeModal()"><div class="modal">'+
+  '<h2>설문 응답 가져오기</h2>'+
+  '<div class="small" style="line-height:1.7;margin-bottom:10px">'+
+  '① 구글 폼 응답 시트를 엽니다<br>② 가져올 응답 <b>행 전체를 드래그 → 복사</b> (제목행 포함 여부 무관)<br>③ 아래 칸에 붙여넣기 → 미리보기 확인 → 가져오기</div>'+
+  '<div style="background:var(--greenSoft);border-radius:12px;padding:12px 14px;margin-bottom:12px">'+
+  '<b style="font-size:13.5px;color:var(--green)">방법 1 — 구글 폼에서 자동 불러오기 (추천)</b>'+
+  '<div style="margin-top:8px"><button class="btn green full" onclick="fetchApply()">새 응답 자동 불러오기</button></div>'+
+  '<span class="label">응답 시트 주소 (최초 1회만 입력)</span>'+
+  '<input class="input" value="'+esc(DB.applySid||"")+'" placeholder="폼 → 응답 → 시트 아이콘 → 열린 시트의 주소 붙여넣기" onblur="saveApplySid(this.value)">'+
+  '</div>'+
+  '<b style="font-size:13.5px">방법 2 — 복사해서 붙여넣기</b>'+
+  '<textarea class="input" id="impText" rows="4" placeholder="응답 시트에서 행을 복사해 여기에 붙여넣기" style="font-size:13px;margin-top:6px"></textarea>'+
+  '<div style="margin-top:8px"><button class="btn line full" onclick="parseImport()">붙여넣은 내용 미리보기</button></div>'+
+  '<div id="impPrev"></div></div></div>';
+}
+function draftsFromRows(rows){
+  var out=[];
+  rows.forEach(function(c){
+    var name=(c[2]||"").trim(); if(!name) return;
+    var looksData = /\d{4}/.test(c[0]||"") || /\d/.test(c[3]||"");
+    if(!looksData) return;
+    if(/캠프생|주소|밴드|레벨을|타임스탬프/.test(name)) return;
+    var birth=(c[3]||"").trim().slice(0,10).replace(/\./g,"-").replace(/\s/g,"").replace(/-$/,"");
+    var ref=(c[14]||"");
+    var disc=0, dl="할인 없음";
+    if(/나라차|클래식/.test(ref)){ disc=0.2; dl=DISC[0][1]; }
+    else if(/이전 캠프/.test(ref)){ disc=0.1; dl=DISC[2][1]; }
+    else if(/지인/.test(ref)){ disc=0.1; dl=DISC[3][1]; }
+    var period=(c[13]||"").trim();
+    var allDays=/전 일정/.test(period);
+    var lvRaw=(c[17]||"").trim();
+    var lv=/모름|테스트|레테/.test(lvRaw)?"":lvRaw;
+    var mealNote=(c[16]||"").trim();
+    var memoArr=[];
+    if(!allDays && period) memoArr.push("참여기간:"+period);
+    if(mealNote && !/없습|없음|^x$/i.test(mealNote)) memoArr.push("식사주의:"+mealNote);
+    if(!lv && lvRaw) memoArr.push("레벨:"+lvRaw);
+    var draft={ name:name, birth:birth, school:(c[4]||"").trim(), grade:(c[5]||"").trim(),
+      gender:(/여/.test(c[6]||"")?"여":"남"), guardian:(c[11]||"").trim(), phone:(c[12]||"").trim(),
+      pkg:"full", days:(allDays?campDates().length:0), disc:disc, discLabel:dl,
+      bus:(/신청합니다/.test(c[9]||"")?"b1":""), busHalf:false,
+      vehicle:/신청합니다/.test(c[9]||""), stop:(c[10]||"").trim(), time:"",
+      cls:"", no:0, level:lv, rlid:"", plan:[], memo:memoArr.join(" / ") };
+    var dup=CAMP.students.some(function(x){ return samePerson(x,draft); });
+    var hist=historyOf(draft).length;
+    out.push({d:draft, dup:dup, hist:hist, use:!dup});
+  });
+  return out;
+}
+function showImportPreview(out, sourceLabel){
+  if(!out.length){ alert("가져올 응답을 찾지 못했습니다."); return; }
+  UI.imp=out;
+  var news=out.filter(function(o){return !o.dup;}).length;
+  var h='<div style="margin-top:14px"><b style="font-size:14px">'+sourceLabel+' '+out.length+'건 (신규 '+news+'건)</b>';
+  out.forEach(function(o,i){
+    h+='<label style="display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer">'+
+      '<input type="checkbox" '+(o.use?"checked":"")+' onchange="UI.imp['+i+'].use=this.checked" style="margin-top:3px">'+
+      '<span style="font-size:13px"><b>'+esc(o.d.name)+'</b> '+esc(o.d.grade)+' · '+(o.d.days?o.d.days+"일":"기간 확인 필요")+
+      ' · '+esc(o.d.discLabel)+(o.d.vehicle?' · 🚌':'')+
+      (o.dup?' <span class="tag" style="background:var(--redSoft);color:var(--red)">이미 등록됨</span>':'')+
+      (o.hist?' <span class="tag" style="background:var(--greenSoft);color:var(--green)">재등록 '+(o.hist+1)+'회</span>':'')+
+      (o.d.memo?'<br><span class="small">'+esc(o.d.memo)+'</span>':'')+
+      '</span></label>';
+  });
+  h+='<div style="margin-top:12px"><button class="btn green full" onclick="doImport()">체크된 응답 가져오기</button></div>'+
+     '<div class="small" style="margin-top:8px">가져온 뒤 출석부에서 반 배치와 날짜 배치를 진행하세요. 할인은 자동 제안값이니 확인 후 확정하세요.</div></div>';
+  document.getElementById("impPrev").innerHTML=h;
+}
+function parseImport(){
+  var txt=document.getElementById("impText").value;
+  if(!txt.trim()){ alert("붙여넣은 내용이 없습니다."); return; }
+  var rows=txt.split(/\r?\n/).filter(function(l){return l.trim();}).map(function(l){return l.split("\t");});
+  showImportPreview(draftsFromRows(rows), "붙여넣기 응답");
+}
+function fetchApply(){
+  var sid=(DB.applySid||"").trim();
+  if(!sid){ alert("먼저 아래에 응답 시트 주소(또는 ID)를 입력해 주세요."); return; }
+  var prev=document.getElementById("impPrev");
+  prev.innerHTML='<div class="small" style="margin-top:12px">구글 폼 응답을 불러오는 중…</div>';
+  fetch(GSHEET_URL+"?key="+encodeURIComponent(accessKey())+"&store=apply&sid="+encodeURIComponent(sid))
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      if(rows && rows.error==="AUTH"){ prev.innerHTML='<div class="small" style="color:var(--red);margin-top:12px">접속키 오류입니다.</div>'; return; }
+      if(rows && rows.error==="NOSID"){ prev.innerHTML='<div class="small" style="color:var(--red);margin-top:12px">응답 시트 ID가 서버에 전달되지 않았습니다.</div>'; return; }
+      if(rows && rows.error){ prev.innerHTML='<div class="small" style="color:var(--red);margin-top:12px">시트를 열지 못했습니다. ① 서버 코드가 v2인지 ② 응답 시트가 같은 구글 계정 소유인지 확인해 주세요.</div>'; return; }
+      if(!rows || !rows.length){ prev.innerHTML='<div class="small" style="margin-top:12px">응답이 없습니다.</div>'; return; }
+      showImportPreview(draftsFromRows(rows), "구글 폼 자동");
+    })
+    .catch(function(){ prev.innerHTML='<div class="small" style="color:var(--red);margin-top:12px">불러오기 실패. 인터넷 연결을 확인해 주세요.</div>'; });
+}
+function saveApplySid(v){
+  /* 전체 URL을 붙여넣어도 ID만 추려서 저장 */
+  var m=v.match(/\/d\/([a-zA-Z0-9_-]{20,})/);
+  DB.applySid=(m?m[1]:v.trim()); saveLocal();
+}
+function doImport(){
+  var n=0;
+  (UI.imp||[]).forEach(function(o){
+    if(!o.use) return;
+    o.d.id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    CAMP.students.push(o.d); n++;
+  });
+  UI.imp=null; saveLocal(); closeModal(); render();
+  alert(n+"명을 등록했습니다.\n출석부 탭에서 반 배치·날짜 배치를 진행하세요.");
+}
+
+function toggleTodo(i){ TODO()[i].d=!TODO()[i].d; saveLocal(); render(); }
+function addTodo(){ var t=prompt("추가할 준비 항목"); if(t&&t.trim()){ TODO().push({t:t.trim(),d:false}); saveLocal(); render(); } }
+function resetTodo(){ if(confirm("체크리스트를 기본 목록으로 되돌릴까요?")){ CAMP.todo=JSON.parse(JSON.stringify(DEFAULT_TODO)); saveLocal(); render(); } }
+function addInq(){
+  var n=prompt("문의자(학생) 이름"); if(n===null) return;
+  var c=prompt("연락처 (없으면 비워두세요)")||"";
+  var m=prompt("문의 내용 메모")||"";
+  INQ().push({date:new Date().toISOString().slice(0,10), name:(n||"").trim(), contact:c.trim(), memo:m.trim(), st:0});
+  saveLocal(); render();
+}
+function setInqSt(i,st){ INQ()[i].st=st; saveLocal(); render(); }
+function delInq(i){ if(confirm("이 문의 기록을 삭제할까요?")){ INQ().splice(i,1); saveLocal(); render(); } }
+function inqToStu(i){
+  var q=INQ()[i];
+  UI.edit={ id:"", name:q.name||"", grade:"", school:"", gender:"남", guardian:"", phone:q.contact||"",
+            pkg:"full", days:campDates().length, disc:0.2, discLabel:DISC[0][1],
+            bus:"", busHalf:false, stop:"", time:"", memo:(q.memo?"문의:"+q.memo:""), level:"", rlid:"" };
+  renderStuModal();
+}
+
+/* ---- 기타 지출 (시스템 사용료, 쌀·잡곡, 유류대 등) ---- */
+var DEFAULT_EXTRA = [
+  {n:"클래식리더 시스템 사용료", v:0}, {n:"쌀", v:0}, {n:"잡곡", v:0}, {n:"김", v:0},
+  {n:"종이컵·식기류", v:0}, {n:"문구류 (이름표 등)", v:0}, {n:"복사지", v:0}, {n:"유류대", v:0}
+];
+function EXTRA(){ if(!DB.extra) DB.extra=JSON.parse(JSON.stringify(DEFAULT_EXTRA)); return DB.extra; }
+function extraTotal(){ var t=0; EXTRA().forEach(function(x){ t+=Number(x.v)||0; }); return t; }
+function setExtra(i,v){ EXTRA()[i].v=Number(v)||0; saveLocal(); render(); }
+function addExtra(){
+  var n=prompt("추가할 지출 항목 이름");
+  if(!n||!n.trim()) return;
+  EXTRA().push({n:n.trim(), v:0}); saveLocal(); render();
+}
+function delExtra(i){
+  var x=EXTRA()[i]; if(!x) return;
+  if(!confirm('"'+x.n+'" 항목을 삭제할까요?')) return;
+  EXTRA().splice(i,1); saveLocal(); render();
+}
+function extraCard(){
+  var h='<div class="card" style="padding:13px"><div style="display:flex;align-items:center;margin-bottom:8px">'+
+    '<h2 style="margin:0;font-size:15px">기타 지출</h2>'+
+    '<button class="btn line" style="margin-left:auto;padding:6px 10px;font-size:12px" onclick="addExtra()">＋ 항목</button></div>'+
+    '<table class="sheet" style="width:100%"><tbody>';
+  EXTRA().forEach(function(x,i){
+    h+='<tr><td class="lft">'+esc(x.n)+'</td>'+
+      '<td style="width:140px"><input class="input" style="text-align:right;padding:7px 9px;font-size:13px" type="number" value="'+(x.v||"")+'" onblur="setExtra('+i+',this.value)"></td>'+
+      '<td style="width:36px"><button class="btn red" style="padding:4px 7px;font-size:11px" onclick="delExtra('+i+')">×</button></td></tr>';
+  });
+  h+='<tr style="background:#FBFAF7"><td class="lft" style="font-weight:800">합계</td>'+
+     '<td style="text-align:right;font-weight:800;padding-right:12px">'+won(extraTotal())+'</td><td></td></tr>'+
+     '</tbody></table></div>';
+  return h;
+}
+
+function vOps(){
+  var td=TODO(), done=td.filter(function(x){return x.d;}).length;
+  var h='<h2>운영</h2>';
+  /* D-day & 안내 시점 */
+  var today=new Date().toISOString().slice(0,10);
+  if(CAMP.set.start && today<CAMP.set.start){
+    var dd=Math.round((new Date(CAMP.set.start)-new Date(today))/86400000);
+    h+='<div class="card" style="background:var(--blueSoft);border:1.5px solid var(--blue);padding:12px 15px">'+
+       '<b>개강 D-'+dd+'</b><span class="small" style="margin-left:8px">'+
+       (dd<=10?'준비물·차량 안내 발송 시점입니다 (D-10 규정)':'D-10에 준비물·차량 안내를 발송하세요')+'</span></div>';
+  }
+  /* 문의 기록 */
+  h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+     '<h2 style="font-size:15px;margin:0">문의 기록 <span class="small">'+INQ().length+'건</span></h2>'+
+     '<div style="display:flex;gap:6px"><button class="btn line" style="padding:7px 10px;font-size:12px" onclick="copySurvey()">설문 링크</button>'+
+     '<button class="btn green" style="padding:7px 10px;font-size:12px" onclick="openImport()">응답 가져오기</button>'+
+     '<button class="btn" style="padding:7px 10px;font-size:12px" onclick="addInq()">＋ 문의</button></div></div>';
+  if(!INQ().length) h+='<div class="small">문의가 오면 여기 기록하고, 설문 링크를 보내세요.</div>';
+  INQ().slice().reverse().forEach(function(q,ri){
+    var i=INQ().length-1-ri;
+    var ST=["문의","설문 발송","금액 안내","입금 확정"];
     h+='<div style="padding:9px 0;border-bottom:1px solid var(--line)">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
-      '<b style="font-size:14px">'+esc(sl.t)+'</b>'+
-      '<span class="small">'+(left>0?'잔여 <b style="color:var(--green)">'+left+'명</b>':'<b style="color:var(--red)">마감</b>')+' / 정원 '+sl.cap+
-      ' <button class="chip" style="color:var(--red);margin-left:6px" onclick="delLT('+i+')">삭제</button></span></div>'+
-      '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px">'+
-      (sl.ids||[]).map(function(id){ var st=stuById(id); return st?'<button class="chip on" onclick="ltRemove('+i+',\''+id+'\')">'+esc(st.name)+' ×</button>':''; }).join("")+
-      (left>0&&unass.length?'<select class="input" style="width:auto;padding:6px 9px;font-size:12.5px" onchange="ltAssign('+i+',this.value)">'+
-        '<option value="">＋ 배정</option>'+
-        unass.map(function(st){ return '<option value="'+st.id+'">'+esc(st.name)+'</option>'; }).join("")+'</select>':'')+
+      '<b style="font-size:14px">'+esc(q.name||"(이름 미상)")+'</b>'+
+      '<span class="small">'+esc(q.date||"")+'</span></div>'+
+      (q.contact?'<div class="small">'+esc(q.contact)+'</div>':'')+
+      (q.memo?'<div class="small">'+esc(q.memo)+'</div>':'')+
+      '<div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">'+
+      ST.map(function(st,si){ return '<button class="chip'+(q.st===si?' on':'')+'" onclick="setInqSt('+i+','+si+')">'+st+'</button>'; }).join("")+
+      '<button class="chip" style="color:var(--red)" onclick="delInq('+i+')">삭제</button>'+
+      (q.st===3?'<button class="chip" style="border-color:var(--green);color:var(--green)" onclick="inqToStu('+i+')">원생 등록 →</button>':'')+
       '</div></div>';
   });
-  if(unass.length) h+='<div class="small" style="margin-top:9px">미배정: '+unass.map(function(st){return esc(st.name);}).join(" · ")+'</div>';
+  h+='</div>';
+  /* 체크리스트 */
+  h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+     '<h2 style="font-size:15px;margin:0">캠프 준비 체크리스트</h2><span class="small"><b>'+done+'</b>/'+td.length+'</span></div>'+
+     '<div class="bar" style="margin-bottom:12px"><div style="width:'+(td.length?done/td.length*100:0)+'%"></div></div>';
+  td.forEach(function(x,i){
+    h+='<label style="display:flex;gap:9px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer">'+
+       '<input type="checkbox" '+(x.d?"checked":"")+' onchange="toggleTodo('+i+')" style="margin-top:3px">'+
+       '<span style="font-size:13.5px;'+(x.d?'color:var(--sub);text-decoration:line-through':'')+'">'+esc(x.t)+'</span></label>';
+  });
+  h+='<div class="row" style="margin-top:10px"><button class="btn line full" onclick="addTodo()">＋ 항목 추가</button>'+
+     '<button class="btn gray full" onclick="resetTodo()">목록 초기화</button></div></div>';
+  /* 레벨테스트 일정 */
+  h+=ltCard();
+  /* 설문 링크 설정 */
+  h+='<div class="card"><span class="label">등록 설문 링크 (구글 폼)</span>'+
+     '<input class="input" value="'+esc(DB.surveyUrl||"https://forms.gle/ui781sjrH2pzpVGD6")+'" onblur="DB.surveyUrl=this.value.trim();saveLocal()">'+
+     '<div class="small" style="margin-top:6px">문의 학부모에게 보내는 등록 설문입니다. 폼 주소가 바뀌면 여기서 수정하세요.</div>'+
+     '<span class="label" style="margin-top:14px">D-10 준비물·레벨테스트 공지 설문 링크</span>'+
+     '<input class="input" value="'+esc(DB.survey2Url||"")+'" placeholder="준비물 공지 구글 폼 링크" onblur="DB.survey2Url=this.value.trim();saveLocal()">'+
+     '<div style="margin-top:10px"><button class="btn line full" onclick="copySurvey2()">준비물 공지 링크 복사</button></div>'+
+     '<div class="small" style="margin-top:6px">캠프 10일 전, 등록 확정자에게 보내는 준비물·레벨테스트 안내 설문입니다.</div></div>';
+  return h;
+}
+function copySurvey2(){
+  var url=(DB.survey2Url||"").trim();
+  if(!url){ alert("먼저 준비물 공지 설문 링크를 입력해 주세요."); return; }
+  var done=function(){ alert("준비물 공지 링크가 복사되었습니다.\n\n"+url); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(done,function(){ prompt("아래 링크를 길게 눌러 복사하세요", url); }); }
+  else prompt("아래 링크를 길게 눌러 복사하세요", url);
+}
+
+/* ---- 레벨테스트 일정 (시간대·정원·배정) ---- */
+function LT(){ if(!CAMP.lt) CAMP.lt=[]; return CAMP.lt; }
+function ltCard(){
+  var need=needLevel();
+  var assigned={}; LT().forEach(function(sl){ (sl.ids||[]).forEach(function(id){ assigned[id]=1; }); });
+  var unass=need.filter(function(s){ return !assigned[s.id]; });
+  var h='<div class="card" style="padding:13px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+
+    '<h2 style="margin:0;font-size:15px">영어 레벨테스트</h2>'+
+    '<span class="small">필요 <b>'+need.length+'명</b> · 미배정 <b style="color:'+(unass.length?'var(--amber)':'var(--green)')+'">'+unass.length+'명</b> · SR test 1만원(상담 2만원)</span>'+
+    '<button class="btn line" style="margin-left:auto;padding:6px 10px;font-size:12px" onclick="addLT()">＋ 시간대</button></div>';
+  if(!LT().length) h+='<div class="small">시간대를 추가하세요. 예: 7/20(월) 오후 7:30, 정원 5명</div>';
+  else {
+    h+='<table class="sheet" style="width:100%"><thead><tr><th class="lft">시간대</th><th>정원</th><th>배정</th><th>잔여</th><th class="lft" style="min-width:250px">배정 학생</th><th></th></tr></thead><tbody>';
+    LT().forEach(function(sl,i){
+      var used=(sl.ids||[]).length, left=(Number(sl.cap)||0)-used;
+      h+='<tr><td class="lft" style="font-weight:700">'+esc(sl.t)+'</td><td>'+sl.cap+'</td><td>'+used+'</td>'+
+        '<td style="font-weight:800;color:'+(left>0?'var(--green)':'var(--red)')+'">'+(left>0?left:'마감')+'</td>'+
+        '<td class="lft"><div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">'+
+        (sl.ids||[]).map(function(id){ var st=stuById(id); return st?'<button class="chip on" style="padding:4px 8px;font-size:11.5px" onclick="ltRemove('+i+',\''+id+'\')">'+esc(st.name)+' ×</button>':''; }).join("")+
+        (left>0&&unass.length?'<select class="input" style="width:auto;padding:5px 8px;font-size:11.5px" onchange="ltAssign('+i+',this.value)"><option value="">＋ 배정</option>'+
+          unass.map(function(st){ return '<option value="'+st.id+'">'+esc(st.name)+'</option>'; }).join("")+'</select>':'')+
+        '</div></td>'+
+        '<td><button class="btn red" style="padding:4px 7px;font-size:11px" onclick="delLT('+i+')">×</button></td></tr>';
+    });
+    h+='</tbody></table>';
+  }
+  if(unass.length) h+='<div class="small" style="margin-top:8px">미배정(첫날 테스트 대상): <b>'+unass.map(function(st){return esc(st.name);}).join(" · ")+'</b></div>';
   h+='</div>';
   return h;
 }
@@ -1485,22 +1860,30 @@ function extraCard(){
 /* ---- 요금 기준 수정 (관리자) ---- */
 function rateCard(){
   var r=RATE();
-  var f=function(label,key,unit){
-    return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px">'+
-      '<span class="small" style="flex:1">'+label+'</span>'+
-      '<input class="input" style="width:118px;text-align:right;padding:8px 10px" type="number" value="'+(r[key]||0)+'" onblur="setRate(\''+key+'\',this.value)">'+
-      '<span class="small" style="width:34px">'+unit+'</span></div>';
+  var row=function(label,key,unit,note){
+    return '<tr><td class="lft">'+label+'</td>'+
+      '<td style="width:130px"><input class="input" style="text-align:right;padding:7px 9px;font-size:13px" type="number" value="'+(r[key]||0)+'" onblur="setRate(\''+key+'\',this.value)"></td>'+
+      '<td style="width:34px">'+unit+'</td><td class="lft small">'+(note||"")+'</td></tr>';
   };
-  return '<div class="card"><h2 style="font-size:15px">요금 기준 <span class="small">(기준이 바뀌면 여기서 수정)</span></h2>'+
-    '<div class="small" style="margin-bottom:10px">1일 기준 금액입니다. 수정하면 이후 등록·계산에 바로 반영됩니다.</div>'+
-    f("영어 수업","eng","원")+f("체육 수업","pe","원")+f("레크레이션","rec","원")+f("식사비 (할인 제외)","meal","원")+
-    '<div style="border-top:1px solid var(--line);margin:12px 0 10px;padding-top:10px"></div>'+
-    '<div class="small" style="margin-bottom:8px">차량비 — 캠프 1회 정액 (형제 50%)</div>'+
-    f("2km 이하","bus1","원")+f("2km~4km","bus2","원")+f("4km 이상","bus3","원")+
-    '<div style="border-top:1px solid var(--line);margin:12px 0 10px;padding-top:10px"></div>'+
-    f("할인 최소 등록 일수","minDays","일")+
-    '<div class="small">이 일수 미만으로 등록하면 할인이 자동으로 빠집니다.</div>'+
-    '<button class="btn line full" style="margin-top:12px" onclick="resetRate()">기본값으로 되돌리기</button></div>';
+  var per=PRICE_SUM();
+  return '<div class="card" style="padding:13px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">'+
+    '<h2 style="margin:0;font-size:15px">요금 기준</h2>'+
+    '<span class="small">1일 풀패키지 <b>'+won(per.full)+'</b> (수업료 '+won(per.tuition)+' + 식비 '+won(r.meal)+')</span>'+
+    '<button class="btn line" style="margin-left:auto;padding:6px 10px;font-size:12px" onclick="resetRate()">기본값 복원</button></div>'+
+    '<table class="sheet" style="width:100%"><tbody>'+
+    row("영어 수업","eng","원","1일 기준")+row("체육 수업","pe","원","1일 기준")+
+    row("레크레이션","rec","원","1일 기준")+row("식사비","meal","원","할인 적용 안 됨")+
+    '<tr><td colspan="4" style="height:6px;background:#FBFAF7"></td></tr>'+
+    row("차량 2km 이하","bus1","원","캠프 1회 정액")+row("차량 2~4km","bus2","원","형제 50% 할인")+
+    row("차량 4km 이상","bus3","원","상담 후 결정")+
+    '<tr><td colspan="4" style="height:6px;background:#FBFAF7"></td></tr>'+
+    row("할인 최소 일수","minDays","일","미만이면 경고 표시")+
+    '</tbody></table>'+
+    '<div class="small" style="margin-top:8px">금액을 수정하면 이후 계산에 바로 반영됩니다. 할인율: 원생 20% · 동반/연속/지인 10% · 특별 30%</div></div>';
+}
+function PRICE_SUM(){
+  var r=RATE(), t=(Number(r.eng)||0)+(Number(r.pe)||0)+(Number(r.rec)||0);
+  return { tuition:t, full:t+(Number(r.meal)||0) };
 }
 function setRate(k,v){
   if(!DB.rate) DB.rate=JSON.parse(JSON.stringify(DEFAULT_RATE));
