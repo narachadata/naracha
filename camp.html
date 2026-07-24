@@ -38,11 +38,18 @@
   .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(430px,1fr)); gap:12px; align-items:start; }
   .grid2 > .card { margin-bottom:0; }
   .sheet { border-collapse:collapse; font-size:12px; white-space:nowrap; }
-  .sheet th { padding:5px 6px; border-bottom:2px solid var(--line); border-right:1px solid #F0EDE6; font-weight:700; text-align:center; background:#FBFAF7; position:sticky; top:0; }
-  .sheet td { padding:4px 6px; border-bottom:1px solid var(--line); border-right:1px solid #F4F1EA; text-align:center; }
+  .sheet th { padding:5px 6px; border-bottom:2px solid var(--line); border-right:1px solid #E7E2D8; font-weight:700; text-align:center; background:#FBFAF7; position:sticky; top:0; }
+  .sheet td { padding:4px 6px; border-bottom:1px solid #EDE8DE; border-right:1px solid #ECE7DC; text-align:center; }
   .sheet .lft { text-align:left; }
-  .sheet .wk { border-left:2.5px solid var(--blue) !important; }
-  .sheet .wkhead { border-bottom:none; padding:3px 6px; font-size:11px; font-weight:800; color:var(--blue); background:var(--blueSoft); }
+  /* 주(週) 시작 = 굵은 파란 세로 구분선 */
+  .sheet .wk { border-left:3px solid var(--blue) !important; }
+  .sheet th.wk, .sheet td.wk { box-shadow:inset 2px 0 0 #DCE3F2; }
+  .sheet .wkhead { border-bottom:none; padding:4px 6px; font-size:11.5px; font-weight:800; color:#fff; background:var(--blue); }
+  /* 날짜 칸: 폭 통일(넓은 칸 기준) + 짝수줄 옅은 배경으로 행 구분 강화 */
+  .sheet td.dcell, .sheet th.dcell { min-width:34px; width:34px; max-width:34px; }
+  .sheet tbody tr.stripe td { background-color:#FAF8F3; }
+  .sheet tbody tr.stripe td.idc { filter:brightness(0.975); }
+  .sheet tbody tr:hover td { background-color:#F3F6FC; }
   .modal { border-radius:20px; max-width:760px; margin:auto; }
   .modalBg { align-items:center; }
   .card { background:var(--card); border-radius:16px; padding:18px; margin-bottom:12px;
@@ -100,7 +107,8 @@
   .sheet tr.clsA td.idc { background:#E3EDFB !important; }  /* A반 인적사항 */
   .sheet tr.clsB td.idc { background:#E4F3E7 !important; }  /* B반 인적사항 */
   .sheet tr.stripe td.idc { filter:brightness(0.985); }
-  .sheet tbody td.cAbs  { background:#EDEBE7 !important; color:#9A958C !important; }  /* 결석·미체크 */
+  .sheet tbody td.cAbs  { background:#EDEBE7 !important; color:#9A958C !important; }  /* 미체크(빈칸) */
+  .sheet tbody td.cGone { background:#8A8578 !important; color:#fff !important; }     /* 지나간 미체크 = 결석 추정(짙은 회색) */
   .sheet tbody td.cOn   { background:#1E7B3C !important; color:#fff !important; }     /* 출석 */
   .sheet tbody td.cNo   { background:#C0392B !important; color:#fff !important; }     /* 명시 결석 */
   .sheet tbody td.cPlan { background:#F7FAFF !important; color:#96A2B8 !important; }  /* 배치 예정 */
@@ -229,6 +237,7 @@
   .mBusTime { font-size:15px; font-weight:800; flex:none; width:52px; }
   .mBusMid { flex:1; min-width:0; }
   .mBusName { font-size:15.5px; font-weight:800; display:flex; align-items:center; }
+  .mCallHint { font-size:12px; margin-left:5px; opacity:.55; }
   .mBusPlace { font-size:12.5px; color:var(--sub); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .mBusIco { flex:none; width:46px; height:46px; border-radius:13px; border:none; background:var(--greenSoft);
              font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
@@ -268,7 +277,7 @@
 <script>
 /* ================= 기본 설정 ================= */
 /* ── 앱 버전: 새 파일을 만들 때마다 자동 갱신됨. 기기들이 이 값을 비교해 새 버전을 감지 ── */
-var APP_VER = "v20260726.1000";
+var APP_VER = "v20260726.1400";
 
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwZmWHCEGwXoOs2omyAgWiOE3ds0zQCtRy-Ta7lLqk1lXQMNFPXCkrSvlgTTXGdlK9E/exec";
 var STORE = "camp";           /* 기존 프로그램과 같은 창고 방식, 캠프 전용 창고 이름 */
@@ -1205,7 +1214,9 @@ function vAtt(){
     h+='</div>';
   }
   var sheetA=clsSheet("A"), sheetB=clsSheet("B");
-  h+=totalSheet()+sheetA+sheetB;
+  h+=totalSheet()+
+     '<div class="card" style="padding:0;overflow:hidden">'+
+     '<div style="overflow:auto;max-height:80vh;padding:0 14px 14px">'+sheetA+sheetB+'</div></div>';
   if(unassigned.length){
     h+='<div class="card"><h2 style="font-size:15px">반 미배치 '+unassigned.length+'명</h2><div class="grid2">'+
       unassigned.map(function(s){
@@ -1392,19 +1403,29 @@ function clsSheet(c){
   var wg=weekGroups(), wstart=weekStarts(), C=COL();
   var colCnt=ds.filter(function(d){ return C[d]; }).length;
   var accent = c==="A" ? "#2B5FB8" : "#1E7B3C";
-  var h='<div class="card" style="padding:0;overflow:hidden;border-top:4px solid '+accent+'">'+
-    '<div style="display:flex;align-items:baseline;gap:12px;padding:12px 14px 9px;flex-wrap:wrap">'+
+  var h='<div style="border-top:4px solid '+accent+'">'+
+    '<div style="display:flex;align-items:baseline;gap:12px;padding:12px 4px 9px;flex-wrap:wrap">'+
     '<h2 style="margin:0;color:'+accent+'">'+c+'반 <span class="small" style="font-weight:600;color:var(--sub)">'+list.length+'명</span></h2>'+
     '<span class="small">'+(c==="A"?"10시 체육 → 11시 영어":"10시 영어 → 11시 체육")+'</span>'+
-    '<span class="small" style="margin-left:auto">'+
+    (c==="A"?'<span class="small" style="margin-left:auto">'+
     '<b style="background:#1E7B3C;color:#fff;padding:1px 6px;border-radius:4px">✓ 출석</b> '+
     '<b style="background:#C0392B;color:#fff;padding:1px 6px;border-radius:4px">✕ 결석</b> '+
-    '<b style="background:#EDEBE7;color:#8B857A;padding:1px 6px;border-radius:4px">－ 미체크</b> '+
+    '<b style="background:#8A8578;color:#fff;padding:1px 6px;border-radius:4px">－ 결석(미체크)</b> '+
     '<b style="background:#F7FAFF;color:#8595AD;padding:1px 6px;border-radius:4px;border:1px solid #E3E9F2">· 배치</b>'+
     ' &nbsp;1클릭 출석 · 2클릭 결석 · 우클릭 메모</span>'+
-    (colCnt?'<button class="btn line" style="padding:5px 10px;font-size:11.5px" onclick="expandAll()">접힌 '+colCnt+'일 펼치기</button>':'')+
+    (colCnt?'<button class="btn line" style="padding:5px 10px;font-size:11.5px" onclick="expandAll()">접힌 '+colCnt+'일 펼치기</button>':''):'')+
     '</div>'+
-    '<div style="overflow:auto;max-height:72vh;padding:0 14px 12px"><table class="sheet">';
+    '<table class="sheet" style="table-layout:fixed;width:'+
+      (30+30+92+52+64+42+36+66+52 + ds.reduce(function(a,d){return a+(C[d]?14:34);},0) + 44+40+120)+
+      'px">';
+  /* 열 폭 고정: 인적사항 9칸 + 날짜칸(균일) + 집계 3칸 → A·B반이 동일 폭으로 정렬됨 */
+  h+='<colgroup>'+
+     '<col style="width:30px"><col style="width:30px"><col style="width:92px">'+   /* 반·번·이름 */
+     '<col style="width:52px"><col style="width:64px"><col style="width:42px">'+   /* 생일·학교·학년 */
+     '<col style="width:36px"><col style="width:66px"><col style="width:52px">'+   /* 성별·레벨·ID */
+     ds.map(function(d){ return '<col class="dcol" style="width:'+(C[d]?'14px':'34px')+'">'; }).join("")+
+     '<col style="width:44px"><col style="width:40px"><col style="width:120px">'+  /* 총계·보강·연락처 */
+     '</colgroup>';
   /* 주차 헤더 */
   h+='<thead><tr><th colspan="9" style="background:#fff;border-bottom:none"></th>';
   wg.forEach(function(g,i){
@@ -1420,11 +1441,11 @@ function clsSheet(c){
   ds.forEach(function(d){
     var dd=new Date(d+"T00:00:00"), hol=isHol(d), mon=dd.getDay()===1;
     if(C[d]){
-      h+='<th class="'+(wstart[d]?'wk ':'')+'hdrDay" style="cursor:pointer;padding:5px 2px;min-width:18px;background:#E4E0D6;color:#8B8578;font-weight:800" onclick="toggleCol(\''+d+'\',event)" title="'+esc(colTip(d))+'">▸</th>';
+      h+='<th class="dcell '+(wstart[d]?'wk ':'')+'hdrDay" style="cursor:pointer;padding:5px 1px;background:#E4E0D6;color:#8B8578;font-weight:800" onclick="toggleCol(\''+d+'\',event)" title="'+esc(colTip(d))+'">▸</th>';
       return;
     }
     var cls = hol?'cHol':(mon?'hdrMon':'hdrDay');
-    h+='<th class="'+(wstart[d]?'wk ':'')+cls+'" style="cursor:pointer'+(d===today?';box-shadow:inset 0 -3px 0 #2B5FB8':'')+'" '+
+    h+='<th class="dcell '+(wstart[d]?'wk ':'')+cls+'" style="cursor:pointer'+(d===today?';box-shadow:inset 0 -3px 0 #2B5FB8':'')+'" '+
        'onclick="toggleCol(\''+d+'\',event)" oncontextmenu="event.preventDefault();toggleHoliday(\''+d+'\')" title="클릭 = 이 날짜까지 접기(지난 날 숨기기) / 우클릭 = 휴일 지정">'+
        (dd.getMonth()+1)+'/'+dd.getDate()+
        '<div style="font-weight:600;font-size:10px;color:'+(hol?'#B5343F':'#6B7280')+'">'+
@@ -1448,18 +1469,18 @@ function clsSheet(c){
        (s.levelAt?'<span style="color:#B0AA9E;font-size:9px;margin-left:3px">✎</span>':'')+'</td>'+
        '<td class="idc idCol" style="font-family:monospace;cursor:pointer" onclick="editRlid(\''+s.id+'\')" title="클릭해서 수정">'+esc(s.rlid||"")+'</td>';
     ds.forEach(function(d){
-      if(C[d]){ h+='<td class="'+(wstart[d]?'wk ':'')+'cPlan" style="min-width:16px"></td>'; return; }
-      if(isHol(d)){ h+='<td class="'+(wstart[d]?'wk ':'')+'cHol">/</td>'; return; }
+      if(C[d]){ h+='<td class="dcell '+(wstart[d]?'wk ':'')+'cPlan"></td>'; return; }
+      if(isHol(d)){ h+='<td class="dcell '+(wstart[d]?'wk ':'')+'cHol">/</td>'; return; }
       var planned=planOf(s).indexOf(d)>=0, st=attState(s.id,d), nt=noteOf(s.id,d);
       var cls, mark;
       if(st===1){ cls='cOn'; mark='✓'; }
       else if(st===2){ cls='cNo'; mark='✕'; }
-      else if(planned && d<today){ cls='cAbs'; mark='－'; }
+      else if(planned && d<today){ cls='cGone'; mark='－'; }   /* 지나간 미체크 = 결석 추정(짙은 회색) */
       else if(planned){ cls='cPlan'; mark='·'; }
       else { cls='cAbs'; mark=''; }
-      h+='<td class="'+(wstart[d]?'wk ':'')+cls+'" onclick="tapCell(\''+s.id+'\',\''+d+'\')" '+
+      h+='<td class="dcell '+(wstart[d]?'wk ':'')+cls+'" onclick="tapCell(\''+s.id+'\',\''+d+'\')" '+
          'oncontextmenu="event.preventDefault();editNote(\''+s.id+'\',\''+d+'\')" '+(nt?'title="'+esc(nt)+'" ':'')+
-         'style="cursor:pointer;font-weight:700;min-width:30px;position:relative">'+mark+
+         'style="cursor:pointer;font-weight:700;position:relative">'+mark+
          (nt?'<span style="position:absolute;top:1px;right:2px;width:5px;height:5px;border-radius:99px;background:#E8A317"></span>':'')+'</td>';
     });
     h+='<td class="wk" style="font-weight:800;background:#FBFAF7">'+actualCnt(s)+'</td>'+
@@ -1475,10 +1496,10 @@ function clsSheet(c){
       '<td colspan="6"></td>';
     var t=0;
     ds.forEach(function(d){
-      if(C[d]){ out+='<td class="'+(wstart[d]?'wk':'')+'"></td>'; return; }
-      if(isHol(d)){ out+='<td class="'+(wstart[d]?'wk ':'')+'cHol">/</td>'; return; }
+      if(C[d]){ out+='<td class="dcell '+(wstart[d]?'wk':'')+'"></td>'; return; }
+      if(isHol(d)){ out+='<td class="dcell '+(wstart[d]?'wk ':'')+'cHol">/</td>'; return; }
       var n=calc(d); t+=n;
-      out+='<td class="'+(wstart[d]?'wk':'')+'" style="color:'+color+';font-weight:'+(bold?'800':'700')+'">'+(n||"")+'</td>';
+      out+='<td class="dcell '+(wstart[d]?'wk':'')+'" style="color:'+color+';font-weight:'+(bold?'800':'700')+'">'+(n||"")+'</td>';
     });
     return { html:out, total:t };
   }
@@ -1513,7 +1534,7 @@ function clsSheet(c){
         plan:list.filter(function(s){ return planOf(s).indexOf(d)>=0; }).length,
         att:list.filter(function(s){ return attState(s.id,d)===1; }).length };
     })};
-  h+='</tbody></table></div></div>';
+  h+='</tbody></table></div>';
   return h;
 }
 function fmtShort(d){ var x=new Date(d+"T00:00:00"); return (x.getMonth()+1)+"/"+x.getDate(); }
@@ -1691,7 +1712,7 @@ function vBus(){
       '<th style="position:sticky;left:0;z-index:2;background:#FBFAF7;min-width:82px">이름</th><th>학년</th>';
     ds.forEach(function(d){
       var dd=new Date(d+"T00:00:00"), mon=dd.getDay()===1, hol=isHol(d);
-      h+='<th class="'+(wstart[d]?'wk ':'')+(hol?'cHol':(mon?'hdrMon':'hdrDay'))+'"'+
+      h+='<th class="dcell '+(wstart[d]?'wk ':'')+(hol?'cHol':(mon?'hdrMon':'hdrDay'))+'"'+
          (d===selDay?' style="box-shadow:inset 0 -3px 0 '+accent+';outline:2px solid '+accent+';outline-offset:-2px"':'')+'>'+
          (dd.getMonth()+1)+'/'+dd.getDate()+
          '<div style="font-weight:600;font-size:10px;color:'+(hol?'#B5343F':'#6B7280')+'">'+
@@ -1699,14 +1720,16 @@ function vBus(){
     });
     h+='<th class="hdrSum">탑승계</th><th>수정</th></tr></thead><tbody>';
     /* ── 시간순으로 정렬해서 표시 (원본 인덱스 si는 수정·삭제용으로 보존) ── */
+    var rowIdx=0;
     sortedStops(rt).forEach(function(o){
       var st=o.st, si=o.i;
       if(!st.name){   /* 이름 없는 구분선 (도장 도착 등) */
-        h+='<tr style="background:#FAF9F5"><td style="color:var(--sub);font-weight:700">'+esc(st.t||"")+'</td>'+
+        h+='<tr style="background:#F1EEE7"><td style="color:var(--sub);font-weight:700">'+esc(st.t||"")+'</td>'+
            '<td class="lft small" colspan="'+(ds.length+3)+'">'+esc(st.place||"도착")+'</td>'+
            '<td><button class="btn red" style="padding:4px 7px;font-size:11px" onclick="delStop('+ri+','+si+')">×</button></td></tr>';
         return;
       }
+      var stripe = (rowIdx++ %2)===1;
       var stu=st.sid&&stuById(st.sid);
       var dupN = st.sid ? sidStopCount[st.sid] : 0;
       var dl = daysLabel(st);
@@ -1719,18 +1742,18 @@ function vBus(){
         var cls, inner, onTap="";
         if(!runs){                          /* 이 요일엔 이 정류장에서 안 태움 */
           cls='cAbs'; inner='<span style="color:#C9C4BA">·</span>';
-        } else if(aState===2){              /* 결석 → 안 탐 (흐리게) */
-          cls='cBusNo'; inner='<span title="결석" style="opacity:.4">'+busGlyph(isGo)+'</span>';
+        } else if(aState===2){              /* 결석 → 안 탐 (짙은 회색으로 명확히) */
+          cls='cGone'; inner='<span title="결석">✕</span>';
         } else if(skip){                    /* 출석했지만 차량제외 → 안 탐 (끈 상태) */
           cls='cBusSkip'; inner='<span title="차량 제외 (탭하면 다시 켜기)">✕</span>'; onTap="toggleBusSkip";
         } else {                            /* 탈 예정 (출석 또는 미체크) → 진한 차량 아이콘 */
           cls='cBusOn'; inner=busGlyph(isGo); onTap="toggleBusSkip"; cnt++;
         }
-        cells+='<td class="'+(wstart[d]?'wk ':'')+cls+'" '+
+        cells+='<td class="dcell '+(wstart[d]?'wk ':'')+cls+'" '+
                (onTap?'onclick="'+onTap+'(\''+st.sid+'\',\''+d+'\')" title="탭하면 차량 제외/복원" ':'')+
-               'style="'+(onTap?'cursor:pointer;':'')+'font-weight:700;min-width:34px;font-size:15px">'+inner+'</td>';
+               'style="'+(onTap?'cursor:pointer;':'')+'font-weight:700;font-size:15px">'+inner+'</td>';
       });
-      h+='<tr><td style="font-weight:700;color:'+accent+'">'+esc(st.t||"")+'</td>'+
+      h+='<tr'+(stripe?' class="stripe"':'')+'><td style="font-weight:700;color:'+accent+'">'+esc(st.t||"")+'</td>'+
          '<td class="lft" style="max-width:220px;overflow:hidden;text-overflow:ellipsis">'+esc(st.place||"")+
            (dl?' <span class="small" style="color:'+accent+';font-weight:700">['+esc(dl)+']</span>':'')+'</td>'+
          '<td class="lft"'+(st.sid?' data-sid="'+st.sid+'"':'')+' style="position:sticky;left:0;background:#fff;font-weight:700;z-index:1">'+esc(st.name)+
@@ -1749,7 +1772,7 @@ function vBus(){
         if(isBusSkip(st.sid,d)) return false;        /* 차량제외 */
         return true;
       }).length;
-      h+='<td class="'+(wstart[d]?'wk ':'')+'hdrSum" style="font-weight:800;font-size:14px;color:'+accent+'">'+(n||'0')+'</td>';
+      h+='<td class="dcell '+(wstart[d]?'wk ':'')+'hdrSum" style="font-weight:800;font-size:14px;color:'+accent+'">'+(n||'0')+'</td>';
     });
     h+='<td class="hdrSum"></td><td class="hdrSum"></td></tr></tbody></table></div></div>';
   });
@@ -1883,7 +1906,8 @@ function mBus(){
       h+='<div class="mBusItem'+(off?" off":"")+'">'+
          '<div class="mBusTime" style="color:'+accent+'">'+esc(st.t||"–")+'</div>'+
          '<div class="mBusMid">'+
-           '<div class="mBusName">'+esc(s?s.name:st.name)+
+           '<div class="mBusName" onclick="callGuardian(\''+(s?s.id:"")+'\')" style="cursor:pointer">'+esc(s?s.name:st.name)+
+             (s&&s.phone?' <span class="mCallHint">📞</span>':'')+
              (absent?'<span class="bAbs">결석</span>':skip?'<span class="bSkip">차량제외</span>':'')+'</div>'+
            '<div class="mBusPlace">'+esc(st.place||"")+'</div>'+
          '</div>'+
@@ -1893,8 +1917,28 @@ function mBus(){
     });
     h+='</div></div>';
   });
-  h+='<div class="mHint">차량 아이콘을 누르면 그 사람만 <b>차량제외</b>로 바뀝니다(출석은 유지). 결석은 출석부에서 처리됩니다.</div>';
+  h+='<div class="mHint">차량 아이콘을 누르면 그 사람만 <b>차량제외</b>로 바뀝니다(출석은 유지). 결석은 출석부에서 처리됩니다. 이름을 누르면 <b>보호자에게 전화</b>를 걸 수 있어요.</div>';
   return h;
+}
+
+/* 보호자 전화번호 추출: "부/010-6671-2382 , 모/010-9913-9775" 같은 형태에서 첫 번호만 뽑음 */
+function firstPhone(raw){
+  if(!raw) return "";
+  var nums = String(raw).match(/01[0-9][-. ]?\d{3,4}[-. ]?\d{4}/g);
+  if(nums && nums.length) return nums[0].replace(/[^0-9]/g,"");
+  var d = String(raw).replace(/[^0-9]/g,"");
+  return d.length>=9 ? d : "";
+}
+/* 모바일 차량: 이름 탭 → "보호자에게 전화할까요?" 확인 → 예를 누르면 전화 연결 */
+function callGuardian(sid){
+  var s = stuById(sid);
+  if(!s){ alert("학생 정보를 찾을 수 없습니다."); return; }
+  var tel = firstPhone(s.phone);
+  if(!tel){ alert(esc(s.name)+" 님의 연락처가 등록되어 있지 않습니다."); return; }
+  var pretty = tel.length===11 ? tel.slice(0,3)+"-"+tel.slice(3,7)+"-"+tel.slice(7) : tel;
+  if(confirm(s.name+" 보호자에게 전화할까요?\n\n"+pretty)){
+    location.href = "tel:"+tel;
+  }
 }
 
 /* ── 모바일 · 식사 (오늘 식단/인원) ── */
