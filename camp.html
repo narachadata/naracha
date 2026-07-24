@@ -103,6 +103,9 @@
 
 <script>
 /* ================= 기본 설정 ================= */
+/* ── 앱 버전: 새 파일을 만들 때마다 자동 갱신됨. 기기들이 이 값을 비교해 새 버전을 감지 ── */
+var APP_VER = "v20260724.1607";
+
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwZmWHCEGwXoOs2omyAgWiOE3ds0zQCtRy-Ta7lLqk1lXQMNFPXCkrSvlgTTXGdlK9E/exec";
 var STORE = "camp";           /* 기존 프로그램과 같은 창고 방식, 캠프 전용 창고 이름 */
 var LS_KEY = "naracha-camp";  /* 이 기기 저장 키 */
@@ -1558,6 +1561,33 @@ loadLocal();
 render();
 campPull(true);
 setInterval(campPull, 60000);   /* 1분마다 다른 기기의 변경사항 확인 */
+
+/* ── 새 버전 자동 적용 ──
+   깃허브에 새 camp.html이 올라오면(APP_VER가 달라지면) 안내 후 자동 새로고침 */
+var updShown=false;
+function checkUpdate(){
+  if(!/^https?:/.test(location.protocol) || updShown) return;
+  var url=location.origin+location.pathname+"?chk="+Date.now();
+  fetch(url,{cache:"no-store"})
+    .then(function(r){ return r.text(); })
+    .then(function(t){
+      var m=t.match(/APP_VER\s*=\s*"([^"]+)"/);
+      if(m && m[1]!==APP_VER){
+        updShown=true;
+        var bar=document.createElement("div");
+        bar.style.cssText="position:fixed;top:0;left:0;right:0;z-index:99;background:#1E7B3C;color:#fff;text-align:center;padding:10px;font-size:13.5px;font-weight:700";
+        bar.textContent="새 버전이 나왔습니다 · 잠시 후 자동으로 새로고침됩니다";
+        document.body.appendChild(bar);
+        setTimeout(function(){ location.replace(location.pathname+"?u="+Date.now()); }, 2500);
+      }
+    })
+    .catch(function(){});
+}
+setTimeout(checkUpdate, 8000);            /* 켠 직후 1회 */
+setInterval(checkUpdate, 300000);         /* 이후 5분마다 */
+document.addEventListener("visibilitychange", function(){   /* 화면을 다시 켤 때도 확인 */
+  if(!document.hidden) checkUpdate();
+});
 </script>
 </body>
 </html>
