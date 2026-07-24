@@ -89,6 +89,50 @@
            border-radius:20px 20px 0 0; padding:20px 18px 30px; }
   .empty { text-align:center; color:var(--sub); font-size:13.5px; padding:26px 0; }
   .tag { font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; background:var(--amberSoft); color:var(--amber); }
+
+
+  /* ── 이름 검색 ── */
+  .findBar { position:fixed; top:0; left:0; right:0; z-index:120; background:var(--navy);
+             border-bottom:2px solid var(--red); padding:10px 18px; display:flex; align-items:center; gap:12px;
+             box-shadow:0 6px 24px rgba(0,0,0,.28); }
+  .findBar input { flex:0 0 320px; padding:9px 13px; border-radius:9px; border:1.5px solid var(--navyLine);
+                   background:#1E2947; color:#fff; font-size:15px; font-family:inherit; outline:none; }
+  .findBar input:focus { border-color:var(--red); }
+  .findBar .res { color:var(--navyDim); font-size:13px; }
+  .findBar .hit { display:inline-block; background:#1E2947; border:1px solid var(--navyLine); color:#fff;
+                  border-radius:8px; padding:6px 11px; font-size:13px; cursor:pointer; margin-right:6px; }
+  .findBar .hit:hover { border-color:var(--red); }
+  .findBar .x { margin-left:auto; background:none; border:none; color:var(--navyDim); font-size:20px; cursor:pointer; }
+  @keyframes neonPulse {
+    0%,100% { box-shadow:0 0 4px #FFE066, 0 0 12px #FFD11A, 0 0 22px #FFB800; background:#FFF6D6; }
+    50%     { box-shadow:0 0 10px #FFF3B0, 0 0 26px #FFD11A, 0 0 44px #FFB800; background:#FFFBEA; }
+  }
+  .neon { animation:neonPulse 1s ease-in-out 4; border-radius:7px;
+          outline:2.5px solid #FFC400; position:relative; z-index:5; }
+  .neonTxt { color:#8A5A00 !important; font-weight:900 !important; text-shadow:0 0 8px #FFD11A; }
+  /* ── A4 일일 출석부 인쇄 ── */
+  #printArea { display:none; }
+  @media print {
+    body > *:not(#printArea) { display:none !important; }
+    #printArea { display:block !important; }
+    @page { size:A4 portrait; margin:14mm 13mm; }
+  }
+  .pSheet { font-family:'Pretendard','Malgun Gothic',sans-serif; color:#000; }
+  .pHead { text-align:center; border-bottom:2.5px solid #000; padding-bottom:7px; margin-bottom:4px; }
+  .pTitle { font-size:15pt; font-weight:800; letter-spacing:-0.03em; }
+  .pOrg { font-size:9pt; color:#333; margin-top:3px; letter-spacing:.02em; }
+  .pMeta { display:flex; justify-content:space-between; align-items:flex-end; margin:8px 0 6px; font-size:10.5pt; }
+  .pMeta .d { font-weight:800; font-size:12pt; }
+  .pMeta .n { font-size:9.5pt; color:#333; }
+  .pTbl { width:100%; border-collapse:collapse; font-size:9.5pt; }
+  .pTbl th { border:1px solid #000; background:#EFEFEF; padding:4px 3px; font-weight:700; text-align:center; }
+  .pTbl td { border:1px solid #666; padding:3.5px 4px; text-align:center; height:19px; }
+  .pTbl td.l { text-align:left; }
+  .pTbl .clsRow td { background:#F5F5F5; font-weight:800; text-align:left; padding:4px 6px; border-top:1.6px solid #000; }
+  .pTbl .subRow td { background:#FAFAFA; font-weight:700; }
+  .pSign { display:flex; justify-content:flex-end; gap:26px; margin-top:12px; font-size:9.5pt; }
+  .pSign span { border-bottom:1px solid #000; min-width:92px; display:inline-block; }
+  .pFoot { margin-top:9px; font-size:8pt; color:#555; text-align:center; }
 </style>
 </head>
 <body>
@@ -110,11 +154,13 @@
 </div>
 <div class="wrap" id="view"></div>
 <div id="modalHost"></div>
+<div id="printArea"></div>
+<div id="findHost"></div>
 
 <script>
 /* ================= 기본 설정 ================= */
 /* ── 앱 버전: 새 파일을 만들 때마다 자동 갱신됨. 기기들이 이 값을 비교해 새 버전을 감지 ── */
-var APP_VER = "v20260724.1715";
+var APP_VER = "v20260724.1726";
 
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwZmWHCEGwXoOs2omyAgWiOE3ds0zQCtRy-Ta7lLqk1lXQMNFPXCkrSvlgTTXGdlK9E/exec";
 var STORE = "camp";           /* 기존 프로그램과 같은 창고 방식, 캠프 전용 창고 이름 */
@@ -558,7 +604,7 @@ function vStu(){
   CAMP.students.slice().sort(function(a,b){return a.name.localeCompare(b.name,"ko");}).forEach(function(s){
     var hist=historyOf(s), u=unplaced(s), m=makeupCnt(s);
     h+='<tr>'+
-      '<td class="lft" style="position:sticky;left:0;background:#fff;cursor:pointer;font-weight:700;z-index:1" onclick="openStu(\''+s.id+'\')">'+
+      '<td class="lft" data-sid="'+s.id+'" style="position:sticky;left:0;background:#fff;cursor:pointer;font-weight:700;z-index:1" onclick="openStu(\''+s.id+'\')">'+
       busIcon(s)+esc(s.name)+(hist.length?' <span class="tag" style="background:var(--greenSoft);color:var(--green)">'+(hist.length+1)+'회</span>':'')+'</td>'+
       '<td>'+esc(s.cls||"—")+'</td><td>'+esc((s.grade||"").replace("초등 ",""))+'</td><td>'+esc(s.school||"")+'</td>'+
       '<td>'+esc(s.gender||"")+'</td><td>'+esc((s.birth||"").slice(2))+'</td>'+
@@ -718,6 +764,19 @@ function tapCell(id,d){
   else delete day[id];          /* 3번 클릭 → 지움 */
   CAMP.att[d]=day; saveLocal(); render();
 }
+/* 셀 메모: CAMP.notes[날짜][학생id] = "내용" */
+function NOTES(){ if(!CAMP.notes) CAMP.notes={}; return CAMP.notes; }
+function noteOf(sid,d){ var n=NOTES()[d]; return (n&&n[sid])||""; }
+function editNote(sid,d){
+  var s=stuById(sid); if(!s) return;
+  var cur=noteOf(sid,d);
+  var v=prompt(s.name+" — "+fmtD(d)+" 메모\n(출석부 ‘비고’란에 인쇄됩니다. 비우면 삭제)", cur);
+  if(v===null) return;
+  var N=NOTES(); if(!N[d]) N[d]={};
+  if(v.trim()) N[d][sid]=v.trim(); else delete N[d][sid];
+  saveLocal(); render();
+}
+
 /* 휴일 관리 */
 function HOL(){ if(!CAMP.holidays) CAMP.holidays={}; return CAMP.holidays; }
 function isHol(d){ return !!HOL()[d]; }
@@ -766,7 +825,15 @@ function vAtt(){
   var warn=CAMP.students.filter(function(s){ return unplaced(s)>0; });
   var mk=CAMP.students.filter(function(s){ return makeupCnt(s)>0; });
   var unassigned=CAMP.students.filter(function(s){ return !(s.cls==="A"||s.cls==="B"); });
-  var h='';
+  var h='<div class="card" style="padding:11px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+    '<b style="font-size:14px">일일 출석부 인쇄</b>'+
+    '<span class="small">날짜를 고르고 인쇄하면 A4 한 장으로 출력됩니다 (그날 배치된 학생만, 비고에 메모 표시)</span>'+
+    '<select class="input" style="width:auto;padding:7px 11px;font-size:13px;margin-left:auto" onchange="UI.date=this.value;render()">'+
+    campDates().map(function(d){ return '<option value="'+d+'"'+(UI.date===d?" selected":"")+'>'+fmtD(d)+(isHol(d)?" · "+esc(holName(d)):"")+'</option>'; }).join("")+
+    '</select>'+
+    '<button class="btn" style="padding:8px 14px;font-size:13px" onclick="printDay()">🖨 이 날짜 인쇄</button>'+
+    '<button class="btn line" style="padding:8px 12px;font-size:12.5px" onclick="printRange()">전체 기간 인쇄</button>'+
+    '</div>';
   if(warn.length||mk.length){
     h+='<div class="grid2" style="margin-bottom:12px">';
     if(warn.length) h+='<div class="card" style="background:var(--amberSoft);border:1.5px solid var(--amber);padding:12px 14px">'+
@@ -798,7 +865,7 @@ function clsSheet(c){
     '<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:9px;flex-wrap:wrap">'+
     '<h2 style="margin:0">'+c+'반 <span class="small" style="font-weight:600">'+list.length+'명</span></h2>'+
     '<span class="small">'+(c==="A"?"10시 체육 → 11시 영어":"10시 영어 → 11시 체육")+'</span>'+
-    '<span class="small" style="margin-left:auto">칸 1클릭 <b style="color:var(--green)">✓출석</b> · 2클릭 <b style="color:var(--red)">✕결석</b> · 3클릭 지움 &nbsp;|&nbsp; 날짜 클릭 = 접기 · 날짜 <b>길게(우클릭)</b> = 휴일 지정</span>'+
+    '<span class="small" style="margin-left:auto">칸 1클릭 <b style="color:var(--green)">✓출석</b> · 2클릭 <b style="color:var(--red)">✕결석</b> · 3클릭 지움 &nbsp;|&nbsp; 칸 우클릭 = <b>메모</b>(주황점 표시) · 날짜 클릭 = 접기 · 날짜 우클릭 = 휴일</span>'+
     (colCnt?'<button class="btn line" style="padding:5px 10px;font-size:11.5px" onclick="expandAll()">접힌 '+colCnt+'일 모두 펼치기</button>':'')+
     '</div>'+
     '<div style="overflow:auto;max-height:72vh"><table class="sheet">';
@@ -832,7 +899,7 @@ function clsSheet(c){
   list.forEach(function(s){
     var u=unplaced(s), m=makeupCnt(s);
     h+='<tr><td>'+esc(s.cls||"")+'</td><td>'+(s.no||"")+'</td>'+
-       '<td class="lft" style="position:sticky;left:0;background:#fff;cursor:pointer;font-weight:700;z-index:1" onclick="openPlan(\''+s.id+'\')">'+
+       '<td class="lft" data-sid="'+s.id+'" style="position:sticky;left:0;background:#fff;cursor:pointer;font-weight:700;z-index:1" onclick="openPlan(\''+s.id+'\')">'+
        busIcon(s)+esc(s.name)+(u>0?' <span class="tag" style="background:var(--amberSoft);color:var(--amber)">+'+u+'</span>':'')+'</td>'+
        '<td class="small">'+esc((s.birth||"").slice(2))+'</td><td>'+esc(s.school||"")+'</td>'+
        '<td>'+esc((s.grade||"").replace("초등 ",""))+'</td><td>'+esc(s.gender||"")+'</td>'+
@@ -845,7 +912,13 @@ function clsSheet(c){
       var bg = st===1?'var(--green)' : st===2?'var(--red)' : absent?'var(--redSoft)' : planned?'var(--blueSoft)':'#fff';
       var fg = (st===1||st===2)?'#fff' : absent?'var(--red)':'var(--sub)';
       var mark = st===1?'✓' : st===2?'✕' : absent?'－' : planned?'·':'';
-      h+='<td class="'+(wstart[d]?'wk':'')+'" onclick="tapCell(\''+s.id+'\',\''+d+'\')" style="cursor:pointer;background:'+bg+';color:'+fg+';font-weight:700;min-width:30px">'+mark+'</td>';
+      var nt=noteOf(s.id,d);
+      h+='<td class="'+(wstart[d]?'wk':'')+'" onclick="tapCell(\''+s.id+'\',\''+d+'\')" '+
+         'oncontextmenu="event.preventDefault();editNote(\''+s.id+'\',\''+d+'\')" '+
+         (nt?'title="'+esc(nt)+'" ':'')+
+         'style="cursor:pointer;background:'+bg+';color:'+fg+';font-weight:700;min-width:30px;position:relative">'+mark+
+         (nt?'<span style="position:absolute;top:1px;right:2px;width:5px;height:5px;border-radius:99px;background:var(--amber)"></span>':'')+
+         '</td>';
     });
     h+='<td class="wk" style="font-weight:800">'+actualCnt(s)+'</td>'+
        '<td style="font-weight:800;color:'+(m>0?'var(--red)':'var(--sub)')+'">'+(m||"")+'</td>'+
@@ -871,6 +944,183 @@ function clsSheet(c){
      '<td style="font-weight:800">'+riders+'</td><td class="lft small">차량 신청 인원</td><td></td></tr>';
   h+='</tbody></table></div></div>';
   return h;
+}
+/* ══════ 이름 검색 (Ctrl+F / Cmd+F) ══════ */
+function openFind(pre){
+  var box=document.getElementById("findHost");
+  box.innerHTML='<div class="findBar">'+
+    '<b style="color:#fff;font-size:14px;white-space:nowrap">이름 찾기</b>'+
+    '<input id="findIn" placeholder="캠프생 이름 입력 (예: 황로한)" value="'+esc(pre||"")+'" '+
+    'oninput="runFind(this.value)" onkeydown="if(event.key===\'Escape\')closeFind();if(event.key===\'Enter\')firstHit()">'+
+    '<span class="res" id="findRes"></span>'+
+    '<div id="findHits" style="flex:1;overflow-x:auto;white-space:nowrap"></div>'+
+    '<button class="x" onclick="closeFind()" title="닫기 (Esc)">×</button></div>';
+  document.body.style.paddingTop="54px";
+  var el=document.getElementById("findIn");
+  el.focus(); el.select();
+  if(pre) runFind(pre);
+}
+function closeFind(){
+  document.getElementById("findHost").innerHTML="";
+  document.body.style.paddingTop="0";
+  clearNeon();
+}
+function runFind(q){
+  q=(q||"").trim().toLowerCase();
+  var res=document.getElementById("findRes"), hits=document.getElementById("findHits");
+  if(!q){ res.textContent=""; hits.innerHTML=""; return; }
+  var found=CAMP.students.filter(function(s){ return (s.name||"").toLowerCase().indexOf(q)>=0; });
+  /* 다른 캠프에서도 찾기 */
+  var others=[];
+  DB.camps.forEach(function(c){
+    if(c===CAMP) return;
+    (c.students||[]).forEach(function(s){
+      if((s.name||"").toLowerCase().indexOf(q)>=0) others.push({c:c,s:s});
+    });
+  });
+  res.textContent = found.length+"명"+(others.length?" (다른 캠프 "+others.length+"건)":"");
+  var h="";
+  found.forEach(function(s){
+    h+='<button class="hit" onclick="gotoStu(\''+s.id+'\')">'+esc(s.name)+
+       ' <span style="color:#8C96AE">'+esc(s.cls||"미배치")+(s.cls?"반":"")+' · '+esc((s.grade||"").replace("초등 ",""))+'</span></button>';
+  });
+  others.slice(0,6).forEach(function(o){
+    h+='<button class="hit" style="opacity:.72" onclick="gotoOther(\''+o.c.id+'\',\''+o.s.id+'\')">'+esc(o.s.name)+
+       ' <span style="color:#8C96AE">'+esc(o.c.set.name.replace("방학 캠프",""))+'</span></button>';
+  });
+  hits.innerHTML=h;
+  if(found.length===1) gotoStu(found[0].id, true);
+}
+function firstHit(){
+  var q=(document.getElementById("findIn").value||"").trim().toLowerCase();
+  var f=CAMP.students.filter(function(s){ return (s.name||"").toLowerCase().indexOf(q)>=0; });
+  if(f.length) gotoStu(f[0].id);
+}
+function gotoStu(id, keepFocus){
+  var s=stuById(id); if(!s) return;
+  /* 반 배치 여부에 따라 알맞은 탭으로 이동 */
+  if(UI.tab!=="att" && UI.tab!=="stu"){ UI.tab="att"; }
+  render();
+  setTimeout(function(){ neonTo(id, keepFocus); }, 30);
+}
+function gotoOther(campId, sid){
+  setCur(campId);
+  setTimeout(function(){ neonTo(sid); }, 60);
+}
+function clearNeon(){
+  var old=document.querySelectorAll(".neon,.neonTxt");
+  for(var i=0;i<old.length;i++){ old[i].classList.remove("neon"); old[i].classList.remove("neonTxt"); }
+}
+function neonTo(id, keepFocus){
+  clearNeon();
+  var el=document.querySelector('[data-sid="'+id+'"]');
+  if(!el){ return; }
+  el.classList.add("neon"); el.classList.add("neonTxt");
+  el.scrollIntoView({behavior:"smooth", block:"center", inline:"center"});
+  if(!keepFocus){ var fi=document.getElementById("findIn"); if(fi) fi.focus(); }
+}
+/* 단축키: Ctrl+F (Windows) / Cmd+F (Mac) */
+document.addEventListener("keydown", function(e){
+  var mod = e.ctrlKey || e.metaKey;
+  if(mod && (e.key==="f" || e.key==="F")){
+    e.preventDefault();
+    var sel="";
+    try{ sel=String(window.getSelection()).trim().slice(0,20); }catch(err){}
+    openFind(sel);
+  }
+  if(e.key==="Escape" && document.getElementById("findIn")) closeFind();
+});
+
+/* ── 일일 출석부 A4 인쇄 ── */
+function printDay(d){
+  d=d||UI.date;
+  if(!d){ alert("날짜를 먼저 선택해 주세요."); return; }
+  var dt=new Date(d+"T00:00:00");
+  var wd=["일","월","화","수","목","금","토"][dt.getDay()];
+  var col=wd;   /* 요일 열 제목 */
+  var html='<div class="pSheet"><div class="pHead">'+
+    '<div class="pTitle">'+esc(CAMP.set.name)+' 출석부</div>'+
+    '<div class="pOrg">나라차태권도 × 클래식리더영어도서관</div></div>';
+  var total=0, body='';
+  ["A","B"].forEach(function(c){
+    var list=clsList(c).filter(function(s){ return planOf(s).indexOf(d)>=0; });
+    if(!list.length) return;
+    total+=list.length;
+    body+='<tr class="clsRow"><td colspan="9">'+c+'반 &nbsp;<span style="font-weight:600;font-size:8.5pt">'+
+      (c==="A"?"10시 체육 → 11시 영어":"10시 영어 → 11시 체육")+'</span></td></tr>';
+    list.forEach(function(s){
+      var st=attState(s.id,d);
+      body+='<tr><td>'+esc(s.cls)+'</td><td>'+(s.no||"")+'</td>'+
+        '<td class="l" style="font-weight:700">'+esc(s.name)+'</td>'+
+        '<td>'+esc((s.grade||"").replace("초등 ",""))+'</td><td>'+esc(s.gender||"")+'</td>'+
+        '<td>'+esc(s.level||"")+'</td><td>'+esc(s.rlid||"")+'</td>'+
+        '<td>'+(st===1?"○":st===2?"×":"")+'</td>'+
+        '<td class="l" style="font-size:8.5pt">'+esc(noteOf(s.id,d))+'</td></tr>';
+    });
+    body+='<tr class="subRow"><td colspan="7" style="text-align:right;padding-right:8px">'+c+'반 소계</td>'+
+      '<td>'+list.length+'</td><td></td></tr>';
+  });
+  if(!total){ alert(fmtD(d)+"에 배치된 캠프생이 없습니다."); return; }
+  html+='<div class="pMeta"><div class="d">날짜 : '+(dt.getMonth()+1)+'월 '+dt.getDate()+'일 ('+wd+'요일)'+
+    (isHol(d)?' — '+esc(holName(d)):'')+'</div>'+
+    '<div class="n">출석 예정 인원 <b>'+total+'명</b></div></div>'+
+    '<table class="pTbl"><thead><tr>'+
+    '<th style="width:6%">반</th><th style="width:6%">번</th><th style="width:15%">이름</th>'+
+    '<th style="width:9%">학년</th><th style="width:8%">성별</th><th style="width:15%">영레벨</th>'+
+    '<th style="width:11%">RL_ID</th><th style="width:7%">'+col+'</th><th>비고</th></tr></thead><tbody>'+
+    body+
+    '<tr class="subRow" style="border-top:2px solid #000"><td colspan="7" style="text-align:right;padding-right:8px;font-size:10.5pt">총인원</td>'+
+    '<td style="font-size:10.5pt">'+total+'</td><td></td></tr>'+
+    '</tbody></table>'+
+    '<div class="pSign">담당 <span></span> 확인 <span></span></div>'+
+    '<div class="pFoot">출석 ○ · 결석 × &nbsp;|&nbsp; 나라차태권도 분당도장 · 두산위브트레지움 109동 B101호</div></div>';
+  document.getElementById("printArea").innerHTML=html;
+  window.print();
+}
+function printRange(){
+  var ds=campDates().filter(function(d){ return !isHol(d); });
+  if(!confirm("캠프 전체 "+ds.length+"일의 출석부를 한 번에 인쇄할까요?\n(용지 "+ds.length+"장)")) return;
+  var all='';
+  ds.forEach(function(d,i){
+    printDayHTML(d, function(h){ all+='<div style="'+(i<ds.length-1?'page-break-after:always':'')+'">'+h+'</div>'; });
+  });
+  if(!all){ alert("인쇄할 내용이 없습니다."); return; }
+  document.getElementById("printArea").innerHTML=all;
+  window.print();
+}
+function printDayHTML(d, cb){
+  var prev=document.getElementById("printArea").innerHTML;
+  var dt=new Date(d+"T00:00:00");
+  var wd=["일","월","화","수","목","금","토"][dt.getDay()];
+  var total=0, body='';
+  ["A","B"].forEach(function(c){
+    var list=clsList(c).filter(function(s){ return planOf(s).indexOf(d)>=0; });
+    if(!list.length) return;
+    total+=list.length;
+    body+='<tr class="clsRow"><td colspan="9">'+c+'반 &nbsp;<span style="font-weight:600;font-size:8.5pt">'+
+      (c==="A"?"10시 체육 → 11시 영어":"10시 영어 → 11시 체육")+'</span></td></tr>';
+    list.forEach(function(s){
+      var st=attState(s.id,d);
+      body+='<tr><td>'+esc(s.cls)+'</td><td>'+(s.no||"")+'</td><td class="l" style="font-weight:700">'+esc(s.name)+'</td>'+
+        '<td>'+esc((s.grade||"").replace("초등 ",""))+'</td><td>'+esc(s.gender||"")+'</td>'+
+        '<td>'+esc(s.level||"")+'</td><td>'+esc(s.rlid||"")+'</td>'+
+        '<td>'+(st===1?"○":st===2?"×":"")+'</td>'+
+        '<td class="l" style="font-size:8.5pt">'+esc(noteOf(s.id,d))+'</td></tr>';
+    });
+    body+='<tr class="subRow"><td colspan="7" style="text-align:right;padding-right:8px">'+c+'반 소계</td><td>'+list.length+'</td><td></td></tr>';
+  });
+  if(!total) return;
+  cb('<div class="pSheet"><div class="pHead"><div class="pTitle">'+esc(CAMP.set.name)+' 출석부</div>'+
+    '<div class="pOrg">나라차태권도 × 클래식리더영어도서관</div></div>'+
+    '<div class="pMeta"><div class="d">날짜 : '+(dt.getMonth()+1)+'월 '+dt.getDate()+'일 ('+wd+'요일)'+(isHol(d)?' — '+esc(holName(d)):'')+'</div>'+
+    '<div class="n">출석 예정 인원 <b>'+total+'명</b></div></div>'+
+    '<table class="pTbl"><thead><tr><th style="width:6%">반</th><th style="width:6%">번</th><th style="width:15%">이름</th>'+
+    '<th style="width:9%">학년</th><th style="width:8%">성별</th><th style="width:15%">영레벨</th>'+
+    '<th style="width:11%">RL_ID</th><th style="width:7%">'+wd+'</th><th>비고</th></tr></thead><tbody>'+body+
+    '<tr class="subRow" style="border-top:2px solid #000"><td colspan="7" style="text-align:right;padding-right:8px;font-size:10.5pt">총인원</td>'+
+    '<td style="font-size:10.5pt">'+total+'</td><td></td></tr></tbody></table>'+
+    '<div class="pSign">담당 <span></span> 확인 <span></span></div>'+
+    '<div class="pFoot">출석 ○ · 결석 × &nbsp;|&nbsp; 나라차태권도 분당도장 · 두산위브트레지움 109동 B101호</div></div>');
 }
 function fmtShort(d){ var x=new Date(d+"T00:00:00"); return (x.getMonth()+1)+"/"+x.getDate(); }
 function setCls(c){ UI.cls=c; render(); }
@@ -1000,7 +1250,7 @@ function vBus(){
       });
       h+='<tr><td style="font-weight:700;color:var(--blue)">'+esc(st.t||"")+'</td>'+
          '<td class="lft" style="max-width:230px;overflow:hidden;text-overflow:ellipsis">'+esc(st.place||"")+'</td>'+
-         '<td class="lft" style="position:sticky;left:0;background:#fff;font-weight:700;z-index:1">'+esc(st.name)+
+         '<td class="lft"'+(st.sid?' data-sid="'+st.sid+'"':'')+' style="position:sticky;left:0;background:#fff;font-weight:700;z-index:1">'+esc(st.name)+
          (stu?'':' <span class="small" style="color:var(--red)">(미연결)</span>')+'</td>'+
          '<td>'+esc(st.grade||"")+'</td>'+cells+
          '<td style="font-weight:800">'+cnt+'</td>'+
