@@ -114,7 +114,7 @@
 <script>
 /* ================= 기본 설정 ================= */
 /* ── 앱 버전: 새 파일을 만들 때마다 자동 갱신됨. 기기들이 이 값을 비교해 새 버전을 감지 ── */
-var APP_VER = "v20260724.1704";
+var APP_VER = "v20260724.1715";
 
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwZmWHCEGwXoOs2omyAgWiOE3ds0zQCtRy-Ta7lLqk1lXQMNFPXCkrSvlgTTXGdlK9E/exec";
 var STORE = "camp";           /* 기존 프로그램과 같은 창고 방식, 캠프 전용 창고 이름 */
@@ -329,11 +329,16 @@ function campPull(first){
 function saveLocalOnly(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(DB)); }catch(e){} }
 
 /* ================= 날짜/요금 ================= */
+/* 지역(한국) 시간 기준 YYYY-MM-DD — toISOString은 UTC라 하루 밀리므로 사용 금지 */
+function ymd(d){
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function todayStr(){ return ymd(new Date()); }
 function campDates(){
   var out=[], s=CAMP.set.start, e=CAMP.set.end;
   if(!s||!e) return out;
   var d=new Date(s+"T00:00:00"), end=new Date(e+"T00:00:00");
-  while(d<=end){ var w=d.getDay(); if(w>=1&&w<=5) out.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); }
+  while(d<=end){ var w=d.getDay(); if(w>=1&&w<=5) out.push(ymd(d)); d.setDate(d.getDate()+1); }
   return out;
 }
 /* 캠프 날짜를 주 단위로 묶기 (월~금, 주말 제외) */
@@ -402,7 +407,7 @@ function render(){
   var ds=campDates();
   pickCamp();
   if(!UI.date || ds.indexOf(UI.date)<0){
-    var today=new Date().toISOString().slice(0,10);
+    var today=todayStr();
     UI.date = ds.indexOf(today)>=0 ? today : (ds[0]||"");
   }
   var th="";
@@ -741,7 +746,7 @@ function actualCnt(s){ var n=0; campDates().forEach(function(d){ if(attState(s.i
 function unplaced(s){ return (Number(s.days)||0) - plannedCnt(s); }
 /* 보강 필요 = 배치됐지만 결석한 날 (지난 날짜만 집계) */
 function makeupCnt(s){
-  var today=new Date().toISOString().slice(0,10), n=0;
+  var today=todayStr(), n=0;
   planOf(s).forEach(function(d){
     if(campDates().indexOf(d)<0 || isHol(d)) return;      /* 휴일은 보강 대상 아님 */
     var st=attState(s.id,d);
@@ -786,7 +791,7 @@ function vAtt(){
   return h;
 }
 function clsSheet(c){
-  var ds=campDates(), list=clsList(c), today=new Date().toISOString().slice(0,10);
+  var ds=campDates(), list=clsList(c), today=todayStr();
   var wg=weekGroups(), wstart=weekStarts(), C=COL();
   var colCnt=ds.filter(function(d){ return C[d]; }).length;
   var h='<div class="card" style="padding:14px 14px 10px">'+
@@ -883,7 +888,7 @@ function openPlan(id){
 function renderPlan(){
   var s=null; CAMP.students.forEach(function(x){ if(x.id===UI.plan) s=x; });
   if(!s) return;
-  var ds=campDates(), u=unplaced(s), m=makeupCnt(s), today=new Date().toISOString().slice(0,10);
+  var ds=campDates(), u=unplaced(s), m=makeupCnt(s), today=todayStr();
   var h='<div class="modalBg" onclick="if(event.target===this)closePlan()"><div class="modal">'+
     '<h2>'+busIcon(s)+esc(s.name)+' <span class="small">'+esc(s.grade||"")+' · '+(s.cls||"미배치")+'반</span></h2>'+
     '<div class="row" style="margin-bottom:12px">'+
@@ -939,7 +944,7 @@ function ridesToday(d){ /* 그날 탑승 예정: 배치된 날 + 차량 이용 *
   return n;
 }
 function vBus(){
-  var ds=campDates(), rts=ROUTES(), today=new Date().toISOString().slice(0,10);
+  var ds=campDates(), rts=ROUTES(), today=todayStr();
   var riders=CAMP.students.filter(function(s){return s.bus;});
   var inRoute={}; rts.forEach(function(rt){ rt.stops.forEach(function(st){ if(st.sid) inRoute[st.sid]=1; }); });
   var miss=riders.filter(function(s){ return !inRoute[s.id]; });
@@ -1115,7 +1120,7 @@ function campMealTotal(c,d){
 }
 
 function vMeal(){
-  var ds=campDates(), today=new Date().toISOString().slice(0,10);
+  var ds=campDates(), today=todayStr();
   var total=mealAllTotal(), people=mealPeople();
   var h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">'+
     '<h2 style="margin:0">식단 · 주문</h2>'+
@@ -1346,7 +1351,7 @@ function exportCSV(){
   var csv="\uFEFF"+R.map(function(r){ return r.map(e).join(","); }).join("\n");
   var a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
-  a.download=(CAMP.set.name||"캠프")+"_백업_"+new Date().toISOString().slice(0,10)+".csv";
+  a.download=(CAMP.set.name||"캠프")+"_백업_"+todayStr()+".csv";
   a.click(); URL.revokeObjectURL(a.href);
 }
 
@@ -1411,7 +1416,7 @@ function vOps(){
   var td=TODO(), done=td.filter(function(x){return x.d;}).length;
   var h='<h2>운영</h2>';
   /* D-day & 안내 시점 */
-  var today=new Date().toISOString().slice(0,10);
+  var today=todayStr();
   if(CAMP.set.start && today<CAMP.set.start){
     var dd=Math.round((new Date(CAMP.set.start)-new Date(today))/86400000);
     h+='<div class="card" style="background:var(--blueSoft);border:1.5px solid var(--blue);padding:12px 15px">'+
@@ -1630,7 +1635,7 @@ function addInq(){
   var n=prompt("문의자(학생) 이름"); if(n===null) return;
   var c=prompt("연락처 (없으면 비워두세요)")||"";
   var m=prompt("문의 내용 메모")||"";
-  INQ().push({date:new Date().toISOString().slice(0,10), name:(n||"").trim(), contact:c.trim(), memo:m.trim(), st:0});
+  INQ().push({date:todayStr(), name:(n||"").trim(), contact:c.trim(), memo:m.trim(), st:0});
   saveLocal(); render();
 }
 function setInqSt(i,st){ INQ()[i].st=st; saveLocal(); render(); }
@@ -1681,7 +1686,7 @@ function vOps(){
   var td=TODO(), done=td.filter(function(x){return x.d;}).length;
   var h='<h2>운영</h2>';
   /* D-day & 안내 시점 */
-  var today=new Date().toISOString().slice(0,10);
+  var today=todayStr();
   if(CAMP.set.start && today<CAMP.set.start){
     var dd=Math.round((new Date(CAMP.set.start)-new Date(today))/86400000);
     h+='<div class="card" style="background:var(--blueSoft);border:1.5px solid var(--blue);padding:12px 15px">'+
@@ -1900,7 +1905,7 @@ function addInq(){
   var n=prompt("문의자(학생) 이름"); if(n===null) return;
   var c=prompt("연락처 (없으면 비워두세요)")||"";
   var m=prompt("문의 내용 메모")||"";
-  INQ().push({date:new Date().toISOString().slice(0,10), name:(n||"").trim(), contact:c.trim(), memo:m.trim(), st:0});
+  INQ().push({date:todayStr(), name:(n||"").trim(), contact:c.trim(), memo:m.trim(), st:0});
   saveLocal(); render();
 }
 function setInqSt(i,st){ INQ()[i].st=st; saveLocal(); render(); }
