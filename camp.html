@@ -178,7 +178,7 @@
 <script>
 /* ================= 기본 설정 ================= */
 /* ── 앱 버전: 새 파일을 만들 때마다 자동 갱신됨. 기기들이 이 값을 비교해 새 버전을 감지 ── */
-var APP_VER = "v20260724.1809";
+var APP_VER = "v20260724.1814";
 
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwZmWHCEGwXoOs2omyAgWiOE3ds0zQCtRy-Ta7lLqk1lXQMNFPXCkrSvlgTTXGdlK9E/exec";
 var STORE = "camp";           /* 기존 프로그램과 같은 창고 방식, 캠프 전용 창고 이름 */
@@ -336,7 +336,15 @@ function loginWithKey(){
 }
 function finishLogin(k,role){
   try{ localStorage.setItem("naracha_camp_key",k); localStorage.setItem("naracha_camp_role",role); }catch(e){}
+  UI.authMsg=null;
   render(); campPull(true);
+}
+/* 접속키가 통하지 않을 때: 저장된 키를 지우고 로그인 화면으로 되돌림 */
+function authFail(msg){
+  try{ localStorage.removeItem("naracha_camp_key"); localStorage.removeItem("naracha_camp_role"); }catch(e){}
+  UI.authMsg = msg || "접속키가 올바르지 않습니다. 다시 입력해 주세요.";
+  setSync("err","접속키 오류 — 재입력 필요");
+  UI.tab="att"; render();
 }
 function logout(){
   if(!confirm("로그아웃할까요? 자료는 이 기기와 클라우드에 그대로 남습니다.")) return;
@@ -352,6 +360,15 @@ function setSync(status, txt){
   if(!dot) return;
   dot.style.background = status==="ok" ? "#1E7B3C" : status==="err" ? "#C0392B" : status==="busy" ? "#B07D1A" : "#C7C7CC";
   t.textContent = txt;
+  /* 오류 상태면 클릭해서 접속키를 다시 넣을 수 있게 */
+  var box=t.parentNode;
+  if(box){
+    if(status==="err"){
+      box.style.cursor="pointer";
+      box.title="클릭해서 접속키 다시 입력";
+      box.onclick=function(){ if(confirm("접속키를 다시 입력하시겠습니까?\n(입력한 자료는 그대로 유지됩니다)")) authFail("접속키를 다시 입력해 주세요."); };
+    } else { box.style.cursor=""; box.title=""; box.onclick=null; }
+  }
 }
 function campSyncSoon(){ clearTimeout(syncTimer); syncTimer=setTimeout(campSync, 1200); }
 function campSync(){
@@ -361,7 +378,10 @@ function campSync(){
   for(var k=0;k<s.length;k+=45000) rows.push([s.slice(k,k+45000)]);
   fetch(GSHEET_URL, {method:"POST", body:JSON.stringify({key:accessKey(), store:STORE, rows:rows})})
     .then(function(r){ return r.text(); })
-    .then(function(){ setSync("ok","동기화 완료 "+new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"})); })
+    .then(function(t){
+      if(t && t.indexOf('"AUTH"')>=0){ authFail("저장 권한이 없습니다. 접속키를 다시 입력해 주세요."); return; }
+      setSync("ok","동기화 완료 "+new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"}));
+    })
     .catch(function(){ setSync("err","저장 실패 (인터넷 확인)"); });
 }
 function campPull(first){
@@ -370,7 +390,7 @@ function campPull(first){
   fetch(GSHEET_URL+"?key="+encodeURIComponent(accessKey())+"&store="+STORE)
     .then(function(r){ return r.json(); })
     .then(function(rows){
-      if(rows && rows.error==="AUTH"){ setSync("err","접속키 오류"); return; }
+      if(rows && rows.error==="AUTH"){ authFail("서버에서 접속키를 확인하지 못했습니다. 키가 변경되었을 수 있습니다."); return; }
       if(!rows || rows.length<2){ setSync("ok","클라우드 비어있음 (첫 저장 대기)"); if(first&&DB.camps.some(function(c){return c.students.length;})) campSyncSoon(); return; }
       var joined="";
       for(var i=0;i<rows.length;i++){
@@ -543,12 +563,22 @@ function visibleTabs(){
 }
 
 function vLogin(){
-  return '<div class="card" style="margin-top:26px"><h2>접속키 입력</h2>'+
-    '<div class="small" style="margin-bottom:12px;line-height:1.7">캠프 전용 접속키를 입력하세요. (수련생관리 키와 다릅니다)<br>'+
-    '<b>관리자 키</b>: 모든 화면 + 정산(돈 관련) 표시<br><b>선생님 키</b>: 출석·차량·식단 등 운영 화면만 표시</div>'+
-    '<input class="input pwbox" id="loginKey" placeholder="접속키">'+
-    '<div style="margin-top:12px"><button class="btn full" onclick="loginWithKey()">시작하기</button></div>'+
-    '<div class="small" id="loginMsg" style="margin-top:10px;color:var(--red)"></div></div>';
+  var warn = UI.authMsg ? '<div class="card" style="background:var(--redSoft);border:1.5px solid var(--red);padding:12px 14px;margin-bottom:12px">'+
+      '<b style="color:var(--red);font-size:14px">접속키 오류</b>'+
+      '<div class="small" style="margin-top:4px">'+esc(UI.authMsg)+'</div></div>' : '';
+  return '<div style="max-width:520px;margin:26px auto">'+warn+
+    '<div class="card" style="padding:22px">'+
+    '<h2 style="margin:0 0 6px">접속키 입력</h2>'+
+    '<div class="small" style="line-height:1.8;margin-bottom:14px">캠프 전용 접속키를 입력하세요. (수련생관리 키와 다릅니다)<br>'+
+    '<b>관리자 키</b> — 모든 화면 + 캠프등록생·운영·정산<br>'+
+    '<b>선생님 키</b> — 출석부·차량·식사·설정</div>'+
+    '<input class="input" id="loginKey" placeholder="접속키" style="font-size:16px;padding:13px 15px" '+
+    'onkeydown="if(event.key===\'Enter\')loginWithKey()">'+
+    '<div style="margin-top:12px"><button class="btn full" style="padding:14px" onclick="loginWithKey()">시작하기</button></div>'+
+    '<div class="small" id="loginMsg" style="margin-top:10px;color:var(--red);min-height:18px"></div>'+
+    '<div class="small" style="margin-top:8px;padding-top:12px;border-top:1px solid var(--line)">'+
+    '키가 기억나지 않으면 원장님께 문의하세요. 입력한 자료는 이 기기에 남아 있으며 올바른 키로 다시 들어오면 그대로 이어집니다.</div>'+
+    '</div></div>';
 }
 
 function render(){
@@ -988,7 +1018,19 @@ function colBtns(keys){
       (H[k]?'▸ ':'▾ ')+labels[k]+'</button>';
   }).join("");
 }
-function toggleCol(d){ var C=COL(); if(C[d]) delete C[d]; else C[d]=1; render(); }
+/* 날짜를 누르면 그 날짜까지(이전 날짜 포함) 모두 접기 / 다시 누르면 그 날짜부터 펼치기 */
+function toggleCol(d){
+  var C=COL(), ds=campDates(), i=ds.indexOf(d);
+  if(i<0) return;
+  if(C[d]){
+    /* 이미 접혀 있으면: 그 날짜부터 뒤쪽을 펼침 (앞쪽 접힘은 유지) */
+    for(var j=i;j<ds.length;j++) delete C[ds[j]];
+  } else {
+    /* 접기: 처음부터 누른 날짜까지 모두 접음 */
+    for(var k=0;k<=i;k++) C[ds[k]]=1;
+  }
+  render();
+}
 function toggleWeekCol(i){
   var g=weekGroups()[i]; if(!g) return;
   var C=COL(), allOn=g.dates.every(function(d){ return C[d]; });
@@ -1026,12 +1068,14 @@ function vAtt(){
   var unassigned=CAMP.students.filter(function(s){ return !(s.cls==="A"||s.cls==="B"); });
   var h='<div class="card" style="padding:11px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
     '<b style="font-size:14px">일일 출석부 인쇄</b>'+
-    '<span class="small">날짜를 고르고 인쇄하면 A4 한 장으로 출력됩니다 (그날 배치된 학생만, 비고에 메모 표시)</span>'+
+    '<span class="small">날짜를 고른 뒤 <b>미리보기</b>로 확인하고 인쇄하거나 파일로 저장하세요. A4 한 장 · 그날 배치된 캠프생만 · 메모는 비고란에 표시</span>'+
     '<select class="input" style="width:auto;padding:7px 11px;font-size:13px;margin-left:auto" onchange="UI.date=this.value;render()">'+
     campDates().map(function(d){ return '<option value="'+d+'"'+(UI.date===d?" selected":"")+'>'+fmtD(d)+(isHol(d)?" · "+esc(holName(d)):"")+'</option>'; }).join("")+
     '</select>'+
-    '<button class="btn" style="padding:8px 14px;font-size:13px" onclick="printDay()">🖨 이 날짜 인쇄</button>'+
-    '<button class="btn line" style="padding:8px 12px;font-size:12.5px" onclick="printRange()">전체 기간 인쇄</button>'+
+    '<button class="btn" style="padding:8px 14px;font-size:13px" onclick="previewDay()">📄 미리보기</button>'+
+    '<button class="btn line" style="padding:8px 12px;font-size:12.5px" onclick="printDay()">🖨 인쇄 / PDF</button>'+
+    '<button class="btn green" style="padding:8px 12px;font-size:12.5px" onclick="downloadDay()">⤓ 다운로드</button>'+
+    '<button class="btn line" style="padding:8px 11px;font-size:12px" onclick="downloadRange()">전체 기간 저장</button>'+
     '</div>';
   if(warn.length||mk.length){
     h+='<div class="grid2" style="margin-bottom:12px">';
@@ -1058,6 +1102,124 @@ function vAtt(){
   return h;
 }
 /* ── 전체(A+B) 일자별 인원 요약 ── */
+/* ══════ 일일 출석부: 화면 미리보기 + 인쇄 + 다운로드 ══════ */
+function daySheetHTML(d){
+  var dt=new Date(d+"T00:00:00");
+  var wd=["일","월","화","수","목","금","토"][dt.getDay()];
+  var total=0, body='', subs=[];
+  ["A","B"].forEach(function(c){
+    var list=clsList(c).filter(function(s){ return planOf(s).indexOf(d)>=0; })
+      .sort(function(a,b){ return (Number(a.no)||999)-(Number(b.no)||999); });
+    if(!list.length) return;
+    total+=list.length; subs.push(c+"반 "+list.length+"명");
+    body+='<tr class="clsRow"><td colspan="9">'+c+'반 &nbsp;<span style="font-weight:600;font-size:8.5pt">'+
+      (c==="A"?"10시 체육 → 11시 영어":"10시 영어 → 11시 체육")+'</span></td></tr>';
+    list.forEach(function(s){
+      var st=attState(s.id,d), nt=noteOf(s.id,d);
+      body+='<tr><td>'+esc(s.cls)+'</td><td>'+(s.no||"")+'</td>'+
+        '<td class="l" style="font-weight:700">'+esc(s.name)+'</td>'+
+        '<td>'+esc((s.grade||"").replace("초등 ",""))+'</td><td>'+esc(s.gender||"")+'</td>'+
+        '<td>'+esc(s.level||"")+'</td><td>'+esc(s.rlid||"")+'</td>'+
+        '<td style="font-weight:700">'+(st===1?"○":st===2?"×":"")+'</td>'+
+        '<td class="l" style="font-size:8.5pt">'+esc(nt)+'</td></tr>';
+    });
+    body+='<tr class="subRow"><td colspan="7" style="text-align:right;padding-right:8px">'+c+'반 소계</td>'+
+      '<td>'+list.length+'</td><td></td></tr>';
+  });
+  if(!total) return null;
+  return '<div class="pSheet"><div class="pHead">'+
+    '<div class="pTitle">'+esc(CAMP.set.name)+' 출석부</div>'+
+    '<div class="pOrg">나라차태권도 × 클래식리더영어도서관</div></div>'+
+    '<div class="pMeta"><div class="d">날짜 : '+(dt.getMonth()+1)+'월 '+dt.getDate()+'일 ('+wd+'요일)'+
+    (isHol(d)?' — '+esc(holName(d)):'')+'</div>'+
+    '<div class="n">'+subs.join(" · ")+' &nbsp;/&nbsp; 출석 예정 <b>'+total+'명</b></div></div>'+
+    '<table class="pTbl"><thead><tr>'+
+    '<th style="width:6%">반</th><th style="width:6%">번</th><th style="width:15%">이름</th>'+
+    '<th style="width:9%">학년</th><th style="width:8%">성별</th><th style="width:15%">영레벨</th>'+
+    '<th style="width:11%">RL_ID</th><th style="width:7%">'+wd+'</th><th>비고</th></tr></thead><tbody>'+body+
+    '<tr class="subRow" style="border-top:2px solid #000"><td colspan="7" style="text-align:right;padding-right:8px;font-size:10.5pt">총인원</td>'+
+    '<td style="font-size:10.5pt">'+total+'</td><td></td></tr></tbody></table>'+
+    '<div class="pSign">담당 <span></span> 확인 <span></span></div>'+
+    '<div class="pFoot">출석 ○ · 결석 × &nbsp;|&nbsp; 나라차태권도 분당도장 · 두산위브트레지움 109동 B101호</div></div>';
+}
+/* 화면 미리보기 창 */
+function previewDay(d){
+  d=d||UI.date;
+  var body=daySheetHTML(d);
+  if(!body){ alert(fmtD(d)+"에 배치된 캠프생이 없습니다."); return; }
+  document.getElementById("modalHost").innerHTML=
+    '<div class="modalBg" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:880px;padding:18px">'+
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'+
+    '<h2 style="margin:0;font-size:16px">출석부 미리보기 — '+fmtD(d)+'</h2>'+
+    '<span style="margin-left:auto;display:flex;gap:6px">'+
+    '<button class="btn" style="padding:8px 13px;font-size:13px" onclick="printDay(\''+d+'\')">🖨 인쇄 / PDF 저장</button>'+
+    '<button class="btn green" style="padding:8px 13px;font-size:13px" onclick="downloadDay(\''+d+'\')">⤓ 파일 다운로드</button>'+
+    '<button class="btn gray" style="padding:8px 12px;font-size:13px" onclick="closeModal()">닫기</button></span></div>'+
+    '<div style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:20px 22px;max-height:66vh;overflow:auto">'+
+    body+'</div></div></div>';
+}
+/* 인쇄 (브라우저 인쇄창 → PDF 저장 가능) */
+function printDay(d){
+  d=d||UI.date;
+  var body=daySheetHTML(d);
+  if(!body){ alert(fmtD(d)+"에 배치된 캠프생이 없습니다."); return; }
+  document.getElementById("printArea").innerHTML=body;
+  setTimeout(function(){ window.print(); }, 60);
+}
+function printRange(){
+  var ds=campDates().filter(function(d){ return !isHol(d) && daySheetHTML(d); });
+  if(!ds.length){ alert("인쇄할 내용이 없습니다."); return; }
+  if(!confirm("캠프 "+ds.length+"일치 출석부를 인쇄할까요? (용지 "+ds.length+"장)")) return;
+  var all='';
+  ds.forEach(function(d,i){
+    all+='<div style="'+(i<ds.length-1?'page-break-after:always':'')+'">'+daySheetHTML(d)+'</div>';
+  });
+  document.getElementById("printArea").innerHTML=all;
+  setTimeout(function(){ window.print(); }, 60);
+}
+/* 파일 다운로드 (HTML — 더블클릭하면 열리고, 워드에서도 열림) */
+function downloadDay(d){
+  d=d||UI.date;
+  var body=daySheetHTML(d);
+  if(!body){ alert(fmtD(d)+"에 배치된 캠프생이 없습니다."); return; }
+  saveSheetFile(body, d.replace(/-/g,"")+"_출석부");
+}
+function downloadRange(){
+  var ds=campDates().filter(function(d){ return !isHol(d) && daySheetHTML(d); });
+  if(!ds.length){ alert("저장할 내용이 없습니다."); return; }
+  var all='';
+  ds.forEach(function(d,i){ all+='<div style="'+(i<ds.length-1?'page-break-after:always':'')+'">'+daySheetHTML(d)+'</div>'; });
+  saveSheetFile(all, (CAMP.set.name||"캠프").replace(/[\\\/:*?"<>|]/g,"")+"_전체출석부");
+}
+function saveSheetFile(body, filename){
+  var css=''+
+    '@page{size:A4 portrait;margin:14mm 13mm}'+
+    'body{font-family:"Malgun Gothic","맑은 고딕",sans-serif;color:#000;margin:0;padding:14px}'+
+    '.pHead{text-align:center;border-bottom:2.5px solid #000;padding-bottom:7px;margin-bottom:4px}'+
+    '.pTitle{font-size:15pt;font-weight:800}.pOrg{font-size:9pt;color:#333;margin-top:3px}'+
+    '.pMeta{display:flex;justify-content:space-between;align-items:flex-end;margin:8px 0 6px;font-size:10.5pt}'+
+    '.pMeta .d{font-weight:800;font-size:12pt}.pMeta .n{font-size:9.5pt;color:#333}'+
+    '.pTbl{width:100%;border-collapse:collapse;font-size:9.5pt}'+
+    '.pTbl th{border:1px solid #000;background:#EFEFEF;padding:4px 3px;font-weight:700;text-align:center}'+
+    '.pTbl td{border:1px solid #666;padding:3.5px 4px;text-align:center;height:19px}'+
+    '.pTbl td.l{text-align:left}'+
+    '.pTbl .clsRow td{background:#F5F5F5;font-weight:800;text-align:left;padding:4px 6px;border-top:1.6px solid #000}'+
+    '.pTbl .subRow td{background:#FAFAFA;font-weight:700}'+
+    '.pSign{display:flex;justify-content:flex-end;gap:26px;margin-top:12px;font-size:9.5pt}'+
+    '.pSign span{border-bottom:1px solid #000;min-width:92px;display:inline-block}'+
+    '.pFoot{margin-top:9px;font-size:8pt;color:#555;text-align:center}';
+  var html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">'+
+    '<title>'+esc(filename)+'</title><style>'+css+'</style></head><body>'+body+'</body></html>';
+  try{
+    var blob=new Blob(["\uFEFF"+html],{type:"text/html;charset=utf-8"});
+    var a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download=filename+".html";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 500);
+  }catch(e){ alert("다운로드에 실패했습니다. ‘인쇄 / PDF 저장’을 이용해 주세요."); }
+}
+
 function totalSheet(){
   var ds=campDates(), C=COL(), wstart=weekStarts(), today=todayStr(), wg=weekGroups();
   var A=clsList("A"), B=clsList("B"), all=A.concat(B);
@@ -1148,7 +1310,7 @@ function clsSheet(c){
     }
     var cls = hol?'cHol':(mon?'hdrMon':'hdrDay');
     h+='<th class="'+(wstart[d]?'wk ':'')+cls+'" style="cursor:pointer'+(d===today?';box-shadow:inset 0 -3px 0 #2B5FB8':'')+'" '+
-       'onclick="toggleCol(\''+d+'\')" oncontextmenu="event.preventDefault();toggleHoliday(\''+d+'\')" title="클릭=접기 / 우클릭=휴일">'+
+       'onclick="toggleCol(\''+d+'\')" oncontextmenu="event.preventDefault();toggleHoliday(\''+d+'\')" title="클릭 = 이 날짜까지 접기(지난 날 숨기기) / 우클릭 = 휴일 지정">'+
        (dd.getMonth()+1)+'/'+dd.getDate()+
        '<div style="font-weight:600;font-size:10px;color:'+(hol?'#B5343F':'#6B7280')+'">'+
        (hol?esc(holName(d)).slice(0,4):"일월화수목금토"[dd.getDay()])+'</div></th>';
