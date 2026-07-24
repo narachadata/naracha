@@ -105,6 +105,10 @@
   .sheet tbody td.cNo   { background:#C0392B !important; color:#fff !important; }     /* 명시 결석 */
   .sheet tbody td.cPlan { background:#F7FAFF !important; color:#96A2B8 !important; }  /* 배치 예정 */
   .sheet tbody td.cHol, .sheet th.cHol  { background:#E4E0D8 !important; color:#A9A296 !important; }  /* 휴일 */
+  .sheet tbody td.cSkip { background:#FCE9B8 !important; color:#8A5A00 !important; font-size:10px; }   /* 차량 제외 */
+  .sheet tbody td.cBusOn   { background:#EAF6EE !important; }                                          /* 탑승 예정 (아이콘) */
+  .sheet tbody td.cBusSkip { background:#FCE9B8 !important; color:#B07D1A !important; }                 /* 차량 제외됨 */
+  .sheet tbody td.cBusNo   { background:#F3EEEA !important; }                                          /* 결석 (안 탐) */
   .sheet tbody td.warn  { background:#FFF4D6 !important; }      /* 레벨테스트 필요 */
   .sheet tbody td.mkCell{ background:#FDE7E9 !important; color:#B5343F !important; font-weight:800; }
   .sheet tbody tr.sumRow td { background:#F3F1EA !important; font-weight:800; }
@@ -153,6 +157,11 @@
   .pSign { display:flex; justify-content:flex-end; gap:26px; margin-top:12px; font-size:9.5pt; }
   .pSign span { border-bottom:1px solid #000; min-width:92px; display:inline-block; }
   .pFoot { margin-top:9px; font-size:8pt; color:#555; text-align:center; }
+  .dayBtn { flex:1; padding:9px 0; border:1.5px solid var(--line); background:#fff; color:var(--sub);
+            border-radius:8px; font-family:inherit; font-weight:700; font-size:14px; cursor:pointer; }
+  .dayBtn.on { background:var(--blue); color:#fff; border-color:var(--blue); }
+  .dupBadge { display:inline-block; font-size:10px; font-weight:800; padding:1px 6px; border-radius:99px;
+              background:var(--amberSoft); color:var(--amber); margin-left:5px; vertical-align:middle; }
 </style>
 </head>
 <body>
@@ -180,7 +189,7 @@
 <script>
 /* ================= 기본 설정 ================= */
 /* ── 앱 버전: 새 파일을 만들 때마다 자동 갱신됨. 기기들이 이 값을 비교해 새 버전을 감지 ── */
-var APP_VER = "v20260724.1826";
+var APP_VER = "v20260725.1900";
 
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwZmWHCEGwXoOs2omyAgWiOE3ds0zQCtRy-Ta7lLqk1lXQMNFPXCkrSvlgTTXGdlK9E/exec";
 var STORE = "camp";           /* 기존 프로그램과 같은 창고 방식, 캠프 전용 창고 이름 */
@@ -1480,6 +1489,39 @@ function closePlan(){ UI.plan=null; document.getElementById("modalHost").innerHT
    CAMP.routes = [ {name, dir:"등원"|"하원", stops:[{t,place,grade,name,sid}]} ] */
 function ROUTES(){ if(!CAMP.routes) CAMP.routes=[]; return CAMP.routes; }
 function stuById(id){ var r=null; CAMP.students.forEach(function(s){ if(s.id===id) r=s; }); return r; }
+
+/* ── 요일 유틸 ──
+   dowOf("2026-07-27") => 1(월) ~ 5(금).  일=0, 토=6 */
+function dowOf(d){ return new Date(d+"T00:00:00").getDay(); }
+var DOW_KO = ["일","월","화","수","목","금","토"];
+/* 정류장의 '태우는 요일': st.days = [1,3,4] 처럼 요일번호 배열.
+   비어 있으면(=지정 안 함) 모든 요일에 태우는 것으로 간주(기존 동작 유지). */
+function stopRunsOn(st, d){
+  if(!st.days || !st.days.length) return true;   /* 요일 지정 없음 → 매일 */
+  return st.days.indexOf(dowOf(d)) >= 0;
+}
+/* 정류장의 '태우는 요일'을 사람이 읽는 문구로: [1,3,4] => "월수목" */
+function daysLabel(st){
+  if(!st.days || !st.days.length) return "";
+  return st.days.slice().sort().map(function(n){ return DOW_KO[n]; }).join("");
+}
+/* "09:13" → 553(분).  시간이 없으면 아주 큰 값(맨 뒤로) */
+function timeMin(t){
+  if(!t) return 999999;
+  var m=String(t).match(/(\d{1,2})\s*[:시]\s*(\d{1,2})?/);
+  if(!m) return 999999;
+  return Number(m[1])*60 + Number(m[2]||0);
+}
+/* 정류장을 시간순으로 정렬한 새 배열 반환 (원본 순서는 보존, 표시용 인덱스는 따로 관리).
+   같은 시간이면 원래 순서 유지. */
+function sortedStops(rt){
+  return rt.stops.map(function(st,i){ return {st:st, i:i}; })
+    .sort(function(a,b){
+      var ta=timeMin(a.st.t), tb=timeMin(b.st.t);
+      if(ta!==tb) return ta-tb;
+      return a.i-b.i;      /* 시간 같으면 입력 순서 유지 */
+    });
+}
 function ridesToday(d){ /* 그날 탑승 예정: 배치된 날 + 차량 이용 */
   var n=0; CAMP.students.forEach(function(s){ if(s.bus && planOf(s).indexOf(d)>=0) n++; });
   return n;
@@ -1489,12 +1531,22 @@ function vBus(){
   var riders=CAMP.students.filter(function(s){return s.bus;});
   var inRoute={}; rts.forEach(function(rt){ rt.stops.forEach(function(st){ if(st.sid) inRoute[st.sid]=1; }); });
   var miss=riders.filter(function(s){ return !inRoute[s.id]; });
+  /* 같은 방향(등원/하원) 안에서 한 학생이 여러 정류장에 걸쳐 있으면 '중복(요일별 위치)' 으로 봄 */
+  var dirCount={};   /* dirCount[방향][학생id] = 정류장 수 */
+  rts.forEach(function(rt){
+    var dc=dirCount[rt.dir]||(dirCount[rt.dir]={});
+    rt.stops.forEach(function(st){ if(st.sid){ dc[st.sid]=(dc[st.sid]||0)+1; } });
+  });
 
-  var h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">'+
+  var h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;flex-wrap:wrap">'+
     '<h2 style="margin:0">차량 운행표</h2>'+
     '<span class="small">차량 이용 <b>'+riders.length+'명</b> · 노선 <b>'+rts.length+'개</b></span>'+
-    '<span class="small" style="margin-left:auto">칸 클릭 = 탑승 확인 · 회색칸 = 그날 미배치</span>'+
-    '<button class="btn line" style="padding:8px 12px;font-size:12.5px" onclick="addRoute()">＋ 노선</button></div>';
+    '<span class="small" style="margin-left:auto">'+
+      '🚌 <span style="color:var(--blue);font-weight:700">등원 승차</span> · '+
+      '🚐 <span style="color:var(--green);font-weight:700">하원 하차</span> · '+
+      '<span style="color:#B07D1A;font-weight:700">✕ 제외</span>(출석하지만 차량 안 탐)</span>'+
+    '<button class="btn line" style="padding:8px 12px;font-size:12.5px" onclick="addRoute()">＋ 노선</button></div>'+
+    '<div class="small" style="margin:-4px 0 12px;color:var(--sub)">오늘 <b>누가 어디서 타는지</b> 확인하는 표입니다. 차량 아이콘이 있으면 탑승 예정 · 아래 인원 수는 실제 탈 사람만 자동 집계됩니다. 출석했지만 차량을 안 타는 사람은 <b>칸을 눌러</b> 제외하세요. (결석은 출석부에서 처리하면 자동으로 빠집니다)</div>';
 
   if(miss.length) h+='<div class="card" style="background:var(--amberSoft);border:1.5px solid var(--amber);padding:11px 14px">'+
     '<b style="font-size:13.5px;color:var(--amber)">⚠ 노선 미배정 '+miss.length+'명</b> '+
@@ -1502,57 +1554,110 @@ function vBus(){
 
   if(!rts.length) return h+'<div class="empty">등록된 노선이 없습니다. ‘＋ 노선’으로 추가하세요.</div>';
 
+  /* ── 선택한 날짜 기준 승차/하차 총 인원 요약 ── */
+  var selDay = UI.date;
+  var goSum=0, backSum=0;
+  rts.forEach(function(rt){ var n=routeRideCount(rt, selDay);
+    if(rt.dir==="등원") goSum+=n; else backSum+=n; });
+  h+='<div class="card" style="display:flex;align-items:center;gap:12px;padding:12px 14px;flex-wrap:wrap">'+
+    '<span class="small" style="font-weight:700">날짜</span>'+
+    '<select class="input" style="width:auto;padding:7px 11px;font-size:13px" onchange="UI.date=this.value;render()">'+
+    campDates().map(function(d){ return '<option value="'+d+'"'+(selDay===d?" selected":"")+'>'+fmtD(d)+(isHol(d)?" · 휴일":"")+'</option>'; }).join("")+
+    '</select>'+
+    '<div style="margin-left:auto;display:flex;gap:10px">'+
+      '<div style="background:var(--blueSoft);border-radius:10px;padding:8px 16px;text-align:center;min-width:96px">'+
+        '<div class="small" style="color:var(--blue);font-weight:700">🚌 승차(등원)</div>'+
+        '<div style="font-size:22px;font-weight:800;color:var(--blue)">'+goSum+'<span style="font-size:12px;font-weight:600">명</span></div></div>'+
+      '<div style="background:var(--greenSoft);border-radius:10px;padding:8px 16px;text-align:center;min-width:96px">'+
+        '<div class="small" style="color:var(--green);font-weight:700">🚐 하차(하원)</div>'+
+        '<div style="font-size:22px;font-weight:800;color:var(--green)">'+backSum+'<span style="font-size:12px;font-weight:600">명</span></div></div>'+
+    '</div></div>';
+
+  var wstart=weekStarts();
   rts.forEach(function(rt,ri){
-    h+='<div class="card" style="padding:13px 13px 10px">'+
-      '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">'+
-      '<h2 style="margin:0;font-size:15px">'+esc(rt.name)+'</h2>'+
-      '<span class="tag" style="background:'+(rt.dir==="등원"?'var(--blueSoft);color:var(--blue)':'var(--greenSoft);color:var(--green)')+'">'+esc(rt.dir)+'</span>'+
+    var sidStopCount = dirCount[rt.dir]||{};   /* 이 노선 방향 안에서의 학생별 정류장 수 */
+    var isGo = rt.dir==="등원";
+    /* 등원=파랑 계열, 하원=초록 계열로 카드 전체를 차별화 */
+    var accent = isGo ? "var(--blue)" : "var(--green)";
+    var accentSoft = isGo ? "var(--blueSoft)" : "var(--greenSoft)";
+    h+='<div class="card" style="padding:0;overflow:hidden;border:1.5px solid '+accentSoft+'">'+
+      '<div style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:'+accentSoft+';border-left:5px solid '+accent+'">'+
+      '<span style="font-size:17px">'+(isGo?"🚌":"🏠")+'</span>'+
+      '<h2 style="margin:0;font-size:15px;color:'+accent+'">'+esc(rt.name)+'</h2>'+
+      '<span class="tag" style="background:'+accent+';color:#fff">'+esc(rt.dir)+'</span>'+
       '<span class="small">정류장 '+rt.stops.filter(function(x){return x.name;}).length+'곳</span>'+
+      '<span class="tag" style="background:#fff;color:'+accent+';border:1.5px solid '+accent+';font-size:12px">'+
+        fmtShort(selDay)+' '+(isGo?'승차':'하차')+' <b>'+routeRideCount(rt,selDay)+'명</b></span>'+
       '<span style="margin-left:auto;display:flex;gap:5px">'+
       '<button class="btn line" style="padding:6px 10px;font-size:12px" onclick="addStop('+ri+')">＋ 정류장</button>'+
       (isAdmin()?'<button class="btn red" style="padding:6px 9px;font-size:12px" onclick="delRoute('+ri+')">노선 삭제</button>':'')+
       '</span></div>'+
-      '<div style="overflow:auto;max-height:62vh"><table class="sheet"><thead><tr>'+
-      '<th>시간</th><th class="lft" style="min-width:190px">승하차 장소</th>'+
-      '<th style="position:sticky;left:0;z-index:2;background:#FBFAF7;min-width:88px">이름</th><th>학년</th>';
+      '<div style="overflow:auto;max-height:62vh;padding:0 2px 2px"><table class="sheet"><thead><tr>'+
+      '<th>시간</th><th class="lft" style="min-width:180px">승하차 장소</th>'+
+      '<th style="position:sticky;left:0;z-index:2;background:#FBFAF7;min-width:82px">이름</th><th>학년</th>';
     ds.forEach(function(d){
-      var dd=new Date(d+"T00:00:00");
-      h+='<th'+(d===today?' style="background:var(--blueSoft)"':'')+'>'+(dd.getMonth()+1)+'/'+dd.getDate()+
-         '<div style="font-weight:500;color:var(--sub);font-size:10px">'+"일월화수목금토"[dd.getDay()]+'</div></th>';
+      var dd=new Date(d+"T00:00:00"), mon=dd.getDay()===1, hol=isHol(d);
+      h+='<th class="'+(wstart[d]?'wk ':'')+(hol?'cHol':(mon?'hdrMon':'hdrDay'))+'"'+
+         (d===selDay?' style="box-shadow:inset 0 -3px 0 '+accent+';outline:2px solid '+accent+';outline-offset:-2px"':'')+'>'+
+         (dd.getMonth()+1)+'/'+dd.getDate()+
+         '<div style="font-weight:600;font-size:10px;color:'+(hol?'#B5343F':'#6B7280')+'">'+
+         (hol?esc(holName(d)).slice(0,3):"일월화수목금토"[dd.getDay()])+'</div></th>';
     });
-    h+='<th>탑승계</th><th>수정</th></tr></thead><tbody>';
-    rt.stops.forEach(function(st,si){
-      if(!st.name){
+    h+='<th class="hdrSum">탑승계</th><th>수정</th></tr></thead><tbody>';
+    /* ── 시간순으로 정렬해서 표시 (원본 인덱스 si는 수정·삭제용으로 보존) ── */
+    sortedStops(rt).forEach(function(o){
+      var st=o.st, si=o.i;
+      if(!st.name){   /* 이름 없는 구분선 (도장 도착 등) */
         h+='<tr style="background:#FAF9F5"><td style="color:var(--sub);font-weight:700">'+esc(st.t||"")+'</td>'+
            '<td class="lft small" colspan="'+(ds.length+3)+'">'+esc(st.place||"도착")+'</td>'+
            '<td><button class="btn red" style="padding:4px 7px;font-size:11px" onclick="delStop('+ri+','+si+')">×</button></td></tr>';
         return;
       }
       var stu=st.sid&&stuById(st.sid);
+      var dupN = st.sid ? sidStopCount[st.sid] : 0;
+      var dl = daysLabel(st);
       var cnt=0;
       var cells="";
       ds.forEach(function(d){
-        var planned = stu && planOf(stu).indexOf(d)>=0;
-        var on = st.sid && !!(CAMP.board[d]||{})[st.sid];
-        if(on) cnt++;
-        var bg = on?'var(--green)' : planned?'#fff' : '#F3F1EC';
-        var fg = on?'#fff':'var(--sub)';
-        cells+='<td onclick="'+(st.sid?'toggleBoard(\''+st.sid+'\',\''+d+'\')':'')+'" style="cursor:'+(st.sid?'pointer':'default')+';background:'+bg+';color:'+fg+';font-weight:700;min-width:30px">'+(on?'✓':(planned?'':'·'))+'</td>';
+        var runs = stu && stopRunsOn(st, d) && planOf(stu).indexOf(d)>=0;  /* 이 정류장이 그날 태우는 대상인가 */
+        var aState = st.sid ? attState(st.sid, d) : 0;   /* 출결: 1출석 2결석 0미체크 */
+        var skip = st.sid && isBusSkip(st.sid, d);       /* 차량 제외 여부 */
+        var cls, inner, onTap="";
+        if(!runs){                          /* 이 요일엔 이 정류장에서 안 태움 */
+          cls='cAbs'; inner='<span style="color:#C9C4BA">·</span>';
+        } else if(aState===2){              /* 결석 → 안 탐 (흐리게) */
+          cls='cBusNo'; inner='<span title="결석" style="opacity:.4">'+busGlyph(isGo)+'</span>';
+        } else if(skip){                    /* 출석했지만 차량제외 → 안 탐 (끈 상태) */
+          cls='cBusSkip'; inner='<span title="차량 제외 (탭하면 다시 켜기)">✕</span>'; onTap="toggleBusSkip";
+        } else {                            /* 탈 예정 (출석 또는 미체크) → 진한 차량 아이콘 */
+          cls='cBusOn'; inner=busGlyph(isGo); onTap="toggleBusSkip"; cnt++;
+        }
+        cells+='<td class="'+(wstart[d]?'wk ':'')+cls+'" '+
+               (onTap?'onclick="'+onTap+'(\''+st.sid+'\',\''+d+'\')" title="탭하면 차량 제외/복원" ':'')+
+               'style="'+(onTap?'cursor:pointer;':'')+'font-weight:700;min-width:34px;font-size:15px">'+inner+'</td>';
       });
-      h+='<tr><td style="font-weight:700;color:var(--blue)">'+esc(st.t||"")+'</td>'+
-         '<td class="lft" style="max-width:230px;overflow:hidden;text-overflow:ellipsis">'+esc(st.place||"")+'</td>'+
+      h+='<tr><td style="font-weight:700;color:'+accent+'">'+esc(st.t||"")+'</td>'+
+         '<td class="lft" style="max-width:220px;overflow:hidden;text-overflow:ellipsis">'+esc(st.place||"")+
+           (dl?' <span class="small" style="color:'+accent+';font-weight:700">['+esc(dl)+']</span>':'')+'</td>'+
          '<td class="lft"'+(st.sid?' data-sid="'+st.sid+'"':'')+' style="position:sticky;left:0;background:#fff;font-weight:700;z-index:1">'+esc(st.name)+
+         (dupN>1?'<span class="dupBadge" title="요일별로 위치가 다른 학생 (여러 정류장에 표시됨)">중복</span>':'')+
          (stu?'':' <span class="small" style="color:var(--red)">(미연결)</span>')+'</td>'+
          '<td>'+esc(st.grade||"")+'</td>'+cells+
-         '<td style="font-weight:800">'+cnt+'</td>'+
+         '<td class="hdrSum" style="font-weight:800">'+cnt+'</td>'+
          '<td><button class="btn line" style="padding:4px 8px;font-size:11px" onclick="editStop('+ri+','+si+')">수정</button></td></tr>';
     });
-    h+='<tr><td colspan="4" class="lft" style="font-weight:800;background:#FBFAF7">일자별 탑승인원</td>';
+    h+='<tr><td colspan="4" class="lft" style="font-weight:800;background:#FBFAF7">'+(isGo?'승차 인원':'하차 인원')+'</td>';
     ds.forEach(function(d){
-      var n=rt.stops.filter(function(st){ return st.sid&&(CAMP.board[d]||{})[st.sid]; }).length;
-      h+='<td style="font-weight:800;color:var(--blue);background:#FBFAF7">'+n+'</td>';
+      var n=rt.stops.filter(function(st){
+        /* 그날 태우는 정류장 + 결석 아님 + 차량제외 아님 = 실제 탑승 예정 */
+        if(!(st.sid && stopRunsOn(st,d) && planOf(stuById(st.sid)||{indexOf:function(){return -1;}}).indexOf(d)>=0)) return false;
+        if(attState(st.sid,d)===2) return false;     /* 결석 */
+        if(isBusSkip(st.sid,d)) return false;        /* 차량제외 */
+        return true;
+      }).length;
+      h+='<td class="'+(wstart[d]?'wk ':'')+'hdrSum" style="font-weight:800;font-size:14px;color:'+accent+'">'+(n||'0')+'</td>';
     });
-    h+='<td style="background:#FBFAF7"></td><td style="background:#FBFAF7"></td></tr></tbody></table></div></div>';
+    h+='<td class="hdrSum"></td><td class="hdrSum"></td></tr></tbody></table></div></div>';
   });
   return h;
 }
@@ -1561,6 +1666,31 @@ function toggleBoard(sid,d){
   var day=CAMP.board[d]||{};
   if(day[sid]) delete day[sid]; else day[sid]=1;
   CAMP.board[d]=day; saveLocal(); render();
+}
+/* ── 차량 제외: 출석은 했지만 그날 차량은 안 타는 경우 ──
+   CAMP.busSkip[날짜][학생id] = 1 이면 그날 그 학생은 차량 제외 */
+function BUSSKIP(){ if(!CAMP.busSkip) CAMP.busSkip={}; return CAMP.busSkip; }
+function isBusSkip(sid,d){ var day=BUSSKIP()[d]; return !!(day&&day[sid]); }
+function toggleBusSkip(sid,d){
+  var bs=BUSSKIP(), day=bs[d]||{};
+  if(day[sid]) delete day[sid]; else day[sid]=1;
+  bs[d]=day; saveLocal(); render();
+}
+/* 등원=승차(파랑 🚌), 하원=하차(초록 🚐) 아이콘 */
+function busGlyph(isGo){
+  return isGo
+    ? '<span style="color:#1E2A52">🚌</span>'
+    : '<span style="color:#1E7B3C">🚐</span>';
+}
+/* 특정 날짜에 한 노선이 실제로 태우는 인원 (결석·차량제외 뺀 수) */
+function routeRideCount(rt, d){
+  return rt.stops.filter(function(st){
+    if(!st.sid || !stopRunsOn(st,d)) return false;
+    var s=stuById(st.sid); if(!s || planOf(s).indexOf(d)<0) return false;
+    if(attState(st.sid,d)===2) return false;   /* 결석 */
+    if(isBusSkip(st.sid,d)) return false;       /* 차량 제외 */
+    return true;
+  }).length;
 }
 function addRoute(){
   var n=prompt("노선 이름 (예: 등원차량 운행 1)");
@@ -1596,7 +1726,14 @@ function renderStopModal(){
    '<div><span class="label">학년</span><input class="input" id="sp_grade" placeholder="초2" value="'+esc(st.grade)+'"></div></div>'+
    '<span class="label">이름 (캠프생을 고르면 자동 입력)</span><input class="input" id="sp_name" value="'+esc(st.name)+'">'+
    '<span class="label">승하차 장소</span><input class="input" id="sp_place" value="'+esc(st.place)+'">'+
-   '<div class="small" style="margin:10px 0">※ 이름을 비우고 장소만 넣으면 “도장 도착” 같은 구분선으로 표시됩니다.</div>'+
+   '<span class="label">태우는 요일 <span class="small" style="font-weight:400">(요일마다 위치가 다른 학생만 지정 · 안 고르면 매일 태움)</span></span>'+
+   '<div id="sp_days" style="display:flex;gap:6px;margin:2px 0 4px">'+
+     [1,2,3,4,5].map(function(n){
+       var on=(st.days||[]).indexOf(n)>=0;
+       return '<button type="button" class="dayBtn'+(on?' on':'')+'" data-dow="'+n+'" onclick="this.classList.toggle(\'on\')">'+DOW_KO[n]+'</button>';
+     }).join("")+
+   '</div>'+
+   '<div class="small" style="margin:6px 0 10px">※ 이름을 비우고 장소만 넣으면 “도장 도착” 같은 구분선으로 표시됩니다.</div>'+
    '<div class="row"><button class="btn full" onclick="saveStop()">저장</button>'+
    '<button class="btn gray full" onclick="closeModal()">취소</button></div>'+
    (e.si>=0?'<div style="text-align:center;margin-top:12px"><button class="btn red" onclick="closeModal();delStop('+e.ri+','+e.si+')">정류장 삭제</button></div>':'')+
@@ -1613,7 +1750,10 @@ function stopPick(){
 function saveStop(){
   var e=UI.stopEdit, rt=ROUTES()[e.ri];
   var g=function(id){ return document.getElementById(id).value.trim(); };
-  var st={ t:g("sp_t"), place:g("sp_place"), grade:g("sp_grade"), name:g("sp_name"), sid:g("sp_sid") };
+  /* 태우는 요일 수집: 켜진 요일 버튼들 */
+  var days=[];
+  document.querySelectorAll("#sp_days .dayBtn.on").forEach(function(b){ days.push(Number(b.dataset.dow)); });
+  var st={ t:g("sp_t"), place:g("sp_place"), grade:g("sp_grade"), name:g("sp_name"), sid:g("sp_sid"), days:days };
   if(e.si>=0) rt.stops[e.si]=st; else rt.stops.push(st);
   /* 캠프생 정보에도 승하차 장소·시간 반영 (연동) */
   var s=stuById(st.sid);
@@ -1859,13 +1999,23 @@ function exportCSV(){
   ROUTES().forEach(function(rt){
     R.push([rt.name, rt.dir]);
     R.push(["시간","승하차 장소","학년","이름"].concat(ds.map(fmtD)).concat(["탑승계"]));
-    rt.stops.forEach(function(st){
+    sortedStops(rt).forEach(function(o){
+      var st=o.st;
       if(!st.name){ R.push([st.t,st.place]); return; }
-      var marks=ds.map(function(d){ return st.sid&&(CAMP.board[d]||{})[st.sid]?1:""; });
-      R.push([st.t,st.place,st.grade,st.name].concat(marks).concat([marks.filter(Boolean).length]));
+      var dl=daysLabel(st);
+      var marks=ds.map(function(d){
+        if(!(st.sid && stopRunsOn(st,d))) return "";        /* 태우는 요일 아님 */
+        var a=attState(st.sid,d);
+        if(a===2) return "결";                               /* 결석 */
+        if(isBusSkip(st.sid,d)) return "제외";               /* 차량 제외 */
+        return a===1 ? 1 : "";                               /* 출석1 · 미체크 공백 */
+      });
+      R.push([st.t, st.place+(dl?" ["+dl+"]":""), st.grade, st.name]
+        .concat(marks).concat([marks.filter(function(v){return v===1;}).length]));
     });
     R.push(["","","","탑승인원"].concat(ds.map(function(d){
-      return rt.stops.filter(function(st){ return st.sid&&(CAMP.board[d]||{})[st.sid]; }).length; })));
+      return rt.stops.filter(function(st){
+        return st.sid && stopRunsOn(st,d) && attState(st.sid,d)===1 && !isBusSkip(st.sid,d); }).length; })));
     R.push([]);
   });
   R.push([]); R.push(["[식단표 · 식비]"]);
