@@ -91,6 +91,24 @@
   .tag { font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; background:var(--amberSoft); color:var(--amber); }
 
 
+
+  /* ── 출석부 색 구분 ── */
+  .sheet .hdrInfo { background:#FFF9DB !important; }      /* 인적사항 제목 */
+  .sheet .hdrMon  { background:#D9EAD3 !important; }      /* 월요일 */
+  .sheet .hdrDay  { background:#E8EFF7 !important; }      /* 화~금 */
+  .sheet .hdrSum  { background:#FDE7E9 !important; }      /* 집계 */
+  .sheet .clsA td.idc { background:#E8F0FB !important; }  /* A반 인적사항 */
+  .sheet .clsB td.idc { background:#EAF5EC !important; }  /* B반 인적사항 */
+  .sheet tr.stripe td.idc { filter:brightness(0.985); }
+  .sheet td.cAbs  { background:#EDEBE7 !important; color:#9A958C !important; }  /* 결석·미체크 */
+  .sheet td.cOn   { background:#1E7B3C !important; color:#fff !important; }     /* 출석 */
+  .sheet td.cNo   { background:#C0392B !important; color:#fff !important; }     /* 명시 결석 */
+  .sheet td.cPlan { background:#F7FAFF !important; color:#96A2B8 !important; }  /* 배치 예정 */
+  .sheet td.cHol  { background:#E4E0D8 !important; color:#A9A296 !important; }  /* 휴일 */
+  .sheet td.warn  { background:#FFF4D6 !important; }      /* 레벨테스트 필요 */
+  .sheet td.mkCell{ background:#FDE7E9 !important; color:#B5343F !important; font-weight:800; }
+  .sheet tr.sumRow td { background:#F3F1EA !important; font-weight:800; }
+  .sheet tr:hover td:not(.idc) { filter:brightness(0.97); }
   /* ── 이름 검색 ── */
   .findBar { position:fixed; top:0; left:0; right:0; z-index:120; background:var(--navy);
              border-bottom:2px solid var(--red); padding:10px 18px; display:flex; align-items:center; gap:12px;
@@ -160,7 +178,7 @@
 <script>
 /* ================= 기본 설정 ================= */
 /* ── 앱 버전: 새 파일을 만들 때마다 자동 갱신됨. 기기들이 이 값을 비교해 새 버전을 감지 ── */
-var APP_VER = "v20260724.1751";
+var APP_VER = "v20260724.1755";
 
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwZmWHCEGwXoOs2omyAgWiOE3ds0zQCtRy-Ta7lLqk1lXQMNFPXCkrSvlgTTXGdlK9E/exec";
 var STORE = "camp";           /* 기존 프로그램과 같은 창고 방식, 캠프 전용 창고 이름 */
@@ -983,266 +1001,98 @@ function clsSheet(c){
   var ds=campDates(), list=clsList(c), today=todayStr();
   var wg=weekGroups(), wstart=weekStarts(), C=COL();
   var colCnt=ds.filter(function(d){ return C[d]; }).length;
-  var h='<div class="card" style="padding:14px 14px 10px">'+
-    '<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:9px;flex-wrap:wrap">'+
-    '<h2 style="margin:0">'+c+'반 <span class="small" style="font-weight:600">'+list.length+'명</span></h2>'+
+  var accent = c==="A" ? "#2B5FB8" : "#1E7B3C";
+  var h='<div class="card" style="padding:0;overflow:hidden;border-top:4px solid '+accent+'">'+
+    '<div style="display:flex;align-items:baseline;gap:12px;padding:12px 14px 9px;flex-wrap:wrap">'+
+    '<h2 style="margin:0;color:'+accent+'">'+c+'반 <span class="small" style="font-weight:600;color:var(--sub)">'+list.length+'명</span></h2>'+
     '<span class="small">'+(c==="A"?"10시 체육 → 11시 영어":"10시 영어 → 11시 체육")+'</span>'+
-    '<span class="small" style="margin-left:auto">칸 1클릭 <b style="color:var(--green)">✓출석</b> · 2클릭 <b style="color:var(--red)">✕결석</b> · 3클릭 지움 &nbsp;|&nbsp; 칸 우클릭 = <b>메모</b>(주황점 표시) · 날짜 클릭 = 접기 · 날짜 우클릭 = 휴일</span>'+
-    (colCnt?'<button class="btn line" style="padding:5px 10px;font-size:11.5px" onclick="expandAll()">접힌 '+colCnt+'일 모두 펼치기</button>':'')+
+    '<span class="small" style="margin-left:auto">'+
+    '<b style="background:#1E7B3C;color:#fff;padding:1px 6px;border-radius:4px">✓ 출석</b> '+
+    '<b style="background:#C0392B;color:#fff;padding:1px 6px;border-radius:4px">✕ 결석</b> '+
+    '<b style="background:#EDEBE7;color:#8B857A;padding:1px 6px;border-radius:4px">－ 미체크</b> '+
+    '<b style="background:#F7FAFF;color:#8595AD;padding:1px 6px;border-radius:4px;border:1px solid #E3E9F2">· 배치</b>'+
+    ' &nbsp;1클릭 출석 · 2클릭 결석 · 우클릭 메모</span>'+
+    (colCnt?'<button class="btn line" style="padding:5px 10px;font-size:11.5px" onclick="expandAll()">접힌 '+colCnt+'일 펼치기</button>':'')+
     '</div>'+
-    '<div style="overflow:auto;max-height:72vh"><table class="sheet">';
+    '<div style="overflow:auto;max-height:72vh;padding:0 14px 12px"><table class="sheet">';
   /* 주차 헤더 */
-  h+='<thead><tr><th colspan="9" class="wkhead" style="background:#fff;border-bottom:none"></th>';
+  h+='<thead><tr><th colspan="9" style="background:#fff;border-bottom:none"></th>';
   wg.forEach(function(g,i){
     h+='<th colspan="'+g.dates.length+'" class="wkhead'+(i>0?' wk':'')+'" style="cursor:pointer" onclick="toggleWeekCol('+i+')" title="주 전체 접기/펼치기">'+
        g.label+' <span style="font-weight:600;color:var(--sub)">('+fmtShort(g.dates[0])+'~'+fmtShort(g.dates[g.dates.length-1])+')</span></th>';
   });
   h+='<th colspan="5" class="wkhead wk" style="background:#fff;color:var(--sub)">집계</th></tr>';
   /* 열 제목 */
-  h+='<tr><th>반</th><th>번</th>'+
-    '<th style="position:sticky;left:0;z-index:3;background:#FBFAF7;min-width:92px">이름</th>'+
-    '<th>생일</th><th>학교</th><th>학년</th><th>성별</th><th>영레벨</th><th>RL_ID</th>';
+  h+='<tr><th class="hdrInfo">반</th><th class="hdrInfo">번</th>'+
+    '<th class="hdrInfo" style="position:sticky;left:0;z-index:3;min-width:92px">이름</th>'+
+    '<th class="hdrInfo">생일</th><th class="hdrInfo">학교</th><th class="hdrInfo">학년</th>'+
+    '<th class="hdrInfo">성별</th><th class="hdrInfo">영레벨</th><th class="hdrInfo">RL_ID</th>';
   ds.forEach(function(d){
-    var dd=new Date(d+"T00:00:00"), hol=isHol(d), col=!!C[d];
-    var bg = hol?'#F1EFE9' : (d===today?'var(--blueSoft)':'');
-    if(col){
-      h+='<th class="'+(wstart[d]?'wk':'')+'" style="cursor:pointer;padding:5px 2px;min-width:16px;background:#EDEAE3" '+
-         'onclick="toggleCol(\''+d+'\')" title="'+fmtShort(d)+' 펼치기">▸</th>';
+    var dd=new Date(d+"T00:00:00"), hol=isHol(d), mon=dd.getDay()===1;
+    if(C[d]){
+      h+='<th class="'+(wstart[d]?'wk ':'')+'hdrDay" style="cursor:pointer;padding:5px 2px;min-width:16px" onclick="toggleCol(\''+d+'\')" title="'+fmtShort(d)+' 펼치기">▸</th>';
       return;
     }
-    h+='<th class="'+(wstart[d]?'wk':'')+'" style="cursor:pointer'+(bg?';background:'+bg:'')+'" '+
-       'onclick="toggleCol(\''+d+'\')" oncontextmenu="event.preventDefault();toggleHoliday(\''+d+'\')" '+
-       'title="클릭=접기 / 우클릭=휴일 지정">'+
+    var cls = hol?'cHol':(mon?'hdrMon':'hdrDay');
+    h+='<th class="'+(wstart[d]?'wk ':'')+cls+'" style="cursor:pointer'+(d===today?';box-shadow:inset 0 -3px 0 #2B5FB8':'')+'" '+
+       'onclick="toggleCol(\''+d+'\')" oncontextmenu="event.preventDefault();toggleHoliday(\''+d+'\')" title="클릭=접기 / 우클릭=휴일">'+
        (dd.getMonth()+1)+'/'+dd.getDate()+
-       '<div style="font-weight:500;font-size:10px;color:'+(hol?'var(--red)':'var(--sub)')+'">'+
+       '<div style="font-weight:600;font-size:10px;color:'+(hol?'#B5343F':'#6B7280')+'">'+
        (hol?esc(holName(d)).slice(0,4):"일월화수목금토"[dd.getDay()])+'</div></th>';
   });
-  h+='<th class="wk">총계</th><th>보강</th><th>차량</th><th class="lft">승하차 장소</th><th class="lft">연락처</th></tr></thead><tbody>';
-  list.forEach(function(s){
-    var u=unplaced(s), m=makeupCnt(s);
-    h+='<tr><td>'+esc(s.cls||"")+'</td><td>'+(s.no||"")+'</td>'+
-       '<td class="lft" data-sid="'+s.id+'" style="position:sticky;left:0;background:#fff;cursor:pointer;font-weight:700;z-index:1" onclick="openPlan(\''+s.id+'\')">'+
+  h+='<th class="wk hdrSum">총계</th><th class="hdrSum">보강</th><th class="hdrSum">차량</th>'+
+     '<th class="hdrSum lft">승하차 장소</th><th class="hdrSum lft">연락처</th></tr></thead><tbody>';
+  list.forEach(function(s,ri){
+    var u=unplaced(s), m=makeupCnt(s), needLv=(!s.level||/레테|모름|대기|첫날|테스트/.test(s.level));
+    h+='<tr class="cls'+c+(ri%2?' stripe':'')+'">'+
+       '<td class="idc" style="font-weight:700;color:'+accent+'">'+esc(s.cls||"")+'</td>'+
+       '<td class="idc">'+(s.no||"")+'</td>'+
+       '<td class="idc lft" data-sid="'+s.id+'" style="position:sticky;left:0;cursor:pointer;font-weight:700;z-index:1" onclick="openPlan(\''+s.id+'\')">'+
        busIcon(s)+esc(s.name)+(u>0?' <span class="tag" style="background:var(--amberSoft);color:var(--amber)">+'+u+'</span>':'')+'</td>'+
-       '<td class="small">'+esc((s.birth||"").slice(2))+'</td><td>'+esc(s.school||"")+'</td>'+
-       '<td>'+esc((s.grade||"").replace("초등 ",""))+'</td><td>'+esc(s.gender||"")+'</td>'+
-       '<td>'+esc(s.level||"")+'</td><td style="font-family:monospace">'+esc(s.rlid||"")+'</td>';
+       '<td class="idc small">'+esc((s.birth||"").slice(2))+'</td>'+
+       '<td class="idc">'+esc(s.school||"")+'</td>'+
+       '<td class="idc">'+esc((s.grade||"").replace("초등 ",""))+'</td>'+
+       '<td class="idc">'+esc(s.gender||"")+'</td>'+
+       '<td class="idc'+(needLv?' warn':'')+'">'+esc(s.level||"")+'</td>'+
+       '<td class="idc" style="font-family:monospace">'+esc(s.rlid||"")+'</td>';
     ds.forEach(function(d){
-      if(C[d]){ h+='<td class="'+(wstart[d]?'wk':'')+'" style="background:#F7F5F0;min-width:16px"></td>'; return; }
-      if(isHol(d)){ h+='<td class="'+(wstart[d]?'wk':'')+'" style="background:#F1EFE9;color:#B9B4A9">/</td>'; return; }
-      var planned=planOf(s).indexOf(d)>=0, st=attState(s.id,d);
-      var absent = st===2 || (st===0 && planned && d<today);
-      var bg = st===1?'var(--green)' : st===2?'var(--red)' : absent?'var(--redSoft)' : planned?'var(--blueSoft)':'#fff';
-      var fg = (st===1||st===2)?'#fff' : absent?'var(--red)':'var(--sub)';
-      var mark = st===1?'✓' : st===2?'✕' : absent?'－' : planned?'·':'';
-      var nt=noteOf(s.id,d);
-      h+='<td class="'+(wstart[d]?'wk':'')+'" onclick="tapCell(\''+s.id+'\',\''+d+'\')" '+
-         'oncontextmenu="event.preventDefault();editNote(\''+s.id+'\',\''+d+'\')" '+
-         (nt?'title="'+esc(nt)+'" ':'')+
-         'style="cursor:pointer;background:'+bg+';color:'+fg+';font-weight:700;min-width:30px;position:relative">'+mark+
-         (nt?'<span style="position:absolute;top:1px;right:2px;width:5px;height:5px;border-radius:99px;background:var(--amber)"></span>':'')+
-         '</td>';
+      if(C[d]){ h+='<td class="'+(wstart[d]?'wk ':'')+'cPlan" style="min-width:16px"></td>'; return; }
+      if(isHol(d)){ h+='<td class="'+(wstart[d]?'wk ':'')+'cHol">/</td>'; return; }
+      var planned=planOf(s).indexOf(d)>=0, st=attState(s.id,d), nt=noteOf(s.id,d);
+      var cls, mark;
+      if(st===1){ cls='cOn'; mark='✓'; }
+      else if(st===2){ cls='cNo'; mark='✕'; }
+      else if(planned && d<today){ cls='cAbs'; mark='－'; }
+      else if(planned){ cls='cPlan'; mark='·'; }
+      else { cls='cAbs'; mark=''; }
+      h+='<td class="'+(wstart[d]?'wk ':'')+cls+'" onclick="tapCell(\''+s.id+'\',\''+d+'\')" '+
+         'oncontextmenu="event.preventDefault();editNote(\''+s.id+'\',\''+d+'\')" '+(nt?'title="'+esc(nt)+'" ':'')+
+         'style="cursor:pointer;font-weight:700;min-width:30px;position:relative">'+mark+
+         (nt?'<span style="position:absolute;top:1px;right:2px;width:5px;height:5px;border-radius:99px;background:#E8A317"></span>':'')+'</td>';
     });
-    h+='<td class="wk" style="font-weight:800">'+actualCnt(s)+'</td>'+
-       '<td style="font-weight:800;color:'+(m>0?'var(--red)':'var(--sub)')+'">'+(m||"")+'</td>'+
-       '<td>'+(s.bus?'1':'x')+'</td>'+
-       '<td class="lft" style="max-width:200px;overflow:hidden;text-overflow:ellipsis">'+esc(s.stop||"")+'</td>'+
+    h+='<td class="wk" style="font-weight:800;background:#FBFAF7">'+actualCnt(s)+'</td>'+
+       '<td class="'+(m>0?'mkCell':'')+'">'+(m||"")+'</td>'+
+       '<td>'+(s.bus?'<span style="color:var(--blue);font-weight:800">1</span>':'<span style="color:#C9C5BC">x</span>')+'</td>'+
+       '<td class="lft small" style="max-width:200px;overflow:hidden;text-overflow:ellipsis">'+esc(s.stop||"")+'</td>'+
        '<td class="lft small">'+esc(s.phone||"")+'</td></tr>';
   });
-  /* 합계 */
-  h+='<tr style="background:#FBFAF7"><td colspan="2"></td>'+
-     '<td class="lft" style="position:sticky;left:0;background:#FBFAF7;font-weight:800">일자별 합계</td><td colspan="6"></td>';
+  /* 합계행 */
+  h+='<tr class="sumRow"><td colspan="2"></td>'+
+     '<td class="lft" style="position:sticky;left:0;background:#F3F1EA">일자별 합계</td><td colspan="6"></td>';
   var tot=0;
   ds.forEach(function(d){
-    if(C[d]){ h+='<td class="'+(wstart[d]?'wk':'')+'" style="background:#F7F5F0"></td>'; return; }
-    if(isHol(d)){ h+='<td class="'+(wstart[d]?'wk':'')+'" style="background:#F1EFE9;color:#B9B4A9">/</td>'; return; }
+    if(C[d]){ h+='<td class="'+(wstart[d]?'wk':'')+'"></td>'; return; }
+    if(isHol(d)){ h+='<td class="'+(wstart[d]?'wk ':'')+'cHol">/</td>'; return; }
     var n=list.filter(function(s){ return attState(s.id,d)===1; }).length;
     tot+=n;
-    h+='<td class="'+(wstart[d]?'wk':'')+'" style="font-weight:800;color:var(--blue)">'+n+'</td>';
+    h+='<td class="'+(wstart[d]?'wk':'')+'" style="color:#1E2A52">'+n+'</td>';
   });
   var riders=list.filter(function(s){return s.bus;}).length;
   var mkTot=list.reduce(function(a,s){ return a+makeupCnt(s); },0);
-  h+='<td class="wk" style="font-weight:800">'+tot+'</td>'+
-     '<td style="font-weight:800;color:'+(mkTot?'var(--red)':'inherit')+'">'+(mkTot||"")+'</td>'+
-     '<td style="font-weight:800">'+riders+'</td><td class="lft small">차량 신청 인원</td><td></td></tr>';
+  h+='<td class="wk">'+tot+'</td><td style="color:'+(mkTot?'#B5343F':'inherit')+'">'+(mkTot||"")+'</td>'+
+     '<td>'+riders+'</td><td class="lft small" style="font-weight:600">차량 신청 인원</td><td></td></tr>';
   h+='</tbody></table></div></div>';
   return h;
-}
-/* ══════ 이름 검색 (Ctrl+F / Cmd+F) ══════ */
-function openFind(pre){
-  var box=document.getElementById("findHost");
-  box.innerHTML='<div class="findBar">'+
-    '<b style="color:#fff;font-size:14px;white-space:nowrap">이름 찾기</b>'+
-    '<input id="findIn" placeholder="캠프생 이름 입력 (예: 황로한)" value="'+esc(pre||"")+'" '+
-    'oninput="runFind(this.value)" onkeydown="if(event.key===\'Escape\')closeFind();if(event.key===\'Enter\')firstHit()">'+
-    '<span class="res" id="findRes"></span>'+
-    '<div id="findHits" style="flex:1;overflow-x:auto;white-space:nowrap"></div>'+
-    '<button class="x" onclick="closeFind()" title="닫기 (Esc)">×</button></div>';
-  document.body.style.paddingTop="54px";
-  var el=document.getElementById("findIn");
-  el.focus(); el.select();
-  if(pre) runFind(pre);
-}
-function closeFind(){
-  document.getElementById("findHost").innerHTML="";
-  document.body.style.paddingTop="0";
-  clearNeon();
-}
-function runFind(q){
-  q=(q||"").trim().toLowerCase();
-  var res=document.getElementById("findRes"), hits=document.getElementById("findHits");
-  if(!q){ res.textContent=""; hits.innerHTML=""; return; }
-  var found=CAMP.students.filter(function(s){ return (s.name||"").toLowerCase().indexOf(q)>=0; });
-  /* 다른 캠프에서도 찾기 */
-  var others=[];
-  DB.camps.forEach(function(c){
-    if(c===CAMP) return;
-    (c.students||[]).forEach(function(s){
-      if((s.name||"").toLowerCase().indexOf(q)>=0) others.push({c:c,s:s});
-    });
-  });
-  res.textContent = found.length+"명"+(others.length?" (다른 캠프 "+others.length+"건)":"");
-  var h="";
-  found.forEach(function(s){
-    h+='<button class="hit" onclick="gotoStu(\''+s.id+'\')">'+esc(s.name)+
-       ' <span style="color:#8C96AE">'+esc(s.cls||"미배치")+(s.cls?"반":"")+' · '+esc((s.grade||"").replace("초등 ",""))+'</span></button>';
-  });
-  others.slice(0,6).forEach(function(o){
-    h+='<button class="hit" style="opacity:.72" onclick="gotoOther(\''+o.c.id+'\',\''+o.s.id+'\')">'+esc(o.s.name)+
-       ' <span style="color:#8C96AE">'+esc(o.c.set.name.replace("방학 캠프",""))+'</span></button>';
-  });
-  hits.innerHTML=h;
-  if(found.length===1) gotoStu(found[0].id, true);
-}
-function firstHit(){
-  var q=(document.getElementById("findIn").value||"").trim().toLowerCase();
-  var f=CAMP.students.filter(function(s){ return (s.name||"").toLowerCase().indexOf(q)>=0; });
-  if(f.length) gotoStu(f[0].id);
-}
-function gotoStu(id, keepFocus){
-  var s=stuById(id); if(!s) return;
-  /* 반 배치 여부에 따라 알맞은 탭으로 이동 */
-  if(UI.tab!=="att" && UI.tab!=="stu"){ UI.tab="att"; }
-  render();
-  setTimeout(function(){ neonTo(id, keepFocus); }, 30);
-}
-function gotoOther(campId, sid){
-  setCur(campId);
-  setTimeout(function(){ neonTo(sid); }, 60);
-}
-function clearNeon(){
-  var old=document.querySelectorAll(".neon,.neonTxt");
-  for(var i=0;i<old.length;i++){ old[i].classList.remove("neon"); old[i].classList.remove("neonTxt"); }
-}
-function neonTo(id, keepFocus){
-  clearNeon();
-  var el=document.querySelector('[data-sid="'+id+'"]');
-  if(!el){ return; }
-  el.classList.add("neon"); el.classList.add("neonTxt");
-  el.scrollIntoView({behavior:"smooth", block:"center", inline:"center"});
-  if(!keepFocus){ var fi=document.getElementById("findIn"); if(fi) fi.focus(); }
-}
-/* 단축키: Ctrl+F (Windows) / Cmd+F (Mac) */
-document.addEventListener("keydown", function(e){
-  var mod = e.ctrlKey || e.metaKey;
-  if(mod && (e.key==="f" || e.key==="F")){
-    e.preventDefault();
-    var sel="";
-    try{ sel=String(window.getSelection()).trim().slice(0,20); }catch(err){}
-    openFind(sel);
-  }
-  if(e.key==="Escape" && document.getElementById("findIn")) closeFind();
-});
-
-/* ── 일일 출석부 A4 인쇄 ── */
-function printDay(d){
-  d=d||UI.date;
-  if(!d){ alert("날짜를 먼저 선택해 주세요."); return; }
-  var dt=new Date(d+"T00:00:00");
-  var wd=["일","월","화","수","목","금","토"][dt.getDay()];
-  var col=wd;   /* 요일 열 제목 */
-  var html='<div class="pSheet"><div class="pHead">'+
-    '<div class="pTitle">'+esc(CAMP.set.name)+' 출석부</div>'+
-    '<div class="pOrg">나라차태권도 × 클래식리더영어도서관</div></div>';
-  var total=0, body='';
-  ["A","B"].forEach(function(c){
-    var list=clsList(c).filter(function(s){ return planOf(s).indexOf(d)>=0; });
-    if(!list.length) return;
-    total+=list.length;
-    body+='<tr class="clsRow"><td colspan="9">'+c+'반 &nbsp;<span style="font-weight:600;font-size:8.5pt">'+
-      (c==="A"?"10시 체육 → 11시 영어":"10시 영어 → 11시 체육")+'</span></td></tr>';
-    list.forEach(function(s){
-      var st=attState(s.id,d);
-      body+='<tr><td>'+esc(s.cls)+'</td><td>'+(s.no||"")+'</td>'+
-        '<td class="l" style="font-weight:700">'+esc(s.name)+'</td>'+
-        '<td>'+esc((s.grade||"").replace("초등 ",""))+'</td><td>'+esc(s.gender||"")+'</td>'+
-        '<td>'+esc(s.level||"")+'</td><td>'+esc(s.rlid||"")+'</td>'+
-        '<td>'+(st===1?"○":st===2?"×":"")+'</td>'+
-        '<td class="l" style="font-size:8.5pt">'+esc(noteOf(s.id,d))+'</td></tr>';
-    });
-    body+='<tr class="subRow"><td colspan="7" style="text-align:right;padding-right:8px">'+c+'반 소계</td>'+
-      '<td>'+list.length+'</td><td></td></tr>';
-  });
-  if(!total){ alert(fmtD(d)+"에 배치된 캠프생이 없습니다."); return; }
-  html+='<div class="pMeta"><div class="d">날짜 : '+(dt.getMonth()+1)+'월 '+dt.getDate()+'일 ('+wd+'요일)'+
-    (isHol(d)?' — '+esc(holName(d)):'')+'</div>'+
-    '<div class="n">출석 예정 인원 <b>'+total+'명</b></div></div>'+
-    '<table class="pTbl"><thead><tr>'+
-    '<th style="width:6%">반</th><th style="width:6%">번</th><th style="width:15%">이름</th>'+
-    '<th style="width:9%">학년</th><th style="width:8%">성별</th><th style="width:15%">영레벨</th>'+
-    '<th style="width:11%">RL_ID</th><th style="width:7%">'+col+'</th><th>비고</th></tr></thead><tbody>'+
-    body+
-    '<tr class="subRow" style="border-top:2px solid #000"><td colspan="7" style="text-align:right;padding-right:8px;font-size:10.5pt">총인원</td>'+
-    '<td style="font-size:10.5pt">'+total+'</td><td></td></tr>'+
-    '</tbody></table>'+
-    '<div class="pSign">담당 <span></span> 확인 <span></span></div>'+
-    '<div class="pFoot">출석 ○ · 결석 × &nbsp;|&nbsp; 나라차태권도 분당도장 · 두산위브트레지움 109동 B101호</div></div>';
-  document.getElementById("printArea").innerHTML=html;
-  window.print();
-}
-function printRange(){
-  var ds=campDates().filter(function(d){ return !isHol(d); });
-  if(!confirm("캠프 전체 "+ds.length+"일의 출석부를 한 번에 인쇄할까요?\n(용지 "+ds.length+"장)")) return;
-  var all='';
-  ds.forEach(function(d,i){
-    printDayHTML(d, function(h){ all+='<div style="'+(i<ds.length-1?'page-break-after:always':'')+'">'+h+'</div>'; });
-  });
-  if(!all){ alert("인쇄할 내용이 없습니다."); return; }
-  document.getElementById("printArea").innerHTML=all;
-  window.print();
-}
-function printDayHTML(d, cb){
-  var prev=document.getElementById("printArea").innerHTML;
-  var dt=new Date(d+"T00:00:00");
-  var wd=["일","월","화","수","목","금","토"][dt.getDay()];
-  var total=0, body='';
-  ["A","B"].forEach(function(c){
-    var list=clsList(c).filter(function(s){ return planOf(s).indexOf(d)>=0; });
-    if(!list.length) return;
-    total+=list.length;
-    body+='<tr class="clsRow"><td colspan="9">'+c+'반 &nbsp;<span style="font-weight:600;font-size:8.5pt">'+
-      (c==="A"?"10시 체육 → 11시 영어":"10시 영어 → 11시 체육")+'</span></td></tr>';
-    list.forEach(function(s){
-      var st=attState(s.id,d);
-      body+='<tr><td>'+esc(s.cls)+'</td><td>'+(s.no||"")+'</td><td class="l" style="font-weight:700">'+esc(s.name)+'</td>'+
-        '<td>'+esc((s.grade||"").replace("초등 ",""))+'</td><td>'+esc(s.gender||"")+'</td>'+
-        '<td>'+esc(s.level||"")+'</td><td>'+esc(s.rlid||"")+'</td>'+
-        '<td>'+(st===1?"○":st===2?"×":"")+'</td>'+
-        '<td class="l" style="font-size:8.5pt">'+esc(noteOf(s.id,d))+'</td></tr>';
-    });
-    body+='<tr class="subRow"><td colspan="7" style="text-align:right;padding-right:8px">'+c+'반 소계</td><td>'+list.length+'</td><td></td></tr>';
-  });
-  if(!total) return;
-  cb('<div class="pSheet"><div class="pHead"><div class="pTitle">'+esc(CAMP.set.name)+' 출석부</div>'+
-    '<div class="pOrg">나라차태권도 × 클래식리더영어도서관</div></div>'+
-    '<div class="pMeta"><div class="d">날짜 : '+(dt.getMonth()+1)+'월 '+dt.getDate()+'일 ('+wd+'요일)'+(isHol(d)?' — '+esc(holName(d)):'')+'</div>'+
-    '<div class="n">출석 예정 인원 <b>'+total+'명</b></div></div>'+
-    '<table class="pTbl"><thead><tr><th style="width:6%">반</th><th style="width:6%">번</th><th style="width:15%">이름</th>'+
-    '<th style="width:9%">학년</th><th style="width:8%">성별</th><th style="width:15%">영레벨</th>'+
-    '<th style="width:11%">RL_ID</th><th style="width:7%">'+wd+'</th><th>비고</th></tr></thead><tbody>'+body+
-    '<tr class="subRow" style="border-top:2px solid #000"><td colspan="7" style="text-align:right;padding-right:8px;font-size:10.5pt">총인원</td>'+
-    '<td style="font-size:10.5pt">'+total+'</td><td></td></tr></tbody></table>'+
-    '<div class="pSign">담당 <span></span> 확인 <span></span></div>'+
-    '<div class="pFoot">출석 ○ · 결석 × &nbsp;|&nbsp; 나라차태권도 분당도장 · 두산위브트레지움 109동 B101호</div></div>');
 }
 function fmtShort(d){ var x=new Date(d+"T00:00:00"); return (x.getMonth()+1)+"/"+x.getDate(); }
 function setCls(c){ UI.cls=c; render(); }
