@@ -889,7 +889,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.23";   /* R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.25";   /* R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -16431,10 +16431,10 @@ function renderEventDayof(ev){
   prep.forEach(function(p){ if((d.checks[p.id]||{}).done) doneN++; });
   d.manual.forEach(function(m){ if(m.done) doneN++; });
   var h='<div class="card">'+
-    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><b style="font-size:14px">⑤ 행사 당일 준비</b>'+
-      '<span style="font-size:11.5px;color:var(--sub)">준비 탭 항목이 자동으로 들어옵니다 · 준비완료와 별개로 <b>당일체크</b>로 2중 확인</span>'+
-      '<span style="flex:1"></span><span style="font-size:12px;font-weight:800;color:'+(totN&&doneN===totN?'#1E7B3C':'var(--sub)')+'">당일체크 '+doneN+'/'+totN+'</span></div>'+
-    '<div style="font-size:11.5px;font-weight:800;color:var(--sub);margin:8px 0 4px">📦 준비 항목 (자동) · <span style="color:#1E7B3C">✓준비완료</span>는 ②준비 탭 반영 · <span style="color:#1E7B3C">당일체크</span>는 현장 재확인</div>';
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><b style="font-size:14px">⑤ 최종체크</b>'+
+      '<span style="font-size:11.5px;color:var(--sub)">준비 탭 항목이 자동으로 들어옵니다 · 준비완료와 별개로 <b>최종체크</b>로 2중 확인</span>'+
+      '<span style="flex:1"></span><span style="font-size:12px;font-weight:800;color:'+(totN&&doneN===totN?'#1E7B3C':'var(--sub)')+'">최종체크 '+doneN+'/'+totN+'</span></div>'+
+    '<div style="font-size:11.5px;font-weight:800;color:var(--sub);margin:8px 0 4px">📦 준비 항목 (자동) · <span style="color:#1E7B3C">✓준비완료</span>는 ②준비 탭 반영 · <span style="color:#1E7B3C">최종체크</span>는 마지막 재확인</div>';
   if(!prep.length){ h+='<div style="font-size:12.5px;color:var(--sub);padding:3px 2px">② 준비 탭에 항목을 넣으면 여기에 자동으로 나타납니다.</div>'; }
   prep.forEach(function(p){
     var c=d.checks[p.id]||{};
@@ -16448,12 +16448,12 @@ function renderEventDayof(ev){
         '<b style="font-size:13px'+(c.done?';text-decoration:line-through;color:var(--sub)':'')+'">'+esc(p.item||"(항목)")+'</b>'+
         (p.due?'<span style="font-size:10.5px;color:var(--sub)">기한 '+esc(p.due.slice(5))+'</span>':'')+
         '<span style="flex:1"></span>'+
-        '<label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;background:'+(c.done?'#EAF7EE':'#fff')+';border:1.5px solid '+(c.done?'#1E7B3C':'var(--line)')+';border-radius:9px;padding:4px 10px" title="당일 현장에서 한 번 더 확인 체크"><input type="checkbox" '+(c.done?'checked':'')+' onchange="toggleDayofAuto(\''+id+'\',\''+p.id+'\')" style="width:16px;height:16px;accent-color:#1E7B3C"><span style="font-size:11.5px;font-weight:800;color:'+(c.done?'#1E7B3C':'var(--sub)')+'">당일체크</span></label>'+
+        '<label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;background:'+(c.done?'#EAF7EE':'#fff')+';border:1.5px solid '+(c.done?'#1E7B3C':'var(--line)')+';border-radius:9px;padding:4px 10px" title="마지막으로 한 번 더 확인 체크"><input type="checkbox" '+(c.done?'checked':'')+' onchange="toggleDayofAuto(\''+id+'\',\''+p.id+'\')" style="width:16px;height:16px;accent-color:#1E7B3C"><span style="font-size:11.5px;font-weight:800;color:'+(c.done?'#1E7B3C':'var(--sub)')+'">최종체크</span></label>'+
       '</div>'+
       '<div style="display:flex;gap:6px;align-items:center;margin-top:5px">'+
         '<span style="font-size:11px;color:var(--sub);flex:0 0 auto">담당</span>'+
         '<input class="input" placeholder="담당" style="flex:0 0 100px;height:32px;padding:0 8px;font-size:12px" value="'+esc(owner)+'" oninput="setDayofAuto(\''+id+'\',\''+p.id+'\',\'owner\',this.value)" onchange="commitDayof(\''+id+'\')">'+
-        '<input class="input" placeholder="당일 코멘트 (예: 몇 개·어디에·확인사항)" style="flex:1;height:32px;padding:0 9px;font-size:12px" value="'+esc(c.comment||"")+'" oninput="setDayofAuto(\''+id+'\',\''+p.id+'\',\'comment\',this.value)" onchange="commitDayof(\''+id+'\')">'+
+        '<input class="input" placeholder="코멘트 (예: 몇 개·어디에·확인사항)" style="flex:1;height:32px;padding:0 9px;font-size:12px" value="'+esc(c.comment||"")+'" oninput="setDayofAuto(\''+id+'\',\''+p.id+'\',\'comment\',this.value)" onchange="commitDayof(\''+id+'\')">'+
       '</div>'+
       ((d.checks[p.id]&&d.checks[p.id].dev)?'<div style="margin-top:3px">'+workStamp(d.checks[p.id].dev,d.checks[p.id]._t)+'</div>':'')+
       '</div>';
@@ -16494,7 +16494,7 @@ function buildEventDocHtml(ev){
   if(prep.length){
     var dchkP=((ev.dayof&&ev.dayof.checks)||{});
     prepHtml='<table class="grid"><colgroup><col style="width:46pt"><col style="width:46pt"><col><col style="width:52pt"><col style="width:50pt"><col style="width:50pt"><col style="width:66pt"></colgroup>'+
-      '<tr><th class="ctr">준비완료</th><th class="ctr">당일확인</th><th>준비 항목</th><th class="ctr">담당</th><th class="ctr">시작일</th><th class="ctr">기한</th><th class="num">금액</th></tr>'+
+      '<tr><th class="ctr">준비완료</th><th class="ctr">최종확인</th><th>준비 항목</th><th class="ctr">담당</th><th class="ctr">시작일</th><th class="ctr">기한</th><th class="num">금액</th></tr>'+
       prep.map(function(p){ var dc=dchkP[p.id]||{}; var amt=Number(p.amount)||0;
         return '<tr><td class="ctr chk">'+(p.done?'✔':'')+'</td><td class="ctr chk">'+(dc.done?'✔':'')+'</td><td>'+e2(p.item||'')+'</td><td class="ctr">'+e2(p.owner||'<span class="dash">—</span>')+'</td><td class="ctr">'+md(p.start)+'</td><td class="ctr">'+md(p.due)+'</td><td class="num">'+(amt?won(amt):'<span class="dash">—</span>')+'</td></tr>';
       }).join('')+'</table>';
@@ -16591,7 +16591,7 @@ function buildEventDocHtml(ev){
     '<h2>'+(ev.desc?'③':'②')+' 준비 계획</h2>'+prepHtml+
     '<h2>진행 큐시트</h2>'+cueHtml+
     '<h2>진행 시 주의점</h2>'+nsHtml+
-    '<h2>행사 당일 점검</h2>'+dayofHtml+
+    '<h2>최종체크 점검</h2>'+dayofHtml+
     '<h2>예산 (단식부기)</h2>'+budgetHtml+
     '<h2>자료 · 미디어</h2>'+linkHtml+
     '<h2>평가 · 회고</h2>'+reviewHtml+
@@ -17548,7 +17548,7 @@ function renderEventDetail(ev){
   /* 탭 (준비 · 당일 · 사후 그룹) */
   h+='<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:13px;padding-top:12px;border-top:1px solid var(--line)">'+
       gtb('준비')+tb('기본','① 기본정보')+tb('준비','② 준비')+tb('큐시트','③ 큐시트')+tb('주의','④ 주의점')+
-      sepc+gtb('당일')+tb('당일','⑤ 행사당일')+
+      sepc+gtb('최종')+tb('당일','⑤ 최종체크')+
       sepc+gtb('사후')+tb('평가','⑥ 평가')+tb('자료','⑦ 자료')+tb('예산','⑧ 예산')+
     '</div>'+
     '</div>';
@@ -17688,7 +17688,12 @@ function renderEventDetail(ev){
     var prep=ev.prep||[];
     h+='<div class="card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><b style="font-size:14px">② 준비 항목</b><span style="font-size:11.5px;color:var(--sub)">담당·시작일·기한을 넣으면 [기한·할 일] 간트/리스트에 표시 · 금액은 [⑧ 예산] 지출에 자동 반영</span><span style="flex:1"></span><button class="chip" style="color:var(--blue);border-color:var(--blue)" onclick="addPrep(\''+id+'\')">+ 항목 추가</button></div>';
     if(!prep.length) h+='<div style="font-size:13px;color:var(--sub)">아직 준비 항목이 없습니다. [+ 항목 추가]를 누르세요. (예: 현수막 제작 · 담당 안상준 · 기한 7/15 · 8만원)</div>';
-    prep.forEach(function(p){
+    /* [R4.24] 정렬: 미완료가 위(기존 순서 유지) → 완료는 최신 완료된 것부터 그 아래 */
+    prep.slice().sort(function(a,b){
+      if(!!a.done !== !!b.done) return a.done ? 1 : -1;
+      if(a.done && b.done) return (b.doneT||b._t||0) - (a.doneT||a._t||0);
+      return 0;
+    }).forEach(function(p){
       h+='<div style="border-top:1px solid var(--line);padding:10px 0;'+(p.done?'background:#F6FBF7;':'')+'">'+
         '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+
           '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;flex:0 0 auto" title="준비 완료 체크"><input type="checkbox" '+(p.done?'checked':'')+' onchange="toggleEventPrep(\''+id+'\',\''+p.id+'\')" style="width:17px;height:17px;accent-color:#1E7B3C"><span style="font-size:11px;font-weight:800;color:'+(p.done?'#1E7B3C':'var(--sub)')+'">준비완료</span></label>'+
