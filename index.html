@@ -889,7 +889,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.25";   /* R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.26";   /* R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -16458,13 +16458,13 @@ function renderEventDayof(ev){
       ((d.checks[p.id]&&d.checks[p.id].dev)?'<div style="margin-top:3px">'+workStamp(d.checks[p.id].dev,d.checks[p.id]._t)+'</div>':'')+
       '</div>';
   });
-  h+='<div style="display:flex;align-items:center;gap:8px;margin:12px 0 4px"><span style="font-size:11.5px;font-weight:800;color:var(--sub)">➕ 당일 추가 항목 (수동)</span><span style="flex:1"></span><button class="chip" style="color:var(--blue);border-color:var(--blue)" onclick="addDayofManual(\''+id+'\')">+ 추가</button></div>';
-  if(!d.manual.length){ h+='<div style="font-size:12.5px;color:var(--sub);padding:3px 2px">당일에만 챙길 것(현장 세팅·현금·비품 등)을 직접 추가하세요.</div>'; }
+  h+='<div style="display:flex;align-items:center;gap:8px;margin:12px 0 4px"><span style="font-size:11.5px;font-weight:800;color:var(--sub)">➕ 추가 확인 항목 (수동)</span><span style="flex:1"></span><button class="chip" style="color:var(--blue);border-color:var(--blue)" onclick="addDayofManual(\''+id+'\')">+ 추가</button></div>';
+  if(!d.manual.length){ h+='<div style="font-size:12.5px;color:var(--sub);padding:3px 2px">준비 항목에 없지만 마지막에 챙길 것(현장 세팅·현금·비품 등)을 직접 추가하세요.</div>'; }
   d.manual.forEach(function(m){
     h+='<div style="border-top:1px solid var(--line);padding:8px 0;'+(m.done?'opacity:.62;':'')+'">'+
       '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
         '<input type="checkbox" '+(m.done?'checked':'')+' onchange="toggleDayofManual(\''+id+'\',\''+m.id+'\')" style="width:17px;height:17px;accent-color:#1E7B3C">'+
-        '<input class="input" placeholder="당일 준비/확인 항목" style="flex:1.6 1 150px;height:32px;padding:0 9px;font-size:12.5px'+(m.done?';text-decoration:line-through':'')+'" value="'+esc(m.text||"")+'" oninput="setDayofManual(\''+id+'\',\''+m.id+'\',\'text\',this.value)" onchange="commitDayof(\''+id+'\')">'+
+        '<input class="input" placeholder="확인 항목" style="flex:1.6 1 150px;height:32px;padding:0 9px;font-size:12.5px'+(m.done?';text-decoration:line-through':'')+'" value="'+esc(m.text||"")+'" oninput="setDayofManual(\''+id+'\',\''+m.id+'\',\'text\',this.value)" onchange="commitDayof(\''+id+'\')">'+
         '<input class="input" placeholder="담당" style="flex:0 0 90px;height:32px;padding:0 8px;font-size:12px" value="'+esc(m.owner||"")+'" oninput="setDayofManual(\''+id+'\',\''+m.id+'\',\'owner\',this.value)" onchange="commitDayof(\''+id+'\')">'+
         '<b style="color:var(--red);cursor:pointer;font-size:16px;padding:0 3px" onclick="delDayofManual(\''+id+'\',\''+m.id+'\')">×</b>'+
       '</div>'+
