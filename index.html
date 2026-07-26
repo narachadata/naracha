@@ -889,7 +889,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.26";   /* R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.27";   /* R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -14592,7 +14592,12 @@ window.setFuelField=function(k,v){ state['fuel_'+k]=v;
     if(_w>0 && _p>0){
       var _L=Math.round(_w/_p*100)/100;   /* 소수 2자리 */
       state.fuel_L=String(_L);
-      var _el=document.getElementById('fuelLIn'); if(_el && _el!==document.activeElement) _el.value=_L;
+      /* [R4.27] PC·모바일 양쪽의 주유량 칸을 모두 갱신 (포커스 중인 칸은 건드리지 않음) */
+      try{
+        document.querySelectorAll('.fuelLIn').forEach(function(_el){
+          if(_el !== document.activeElement) _el.value = _L;
+        });
+      }catch(e){}
     }
   }
 };
@@ -14738,7 +14743,7 @@ function renderCarLog(){
         '<input class="input" type="date" style="flex:0 0 150px;height:38px;font-size:12.5px" value="'+esc(state.fuel_date||today())+'" onchange="setFuelField(\'date\',this.value)">'+
         '<input class="input" inputmode="numeric" placeholder="주유비(원)" style="flex:0 0 116px;height:38px;font-size:12.5px" value="'+esc(state.fuel_won||'')+'" oninput="setFuelField(\'won\',this.value)">'+
         '<input class="input" inputmode="numeric" placeholder="단가(원/L)" style="flex:0 0 100px;height:38px;font-size:12.5px" value="'+esc(state.fuel_price||'')+'" oninput="setFuelField(\'price\',this.value)">'+
-        '<input class="input" id="fuelLIn" inputmode="numeric" placeholder="주유량(L) — 자동" style="flex:0 0 118px;height:38px;font-size:12.5px" value="'+esc(state.fuel_L||'')+'" oninput="setFuelField(\'L\',this.value)">'+
+        '<input class="input fuelLIn" inputmode="numeric" placeholder="주유량(L) — 자동" style="flex:0 0 118px;height:38px;font-size:12.5px" value="'+esc(state.fuel_L||'')+'" oninput="setFuelField(\'L\',this.value)">'+
         '<input class="input" inputmode="numeric" placeholder="계기판 km (선택)" style="flex:1 1 130px;height:38px;font-size:12.5px" value="'+esc(state.fuel_odo||'')+'" oninput="setFuelField(\'odo\',this.value)">'+
         '<input class="input" placeholder="메모 (주유소 등)" style="flex:1.5 1 130px;height:38px;font-size:12.5px" value="'+esc(state.fuel_memo||'')+'" oninput="setFuelField(\'memo\',this.value)">'+
         '<button onclick="addFuelLog()" style="height:38px;padding:0 16px;background:'+(state.fuel_editId?'#B45309':'#1E7B3C')+';color:#fff;border:none;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">'+(state.fuel_editId?'✏️ 수정 저장':'주유 저장')+'</button>'+
@@ -22376,45 +22381,123 @@ function phoneCarBody(){
     (latest?'<div style="font-size:11px;color:var(--sub);text-align:center;margin-top:8px">최근 기록 '+esc(latest.date.slice(5))+' · <b style="color:var(--ink)">'+latest.odo.toLocaleString()+'km</b> · 당일 운행은 직전 기록과의 차이로 자동 계산</div>':'')+
   '</div>'+
   /* 입력 ② 주유 (별도) */
-  '<div style="background:#fff;border:1px solid #CFE8D6;border-radius:15px;padding:14px;margin-bottom:14px">'+
-    '<div style="font-size:13.5px;font-weight:900;margin-bottom:3px;color:#1E7B3C">⛽ 주유 기록 (따로)</div>'+
-    '<div style="font-size:11px;color:var(--sub);margin-bottom:10px">주행 끝나기 전 주유해도 OK · 하루 여러 번 가능</div>'+
+  '<div style="background:#fff;border:1px solid '+(state.fuel_editId?'#E8C48A':'#CFE8D6')+';border-radius:15px;padding:14px;margin-bottom:14px">'+
+    '<div style="font-size:13.5px;font-weight:900;margin-bottom:3px;color:'+(state.fuel_editId?'#B45309':'#1E7B3C')+'">⛽ '+(state.fuel_editId?'주유 기록 수정 중':'주유 기록 (따로)')+'</div>'+
+    '<div style="font-size:11px;color:var(--sub);margin-bottom:10px">'+(state.fuel_editId?'저장하면 원래 기록이 갱신됩니다':'주유비와 단가를 넣으면 주유량이 자동 계산됩니다')+'</div>'+
     '<div style="display:flex;gap:8px;margin-bottom:9px">'+
       '<div style="flex:1"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">날짜</div>'+
         '<input type="date" class="input" value="'+esc(state.fuel_date||today())+'" onchange="setFuelField(\'date\',this.value)" style="width:100%;height:44px;font-size:14px"></div>'+
-      '<div style="flex:1"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">주유량 (L)</div>'+
-        '<input inputmode="decimal" class="input" placeholder="예: 45" value="'+esc(state.fuel_L||"")+'" oninput="setFuelField(\'L\',this.value)" style="width:100%;height:44px;font-size:14px"></div>'+
       '<div style="flex:1"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">주유비 (원)</div>'+
         '<input inputmode="numeric" class="input" placeholder="예: 75000" value="'+esc(state.fuel_won||"")+'" oninput="setFuelField(\'won\',this.value)" style="width:100%;height:44px;font-size:14px"></div>'+
     '</div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:9px">'+
+      '<div style="flex:1"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">단가 (원/L)</div>'+
+        '<input inputmode="decimal" class="input" placeholder="예: 1650" value="'+esc(state.fuel_price||"")+'" oninput="setFuelField(\'price\',this.value)" style="width:100%;height:44px;font-size:14px"></div>'+
+      '<div style="flex:1"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">주유량 (L) <span style="color:#1E7B3C">자동</span></div>'+
+        '<input inputmode="decimal" class="input fuelLIn" placeholder="자동 계산" value="'+esc(state.fuel_L||"")+'" oninput="setFuelField(\'L\',this.value)" style="width:100%;height:44px;font-size:14px"></div>'+
+    '</div>'+
     '<div style="margin-bottom:11px"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">메모 (선택)</div>'+
       '<input class="input" placeholder="예: 주유소·계기판 km 등" value="'+esc(state.fuel_memo||"")+'" oninput="setFuelField(\'memo\',this.value)" style="width:100%;height:44px;font-size:14px"></div>'+
-    '<button onclick="addFuelLog()" style="width:100%;background:#1E7B3C;color:#fff;border:none;border-radius:11px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit">＋ 주유 기록 추가</button>'+
+    '<button onclick="addFuelLog()" style="width:100%;background:'+(state.fuel_editId?'#B45309':'#1E7B3C')+';color:#fff;border:none;border-radius:11px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit">'+(state.fuel_editId?'✏️ 수정 저장':'＋ 주유 기록 추가')+'</button>'+
+    (state.fuel_editId?'<button onclick="cancelFuelEdit()" style="width:100%;margin-top:8px;background:#fff;color:var(--sub);border:1px solid var(--line);border-radius:11px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">수정 취소</button>':'')+
   '</div>';
-  /* 최근 운행 기록 (주행거리) */
-  h+='<div style="font-size:13px;font-weight:900;margin:4px 0 8px;color:#2B5FB8">🚗 최근 운행 기록</div>';
-  if(!recent.length){ h+='<div style="text-align:center;color:var(--sub);font-size:13px;padding:12px 0">아직 운행 기록이 없습니다.</div>'; }
-  recent.forEach(function(x){
-    var r=x.r;
-    h+='<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 13px;margin-bottom:7px;display:flex;align-items:center;gap:9px">'+
-      '<div style="flex:0 0 auto;text-align:center"><div style="font-size:13px;font-weight:800">'+esc(r.date.slice(5))+'</div></div>'+
-      '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800">'+r.odo.toLocaleString()+'<span style="font-size:11px;color:var(--sub);font-weight:600">km</span></div>'+
-        (r.memo?'<div style="font-size:11.5px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.memo)+'</div>':'')+'</div>'+
-      (x.diff!=null&&x.diff>=0?'<span style="flex:0 0 auto;background:#EEF4FF;color:var(--blue);border-radius:9px;padding:3px 9px;font-size:11.5px;font-weight:800">+'+x.diff.toLocaleString()+'km</span>':'')+
-    '</div>';
-  });
-  /* 최근 주유 기록 */
-  var mfrecent=fuelRows.slice().reverse().slice(0,12);
-  h+='<div style="font-size:13px;font-weight:900;margin:14px 0 8px;color:#1E7B3C">⛽ 최근 주유 기록</div>';
-  if(!mfrecent.length){ h+='<div style="text-align:center;color:var(--sub);font-size:13px;padding:12px 0">아직 주유 기록이 없습니다.</div>'; }
-  mfrecent.forEach(function(f){
-    h+='<div style="background:#F8FCF9;border:1px solid #CFE8D6;border-radius:12px;padding:10px 13px;margin-bottom:7px;display:flex;align-items:center;gap:9px">'+
-      '<div style="flex:0 0 auto;text-align:center"><div style="font-size:13px;font-weight:800">'+esc((f.date||'').slice(5))+'</div></div>'+
-      '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:#B45309">'+(f.fuelWon||0).toLocaleString()+'<span style="font-size:11px;color:var(--sub);font-weight:600">원</span></div>'+
-        (f.memo?'<div style="font-size:11.5px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f.memo)+'</div>':'')+'</div>'+
-      (f.fuelL?'<span style="flex:0 0 auto;background:#E4F3E8;color:#1E7B3C;border-radius:9px;padding:3px 9px;font-size:11.5px;font-weight:800">'+f.fuelL.toLocaleString()+'L</span>':'')+
-    '</div>';
-  });
+  /* ═══ [R4.27] 운행 기록 — 월별 누계 → 주별 그룹 (이전 달은 접힘) ═══ */
+  h+='<div style="display:flex;align-items:center;gap:6px;margin:4px 0 8px">'+
+     '<span style="font-size:13px;font-weight:900;color:#2B5FB8">🚗 운행 기록</span>'+
+     '<span style="font-size:10.5px;color:var(--sub);font-weight:600">월을 눌러 펼치기 · ✏️ 수정</span></div>';
+  if(!withDiff.length){
+    h+='<div style="text-align:center;color:var(--sub);font-size:13px;padding:12px 0">아직 운행 기록이 없습니다.</div>';
+  } else {
+    if(!state.carOpenM) state.carOpenM={};
+    if(state.carOpenM[ym0]===undefined) state.carOpenM[ym0]=true;
+    var mCarByM={};
+    withDiff.forEach(function(x){ var ym=x.r.date.slice(0,7); (mCarByM[ym]=mCarByM[ym]||[]).push(x); });
+    Object.keys(mCarByM).sort().reverse().forEach(function(ym){
+      var mrows=mCarByM[ym], mKm=0;
+      mrows.forEach(function(x){ if(x.diff!=null&&x.diff>0) mKm+=x.diff; });
+      var open=!!state.carOpenM[ym];
+      h+='<div style="border:1px solid var(--line);border-radius:13px;overflow:hidden;margin-bottom:8px;background:#fff">'+
+        '<div onclick="toggleCarMonth(\''+ym+'\')" style="display:flex;align-items:center;gap:7px;padding:11px 13px;background:'+(open?'#EEF4FF':'#F7F9FC')+';cursor:pointer;flex-wrap:wrap">'+
+          '<b style="font-size:14px;color:var(--blue)">'+ym.slice(0,4)+'.'+ym.slice(5)+'</b>'+
+          '<span style="background:#EEF4FF;color:var(--blue);border-radius:8px;padding:2px 9px;font-size:12px;font-weight:800">'+mKm.toLocaleString()+'km</span>'+
+          '<span style="font-size:11px;color:var(--sub)">'+mrows.length+'일</span>'+
+          '<span style="flex:1"></span><span style="font-size:13px;color:var(--sub)">'+(open?'▲':'▼')+'</span>'+
+        '</div>';
+      if(open){
+        var mByW={};
+        mrows.forEach(function(x){ var wk=_weekMon(x.r.date); (mByW[wk]=mByW[wk]||[]).push(x); });
+        h+='<div style="padding:8px 10px 10px">';
+        Object.keys(mByW).sort().reverse().forEach(function(wk){
+          var wrows=mByW[wk].slice().sort(function(a,b){ return (a.r.date<b.r.date)?1:-1; });
+          var wKm=0; mByW[wk].forEach(function(x){ if(x.diff!=null&&x.diff>0) wKm+=x.diff; });
+          var wEnd=new Date(wk+'T12:00:00'); wEnd.setDate(wEnd.getDate()+6);
+          h+='<div style="display:flex;align-items:center;gap:6px;margin:7px 0 5px">'+
+             '<span style="font-size:11.5px;font-weight:800">'+_mdLabel(wk)+'~'+(wEnd.getMonth()+1)+'/'+wEnd.getDate()+'</span>'+
+             '<span style="background:#F1F5FC;color:#2B5FB8;border-radius:7px;padding:1px 7px;font-size:10.5px;font-weight:800">'+wKm.toLocaleString()+'km</span>'+
+             '</div>';
+          wrows.forEach(function(x){
+            var r=x.r;
+            h+='<div style="background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 11px;margin-bottom:6px;display:flex;align-items:center;gap:8px">'+
+              '<div style="flex:0 0 auto;font-size:12.5px;font-weight:800">'+esc(r.date.slice(5))+'</div>'+
+              '<div style="flex:1;min-width:0">'+
+                '<div style="font-size:14px;font-weight:800">'+r.odo.toLocaleString()+'<span style="font-size:10.5px;color:var(--sub);font-weight:600">km</span></div>'+
+                (r.memo?'<div style="font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.memo)+'</div>':'')+
+              '</div>'+
+              (x.diff!=null&&x.diff>=0?'<span style="flex:0 0 auto;background:#EEF4FF;color:var(--blue);border-radius:8px;padding:3px 8px;font-size:11px;font-weight:800">+'+x.diff.toLocaleString()+'</span>':'')+
+              '<span onclick="editCarLog(\''+esc(r.date)+'\')" style="flex:0 0 auto;font-size:15px;padding:4px 6px;cursor:pointer" title="수정">✏️</span>'+
+            '</div>';
+          });
+        });
+        h+='</div>';
+      }
+      h+='</div>';
+    });
+  }
+  /* ═══ [R4.27] 주유 기록 — 월별 누계 (이전 달 접힘) ═══ */
+  h+='<div style="display:flex;align-items:center;gap:6px;margin:16px 0 8px">'+
+     '<span style="font-size:13px;font-weight:900;color:#1E7B3C">⛽ 주유 기록</span>'+
+     '<span style="font-size:10.5px;color:var(--sub);font-weight:600">월별 누계 · ✏️ 수정</span></div>';
+  if(!fuelRows.length){
+    h+='<div style="text-align:center;color:var(--sub);font-size:13px;padding:12px 0">아직 주유 기록이 없습니다.</div>';
+  } else {
+    if(!state.fuelOpenM) state.fuelOpenM={};
+    if(state.fuelOpenM[ym0]===undefined) state.fuelOpenM[ym0]=true;
+    var mFByM={};
+    fuelRows.forEach(function(f){ var ym=(f.date||'').slice(0,7); if(!ym) return; (mFByM[ym]=mFByM[ym]||[]).push(f); });
+    Object.keys(mFByM).sort().reverse().forEach(function(ym){
+      var mf=mFByM[ym], mL=0, mW=0;
+      mf.forEach(function(f){ mL+=f.fuelL||0; mW+=f.fuelWon||0; });
+      mL=Math.round(mL*100)/100;
+      var mAvg=(mL>0&&mW>0)?Math.round(mW/mL):null;
+      var open=!!state.fuelOpenM[ym];
+      h+='<div style="border:1px solid #CFE8D6;border-radius:13px;overflow:hidden;margin-bottom:8px;background:#fff">'+
+        '<div onclick="toggleFuelMonth(\''+ym+'\')" style="display:flex;align-items:center;gap:7px;padding:11px 13px;background:'+(open?'#F1FAF3':'#F7FBF8')+';cursor:pointer;flex-wrap:wrap">'+
+          '<b style="font-size:14px;color:#1E7B3C">'+ym.slice(0,4)+'.'+ym.slice(5)+'</b>'+
+          '<span style="background:#E4F3E8;color:#1E7B3C;border-radius:8px;padding:2px 9px;font-size:12px;font-weight:800">'+mL.toLocaleString()+'L</span>'+
+          '<span style="background:#FBF3E6;color:#B45309;border-radius:8px;padding:2px 9px;font-size:12px;font-weight:800">'+mW.toLocaleString()+'원</span>'+
+          (mAvg?'<span style="font-size:10.5px;color:var(--sub)">평균 '+mAvg.toLocaleString()+'원/L</span>':'')+
+          '<span style="flex:1"></span><span style="font-size:13px;color:var(--sub)">'+(open?'▲':'▼')+'</span>'+
+        '</div>';
+      if(open){
+        h+='<div style="padding:8px 10px 10px">';
+        mf.slice().reverse().forEach(function(f){
+          var eff=(f.fuelL&&f.fuelWon)?Math.round(f.fuelWon/f.fuelL):(f.fuelPrice||null);
+          h+='<div style="background:#F8FCF9;border:1px solid #CFE8D6;border-radius:11px;padding:9px 11px;margin-bottom:6px;display:flex;align-items:center;gap:8px">'+
+            '<div style="flex:0 0 auto;font-size:12.5px;font-weight:800">'+esc((f.date||'').slice(5))+'</div>'+
+            '<div style="flex:1;min-width:0">'+
+              '<div style="font-size:14px;font-weight:800;color:#B45309">'+(f.fuelWon||0).toLocaleString()+'<span style="font-size:10.5px;color:var(--sub);font-weight:600">원</span>'+
+                (eff?'<span style="font-size:10px;color:var(--sub);font-weight:600;margin-left:5px">'+eff.toLocaleString()+'원/L</span>':'')+'</div>'+
+              (f.memo?'<div style="font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f.memo)+'</div>':'')+
+            '</div>'+
+            (f.fuelL?'<span style="flex:0 0 auto;background:#E4F3E8;color:#1E7B3C;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:800">'+f.fuelL.toLocaleString()+'L</span>':'')+
+            '<span onclick="editFuelLog(\''+esc(f.id)+'\')" style="flex:0 0 auto;font-size:15px;padding:4px 6px;cursor:pointer" title="수정">✏️</span>'+
+          '</div>';
+        });
+        h+='</div>';
+      }
+      h+='</div>';
+    });
+  }
   /* ── 정비 기록 (휴대폰에서 교체 기록 입력) ── */
   var mitems=(typeof maintList==="function")?maintList():[];
   var mcalc=mitems.map(function(it){ return {it:it, c:maintCalc(it)}; });
