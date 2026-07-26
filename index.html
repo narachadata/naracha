@@ -889,7 +889,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.27";   /* R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.28";   /* R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -2021,6 +2021,46 @@ function updateAttStatusPill(){
   if(st.indexOf('⚠')>-1||st.indexOf('실패')>-1||st.indexOf('오프라인')>-1) el.innerHTML='<span class="warnPill">'+esc(st)+'</span>';
   else el.innerHTML='<span style="font-size:11.5px;color:var(--sub);font-weight:700">'+esc(st)+'</span>';
 }
+/* ── [R4.28] 브라우저 저장공간 사용량 — 한도에 닿기 전에 미리 알린다 ──
+   기존에는 '저장 실패한 뒤'에야 경고가 떴다. 미리 알아야 백업·정리할 시간이 생긴다. */
+var STORAGE_LIMIT_KB = 5120;   /* 브라우저 localStorage 한도 추정(보통 5MB) */
+function storageUsedKB(){
+  try{
+    var n=0;
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      n += (k?k.length:0) + ((localStorage.getItem(k)||"").length);
+    }
+    return Math.round(n/1024);
+  }catch(e){ return null; }
+}
+function storagePct(){
+  var kb=storageUsedKB();
+  if(kb==null) return null;
+  return Math.min(100, Math.round(kb/STORAGE_LIMIT_KB*100));
+}
+window.showStorageDetail=function(){
+  var kb=storageUsedKB(); if(kb==null){ alert("저장공간을 확인할 수 없습니다."); return; }
+  var rows=[], tot=0;
+  try{
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i), v=(localStorage.getItem(k)||"").length;
+      tot+=v; rows.push([k, Math.round(v/1024)]);
+    }
+  }catch(e){}
+  rows.sort(function(a,b){ return b[1]-a[1]; });
+  var NAME={"naracha-att":"출석·명단","naracha-photo":"사진","najacha-html":"회계",
+            "naracha-exam":"심사","naracha-work":"업무·차계부","naracha-meas":"측정"};
+  var top=rows.filter(function(r){return r[1]>=1;}).slice(0,8)
+    .map(function(r){ return "  · "+(NAME[r[0]]||r[0])+"  "+r[1].toLocaleString()+"KB"; }).join("\n");
+  alert("💾 이 기기 저장공간\n\n"+
+        "사용 "+kb.toLocaleString()+"KB / 약 "+STORAGE_LIMIT_KB.toLocaleString()+"KB  ("+storagePct()+"%)\n"+
+        "여유 "+Math.max(0,STORAGE_LIMIT_KB-kb).toLocaleString()+"KB\n\n"+
+        "큰 항목\n"+top+"\n\n"+
+        "※ 클라우드에는 전체가 보관됩니다. 이 수치는 '이 기기'의 임시 저장분입니다.\n"+
+        "※ 4개월 지난 주간 출석표는 공간이 부족해지면 자동 정리됩니다.");
+};
+
 function renderSyncBadge(){
   /* 동기화가 끝났으면(성공/실패 모두) 워치독 해제 */
   if(!state.syncing && state.syncWatchdog){ clearTimeout(state.syncWatchdog); state.syncWatchdog=null; }
@@ -19695,6 +19735,22 @@ function render(){
         '<button onclick="state.backupDue=false;render()" style="background:none;border:none;color:#B08830;font-size:12px;cursor:pointer;font-family:inherit">나중에</button>'+
       '</div>';
     }
+    /* ── [R4.28] 저장공간 사전 경고 (75% 이상일 때만) ── */
+    (function(){
+      var _p=storagePct(), _kb=storageUsedKB();
+      if(_p==null || _p<75 || state.__storeBarHidden) return;
+      var hard=_p>=90;
+      h+='<div style="background:'+(hard?'#FDECEA':'#FFF7E8')+';border-bottom:1px solid '+(hard?'#F3C0BA':'#F0DCA8')+';padding:9px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+        '<span style="font-size:13px;color:'+(hard?'#B91C1C':'#8A5A00')+'">💾 <b>이 기기 저장공간 '+_p+'% 사용</b> — '+
+          _kb.toLocaleString()+'KB / 약 '+STORAGE_LIMIT_KB.toLocaleString()+'KB. '+
+          (hard?'곧 저장에 실패할 수 있습니다. 지금 백업해 주세요.':'여유 '+Math.max(0,STORAGE_LIMIT_KB-_kb).toLocaleString()+'KB 남았습니다.')+
+        '</span>'+
+        '<span style="flex:1"></span>'+
+        '<button onclick="showStorageDetail()" style="background:#fff;border:1px solid '+(hard?'#E5A9A2':'#E0C88A')+';color:'+(hard?'#B91C1C':'#8A5A00')+';border-radius:9px;padding:7px 14px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">자세히</button>'+
+        (myRole()==="admin"?'<button onclick="backupToDrive(false)" style="background:'+(hard?'#B91C1C':'#B45309')+';color:#fff;border:none;border-radius:9px;padding:7px 16px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">☁ 지금 백업</button>':'')+
+        '<button onclick="state.__storeBarHidden=true;render()" style="background:none;border:none;color:'+(hard?'#C4736C':'#B08830')+';font-size:12px;cursor:pointer;font-family:inherit">닫기</button>'+
+      '</div>';
+    })();
   }   /* if(!__hdrDone) 끝 */
   /* 탭별 컨테이너 폭: 대시보드=넓게 · 명단/내역=중간 · 입력폼=좁게 (일반 모니터 최적화) */
   if(state.driveHelp) h+=_driveHelpModal();   /* [R3.34] 구글 백업 도움말 */
@@ -22445,6 +22501,7 @@ function phoneCarBody(){
               '</div>'+
               (x.diff!=null&&x.diff>=0?'<span style="flex:0 0 auto;background:#EEF4FF;color:var(--blue);border-radius:8px;padding:3px 8px;font-size:11px;font-weight:800">+'+x.diff.toLocaleString()+'</span>':'')+
               '<span onclick="editCarLog(\''+esc(r.date)+'\')" style="flex:0 0 auto;font-size:15px;padding:4px 6px;cursor:pointer" title="수정">✏️</span>'+
+              '<span onclick="delCarLog(\''+esc(r.date)+'\')" style="flex:0 0 auto;font-size:17px;line-height:1;color:var(--red);font-weight:900;padding:4px 6px;cursor:pointer" title="삭제">×</span>'+
             '</div>';
           });
         });
@@ -22491,6 +22548,7 @@ function phoneCarBody(){
             '</div>'+
             (f.fuelL?'<span style="flex:0 0 auto;background:#E4F3E8;color:#1E7B3C;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:800">'+f.fuelL.toLocaleString()+'L</span>':'')+
             '<span onclick="editFuelLog(\''+esc(f.id)+'\')" style="flex:0 0 auto;font-size:15px;padding:4px 6px;cursor:pointer" title="수정">✏️</span>'+
+            '<span onclick="delFuelLog(\''+esc(f.id)+'\')" style="flex:0 0 auto;font-size:17px;line-height:1;color:var(--red);font-weight:900;padding:4px 6px;cursor:pointer" title="삭제">×</span>'+
           '</div>';
         });
         h+='</div>';
