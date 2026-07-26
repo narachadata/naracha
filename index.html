@@ -889,7 +889,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.28";   /* R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.30";   /* R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -1002,6 +1002,24 @@ function status(e){
   if(e===addMonths(now,1)) return {k:"next",label:"다음달 만료",c:"var(--amber)",s:"var(--amberSoft)"};
   return {k:"ok",label:"여유",c:"var(--green)",s:"var(--greenSoft)"};
 }
+/* ── [R4.30] 청구 방식 판정 — '월별' vs '횟수' ──
+   ⚠️ 과거 버그: regTypeMap(선납 유형: monthly/2months/annual)으로 횟수제를 판정했다.
+      regTypeMap에는 "횟수"라는 값이 들어갈 수 없어, 등록 유형을 한 번이라도 지정한
+      성인 회원은 횟수제 제외가 풀려 매달 청구 대상에 잘못 포함됐다.
+   ✅ 청구 방식의 정식 기준은 명단의 s.reg ("월별"/"횟수") — 학적부에서 직접 고르는 값.
+      값이 비어 있는 옛 기록만 성인반 여부로 보완한다. */
+function isCountBilling(stu){
+  if(!stu) return false;
+  var r = (stu.reg || "").trim();
+  if(r === "횟수") return true;
+  if(r === "월별") return false;
+  return /성인/.test(stu.b || "");   /* 미지정 폴백 (명단 기본값과 동일 규칙) */
+}
+function isCountBillingByName(name){
+  for(var i=0;i<STUDENTS.length;i++){ if(STUDENTS[i].n===name) return isCountBilling(STUDENTS[i]); }
+  return false;
+}
+
 function effExpiry(name){
   var st = null;
   for(var i=0;i<STUDENTS.length;i++){ if(STUDENTS[i].n===name){ st=STUDENTS[i].e; break; } }
@@ -6276,6 +6294,50 @@ function attendDates(name, ym){
     return { d:d, wd:WD.charAt(dt.getDay()), c:m.c, nc2:m.nc, nc:(m.c===0) };
   });
 }
+/* ── [R4.29] 출석 날짜를 '구간'으로 조회 (누적 보기용) ──
+   attendDates(name, ym)은 한 달만 본다. 여러 달을 누적해서 보려면 범위가 필요하다.
+   반환: [{ym, d, wd, c, nc2, nc}]  (날짜 오름차순) */
+function attendDatesRange(name, lo, hi){
+  var map={};   /* 'YYYY-MM-DD' → {c, nc} */
+  for(var wk in state.weeks){
+    if(addDays(wk,6) < lo || wk > hi) continue;
+    var w=state.weeks[wk]; if(!w||!w.cells) continue;
+    for(var key in w.cells){
+      var day=key.split("-")[0];
+      if(dayIsOff(wk, day)) continue;
+      var mk=w.cells[key].marks && w.cells[key].marks[name];
+      if(mk && mk.s==="출석"){
+        var md=addDays(wk, DAY_IDX[day]||0);
+        if(md < lo || md > hi) continue;
+        if(!map[md]) map[md]={c:0, nc:0};
+        if(kindCountsTrain(mk.k, mk)) map[md].c++; else map[md].nc++;
+      }
+    }
+  }
+  var WD="일월화수목금토";
+  return Object.keys(map).sort().map(function(md){
+    var dt=new Date(md+"T00:00:00"), m=map[md];
+    return { ym:md.slice(0,7), d:Number(md.slice(8,10)), wd:WD.charAt(dt.getDay()),
+             c:m.c, nc2:m.nc, nc:(m.c===0) };
+  });
+}
+/* 현재 보기 구간 계산 → {lo, hi, label, span} */
+function statSpanRange(name){
+  var span=state.statSpan||"month";
+  var ym=state.statYm||today().slice(0,7);
+  if(span==="3m"){
+    var lo3=ymAdd(ym,-2)+"-01";
+    return { lo:lo3, hi:ym+"-31", label:"최근 3개월", span:span };
+  }
+  if(span==="exam"){
+    var last=(state.lastExamMap||{})[name]||"";
+    var lo=last ? addDays(last,1) : "2000-01-01";
+    return { lo:lo, hi:today(), label: last? "마지막 심사 다음날부터" : "전체 기간", span:span };
+  }
+  return { lo:ym+"-01", hi:ym+"-31", label:ym, span:"month" };
+}
+window.setStatSpan=function(v){ state.statSpan=v; render(); };
+
 /* ── 심사추천/심사확정 (누적 14회 규칙) ── */
 function examConfObj(){ if(!state.examConfirmMap) state.examConfirmMap={}; return state.examConfirmMap; }
 function isExamRec(name){ if(!name) return false; if((state.kkwPending||[]).indexOf(name)>-1) return false; return (state.accMap[name]||0)>=14; }
@@ -6736,7 +6798,19 @@ function renderStatusTab(){
   x+='<div class="card">'+
     /* 1줄: 연·월 이동 + 작은 검색창 + 상태필터 */
     '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+
-    '<button class="chip" onclick="moveStatYm(-1)">◀</button><b style="font-size:15px;min-width:78px;text-align:center">'+ym+'</b><button class="chip" onclick="moveStatYm(1)">▶</button>'+
+    '<button class="chip" onclick="moveStatYm(-1)"'+((state.statSpan||"month")!=="month"?' disabled style="opacity:.35"':'')+'>◀</button>'+
+      '<b style="font-size:15px;min-width:78px;text-align:center">'+((state.statSpan||"month")==="month"?ym:(state.statSpan==="3m"?ymAdd(ym,-2).slice(2)+"~"+ym.slice(2):"심사 이후"))+'</b>'+
+      '<button class="chip" onclick="moveStatYm(1)"'+((state.statSpan||"month")!=="month"?' disabled style="opacity:.35"':'')+'>▶</button>'+
+      /* [R4.29] 출석 날짜 보기 구간 — 이번 달 / 3개월 누적 / 마지막 심사 이후 누적 */
+      '<span style="display:inline-flex;gap:4px;margin-left:8px">'+
+        ['month','3m','exam'].map(function(v){
+          var lb={month:"이 달",'3m':"3개월",exam:"심사 이후"}[v];
+          var on=((state.statSpan||"month")===v);
+          return '<button class="chip'+(on?' on':'')+'" style="font-size:12px;padding:5px 10px" '+
+                 'title="'+{month:"선택한 한 달만 표시",'3m':"최근 3개월을 누적해서 표시",exam:"각 수련생의 마지막 심사 다음날부터 누적 (승급 24회 기준과 동일)"}[v]+'" '+
+                 'onclick="setStatSpan(\''+v+'\')">'+lb+'</button>';
+        }).join('')+
+      '</span>'+
     '<input class="input" style="max-width:150px;padding:8px 12px;font-size:13.5px" placeholder="🔍 이름 검색" value="'+esc(state.statQ||"")+'" oninput="setStatQ(this.value)">'+
     '<span style="width:6px"></span>'+sfBtns+
     ((state.statF==="확정")?'<span style="flex:1;min-width:8px"></span><button onclick="toggleExamCbLock()" title="심사신청서·테이프전달 체크박스 잠금/해제" style="border:1.5px solid '+(state.examCbUnlock?"#B45309":"#CBD5E1")+';background:'+(state.examCbUnlock?"#FFF7ED":"#fff")+';color:'+(state.examCbUnlock?"#B45309":"#64748B")+';border-radius:10px;padding:7px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap">'+(state.examCbUnlock?"🔓 수동 입력 중 — 다시 잠그기":"🔒 자동 잠금 — 해제하면 수동")+'</button>':'')+
@@ -6840,7 +6914,8 @@ function statListHtml(view){
       : r.st==="정상" ? '<span style="background:#E7F7EC;color:#1E7B3C;border-radius:10px;padding:2px 9px;font-size:11.5px;font-weight:800;white-space:nowrap">일치 ✓</span>'
       : '<span style="font-size:11.5px;color:var(--sub);white-space:nowrap">기준 없음</span>';
     /* 출석 날짜 배지 (그 달) — 아이폰 캘린더 아이콘 스타일(상단 영어 요일 밴드 + 날짜) · 해상도에 따라 열 수 자동 증감/줄바꿈 */
-    var dts=attendDates(s.n, ym);
+    var _sr=statSpanRange(s.n);
+  var dts=(_sr.span==="month") ? attendDates(s.n, ym) : attendDatesRange(s.n, _sr.lo, _sr.hi);
     var ENG_WD={"일":"SUN","월":"MON","화":"TUE","수":"WED","목":"THU","금":"FRI","토":"SAT"};
     var dateBtns = dts.length
       ? '<div style="display:grid;grid-template-columns:repeat(auto-fill,40px);gap:6px;justify-content:start;align-content:start">'+
@@ -6856,13 +6931,19 @@ function statListHtml(view){
                     : (o.c===0) ? 'title="수련횟수 미포함 (체험·심사·국기원·대회연습)"'
                     : (o.c>=2 ? 'title="같은 날 '+o.c+'회 수련"' : '');
             return '<span '+ttl+' style="display:inline-flex;flex-direction:column;width:100%;height:40px;border:1px solid #E3E6EA;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.07)">'+
-              '<span style="height:13px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;letter-spacing:.3px;color:#fff;background:#2B5FB8">'+(ENG_WD[o.wd]||o.wd)+'</span>'+
+              '<span style="height:13px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;letter-spacing:.3px;color:#fff;background:'+((_sr.span!=="month"&&o.ym)?(Number(o.ym.slice(5))%2?'#2B5FB8':'#1E7B3C'):'#2B5FB8')+'">'+((_sr.span!=="month"&&o.ym)?(Number(o.ym.slice(5))+'월'):(ENG_WD[o.wd]||o.wd))+'</span>'+
               '<span style="flex:1;display:flex;align-items:center;justify-content:center;padding-bottom:1px">'+
                 '<b style="font-size:15px;font-weight:800;line-height:1;letter-spacing:-.5px;'+numCss+'">'+o.d+'</b>'+
                 mult+
               '</span></span>';
           }).join('')+'</div>'
-      : '<span style="font-size:11.5px;color:var(--sub)">출석 없음</span>';
+      : '<span style="font-size:11.5px;color:var(--sub)">'+(_sr.span==="month"?"출석 없음":_sr.label+" 출석 없음")+'</span>';
+  if(dts.length && _sr.span!=="month"){
+    var _cnt=dts.reduce(function(a,o){ return a+o.c; },0);
+    dateBtns = '<div style="font-size:11px;color:var(--sub);font-weight:700;margin-bottom:5px">'+
+      _sr.label+' · <b style="color:var(--ink)">'+dts.length+'일 / '+_cnt+'회</b>'+
+      '<span style="color:#94A3B8;font-weight:600"> (수련횟수 포함분)</span></div>'+dateBtns;
+  }
     /* 심사 클러스터 (구 심사대상 탭 통합): 누적횟수(클릭=수동수정) · 마지막 심사일 · 상태 배지 */
     var esn2=esc(s.n).replace(/'/g,"\\'");
     var kkwAp=r.kkw?(((state.kkwInfo||{})[s.n]||{}).ap||""):"";
@@ -20520,7 +20601,7 @@ function render(){
     });
     var notBilled=STUDENTS.filter(function(s){
       if(state.closedMap[s.n]||isQuit(s.n)) return false;   /* 퇴관생 제외 */
-      if((state.regTypeMap[s.n]||(/성인/.test(s.b||"")?"횟수":"월별"))==="횟수") return false;
+      if(isCountBilling(s)) return false;   /* [R4.30] 횟수제(성인)는 월 청구 대상 아님 — 명단 reg 기준 */
       var _ex=effExpiry(s.n); if(_ex && _ex>=thisYm) return false;   /* 선납 등록기간이 아직 유효하면 청구 대상 아님 */
       return !billedThisMonth[s.n];
     });
