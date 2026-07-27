@@ -333,6 +333,31 @@ window.examFinalizeDone = function(names){
     return n;
   }catch(e){ return 0; }
 };
+/* [R4.38] 심사확정 잔여 체크 청소 — '마지막 심사일'이 확정 체크 시각보다 뒤면
+   그 확정의 심사는 이미 끝난 것이므로 확정(및 신청서·테이프·심사비 체크)을 자동으로 내린다.
+   지도진 수동추천(mrec)도 같은 규칙으로 정리. 심사 후 다시 체크한 재확정은 confT가
+   심사일보다 새로우므로 그대로 유지된다. (예전에 출력으로 완료돼 이미 횟수가 리셋된
+   학생들처럼, 확정 체크만 남아 계속 표시되던 잔여분을 어느 기기에서든 걷어낸다) */
+function examSweepConfirmDone(){
+  try{
+    var m=state.examConfirmMap||{}, le=state.lastExamMap||{}, now=Date.now(), n=0;
+    for(var nm in m){
+      var e=m[nm]; if(!e) continue;
+      var last=le[nm]; if(!last || !/^\d{4}-\d{2}-\d{2}$/.test(last)) continue;
+      var lastT=new Date(last+"T23:59:59").getTime();
+      var did=false;
+      if(e.conf && (e.confT||e.t||0)<=lastT){
+        ["conf","applied","tape","fee","appliedManual","tapeManual"].forEach(function(f){
+          if(e[f]){ e[f]=0; e[f+"T"]=now; did=true; }
+        });
+      }
+      if(e.mrec && (e.mrecT||e.t||0)<=lastT){ e.mrec=0; e.mrecT=now; did=true; }
+      if(did){ e.t=now; n++; }
+    }
+    if(n){ state.examConfirmT=Date.now(); try{persistAtt();}catch(_){} }
+    return n;
+  }catch(e){ return 0; }
+}
 window.examAutoResetAcc = function(exApp){
   /* [R3.62] 심사 완료(done3) 자동 반영 — 응심 버튼을 대신한다.
      합격자 한 명당 정확히 한 번만:
@@ -400,6 +425,7 @@ window.examAutoResetAcc = function(exApp){
     }catch(e){}
   }
   if(finNames.length){ try{ window.examFinalizeDone(finNames); }catch(e){} }   /* [R4.37] 완료 처리된 학생의 심사확정 잔여 체크 자동 정리 (학생별 1회) */
+  try{ if(typeof examSweepConfirmDone==="function" && examSweepConfirmDone()){ try{render();}catch(_){}} }catch(e){}   /* [R4.38] 잔여 확정 청소 */
   return did;
 };
 /* iframe이 로드시 데이터를 달라고 하면 → 현재 examData를 v5.8 app 형태로 반환 */
@@ -919,7 +945,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.37";   /* R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.38";   /* R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -1540,6 +1566,15 @@ function loadAll(){
       }
     }catch(e){}
   }, 5000);
+  /* [R4.38] 로드 후 심사확정 잔여 체크 청소: 클라우드 수신(attPulledOnce) 완료를 기다렸다가 1회 실행 */
+  (function sweepConfWhenReady(tries){
+    if(tries>60) return;
+    if(state.unlocked && state.attPulledOnce){
+      try{ if(examSweepConfirmDone()) render(); }catch(e){}
+      return;
+    }
+    setTimeout(function(){ sweepConfWhenReady(tries+1); }, 1000);
+  })(0);
   /* 재원생 고유번호(sid) 자동 부여: 로드·명단 동기화 후 1회, 번호 없는 원생에게 부여 */
   setTimeout(function(){
     try{
@@ -7257,7 +7292,9 @@ window.moveStatYm=function(n){
   render();
 };
 /* 상태필터: 같은 것을 다시 누르면 해제(전체 보기) */
-window.setStatF=function(v){ state.statPage=1; state.statF=(state.statF===v?"":v); render(); };
+window.setStatF=function(v){ state.statPage=1; state.statF=(state.statF===v?"":v);
+  if(state.statF==="추천"||state.statF==="확정"){ try{ examSweepConfirmDone(); }catch(e){} }   /* [R4.38] 목록 열 때 잔여 확정·추천 자동 청소 */
+  render(); };
 window.setStatGroup=function(v){ state.statGroup=v; state.statRev=false; if(v!=="반별")state.statBanF=""; if(v!=="급수별"){state.statGT="";state.statGF="";} render(); };
 window.setStatBanF=function(v){ state.statBanF=v; state.statRev=false; render(); };
 window.setStatGT=function(v){ state.statGT=v; state.statGF=""; state.statRev=false; render(); };
