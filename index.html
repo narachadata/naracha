@@ -945,7 +945,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.39";   /* R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.40";   /* R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -14672,7 +14672,7 @@ function renderBusView(day, mob){
           else if(mk==='등'){ st2='background:#F0F7FF;color:#2B5FB8;border:1px solid #C8D9F0'; tx=nm+' 등원'; }
           else if(mk==='하'){ st2='background:#F1FAF4;color:#1E7B3C;border:1px solid #B8E0C8'; tx=nm+' 하원'; }
           else { st2='background:#F7F6F2;color:var(--ink);border:1px solid #E5E1D8'; tx=nm; }
-          h+='<span onclick="busRiderTap(event,\''+esc(nm).replace(/'/g,"\\'")+'\')" style="'+st2+';border-radius:7px;padding:'+(mob?'3px 8px':'3px 9px')+';font-size:'+(mob?'12px':'12.5px')+';font-weight:700;white-space:nowrap;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis" title="한 번 누르면 전화번호, 다시 누르면 전화 연결">'+esc(tx)+'</span>';
+          h+='<span onclick="busRiderTap(event,\''+esc(nm).replace(/'/g,"\\'")+'\')" style="'+st2+';border-radius:7px;padding:'+(mob?'3px 8px':'3px 9px')+';font-size:'+(mob?'12px':'12.5px')+';font-weight:700;white-space:nowrap;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis" title="누르면 보호자 연락처가 나옵니다 (전화는 팝업에서 직접 눌러야 걸립니다)">'+esc(tx)+'</span>';
         });
       }
       if((st.memo||'').trim()) h+='<span style="font-size:11px;color:var(--sub);font-style:italic">'+esc(st.memo)+'</span>';
@@ -14702,36 +14702,78 @@ function renderBusView(day, mob){
 
 /* [R3.75] 차량 탑승자 이름 탭 — 1번: 첫 전화번호 말풍선 / 2번(같은 이름): 전화 연결 */
 window.__busTapName=null; window.__busTapTel=null;
+/* [R4.40] 탑승자 이름 탭 — 예전엔 '두 번 누르면 곧바로 전화 연결'이라
+   보기 모드에서 스크롤하다 이름을 두 번 건드리면 전화 화면이 저절로 열렸다.
+   이제는 연락처 팝업만 뜨고, 전화는 팝업 안의 [전화 걸기]를 눌러야만 걸린다. */
 window.busRiderTap=function(ev, nm){
   if(ev){ ev.stopPropagation && ev.stopPropagation(); }
   nm=(nm||'').trim(); if(!nm) return;
-  /* 등록 명단에서 첫 번째 보호자 전화 찾기 */
   var stu=STUDENTS.find(function(x){ return x.n===nm; });
-  var tel='';
-  if(stu && stu.gd){ var g1=sortGuardians(stu.gd).find(function(g){ return (g.p||'').trim(); }); if(g1) tel=(g1.p||'').trim(); }
-  if(!tel){
+  var list=[];
+  if(stu && stu.gd){
+    sortGuardians(stu.gd).forEach(function(g){
+      var p=String((g&&g.p)||'').trim(); if(!p) return;
+      list.push({ r:String((g&&g.r)||'보호자').trim()||'보호자', n:String((g&&g.n)||'').trim(), p:p });
+    });
+  }
+  if(!list.length){
     if(typeof toast==='function') toast('📞 '+nm+' — 등록된 전화번호가 없습니다');
-    window.__busTapName=null; window.__busTapTel=null; return;
+    return;
   }
-  if(window.__busTapName===nm && window.__busTapTel===tel){
-    /* 두 번째 탭: 전화 연결 — 앵커 클릭 방식(모바일 안정) */
-    window.__busTapName=null; window.__busTapTel=null;
-    try{
-      var a=document.createElement('a');
-      a.href='tel:'+tel.replace(/[^0-9+]/g,'');
-      a.style.display='none'; document.body.appendChild(a);
-      a.click();
-      setTimeout(function(){ try{ a.remove(); }catch(e){} }, 100);
-    }catch(e){}
-    if(typeof toast==='function') toast('📞 '+nm+' ('+tel+') 연결 중…');
-  } else {
-    /* 첫 번째 탭: 번호 안내 */
-    window.__busTapName=nm; window.__busTapTel=tel;
-    if(typeof toast==='function') toast('📞 '+nm+' · '+tel+' — 한 번 더 누르면 전화 연결', 4000);
-    /* 4초 지나면 첫 탭 상태 해제 (실수 연결 방지) */
-    setTimeout(function(){ if(window.__busTapName===nm){ window.__busTapName=null; window.__busTapTel=null; } }, 4000);
-  }
+  state.busTelM={ name:nm, list:list };
+  render();
 };
+window.closeBusTelM=function(){ state.busTelM=null; render(); };
+/* 전화 걸기 — 사용자가 팝업에서 직접 누를 때만 실행 */
+window.busTelCall=function(tel){
+  var t=String(tel||'').replace(/[^0-9+]/g,''); if(!t) return;
+  state.busTelM=null; render();
+  try{
+    var a=document.createElement('a');
+    a.href='tel:'+t; a.style.display='none';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ try{ a.remove(); }catch(e){} }, 100);
+  }catch(e){}
+};
+window.busTelCopy=function(tel){
+  var t=String(tel||'').trim(); if(!t) return;
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(function(){ if(typeof toast==='function') toast('📋 복사했습니다 · '+t); },
+        function(){ if(typeof toast==='function') toast('복사하지 못했습니다 · '+t); });
+      return;
+    }
+  }catch(e){}
+  if(typeof toast==='function') toast('번호: '+t);
+};
+/* [R4.40] 탑승자 연락처 팝업 */
+function _busTelModal(){
+  var m=state.busTelM; if(!m) return '';
+  var rows=(m.list||[]).map(function(g){
+    var telEsc=esc(g.p).replace(/'/g,"\\'");
+    return '<div style="border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px">'+
+      '<div style="display:flex;align-items:baseline;gap:7px;margin-bottom:7px">'+
+        '<b style="font-size:12.5px;color:#2B5FB8">'+esc(g.r)+'</b>'+
+        (g.n?'<span style="font-size:12px;color:var(--sub)">'+esc(g.n)+'</span>':'')+
+        '<span style="flex:1"></span>'+
+        '<span style="font-size:14px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums">'+esc(g.p)+'</span>'+
+      '</div>'+
+      '<div style="display:flex;gap:7px">'+
+        '<button onclick="busTelCall(\''+telEsc+'\')" style="flex:1;background:#1E7B3C;color:#fff;border:none;border-radius:10px;padding:11px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">📞 전화 걸기</button>'+
+        '<button onclick="busTelCopy(\''+telEsc+'\')" style="flex:0 0 auto;background:#fff;border:1.5px solid var(--line);color:var(--sub);border-radius:10px;padding:11px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">📋 복사</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  return '<div onclick="if(event.target===this)closeBusTelM()" style="position:fixed;inset:0;background:rgba(27,37,52,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto">'+
+    '<div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:18px 20px 16px;box-shadow:0 14px 44px rgba(0,0,0,.32)">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'+
+        '<div style="font-size:16px;font-weight:900">📞 '+esc(m.name)+'</div>'+
+        '<button onclick="closeBusTelM()" style="background:none;border:none;font-size:24px;color:var(--sub);cursor:pointer;font-family:inherit;line-height:1">×</button></div>'+
+      '<div style="font-size:12px;color:var(--sub);margin-bottom:13px">보호자 연락처입니다. <b>전화는 아래 버튼을 눌러야만</b> 걸립니다.</div>'+
+      rows+
+      '<button onclick="closeBusTelM()" style="width:100%;background:#fff;border:1.5px solid var(--line);color:var(--sub);border-radius:11px;padding:11px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:2px">닫기</button>'+
+    '</div></div>';
+}
 /* ── [R3.30] 차량운행관리 화면 (PC·모바일 공용 본문) ── */
 function renderBusTab(mobile){
   busAutoCarry();                       /* [R3.31] 주가 바뀌면 지난주 노선 이월 + 출석 반영 */
@@ -14899,7 +14941,7 @@ function renderBusTab(mobile){
   if(!edit){
     h+=renderBusView(day, mob);
     if(courses.length) h+=_busSendCard(day, mob);
-    return h + _busScopeModal() + _busCourseModal();
+    return h + _busScopeModal() + _busCourseModal() + _busTelModal();
   }
 
   /* ── 편집 모드 ── */
@@ -15001,7 +15043,7 @@ function renderBusTab(mobile){
       '<button onclick="setBusEdit(false)" style="flex:1;min-width:180px;background:var(--green,#1E7B3C);color:#fff;border:none;border-radius:12px;padding:'+(mob?'14px':'13px')+';font-size:'+(mob?'14.5px':'14px')+';font-weight:800;cursor:pointer;font-family:inherit">💾 저장하고 보기</button>'+
       '<button onclick="addBusCourse()" class="chip" style="font-weight:800;color:var(--brand);border-color:var(--brand);padding:'+(mob?'12px 16px':'11px 16px')+'">＋ 구간 추가</button>'+
     '</div>';
-  return h + _busScopeModal() + _busCourseModal();
+  return h + _busScopeModal() + _busCourseModal() + _busTelModal();
 }
 
 /* ── 차량관리(차계부): 매일 업무 종료 시 계기판 주행거리 입력 → 당일 운행거리·월 누계 자동계산 ── */
