@@ -945,7 +945,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.38";   /* R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.39";   /* R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -14304,18 +14304,31 @@ window.refreshBusAttendance=function(){
 
 /* ── 편집 액션 ── */
 window.setBusDay=function(d){ state.busDay=d; render(); };
-window.addBusCourse=function(){
-  var t=prompt('구간 이름을 입력하세요.\n(예: 3시부 승차 · 4시부 하차)',''); if(t===null) return;
-  t=(t||'').trim(); if(!t){ alert('구간 이름을 입력해 주세요.'); return; }
-  busCourses().push({id:busNewId(), title:t, note:'', stops:[]});
-  busTouch(); render();
+/* [R4.39] 구간 추가·수정 — 예전엔 prompt 창이 연달아 두 번 떠서(두 번째 '메모'가 빈칸)
+   휴대폰에서 "빈 창이 또 열린다"고 느껴졌다. 이름·메모를 한 팝업에서 함께 입력하도록 교체. */
+window.addBusCourse=function(){ openBusCourseM(''); };
+window.editBusCourse=function(cid){ openBusCourseM(cid); };
+window.openBusCourseM=function(cid){
+  var c=cid?busCourses().find(function(x){return x.id===cid;}):null;
+  if(cid && !c) return;
+  state.busCourseM={ cid:(cid||''), title:(c?(c.title||''):''), note:(c?(c.note||''):'') };
+  render();
+  if(!cid) setTimeout(function(){ try{ var el=document.getElementById('busCourseTitleIn'); if(el) el.focus(); }catch(e){} }, 60);   /* 새로 추가할 때만 바로 입력 가능하게 */
 };
-window.editBusCourse=function(cid){
-  var c=busCourses().find(function(x){return x.id===cid;}); if(!c) return;
-  var t=prompt('구간 이름 수정', c.title||''); if(t===null) return;
-  c.title=(t||'').trim();
-  var n=prompt('구간 옆 메모 (예: 심사 · 비우면 없음)', c.note||''); if(n!==null) c.note=(n||'').trim();
-  busTouch(); render();
+window.closeBusCourseM=function(){ state.busCourseM=null; render(); };
+window.busCourseF=function(k,v){ if(state.busCourseM) state.busCourseM[k]=v; };
+window.saveBusCourseM=function(){
+  var m=state.busCourseM; if(!m) return;
+  var t=String(m.title||'').trim();
+  if(!t){ alert('구간 이름을 입력해 주세요. (예: 3시부 승차)'); return; }
+  var n=String(m.note||'').trim();
+  if(m.cid){
+    var c=busCourses().find(function(x){return x.id===m.cid;});
+    if(c){ c.title=t; c.note=n; }
+  } else {
+    busCourses().push({id:busNewId(), title:t, note:n, stops:[]});
+  }
+  state.busCourseM=null; busTouch(); render();
 };
 window.delBusCourse=function(cid){
   var c=busCourses().find(function(x){return x.id===cid;}); if(!c) return;
@@ -14551,6 +14564,27 @@ function _busScopeModal(){
         '<div style="font-size:11.5px;color:var(--sub);line-height:1.6">매주 '+esc(busDay())+'요일마다 계속 적용됩니다.<br>시간표 출석이 바뀌어도 이 설정이 우선합니다.</div>'+
       '</button>'+
       '<div style="font-size:11px;color:var(--sub);line-height:1.6;background:#F7F6F2;border-radius:9px;padding:9px 11px">언제든 [자동(시간표)]로 바꾸면 다시 출석 기록을 따라갑니다.</div>'+
+    '</div></div>';
+}
+/* [R4.39] 구간 이름·메모 입력 팝업 (추가·수정 공용) — prompt 연속 두 번을 대체 */
+function _busCourseModal(){
+  var m=state.busCourseM; if(!m) return '';
+  var isNew=!m.cid;
+  return '<div onclick="if(event.target===this)closeBusCourseM()" style="position:fixed;inset:0;background:rgba(27,37,52,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto">'+
+    '<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:18px 20px 16px;box-shadow:0 14px 44px rgba(0,0,0,.32)">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'+
+        '<div style="font-size:16px;font-weight:900">'+(isNew?'＋ 구간 추가':'✎ 구간 수정')+'</div>'+
+        '<button onclick="closeBusCourseM()" style="background:none;border:none;font-size:24px;color:var(--sub);cursor:pointer;font-family:inherit;line-height:1">×</button></div>'+
+      '<div style="font-size:12px;color:var(--sub);margin-bottom:14px">'+esc(busDay())+'요일 노선의 구간입니다.</div>'+
+      '<div style="font-size:11.5px;font-weight:800;color:var(--sub);margin-bottom:4px">구간 이름 <span style="color:var(--red)">*</span></div>'+
+      '<input id="busCourseTitleIn" class="input" placeholder="예: 3시부 승차 · 4시부 하차" value="'+esc(m.title||'')+'" oninput="busCourseF(\'title\',this.value)" style="width:100%;height:44px;font-size:14.5px;font-weight:700;margin-bottom:11px">'+
+      '<div style="font-size:11.5px;font-weight:800;color:var(--sub);margin-bottom:4px">구간 옆 메모 <span style="font-weight:600">(선택 · 비워도 됩니다)</span></div>'+
+      '<input class="input" placeholder="예: 심사" value="'+esc(m.note||'')+'" oninput="busCourseF(\'note\',this.value)" style="width:100%;height:44px;font-size:14px;margin-bottom:6px">'+
+      '<div style="font-size:11px;color:var(--sub);line-height:1.6;background:#F7F6F2;border-radius:9px;padding:8px 10px;margin-bottom:13px">구간 이름에 시간을 넣으면(예: <b>3시부 승차</b>) 그 시간 배치 명단이 아래에 나와 눌러서 넣을 수 있습니다.</div>'+
+      '<div style="display:flex;gap:8px">'+
+        '<button onclick="closeBusCourseM()" style="flex:0 0 auto;background:#fff;border:1.5px solid var(--line);color:var(--sub);border-radius:11px;padding:12px 18px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit">취소</button>'+
+        '<button onclick="saveBusCourseM()" style="flex:1;background:var(--brand);color:#fff;border:none;border-radius:11px;padding:12px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit">'+(isNew?'추가':'저장')+'</button>'+
+      '</div>'+
     '</div></div>';
 }
 
@@ -14865,7 +14899,7 @@ function renderBusTab(mobile){
   if(!edit){
     h+=renderBusView(day, mob);
     if(courses.length) h+=_busSendCard(day, mob);
-    return h + _busScopeModal();
+    return h + _busScopeModal() + _busCourseModal();
   }
 
   /* ── 편집 모드 ── */
@@ -14967,7 +15001,7 @@ function renderBusTab(mobile){
       '<button onclick="setBusEdit(false)" style="flex:1;min-width:180px;background:var(--green,#1E7B3C);color:#fff;border:none;border-radius:12px;padding:'+(mob?'14px':'13px')+';font-size:'+(mob?'14.5px':'14px')+';font-weight:800;cursor:pointer;font-family:inherit">💾 저장하고 보기</button>'+
       '<button onclick="addBusCourse()" class="chip" style="font-weight:800;color:var(--brand);border-color:var(--brand);padding:'+(mob?'12px 16px':'11px 16px')+'">＋ 구간 추가</button>'+
     '</div>';
-  return h + _busScopeModal();
+  return h + _busScopeModal() + _busCourseModal();
 }
 
 /* ── 차량관리(차계부): 매일 업무 종료 시 계기판 주행거리 입력 → 당일 운행거리·월 누계 자동계산 ── */
