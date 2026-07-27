@@ -889,7 +889,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.30";   /* R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.34";   /* R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -1018,6 +1018,44 @@ function isCountBilling(stu){
 function isCountBillingByName(name){
   for(var i=0;i<STUDENTS.length;i++){ if(STUDENTS[i].n===name) return isCountBilling(STUDENTS[i]); }
   return false;
+}
+
+/* ── [R4.31] 장기(연간등록) 수련생 판정 ──
+   기준 ① 등록 유형이 annual (관장이 직접 지정)
+   기준 ② 등록 만료월이 6개월 이상 남음 (선납 청구 시 자동 기록된 e / expiryMap)
+   ※ regTypeMap은 회계 창고라 사범 기기에서는 비어 있을 수 있어 ②로 보완 판정한다. */
+function ymMonthsLeft(ym){
+  if(!ym || !/^\d{4}-\d{2}/.test(ym)) return null;
+  var t=today().slice(0,7);
+  return (parseInt(ym.slice(0,4),10)-parseInt(t.slice(0,4),10))*12
+       + (parseInt(ym.slice(5,7),10)-parseInt(t.slice(5,7),10));
+}
+function regTypeOf(name){ return ((state.regTypeMap||{})[name]||""); }
+function longRegInfo(stu){
+  if(!stu) return {long:false};
+  var name=stu.n, exp=effExpiry(name), left=ymMonthsLeft(exp);
+  var byType=(regTypeOf(name)==="annual");
+  var byExp=(left!=null && left>=5);            /* 이번 달 포함 6개월 이상 */
+  return {
+    long: byType||byExp,
+    exp: exp||"",
+    left: left,
+    soon: (left!=null && left>=0 && left<=1),   /* 이번 달·다음 달 만료 */
+    over: (left!=null && left<0),               /* 만료 지남 */
+    src: byType?"지정":(byExp?"추정":"")
+  };
+}
+function longRegInfoByName(name){
+  for(var i=0;i<STUDENTS.length;i++){ if(STUDENTS[i].n===name) return longRegInfo(STUDENTS[i]); }
+  return {long:false};
+}
+/* 명단 행 배지 — 연간등록 / 만료 임박 / 만료 지남 */
+function regBadge(stu){
+  var g=longRegInfo(stu);
+  if(g.over) return '<span title="등록 만료월이 지났습니다" style="background:#FDECEA;color:#B3261E;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:800;white-space:nowrap">만료 '+g.exp.slice(2)+'</span>';
+  if(g.soon) return '<span title="이번 달·다음 달 만료 — 재등록 안내가 필요합니다" style="background:#FFF3E0;color:#B45309;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:800;white-space:nowrap">임박 '+g.exp.slice(2)+'</span>';
+  if(g.long) return '<span title="연간등록 (6개월 이상 선등록)'+(g.src==="추정"?" — 만료월로 추정":"")+'" style="background:#EDE9FE;color:#5B21B6;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:800;white-space:nowrap">연간'+(g.exp?' '+g.exp.slice(2):'')+'</span>';
+  return '';
 }
 
 function effExpiry(name){
@@ -5926,8 +5964,8 @@ function renderRosterTab(){
     (myRole()==="admin"?'<button class="chip sm" style="color:var(--sub);border-color:var(--line);font-weight:600;background:#FBFBFA" title="구글폼 신규등록 자동연동을 설정합니다" onclick="openSignupSetup()">📝 폼연동'+(function(){var n=signupForms().length;return n?' <span style="background:#DCF0E3;color:#1E7B3C;border-radius:10px;padding:0 5px;font-size:11.5px;font-weight:800">'+n+'</span>':'';})()+'</button>':'')+
     '</div>'+
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"><span style="font-size:11.5px;color:var(--sub);align-self:center">정렬:</span>'+
-    ["이름순","반별","급수별","시범단"].map(function(k){
-      return '<button class="chip sm'+((state.rosterSort||"이름순")===k?' on':'')+'" onclick="setRosterSort(\''+k+'\')">'+(k==="시범단"?"🛡 시범단":k)+'</button>';
+    ["이름순","반별","급수별","시범단","등록"].map(function(k){
+      return '<button class="chip sm'+((state.rosterSort||"이름순")===k?' on':'')+'" onclick="setRosterSort(\''+k+'\')">'+(k==="시범단"?"🛡 시범단":k==="등록"?"🗓 등록":k)+'</button>';
     }).join('')+'</div>'+
     (function(){
       var so=state.rosterSort||"이름순";
@@ -5938,6 +5976,21 @@ function renderRosterTab(){
             var lb=b?b.replace(/\(.*\)/,""):"전체";
             return '<button class="chip sm'+((state.rosterBanF||"")===b?' on':'')+'" onclick="setRosterBanF(\''+b+'\')">'+lb+'</button>';
           }).join('')+'</div>';
+      }
+      if(so==="등록"){
+        /* [R4.31] 등록 상태 서브필터 + 집계 (재원 기준) */
+        var _act=STUDENTS.filter(function(t){ return !isQuit(t.n) && !state.closedMap[t.n]; });
+        var _n={long:0, soon:0, over:0};
+        _act.forEach(function(t){ var g=longRegInfo(t); if(g.long)_n.long++; if(g.soon)_n.soon++; if(g.over)_n.over++; });
+        var _cur=state.rosterRegF||"";
+        var _chips=[["","전체",_act.length],["long","🗓 연간등록",_n.long],["soon","⏰ 만료 임박",_n.soon],["over","⚠️ 만료 지남",_n.over]];
+        return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center">'+
+          _chips.map(function(o){
+            return '<button class="chip sm'+(_cur===o[0]?' on':'')+'" onclick="setRosterRegF(\''+o[0]+'\')">'+
+              o[1]+' <b style="opacity:.75">'+o[2]+'</b></button>';
+          }).join('')+
+          '<span style="font-size:11px;color:var(--sub);margin-left:4px">만료월 기준 · 6개월 이상 남으면 연간등록</span>'+
+        '</div>';
       }
       if(so==="급수별"){
         var gt=state.rosterGT||"";
@@ -6056,6 +6109,18 @@ function rosterListHtml(){
     });
   }
   if(rso==="시범단") list=list.filter(function(s){ return isDemo(s.n); });   /* 시범단 원생만 */
+  if(rso==="등록"){   /* [R4.31] 등록 상태별 필터 + 만료 임박 순 정렬 */
+    var _rf=state.rosterRegF||"";
+    if(_rf) list=list.filter(function(s){ var g=longRegInfo(s);
+      return _rf==="long"?g.long : _rf==="soon"?g.soon : _rf==="over"?g.over : true; });
+    list.sort(function(a,b){
+      var la=longRegInfo(a).left, lb=longRegInfo(b).left;
+      if(la==null&&lb==null) return a.n.localeCompare(b.n);
+      if(la==null) return 1; if(lb==null) return -1;
+      if(la!==lb) return la-lb;
+      return a.n.localeCompare(b.n);
+    });
+  }
   if(rso==="반별")  list.sort(function(a,b){ return (a.b||"").localeCompare(b.b||"") || a.n.localeCompare(b.n); });
   if(rso==="급수별") list.sort(function(a,b){ return gradeRank(b.grade)-gradeRank(a.grade) || a.n.localeCompare(b.n); });
   if(rso==="이름순"||rso==="시범단") list.sort(function(a,b){ return a.n.localeCompare(b.n); });
@@ -6110,7 +6175,7 @@ function rosterListHtml(){
           '<b style="flex:0 0 84px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px;cursor:pointer;color:var(--blue)" title="클릭하면 학적부가 열립니다 (수정도 가능)" onclick="openStuM(\''+esc(s.n).replace(/'/g,"\\'")+'\')">'+esc(s.n)+'</b>'+
           '<span style="flex:0 0 186px;white-space:nowrap">'+beltChip(s)+'</span>'+
           '<span style="flex:0 0 96px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px;color:var(--sub)">'+esc((s.b||"").replace(/\(.*\)/,""))+'</span>'+
-          statusBadge+longAbsBadge(s.n, true)+
+          statusBadge+longAbsBadge(s.n, true)+regBadge(s)+
         '</div>'+
         (function(){ var pb=pendAbsBadge(s.n);
           return '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:0 0 auto">'+
@@ -6337,6 +6402,83 @@ function statSpanRange(name){
   return { lo:ym+"-01", hi:ym+"-31", label:ym, span:"month" };
 }
 window.setStatSpan=function(v){ state.statSpan=v; render(); };
+
+/* ══════ [R4.34] 심사일까지 예상 도달 횟수 ══════
+   나라차 규칙:  14회 → 심사추천자 · 심사일까지 24회를 채울 수 있으면 → 심사확정자
+   지금까지는 사범님이 수련생별 요일을 보고 손으로 계산했다. 그 계산을 대신한다.
+   ① 다음 심사일  = 행사 캘린더의 '승급심사' 중 오늘 이후 가장 가까운 날
+   ② 정규 요일    = 최근 8주 시간표 배치에서 2주 이상 반복된 요일
+   ③ 예상 횟수    = 현재 누적 + (내일~심사일 사이 정규 요일 수, 휴관일 제외) */
+var EXAM_NEED = 24;      /* 심사 응시 기준 횟수 */
+var EXAM_REC  = 14;      /* 심사 추천 기준 횟수 */
+
+function nextExamDate(kind){
+  var w=workData(), t=today(), best="";
+  for(var k in (w.events||{})){
+    var e=w.events[k]; if(!e || e.type!=="승급심사") continue;
+    var d=e.date||""; if(!d || d<t) continue;
+    if(kind==="청소년성인" && !/청소년|성인/.test(e.title||"")) continue;
+    if(kind==="정기" && /청소년|성인/.test(e.title||"")) continue;
+    if(!best || d<best) best=d;
+  }
+  return best;
+}
+/* 학생의 정규 수련 요일 (mon..sun) — 최근 8주 배치 기준 */
+var _regDayCache=null, _regDayCacheT=0;
+function regularDaysOf(name){
+  if(!_regDayCache || Date.now()-_regDayCacheT>60000){
+    _regDayCache={}; _regDayCacheT=Date.now();
+    var wks=Object.keys(state.weeks||{}).filter(function(w){ return w<=today(); }).sort().slice(-8);
+    wks.forEach(function(wk){
+      var w=state.weeks[wk]; if(!w||!w.cells) return;
+      for(var key in w.cells){
+        var day=key.split("-")[0], lv=w.cells[key].lv||[];
+        for(var i=0;i<3;i++){
+          var arr=lv[i]||[];
+          for(var j=0;j<arr.length;j++){
+            var n=(arr[j]||"").trim(); if(!n) continue;
+            if(!_regDayCache[n]) _regDayCache[n]={};
+            _regDayCache[n][day]=(_regDayCache[n][day]||0)+1;
+          }
+        }
+      }
+    });
+  }
+  var c=_regDayCache[name]||{}, out=[];
+  for(var d in c){ if(c[d]>=2) out.push(d); }   /* 2주 이상 반복 = 정규 */
+  return out;
+}
+/* 내일부터 심사일까지 남은 정규 수업 횟수 (휴관일·공휴일 제외) */
+function remainSessions(name, examDate){
+  if(!examDate) return 0;
+  var days=regularDaysOf(name); if(!days.length) return 0;
+  var n=0, d=addDays(today(),1), guard=0;
+  while(d<=examDate && guard++<400){
+    var wd=["sun","mon","tue","wed","thu","fri","sat"][new Date(d+"T00:00:00").getDay()];
+    if(days.indexOf(wd)>-1){
+      var wkMon=addDays(d, -(( new Date(d+"T00:00:00").getDay()+6)%7));
+      if(!dayIsOff(wkMon, wd)) n++;
+    }
+    d=addDays(d,1);
+  }
+  return n;
+}
+/* 예상 도달 → {acc, remain, proj, short, status, days} */
+function examProjection(name, examDate){
+  var acc=state.accMap[name]||0;
+  var rem=remainSessions(name, examDate);
+  var proj=acc+rem, sh=Math.max(0, EXAM_NEED-proj);
+  var dys=regularDaysOf(name);
+  return { acc:acc, remain:rem, proj:proj, short:sh, days:dys,
+    noSched: dys.length===0,          /* 시간표 배치 이력이 없어 예측 불가 */
+    status: (!examDate) ? "일정없음"
+          : (proj>=EXAM_NEED) ? "확정가능"
+          : (dys.length===0) ? "확인필요"   /* 요일을 몰라 계산할 수 없음 */
+          : (sh<=4) ? "부족"
+          : "미달" };
+}
+var DAY_KO={mon:"월",tue:"화",wed:"수",thu:"목",fri:"금",sat:"토",sun:"일"};
+function regDaysLabel(days){ return (days||[]).map(function(d){ return DAY_KO[d]||d; }).join("·"); }
 
 /* ── 심사추천/심사확정 (누적 14회 규칙) ── */
 function examConfObj(){ if(!state.examConfirmMap) state.examConfirmMap={}; return state.examConfirmMap; }
@@ -6714,6 +6856,45 @@ function renderStatusTab(){
 
   /* 상태 필터 버튼 — 위계 1: 크고 뜻에 맞는 색 · 다시 누르면 해제
      심사(빨강·파랑) / 국기원(보라 계열)로 구분 · 국기원추천(연보라)·국기원확정(진보라) */
+  /* [R4.34] 다음 심사일 기준 예상 도달 요약 */
+  var _exSum=(function(){
+    var ed=nextExamDate("정기"); if(!ed) return "";
+    var act=STUDENTS.filter(function(t){ return t.n && !isQuit(t.n) && !state.closedMap[t.n]; });
+    var g={확정가능:[], 부족:[], 미달:[], 확인필요:[]};
+    act.forEach(function(t){ var pj=examProjection(t.n, ed); if(g[pj.status]) g[pj.status].push({n:t.n,p:pj}); });
+    var ya=nextExamDate("청소년성인");
+    var box=function(lb,arr,col,bg,desc){
+      return '<div style="flex:1 1 190px;background:'+bg+';border:1px solid '+col+'33;border-radius:13px;padding:12px 14px">'+
+        '<div style="font-size:12px;font-weight:800;color:'+col+'">'+lb+'</div>'+
+        '<div style="font-size:24px;font-weight:900;color:'+col+';letter-spacing:-1px">'+arr.length+'<span style="font-size:13px;margin-left:2px">명</span></div>'+
+        '<div style="font-size:11px;color:var(--sub);margin-top:2px">'+desc+'</div></div>';
+    };
+    var need=g.부족.slice().sort(function(a,b){ return a.p.short-b.p.short; });
+    return '<div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px">'+
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">'+
+        '<b style="font-size:14.5px">🎯 다음 승급심사 '+ed.slice(5).replace("-","/")+'</b>'+
+        '<span style="font-size:11.5px;color:var(--sub)">정기 '+ed+(ya?' · 청소년·성인 '+ya:'')+'</span>'+
+        '<span style="flex:1"></span>'+
+        '<span style="font-size:11px;color:var(--sub)">현재 누적 + 심사일까지 정규 수업(휴관 제외)으로 계산</span>'+
+      '</div>'+
+      '<div style="display:flex;gap:9px;flex-wrap:wrap">'+
+        box("✅ 응시 확정 가능", g.확정가능, "#1E7B3C", "#F2FAF4", "예상 "+EXAM_NEED+"회 이상")+
+        box("⚠️ 1~4회 부족", g.부족, "#B45309", "#FFF8EC", "추가 수련 안내 대상")+
+        box("⏳ 5회 이상 부족", g.미달, "#6B7280", "#F7F8FA", "이번 심사는 어려움")+
+        (g.확인필요.length? box("❓ 확인 필요", g.확인필요, "#7C3AED", "#F7F3FF", "시간표 배치가 없어 계산 불가") : "")+
+      '</div>'+
+      (need.length?'<div style="margin-top:11px;padding-top:10px;border-top:1px dashed var(--line)">'+
+        '<div style="font-size:11.5px;font-weight:800;color:#B45309;margin-bottom:6px">추가 수련 안내가 필요한 수련생 (부족한 순)</div>'+
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+          need.slice(0,20).map(function(o){
+            return '<span title="현재 '+o.p.acc+'회 + 정규 '+o.p.remain+'회('+regDaysLabel(o.p.days)+') = '+o.p.proj+'회" '+
+              'style="background:#FFF3E0;color:#8A5A00;border:1px solid #F0D9AE;border-radius:9px;padding:3px 9px;font-size:11.5px;font-weight:700;white-space:nowrap">'+
+              esc(o.n)+' <b>'+o.p.short+'회</b></span>';
+          }).join('')+
+          (need.length>20?'<span style="font-size:11.5px;color:var(--sub);align-self:center">외 '+(need.length-20)+'명</span>':'')+
+        '</div></div>':'')+
+    '</div>';
+  })();
   var SF=[{k:"초과",c:"#D0332A"},{k:"추천",lbl:"🥋 심사추천",c:"var(--brandRed)"},{k:"확정",lbl:"✅ 심사확정",c:"#2B5FB8"},{k:"국기원",lbl:"🏛 국기원추천",c:"#7C3AED"},{k:"국기원확정",lbl:"🏛 국기원확정",c:"#5B21B6"}];
   var sfBtns=SF.map(function(o){
     var on=(f===o.k);
@@ -6762,7 +6943,8 @@ function renderStatusTab(){
   }
 
   var view=statViewRows();
-  var x='';
+  var x=_exSum;   /* [R4.34] 심사 예상 요약 카드를 맨 위에 */
+  
   /* ── ⚠️ 연락 권장 상시 카드 (마케팅팀 제안 3): 2주 이상 출석 없음 + 연락 이력 ── */
   (function(){
     var cutoff=addDays(today(),-14);
@@ -6944,7 +7126,19 @@ function statListHtml(view){
       _sr.label+' · <b style="color:var(--ink)">'+dts.length+'일 / '+_cnt+'회</b>'+
       '<span style="color:#94A3B8;font-weight:600"> (수련횟수 포함분)</span></div>'+dateBtns;
   }
-    /* 심사 클러스터 (구 심사대상 탭 통합): 누적횟수(클릭=수동수정) · 마지막 심사일 · 상태 배지 */
+    /* [R4.34] 심사일까지 예상 도달 배지 */
+  var _pjBadge=(function(){
+    var ed=nextExamDate("정기"); if(!ed) return "";
+    var pj=examProjection(s.n, ed);
+    if(pj.status==="확정가능")
+      return '<span title="현재 '+pj.acc+'회 + 심사일까지 정규 '+pj.remain+'회('+regDaysLabel(pj.days)+') = '+pj.proj+'회" style="background:#E7F7EC;color:#1E7B3C;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:800;white-space:nowrap">예상 '+pj.proj+'회 ✓</span>';
+    if(pj.status==="부족")
+      return '<span title="현재 '+pj.acc+'회 + 정규 '+pj.remain+'회('+regDaysLabel(pj.days)+') = '+pj.proj+'회 — 추가 수련 '+pj.short+'회 필요" style="background:#FFF3E0;color:#B45309;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:800;white-space:nowrap">'+pj.short+'회 부족</span>';
+    if(pj.status==="확인필요" && pj.acc>=EXAM_REC)
+      return '<span title="최근 8주 시간표에 배치 이력이 없어 예상 횟수를 계산할 수 없습니다. 시간표에 배치해 주세요." style="background:#F3EEFF;color:#6D28D9;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:800;white-space:nowrap">요일 확인 필요</span>';
+    return '';
+  })();
+  /* 심사 클러스터 (구 심사대상 탭 통합): 누적횟수(클릭=수동수정) · 마지막 심사일 · 상태 배지 */
     var esn2=esc(s.n).replace(/'/g,"\\'");
     var kkwAp=r.kkw?(((state.kkwInfo||{})[s.n]||{}).ap||""):"";
     var exBadge = r.kkw ? '<span title="'+(kkwAp?'국기원 접수일 '+esc(kkwAp)+' · ':'')+'이름을 누르면 학적부에서 단증 수령·취소 처리" style="background:#EEE;color:#666;border-radius:10px;padding:2px 7px;font-size:11.5px;font-weight:800;white-space:nowrap;cursor:help">국기원 대기'+(kkwAp?' '+esc(kkwAp.slice(5)):'')+'</span>'
@@ -6963,7 +7157,7 @@ function statListHtml(view){
       '<span style="font-size:11.5px;color:var(--sub)">심사</span>'+
       '<b style="font-size:13.5px;color:'+(r.acc>=24?'var(--red)':'var(--ink)')+';cursor:pointer;border-bottom:1px dashed var(--sub);font-variant-numeric:tabular-nums" title="클릭하면 누적횟수 수동 수정" onclick="editAcc(\''+esn2+'\')">'+r.acc+'회</b>'+
       (r.last?'<span style="font-size:11.5px;color:var(--sub);font-variant-numeric:tabular-nums" title="마지막 심사일">'+esc(r.last.slice(2))+'</span>':'')+
-      exBadge+termChip+
+      exBadge+_pjBadge+termChip+
       /* [R3.62] 응심 버튼 제거 — 심사관리에서 종합결과 완료 시 자동 반영 */
       '</div>';
     /* 고정폭 칸으로 세로 줄맞춤 (급수·기준·실제·태그·심사·날짜 모두 같은 x에서 시작) */
@@ -9601,6 +9795,7 @@ window.setRosterQ=function(v){
   var el=document.getElementById("rosterListArea");
   if(el) el.innerHTML=rosterListHtml();
 };
+window.setRosterRegF=function(v){ state.rosterRegF=v; state.rosterPage=1; render(); };
 window.setRosterF=function(v){ state.rosterF=v; state.rosterPage=1; if(v==='장기결석') state.rosterSort='반별'; render(); };
 window.setRosterPage=function(p){
   /* [R3.88] 페이지 버튼 줄이 화면의 '같은 자리'에 남도록 보정 —
@@ -16063,6 +16258,157 @@ window.setEventQ=function(v){ state.eventQ=v;
 window.setEventTab=function(t){ state.eventTab=t; render(); };
 window.openEvent=function(id){ state.topCat="업무"; state.workTab="행사"; state.eventSel=id; if(!state.eventTab) state.eventTab="기본"; if(typeof workPull==="function") workPull(); render(); };
 window.closeEvent=function(){ state.eventSel=null; render(); };
+/* ══════ [R4.32] 2026 나라차 캘린더 일괄 등록 ══════
+   종이 캘린더(2026 인성 CALENDAR)의 연간 일정을 행사 캘린더에 한 번에 넣는다.
+   · 같은 날짜 + 같은 제목이 이미 있으면 건너뛴다 (중복 방지)
+   · 종류별로 골라 넣을 수 있고, 등록 후 개별 수정·삭제 가능 */
+var CAL2026 = {
+  심사: [
+    {d:"2026-01-26", e:"2026-01-27", t:"1월 정기승급심사"},
+    {d:"2026-02-24", e:"2026-02-25", t:"2월 정기승급심사"},
+    {d:"2026-03-30", e:"2026-03-31", t:"3월 정기승급심사"},
+    {d:"2026-04-27", e:"2026-04-28", t:"4월 정기승급심사"},
+    {d:"2026-05-26", e:"2026-05-27", t:"5월 정기승급심사"},
+    {d:"2026-06-29", e:"2026-06-30", t:"6월 정기승급심사"},
+    {d:"2026-07-20", e:"2026-07-21", t:"7월 정기승급심사"},
+    {d:"2026-08-24", e:"2026-08-25", t:"8월 정기승급심사"},
+    {d:"2026-09-21", e:"2026-09-22", t:"9월 정기승급심사"},
+    {d:"2026-10-26", e:"2026-10-27", t:"10월 정기승급심사"},
+    {d:"2026-11-23", e:"2026-11-24", t:"11월 정기승급심사"},
+    {d:"2026-12-21", e:"2026-12-22", t:"12월 정기승급심사"},
+    {d:"2026-12-26", e:"",           t:"12월 정기승급심사 (시범단 송년회)"}
+  ],
+  청소년성인: [
+    {d:"2026-01-30", e:"", t:"1월 승급심사 (청소년·성인)"},
+    {d:"2026-02-27", e:"", t:"2월 승급심사 (청소년·성인)"},
+    {d:"2026-04-03", e:"", t:"3월 승급심사 (청소년·성인)"},
+    {d:"2026-05-01", e:"", t:"4월 승급심사 (청소년·성인)"},
+    {d:"2026-05-29", e:"", t:"5월 승급심사 (청소년·성인)"},
+    {d:"2026-07-03", e:"", t:"6월 승급심사 (청소년·성인)"},
+    {d:"2026-07-24", e:"", t:"7월 승급심사 (청소년·성인)"},
+    {d:"2026-08-28", e:"", t:"8월 승급심사 (청소년·성인)"},
+    {d:"2026-09-25", e:"", t:"9월 승급심사 (청소년·성인)"},
+    {d:"2026-10-30", e:"", t:"10월 승급심사 (청소년·성인)"},
+    {d:"2026-11-27", e:"", t:"11월 승급심사 (청소년·성인)"},
+    {d:"2026-12-26", e:"", t:"12월 승급심사 (청소년·성인)"}   /* 그 주 금요일이 크리스마스 → 26일(토) 정기심사와 같은 날 */
+  ],
+  휴관: [
+    {d:"2026-02-06", e:"",           t:"지도진 교육·연구의 날 (휴관)"},
+    {d:"2026-06-02", e:"",           t:"지도진 교육·연구의 날 (휴관)"},
+    {d:"2026-11-30", e:"2026-12-02", t:"지도진 교육·연구의 날 (휴관)"}
+  ],
+  측정: [
+    {d:"2026-03-16", e:"2026-03-21", t:"전반기 줄넘기 측정주간"},
+    {d:"2026-05-11", e:"2026-05-16", t:"전반기 체격·체력측정"},
+    {d:"2026-09-07", e:"2026-09-12", t:"하반기 줄넘기 측정주간"},
+    {d:"2026-11-09", e:"2026-11-14", t:"하반기 체력·체격측정"}
+  ],
+  행사: [
+    {d:"2026-01-02", e:"2026-02-03", t:"26 겨울 오전 Camp 1차"},
+    {d:"2026-01-05", e:"2026-01-14", t:"시범단 선발 오디션"},
+    {d:"2026-01-14", e:"",           t:"시범단 선발 최종 평가일"},
+    {d:"2026-01-18", e:"2026-01-19", t:"시범단 동계 훈련"},
+    {d:"2026-01-29", e:"",           t:"Sports Day (체조)"},
+    {d:"2026-02-03", e:"2026-02-09", t:"시범단 태국 해외 문화 교류"},
+    {d:"2026-02-09", e:"2026-02-27", t:"26 겨울 오전 Camp 2차"},
+    {d:"2026-02-13", e:"",           t:"설날 민속놀이"},
+    {d:"2026-02-26", e:"",           t:"Sports Day (체조)"},
+    {d:"2026-04-01", e:"",           t:"Sports Day (농구)"},
+    {d:"2026-04-30", e:"",           t:"Sports Day (농구)"},
+    {d:"2026-05-04", e:"",           t:"어린이날 맞이 미니 Olympic"},
+    {d:"2026-05-16", e:"",           t:"소아암돕기 자선 행사"},
+    {d:"2026-05-29", e:"",           t:"Sports Day (피구)"},
+    {d:"2026-07-01", e:"",           t:"Sports Day (피구)"},
+    {d:"2026-07-28", e:"",           t:"Sports Day (컬링)"},
+    {d:"2026-08-26", e:"",           t:"Sports Day (컬링)"},
+    {d:"2026-09-23", e:"",           t:"추석맞이 민속놀이"},
+    {d:"2026-10-29", e:"",           t:"Sports Day (핸드볼)"},
+    {d:"2026-11-27", e:"",           t:"Sports Day (피구)"},
+    {d:"2026-12-24", e:"",           t:"Sports Day (피구)"},
+    {d:"2026-12-26", e:"",           t:"시범단 송년회"},
+    {d:"2026-12-31", e:"",           t:"송년파티 & 레크리에이션"}
+  ]
+};
+var CAL2026_META = {
+  심사: { type:"승급심사",  time:"18:00~18:50 (매일)", st:"18:00", et:"18:50",
+          place:"나라차태권도 분당도장", target:"승급심사 추천자" },
+  청소년성인: { type:"승급심사", time:"21:00~21:30", st:"21:00", et:"21:30",
+          place:"나라차태권도 분당도장", target:"청소년·성인 승급심사 대상자" },
+  휴관: { type:"기타행사",  time:"", st:"", et:"", place:"", target:"", allDay:true },
+  측정: { type:"기타행사",  time:"", st:"", et:"", place:"나라차태권도 분당도장", target:"재원생", allDay:true },
+  행사: { type:"일반행사",  time:"", st:"", et:"", place:"", target:"", allDay:true }
+};
+/* 국기원 심사의 달 (짝수달) — 참고용 메모 */
+var CAL2026_KKW = [2,4,6,8,10,12];
+
+function _cal2026Modal(){
+  if(!state.cal2026) return '';
+  var sel=state.cal2026;
+  var cats=[
+    ["심사","🥋 정기승급심사", CAL2026.심사.length, "매월 말 이틀 (12월은 3일) · 18:00"],
+    ["청소년성인","🥋 승급심사 (청소년·성인)", CAL2026.청소년성인.length, "같은 주 금요일 21:00"],
+    ["휴관","🚫 휴관일",       CAL2026.휴관.length, "지도진 교육·연구의 날"],
+    ["측정","📏 측정 주간",     CAL2026.측정.length, "줄넘기·체력 전후반기"],
+    ["행사","🎪 그 밖의 행사",  CAL2026.행사.length, "Sports Day·캠프·시범단 등"]
+  ];
+  var tot=cats.reduce(function(a,c){ return a+(sel[c[0]]?c[2]:0); },0);
+  return '<div style="position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:120;display:flex;align-items:center;justify-content:center;padding:18px" onclick="if(event.target===this)closeCal2026()">'+
+    '<div style="background:#fff;border-radius:18px;max-width:460px;width:100%;max-height:88vh;overflow:auto;padding:22px">'+
+      '<div style="font-size:18px;font-weight:900;margin-bottom:4px">📅 2026 캘린더 일괄 등록</div>'+
+      '<div style="font-size:12.5px;color:var(--sub);line-height:1.7;margin-bottom:16px">'+
+        '종이 캘린더(2026 인성 CALENDAR)의 연간 일정을 행사 캘린더에 넣습니다.<br>'+
+        '<b style="color:var(--ink)">같은 날짜·같은 제목이 이미 있으면 건너뜁니다.</b> 등록 후 개별 수정·삭제할 수 있습니다.</div>'+
+      cats.map(function(c){
+        var on=!!sel[c[0]];
+        return '<div onclick="toggleCal2026(\''+c[0]+'\')" style="display:flex;align-items:center;gap:11px;border:1.5px solid '+(on?'var(--blue)':'var(--line)')+';background:'+(on?'#F4F8FF':'#fff')+';border-radius:13px;padding:12px 14px;margin-bottom:8px;cursor:pointer">'+
+          '<span style="width:22px;height:22px;border-radius:6px;border:2px solid '+(on?'var(--blue)':'#C7CDD6')+';background:'+(on?'var(--blue)':'#fff')+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;flex:0 0 auto">'+(on?'✓':'')+'</span>'+
+          '<span style="flex:1;min-width:0"><b style="font-size:14.5px">'+c[1]+'</b>'+
+            '<span style="font-size:12px;color:var(--sub);margin-left:6px">'+c[2]+'건</span>'+
+            '<div style="font-size:11.5px;color:var(--sub);margin-top:2px">'+c[3]+'</div></span>'+
+        '</div>';
+      }).join('')+
+      '<div style="background:#FFF7E8;border:1px solid #F0DCA8;border-radius:11px;padding:11px 13px;font-size:12px;color:#8A5A00;line-height:1.7;margin:6px 0 14px">'+
+        '※ <b>국기원 심사의 달</b>은 짝수달(2·4·6·8·10·12월)입니다 — 별도 행사로 등록되지 않습니다.<br>'+
+        '※ 공휴일(설날·추석 등)은 프로그램이 자동 표시하므로 넣지 않습니다.</div>'+
+      '<div style="display:flex;gap:8px">'+
+        '<button onclick="closeCal2026()" style="flex:0 0 auto;background:#fff;border:1px solid var(--line);color:var(--sub);border-radius:11px;padding:12px 18px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer">취소</button>'+
+        '<button onclick="runCal2026()" '+(tot?'':'disabled')+' style="flex:1;background:'+(tot?'var(--blue)':'#D6DAE1')+';color:#fff;border:none;border-radius:11px;padding:12px;font-family:inherit;font-size:14.5px;font-weight:800;cursor:'+(tot?'pointer':'not-allowed')+'">'+(tot? tot+'건 등록하기':'항목을 골라주세요')+'</button>'+
+      '</div>'+
+    '</div></div>';
+}
+window.openCal2026=function(){ state.cal2026={ 심사:true, 청소년성인:true, 휴관:true, 측정:true, 행사:false }; render(); };
+window.closeCal2026=function(){ state.cal2026=null; render(); };
+window.toggleCal2026=function(k){ if(!state.cal2026) return; state.cal2026[k]=!state.cal2026[k]; render(); };
+window.runCal2026=function(){
+  var sel=state.cal2026||{}; var w=workData();
+  if(!w.events) w.events={};
+  /* 이미 있는 (날짜|제목) 목록 — 중복 방지 */
+  var have={};
+  for(var k in w.events){ var e=w.events[k];
+    have[(e.date||"")+"|"+((e.title||"").replace(/\s+/g,""))]=1; }
+  var added=0, skipped=0, list=[], seq=0;
+  ["심사","청소년성인","휴관","측정","행사"].forEach(function(cat){
+    if(!sel[cat]) return;
+    var meta=CAL2026_META[cat];
+    CAL2026[cat].forEach(function(o){
+      var key=o.d+"|"+o.t.replace(/\s+/g,"");
+      if(have[key]){ skipped++; return; }
+      var id="e"+Date.now()+"_"+(seq++);   /* [수정] Date.now()+난수는 한 번에 수십 건 넣을 때 겹쳐 덮어쓰기 발생 → 일련번호로 고유 보장 */
+      w.events[id]={ id:id, title:o.t, type:meta.type, date:o.d, end:o.e||"",
+        time:meta.time||"", place:meta.place||"", target:meta.target||"", desc:"",
+        prep:[], cue:[], cautions:[], dayof:{checks:{},manual:[]}, review:{},
+        status:"준비중", dev:workDev(), _t:Date.now(),
+        allDay:!!meta.allDay, startTime:meta.st||"", endTime:meta.et||"" };
+      have[key]=1; added++; list.push(o.d+" "+o.t);
+    });
+  });
+  workPersist();
+  state.cal2026=null;
+  render();
+  alert("📅 2026 캘린더 등록 완료\n\n새로 등록: "+added+"건\n이미 있어 건너뜀: "+skipped+"건"+
+        (added? "\n\n"+list.slice(0,10).join("\n")+(list.length>10?"\n… 외 "+(list.length-10)+"건":"") : ""));
+};
+
 window.newEvent=function(){ var w=workData(); var id="e"+Date.now(); w.events[id]={ id:id, title:"", type:"", date:"", end:"", time:"", place:"", target:"", desc:"", prep:[], cue:[], cautions:[], dayof:{checks:{},manual:[]}, review:{}, status:"준비중", dev:workDev(), _t:Date.now() }; workPersist(); state.workTab="행사"; state.eventSel=id; state.eventTab="기본"; state.evScope="month"; state.evDay=null; state.evYear=Number(today().slice(0,4)); state.evMonth=Number(today().slice(5,7)); render(); };
 window.newEventOn=function(dateStr){ var w=workData(); var id="e"+Date.now(); w.events[id]={ id:id, title:"", type:"", date:dateStr||"", end:"", time:"", place:"", target:"", desc:"", prep:[], cue:[], cautions:[], dayof:{checks:{},manual:[]}, review:{}, status:"준비중", dev:workDev(), _t:Date.now() }; workPersist(); state.workTab="행사"; state.eventSel=id; state.eventTab="기본"; if(dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)){ state.evYear=Number(dateStr.slice(0,4)); state.evMonth=Number(dateStr.slice(5,7)); } state.evScope="month"; state.evDay=null; render(); };
 window.evToday=function(){ var t=today(); state.evYear=Number(t.slice(0,4)); state.evMonth=Number(t.slice(5,7)); state.evDay=Number(t.slice(8,10)); state.evScope="day"; render(); };
@@ -17347,7 +17693,9 @@ function renderWorkEvents(){
   var h='<div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
     '<b style="font-size:15px">🎪 행사 관리</b><span style="font-size:11.5px;color:var(--sub)">'+evs.length+'건</span>'+
     '<span style="flex:1"></span>'+
-    '<button onclick="newEvent()" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">+ 새 행사</button></div></div>';
+    '<button onclick="newEvent()" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">+ 새 행사</button>'+
+      (myRole()==="admin"?'<button onclick="openCal2026()" title="종이 캘린더의 2026 연간 일정을 한 번에 등록합니다 (중복은 건너뜀)" style="background:#fff;color:var(--blue);border:1.5px solid var(--blue);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;margin-left:6px">📅 2026 일정 등록</button>':'')+
+      '</div></div>'+_cal2026Modal();
 
   h+='<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">'+
      '<div style="flex:2 1 520px;min-width:340px;position:sticky;top:10px;align-self:flex-start">'+renderEventCalendar(byDate, years)+'</div>'+
