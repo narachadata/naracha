@@ -945,7 +945,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.40";   /* R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.41";   /* R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -17369,6 +17369,14 @@ function backupFileName(){ return "나라차백업_"+today()+".json"; }
 function lastBackupT(){ try{ return Number(localStorage.getItem("naracha_last_backup"))||0; }catch(e){ return 0; } }
 function markBackedUp(){ try{ localStorage.setItem("naracha_last_backup", String(Date.now())); }catch(e){} state.backupDue=false; }
 function backupAgeDays(){ var t=lastBackupT(); return t? (Date.now()-t)/86400000 : Infinity; }
+/* [R4.41] 이 기기에서 구글 드라이브 인증을 실제로 마친 적이 있는지.
+   이 앱은 구글 '테스트 중' 상태라, 승인 이력이 없으면 조용한 인증이 성립하지 않고
+   반드시 동의 화면(확인하지 않은 앱)이 뜬다 → 자동 시도는 승인 이력이 있을 때만. */
+function driveEverAuthed(){ try{ return localStorage.getItem("naracha_gdrive_ok")==="1"; }catch(e){ return false; } }
+function markDriveAuthed(){ try{ localStorage.setItem("naracha_gdrive_ok","1"); }catch(e){} }
+/* 조용한 자동 시도는 기기당 6시간에 한 번만 (새로고침할 때마다 다시 뜨는 것 방지) */
+function driveSilentCooldownOK(){ try{ return (Date.now()-Number(localStorage.getItem("naracha_gdrive_try")||0)) > 6*3600000; }catch(e){ return true; } }
+function markDriveSilentTry(){ try{ localStorage.setItem("naracha_gdrive_try", String(Date.now())); }catch(e){} }
 /* 토큰 요청 — silent=true면 동의창 없이 시도(이미 승인된 계정 + 로그인 세션이 있으면 성공) */
 function driveTokenRequest(silent, cb){
   var cid=gdriveClientId(); if(!cid){ cb(null); return; }
@@ -17523,12 +17531,14 @@ window.backupToDrive=function(silent){
     else { openDriveHelp(env); }
     return;
   }
+  if(silent) markDriveSilentTry();               /* [R4.41] 자동 시도 시각 기록 (6시간 쿨다운) */
   driveTokenRequest(!!silent, function(token){
     if(!token){
       if(silent){ state.backupDue=true; try{ render(); }catch(e){} }
       else { openDriveHelp(driveEnvCheck()); }   /* 실패해도 안내창으로 원인·해결 제시 */
       return;
     }
+    markDriveAuthed();                            /* [R4.41] 인증 성공 → 이 기기는 앞으로 조용한 자동 백업 허용 */
     driveUploadBackup(token, function(ok){
       if(ok){ markBackedUp(); toast("☁ 드라이브 백업 완료 (JSON+전체백업 HTML) — [나라차 자동백업] 폴더"); try{ render(); }catch(e){} }
       else if(!silent) alert("백업 업로드에 실패했습니다. 인터넷/권한을 확인해 주세요.");
@@ -17679,7 +17689,16 @@ function checkAutoBackup(){
   if(backupAgeDays() < BACKUP_INTERVAL_DAYS) return;
   if(state.__backupTried){ state.backupDue=true; return; }
   state.__backupTried=true;
-  if(gdriveClientId()) backupToDrive(true);             /* ① 온라인: 드라이브에 JSON+HTML 자동 백업 */
+  /* [R4.41] 구글 로그인 화면이 저절로 뜨던 문제 해결 —
+     ① 휴대폰(모바일 보기)에서는 자동 시도 안 함: 모바일 브라우저가 구글 팝업을 '새 탭'으로 열어
+        차량표를 보는 중에도 accounts.google.com 화면이 떠 버렸다.
+     ② 이 기기에서 드라이브 인증을 마친 적이 없으면 자동 시도 안 함(테스트 중 앱이라 항상 동의 화면).
+     ③ 자동 시도는 6시간에 한 번만 — 새로고침할 때마다 다시 뜨지 않게.
+     자동 시도를 건너뛴 경우엔 PC 상단 배너([☁ 지금 백업하기])로 안내만 한다. */
+  var _phone=(typeof isPhoneView==="function" && isPhoneView());
+  var _canAuto = gdriveClientId() && !_phone && driveEverAuthed() && driveSilentCooldownOK();
+  if(_canAuto) backupToDrive(true);                      /* ① 온라인: 드라이브에 JSON+HTML 자동 백업 */
+  else state.backupDue=true;                             /* 자동 대신 안내 배너 */
   if(isBackupPC()){ try{ writeLocalBackup(true); }catch(e){} }   /* ② 지정 PC: 로컬 폴더에 자동 백업 */
 }
 /* 시작 시: 지정 백업 PC면 저장해 둔 폴더 핸들을 미리 불러온다 */
