@@ -945,7 +945,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.41";   /* R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.42";   /* R4.42: 결석 예정 수정·삭제·복귀 시 시간표의 자동 결석 표시도 함께 복원(기간 단축분 출석 대기로) — 기록만 바뀌고 표시가 남던 문제 · R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -8270,6 +8270,44 @@ function absenceCopiedConflicts(name, from, to, open){
   }
   return out.filter(function(v,i,a){return a.indexOf(v)===i;}).sort();
 }
+/* [R4.42] 결석 예정을 수정·삭제·복귀 처리하면, 이미 배치된 주의 '자동 결석 표시'도 함께 되돌린다.
+   예전엔 기록만 바뀌고 시간표의 결석 표시는 그대로 남아 — 기간을 8/10→8/7로 줄여도
+   8/8~8/10이 계속 결석으로 보였다. 되돌리는 조건(전부 만족해야 함):
+   ① 오늘 이후 날짜만 (지난 기록은 보존)
+   ② 자동으로 찍힌 표시만 — 메모에 '결석예정'이 있는 것 (코치가 직접 찍은 결석은 보호)
+   ③ 그 날짜를 덮는 살아있는 결석 예정이 하나도 없을 때만 (absOf 재확인)
+   '출석' 체크는 절대 건드리지 않는다. 되돌리면 미정(배치만 된 상태)이 되어 출석 체크가 가능해진다. */
+function reconcileAbsencePlaced(name, hiHint){
+  var out=[];
+  try{
+    if(!name) return out;
+    var td=today(), cap=addDays(td,180);
+    var hi=(hiHint && /^\d{4}-\d{2}-\d{2}$/.test(hiHint)) ? hiHint : addDays(td,42);
+    if(hi>cap) hi=cap; if(hi<td) hi=td;
+    var w=mondayOf(td), endW=mondayOf(hi), guard=0;
+    while(w<=endW && guard<40){
+      var wd=state.weeks[w];
+      if(wd && wd.cells){
+        (function(wk, wdd){
+          var touched=false;
+          Object.keys(wdd.cells).forEach(function(key){
+            var c=wdd.cells[key]; if(!c || !c.marks) return;
+            var mk=c.marks[name]; if(!mk || mk.s!=="결석") return;
+            var d=dateOfKey(key, wk);
+            if(d<td || d>hi) return;
+            if(String(mk.m||"").indexOf("결석예정")===-1) return;
+            if(absOf(name, d)) return;
+            c.marks[name]={ k:(mk.k||"정규"), s:"", m:"", t:Date.now(), by:"" };
+            touched=true; out.push(d);
+          });
+          if(touched) wdd.t=Date.now();
+        })(w, wd);
+      }
+      w=addDays(w,7); guard++;
+    }
+  }catch(e){}
+  return out.filter(function(v,i,a){return a.indexOf(v)===i;}).sort();
+}
 /* 이미 배치(복사)된 주에 결석을 일괄 적용 — '출석'으로 이미 찍힌 칸은 절대 건드리지 않음 */
 function applyAbsenceToPlaced(name, from, to, open, reason){
   var res={ done:[], skipAtt:[] };
@@ -8939,7 +8977,13 @@ window.delAbsHid=function(name, hid){
   if(!confirm(name+" 님의 이 결석 예정을 삭제할까요?")) return;
   var e=((state.absences||{})[name]||[]).filter(function(x){return x.hid===hid;})[0];
   if(e && e.src==="chip"){ _clearChipMarkOn(name, e.from); e.del=true; e.t=Date.now(); }   /* 시간표 미리결석: 칩 표시도 함께 해제 */
-  else { removeHoldEntry(name, hid); }
+  else {
+    var _hi=e ? (e.open ? addDays(today(),180) : (e.to||e.from)) : "";
+    removeHoldEntry(name, hid);
+    /* [R4.42] 삭제하면 그 기간의 자동 결석 표시도 복원 (다른 결석 예정이 덮는 날은 유지) */
+    var _rest=reconcileAbsencePlaced(name, _hi);
+    if(_rest.length && typeof toast==="function") toast("↩️ "+name+" · 결석 표시 "+_rest.length+"일을 출석 대기로 되돌렸습니다");
+  }
   persistAtt(); persist(); render();
 };
 window.saveAbs=function(){
@@ -8951,8 +8995,13 @@ window.saveAbs=function(){
   if(hasTo && m.to<m.from){ alert("종료일이 시작일보다 빠릅니다."); return; }
   var open=!hasTo, to=hasTo?m.to:"";
   if(m.editHid){
+    /* [R4.42] 수정 전 기간을 기억 — 기간을 줄이면 빠진 날짜의 자동 결석 표시를 복원해야 한다 */
+    var _oldE=((state.absences||{})[nm]||[]).filter(function(x){return x.hid===m.editHid;})[0];
+    var _oldHi=_oldE ? (_oldE.open ? addDays(today(),180) : (_oldE.to||_oldE.from)) : "";
     updateHold(nm, m.editHid, m.from, to, open, m.reason);
-    state.absDone="'"+nm+"' 결석 예정을 수정했습니다.";
+    var _rest=reconcileAbsencePlaced(nm, _oldHi);
+    state.absDone="'"+nm+"' 결석 예정을 수정했습니다."
+      +(_rest.length?" 기간에서 빠진 "+_rest.length+"일("+_rest.slice(0,5).join(", ")+(_rest.length>5?" 외":"")+")의 결석 표시를 되돌렸습니다.":"");
   } else {
     var ov=overlapHolds(nm, m.from, to, open, null);
     if(ov.length){
@@ -8986,12 +9035,16 @@ window.endAbsence=function(name){
   if(!best){ alert(name+" 님은 현재 결석 예정 상태가 아닙니다."); return; }
   if(!confirm(name+" 님을 오늘("+td+")부터 다시 수련 시작으로 처리할까요?\n\n· 어제까지만 휴식으로 남고, 오늘부터 출석 체크가 가능해집니다.")) return;
   var y=addDays(td,-1);   /* 어제 */
+  var _oldHi=best.open ? addDays(td,180) : (best.to||best.from);   /* [R4.42] 복귀 전 기간 기억 */
   if(best.from>y){ best.del=true; _unextendLong(name, best.from); }   /* 오늘 시작·미래 → 홀딩 취소 */
   else { best.to=y; best.open=false;
          if(best.ext){ if(best.extDays==null||best.extDays>_holdDays(best.from,best.to)) best.extDays=_holdDays(best.from,best.to);
                        _extendLong(name, best.from, best.extDays); } }  /* 승인 건: 실제 쉰 일수 초과분 자동 회수 */
   best.t=Date.now();
   recomputeHoldMap(name);
+  /* [R4.42] 오늘부터 복귀 → 오늘 이후의 자동 결석 표시 복원 */
+  var _rest=reconcileAbsencePlaced(name, _oldHi);
+  if(_rest.length && typeof toast==="function") toast("↩️ "+name+" · 오늘부터 복귀 — 결석 표시 "+_rest.length+"일을 출석 대기로 되돌렸습니다");
   persistAtt(); persist(); render();
 };
 window.delAbs=function(name, from, to){   /* 하위호환 (from·to 매칭) */
