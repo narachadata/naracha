@@ -889,7 +889,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.35";   /* R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.36";   /* R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -14713,6 +14713,7 @@ function renderBusTab(mobile){
             }).join(', ')+'</div>':'')+
         '</div>';
       }
+      if(state.busPanelFold===undefined) state.busPanelFold=true;   /* [R4.36] 기본은 접힘 — 처음 들어올 때 화면이 복잡해 보이던 문제 */
       if(state.busPanelFold){
         /* 접힌 상태: 오른쪽 가장자리에 작은 탭만 (스크롤해도 고정) */
         h+='<button onclick="state.busPanelFold=false;render()" title="당일 시간표 패널 펴기" '+
@@ -14736,22 +14737,23 @@ function renderBusTab(mobile){
     }catch(e){}
   }
 
-  /* 편집 모드 안내 */
-  if(edit) h+='<div class="card" style="padding:'+(mob?'10px 12px':'10px 14px')+';background:#EEF4FF;border-color:#C9DBF5">'+
-    '<div style="font-size:12px;color:#2B5FB8;font-weight:700;line-height:1.7">✏️ 수정 중입니다 — 입력한 내용은 자동으로 저장됩니다.<br>'+
-    '<span style="font-weight:600;color:var(--sub)">다 마치면 위 <b>[💾 저장하고 보기]</b>를 눌러 표로 확인하세요.</span></div></div>';
-  /* 표기 안내 (편집 모드에서만) */
-  if(edit) h+='<div class="card" style="padding:'+(mob?'10px 12px':'11px 14px')+';background:#FAF9F6">'+
-    '<div style="font-size:11.5px;color:var(--sub);line-height:1.75">'+
-      '<b style="color:var(--ink)">표기 규칙</b> — '+
-      '<b>(이름)</b> 보강 · <b>/이름/</b> 미탑승 · <b>이름(등)</b> 등원만 · <b>이름(하)</b> 하원만'+
-      '<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)">'+
-        '<b style="color:var(--ink)">탑승 여부는 여기서 직접 정할 수 있습니다.</b> 시간표 출석은 <b>참고용</b>입니다.<br>'+
+  /* [R4.36] 수정 모드 안내 — 두 카드를 한 줄 + 접이식으로 통합 (화면이 복잡해 보이던 문제) */
+  if(edit){
+    var _hOpen=(state.busHelp===true);
+    h+='<div class="card" style="padding:'+(mob?'9px 12px':'9px 14px')+';background:#EEF4FF;border-color:#C9DBF5">'+
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+        '<span style="font-size:12.5px;color:#2B5FB8;font-weight:800">✏️ 수정 중 — 자동 저장됩니다</span>'+
+        '<span style="flex:1"></span>'+
+        '<button onclick="state.busHelp=!'+(_hOpen?'true':'false')+';render()" style="background:none;border:none;color:#2B5FB8;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:underline">'+(_hOpen?'표기 규칙 접기':'표기 규칙 보기')+'</button>'+
+      '</div>'+
+      (_hOpen?'<div style="font-size:11.5px;color:var(--sub);line-height:1.8;margin-top:8px;padding-top:8px;border-top:1px dashed #C9DBF5">'+
+        '<b style="color:var(--ink)">(이름)</b> 보강 · <b style="color:var(--ink)">/이름/</b> 미탑승 · <b style="color:var(--ink)">이름(등)</b> 등원만 · <b style="color:var(--ink)">이름(하)</b> 하원만<br>'+
         '<span style="background:#F1F5F9;color:#64748B;border-radius:5px;padding:1px 5px;font-weight:700;font-size:10.5px">자동</span> 시간표 따라감 · '+
         '<span style="background:#FEF3E2;color:#B45309;border-radius:5px;padding:1px 5px;font-weight:800;font-size:10.5px">📅 이번주</span> 이번 주만 · '+
         '<span style="background:#EDE9FE;color:#6D28D9;border-radius:5px;padding:1px 5px;font-weight:800;font-size:10.5px">📌 계속</span> 매주 유지'+
-      '</div>'+
-    '</div></div>';
+      '</div>':'')+
+    '</div>';
+  }
 
   /* [R3.33] 시간표 대조 경고 요약 */
   if(courses.length){
@@ -14818,13 +14820,11 @@ function renderBusTab(mobile){
         var col=mk==='미탑승'?'#B91C1C':mk==='보강'?'#B45309':mk?'#1E7B3C':'var(--ink)';
         /* 지정 출처 배지: 계속(고정) · 이번주만 · 자동(시간표) */
         var badge = src==='fix'
-          ? '<span title="계속 적용 — 매주 유지됩니다" style="flex:0 0 auto;background:#EDE9FE;color:#6D28D9;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:800">📌 계속</span>'
-          : src==='ovr'
-          ? '<span title="이번 주만 적용 — 다음 주엔 시간표 기준으로 돌아갑니다" style="flex:0 0 auto;background:#FEF3E2;color:#B45309;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:800">📅 이번주</span>'
-          : (mk==='등'||mk==='하')
-          ? ''
-          : '<span title="시간표 출석을 따라갑니다 (참고용)" style="flex:0 0 auto;background:#F1F5F9;color:#64748B;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700">자동</span>';
-        /* 선택값: 고정/이번주 지정이 있으면 그 값, 없으면 auto */
+            ? '<span title="계속 적용 — 매주 유지됩니다" style="flex:0 0 auto;background:#EDE9FE;color:#6D28D9;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:800;white-space:nowrap">📌</span>'
+            : src==='ovr'
+              ? '<span title="이번 주만 적용 — 다음 주엔 시간표 기준으로 돌아갑니다" style="flex:0 0 auto;background:#FEF3E2;color:#B45309;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:800;white-space:nowrap">📅</span>'
+              : '';   /* [R4.36] '자동'은 기본 상태라 배지를 숨김 — 화면 밀도를 낮춘다 */
+          /* 선택값: 고정/이번주 지정이 있으면 그 값, 없으면 auto */
         var selVal = (src==='auto') ? ((mk==='등'||mk==='하')?mk:'auto')
                    : ((src==='fix'?r.fix:r.ovr)||'auto');
         var wn=busRiderWarn(r, day);
@@ -14900,6 +14900,7 @@ window.addCarLog=function(){
   /* 운행 기록 = 계기판 총 주행거리 + 메모 (주유는 별도) */
   var oldMemo=(w.car[date]&&w.car[date].memo)||'';
   w.car[date]={ date:date, odo:odo, memo:(state.car_memo||oldMemo||''), dev:workDev(), _t:Date.now() };
+  state.car_editDate=null;   /* [R4.36] 수정 모드 해제 */
   state.car_odo=''; state.car_memo=''; state.car_date='';
   workPersist(); render();
 };
@@ -14938,6 +14939,7 @@ window.delFuelLog=function(id){ var w=workData(); if(!w.carFuel[id]) return; if(
 /* [R4.20] 운행 기록 수정 — 날짜 키 덮어쓰기 방식이므로 폼에 불러와 다시 저장하면 갱신됨 */
 window.editCarLog=function(date){
   var w=workData(), r=w.car&&w.car[date]; if(!r) return;
+  state.car_editDate=date;   /* [R4.36] 수정 중 표시용 */
   state.car_date=r.date; state.car_odo=String(r.odo||''); state.car_memo=r.memo||'';
   render();
   setTimeout(function(){ var el=document.getElementById('carOdoIn'); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.focus(); } },80);
@@ -14949,6 +14951,7 @@ window.editFuelLog=function(id){
   render();
   setTimeout(function(){ var el=document.getElementById('fuelLIn'); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); } },80);
 };
+window.cancelCarEdit=function(){ state.car_editDate=null; state.car_odo=''; state.car_memo=''; state.car_date=''; render(); };
 window.cancelFuelEdit=function(){ state.fuel_editId=null; state.fuel_L=''; state.fuel_won=''; state.fuel_price=''; state.fuel_odo=''; state.fuel_memo=''; state.fuel_date=''; render(); };
 /* [R4.20] 주차 시작(월요일) 날짜 */
 function _weekMon(dstr){ var d=new Date(dstr+'T12:00:00'); var wd=(d.getDay()+6)%7; d.setDate(d.getDate()-wd); return d.toISOString().slice(0,10); }
@@ -15047,13 +15050,18 @@ function renderCarLog(){
       '<div style="flex:1 1 120px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 12px;text-align:center"><div style="font-size:19px;font-weight:900;color:#B45309">'+monWon.toLocaleString()+'<span style="font-size:12px">원</span></div><div style="font-size:11px;color:var(--sub)">이번 달 주유비</div></div>'+
     '</div>'+
     /* 입력 ① 운행(주행거리) */
-    '<div style="background:#F1F5FC;border:1px solid #D6E2F2;border-radius:12px;padding:10px 12px">'+
-      '<div style="font-size:12px;font-weight:800;color:#2B5FB8;margin-bottom:7px">🚗 오늘 주행거리 (계기판)</div>'+
+    '<div style="background:'+(state.car_editDate?'#FFFAF2':'#F1F5FC')+';border:1px solid '+(state.car_editDate?'#EBCF9E':'#D6E2F2')+';border-radius:12px;padding:10px 12px">'+
+      '<div style="font-size:12px;font-weight:800;color:'+(state.car_editDate?'#B45309':'#2B5FB8')+';margin-bottom:7px;display:flex;align-items:center;gap:6px">'+
+        (state.car_editDate
+          ? '<span>✏️ '+state.car_editDate.slice(5).replace("-","/")+' 기록 수정 중</span>'+
+            '<button onclick="cancelCarEdit()" style="margin-left:auto;background:none;border:none;color:var(--sub);font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:underline">취소</button>'
+          : '<span>🚗 오늘 주행거리 (계기판)</span>')+
+      '</div>'+
       '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'+
         '<input class="input" type="date" style="flex:0 0 150px;height:38px;font-size:12.5px" value="'+esc(d0)+'" onchange="setCarField(\'date\',this.value)">'+
         '<input class="input" id="carOdoIn" inputmode="numeric" placeholder="계기판 총 주행거리 (km) *" style="flex:1.4 1 170px;height:38px;font-size:12.5px" value="'+esc(state.car_odo||'')+'" oninput="setCarField(\'odo\',this.value)">'+
         '<input class="input" placeholder="메모 (정비·특이사항)" style="flex:2 1 150px;height:38px;font-size:12.5px" value="'+esc(state.car_memo||'')+'" oninput="setCarField(\'memo\',this.value)">'+
-        '<button onclick="addCarLog()" style="height:38px;padding:0 16px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">주행 저장</button>'+
+        '<button onclick="addCarLog()" style="height:38px;padding:0 16px;background:'+(state.car_editDate?'#B45309':'var(--blue)')+';color:#fff;border:none;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">'+(state.car_editDate?'수정 저장':'주행 저장')+'</button>'+
       '</div>'+
       '<div style="font-size:10.5px;color:var(--sub);margin-top:6px">* 계기판의 <b>누적 숫자</b>를 그대로 입력하세요. 같은 날 다시 저장하면 갱신됩니다. <b>당일 운행거리는 직전 기록과의 차이</b>로 자동 계산됩니다.</div>'+
     '</div>'+
@@ -15068,9 +15076,8 @@ function renderCarLog(){
         '<input class="input" inputmode="numeric" placeholder="계기판 km (선택)" style="flex:1 1 130px;height:38px;font-size:12.5px" value="'+esc(state.fuel_odo||'')+'" oninput="setFuelField(\'odo\',this.value)">'+
         '<input class="input" placeholder="메모 (주유소 등)" style="flex:1.5 1 130px;height:38px;font-size:12.5px" value="'+esc(state.fuel_memo||'')+'" oninput="setFuelField(\'memo\',this.value)">'+
         '<button onclick="addFuelLog()" style="height:38px;padding:0 16px;background:'+(state.fuel_editId?'#B45309':'#1E7B3C')+';color:#fff;border:none;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">'+(state.fuel_editId?'✏️ 수정 저장':'주유 저장')+'</button>'+
-        (state.fuel_editId?'<button onclick="cancelFuelEdit()" style="height:38px;padding:0 12px;background:#fff;color:var(--sub);border:1px solid var(--line);border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">취소</button>':'')+
       '</div>'+
-      (state.fuel_editId?'<div style="font-size:10.5px;color:#B45309;margin-top:6px;font-weight:700">✏️ 기존 주유 기록을 수정하는 중입니다 — 저장하면 원래 기록이 갱신됩니다.</div>':'')+
+      
     '</div>';
   /* ═══ [R4.20] 운행 기록 — 월별 누계 → 주별 그룹 (이전 달은 접힘, 눌러서 열람) ═══ */
   h+='<div style="font-size:12px;font-weight:800;color:#2B5FB8;margin:14px 0 6px">🚗 운행 기록 (주행거리) <span style="font-size:10.5px;color:var(--sub);font-weight:600">— 월을 누르면 펼쳐집니다 · ✏️로 수정</span></div>';
@@ -22857,8 +22864,13 @@ function phoneCarBody(){
     '<div style="font-size:12px;color:var(--sub);margin-bottom:12px">'+esc(ci.name||"도장 차량")+(ci.plate?' · '+esc(ci.plate):'')+' · 업무 종료 시 계기판 주행거리를 기록하세요.</div>'+
     '<div style="display:flex;gap:7px;margin-bottom:13px">'+card(monKm.toLocaleString(),"km","이번 달 운행","var(--blue)")+card(monFuel.toLocaleString(),"L","주유량","#1E7B3C")+card(monWon.toLocaleString(),"원","주유비","#B45309")+'</div>';
   /* 입력 ① 운행(주행거리) */
-  h+='<div style="background:#fff;border:1px solid #D6E2F2;border-radius:15px;padding:14px;margin-bottom:11px">'+
-    '<div style="font-size:13.5px;font-weight:900;margin-bottom:10px;color:#2B5FB8">🚗 오늘 주행거리 (계기판)</div>'+
+  h+='<div style="background:#fff;border:1px solid '+(state.car_editDate?'#EBCF9E':'#D6E2F2')+';border-radius:15px;padding:14px;margin-bottom:11px">'+
+    '<div style="font-size:13.5px;font-weight:900;margin-bottom:10px;color:'+(state.car_editDate?'#B45309':'#2B5FB8')+';display:flex;align-items:center;gap:6px">'+
+      (state.car_editDate
+        ? '<span>✏️ '+state.car_editDate.slice(5).replace("-","/")+' 기록 수정 중</span>'+
+          '<button onclick="cancelCarEdit()" style="margin-left:auto;background:none;border:none;color:var(--sub);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:underline">취소</button>'
+        : '<span>🚗 오늘 주행거리 (계기판)</span>')+
+    '</div>'+
     '<div style="display:flex;gap:8px;margin-bottom:9px">'+
       '<div style="flex:1"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">날짜</div>'+
         '<input type="date" class="input" value="'+esc(d0)+'" onchange="setCarField(\'date\',this.value)" style="width:100%;height:44px;font-size:14px"></div>'+
@@ -22867,13 +22879,17 @@ function phoneCarBody(){
     '</div>'+
     '<div style="margin-bottom:11px"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">메모</div>'+
       '<input class="input" placeholder="예: 엔진오일 교체, 시합 인솔 등" value="'+esc(state.car_memo||"")+'" oninput="setCarField(\'memo\',this.value)" style="width:100%;height:44px;font-size:14px"></div>'+
-    '<button onclick="addCarLog()" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:11px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit">＋ 주행 기록 추가</button>'+
+    '<button onclick="addCarLog()" style="width:100%;background:'+(state.car_editDate?'#B45309':'var(--blue)')+';color:#fff;border:none;border-radius:11px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit">'+(state.car_editDate?'✏️ 수정 저장':'＋ 주행 기록 추가')+'</button>'+
     (latest?'<div style="font-size:11px;color:var(--sub);text-align:center;margin-top:8px">최근 기록 '+esc(latest.date.slice(5))+' · <b style="color:var(--ink)">'+latest.odo.toLocaleString()+'km</b> · 당일 운행은 직전 기록과의 차이로 자동 계산</div>':'')+
   '</div>'+
   /* 입력 ② 주유 (별도) */
   '<div style="background:#fff;border:1px solid '+(state.fuel_editId?'#E8C48A':'#CFE8D6')+';border-radius:15px;padding:14px;margin-bottom:14px">'+
-    '<div style="font-size:13.5px;font-weight:900;margin-bottom:3px;color:'+(state.fuel_editId?'#B45309':'#1E7B3C')+'">⛽ '+(state.fuel_editId?'주유 기록 수정 중':'주유 기록 (따로)')+'</div>'+
-    '<div style="font-size:11px;color:var(--sub);margin-bottom:10px">'+(state.fuel_editId?'저장하면 원래 기록이 갱신됩니다':'주유비와 단가를 넣으면 주유량이 자동 계산됩니다')+'</div>'+
+    '<div style="font-size:13.5px;font-weight:900;margin-bottom:10px;color:'+(state.fuel_editId?'#B45309':'#1E7B3C')+';display:flex;align-items:center;gap:6px">'+
+      (state.fuel_editId
+        ? '<span>✏️ '+(state.fuel_date||'').slice(5).replace("-","/")+' 주유 기록 수정 중</span>'+
+          '<button onclick="cancelFuelEdit()" style="margin-left:auto;background:none;border:none;color:var(--sub);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:underline">취소</button>'
+        : '<span>⛽ 주유 기록</span><span style="font-size:11px;color:var(--sub);font-weight:600">— 주유비·단가 넣으면 주유량 자동</span>')+
+    '</div>'+
     '<div style="display:flex;gap:8px;margin-bottom:9px">'+
       '<div style="flex:1"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">날짜</div>'+
         '<input type="date" class="input" value="'+esc(state.fuel_date||today())+'" onchange="setFuelField(\'date\',this.value)" style="width:100%;height:44px;font-size:14px"></div>'+
@@ -22889,7 +22905,6 @@ function phoneCarBody(){
     '<div style="margin-bottom:11px"><div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:3px">메모 (선택)</div>'+
       '<input class="input" placeholder="예: 주유소·계기판 km 등" value="'+esc(state.fuel_memo||"")+'" oninput="setFuelField(\'memo\',this.value)" style="width:100%;height:44px;font-size:14px"></div>'+
     '<button onclick="addFuelLog()" style="width:100%;background:'+(state.fuel_editId?'#B45309':'#1E7B3C')+';color:#fff;border:none;border-radius:11px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit">'+(state.fuel_editId?'✏️ 수정 저장':'＋ 주유 기록 추가')+'</button>'+
-    (state.fuel_editId?'<button onclick="cancelFuelEdit()" style="width:100%;margin-top:8px;background:#fff;color:var(--sub);border:1px solid var(--line);border-radius:11px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">수정 취소</button>':'')+
   '</div>';
   /* ═══ [R4.27] 운행 기록 — 월별 누계 → 주별 그룹 (이전 달은 접힘) ═══ */
   h+='<div style="display:flex;align-items:center;gap:6px;margin:4px 0 8px">'+
