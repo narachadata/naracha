@@ -945,7 +945,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.44";   /* R4.44: 시간표 말풍선(결석예정 등) 폭 확대 — 날짜가 중간에서 줄바꿈되던 표시 개선 · R4.43: 결석관리 정합화 — 접속 시 기록과 어긋난 자동 결석 표시·옛 메모 잔재 전체 자동 청소 + 결석 등록/수정 시 확인창 없이 자동 반영(한 줄 안내) + 저장 직후 '겹칩니다' 오경고 제거 · R4.42: 결석 예정 수정·삭제·복귀 시 시간표의 자동 결석 표시도 함께 복원(기간 단축분 출석 대기로) — 기록만 바뀌고 표시가 남던 문제 · R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.45";   /* R4.44~45: 시간표 표시 3건 — 요일 머리 위로 스크롤 글씨 비침 제거(보드 위 여백 padding→border) · 말풍선이 옆 요일에 가려지던 문제(기둥 opacity 쌓임 문맥 제거) · 말풍선 폭 확대(날짜 줄바꿈 개선) · R4.43: 결석관리 정합화 — 접속 시 기록과 어긋난 자동 결석 표시·옛 메모 잔재 전체 자동 청소 + 결석 등록/수정 시 확인창 없이 자동 반영(한 줄 안내) + 저장 직후 '겹칩니다' 오경고 제거 · R4.42: 결석 예정 수정·삭제·복귀 시 시간표의 자동 결석 표시도 함께 복원(기간 단축분 출석 대기로) — 기록만 바뀌고 표시가 남던 문제 · R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -8538,10 +8538,13 @@ function renderWeekTab(){
    '</div>'+
    '</div>';
   var days = state.dayView ? W_DAYS.filter(function(d){return d[0]===state.dayView;}) : W_DAYS;
-  /* [R4.35] 보드 바탕을 진하게 — 위 메뉴 영역과 시각적으로 분리 */
+  /* [R4.35] 보드 바탕을 진하게 — 위 메뉴 영역과 시각적으로 분리
+     [R4.44] 위쪽 여백을 padding → border(스크롤 영역 밖)로 변경:
+     padding이면 스크롤된 내용이 요일 머리 위 띠에 비쳐 보였다(배경으로 글씨 어른거림).
+     border는 스크롤 창 밖이라 내용이 그 경계에서 잘려 깔끔하게 사라진다. */
   x+='<div id="weekScroll" style="display:flex;gap:9px;align-items:flex-start;overflow:auto;max-height:calc(100vh - 24px);'+
-     'background:linear-gradient(180deg,#DCD8CE 0%,#E4E0D6 100%);border:1px solid #C6C0B2;border-radius:14px;'+
-     'padding:12px;box-shadow:inset 0 3px 9px rgba(60,50,35,.14)">';
+     'background:linear-gradient(180deg,#DCD8CE 0%,#E4E0D6 100%);border:1px solid #C6C0B2;border-top:13px solid #DCD8CE;border-radius:14px;'+
+     'padding:0 12px 12px;box-shadow:inset 0 3px 9px rgba(60,50,35,.14)">';
   if(!state.dayView){
     var fbtn='position:fixed;top:50%;transform:translateY(-50%);z-index:600;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.92);box-shadow:0 2px 10px rgba(0,0,0,.15);font-size:17px;color:var(--blue);cursor:pointer;display:none;font-family:inherit';
     x+='<button id="wkL" style="'+fbtn+';left:6px" onclick="scrollWeekBoard(-1)" title="이전 요일">◀</button>'+
@@ -8552,7 +8555,7 @@ function renderWeekTab(){
     var wmemo=(weekData().memo||{})[day]||"";
     var isOff=!!((weekData().off||{})[day]);
     var _isTd=(date===today());   /* [R4.35] 오늘 강조 */
-    x+='<div class="dayCol dayCol-'+day+(_isTd?' dayCol-today':'')+'" style="'+(state.dayView?'flex:0 1 800px;max-width:800px;margin:0 auto;min-width:320px':(state.fitW?'flex:1;min-width:0':'flex:1;min-width:280px'))+';background:'+(isOff?'#FFF0F0':'var(--card)')+';border:'+(isOff?'2px solid var(--red)':(_isTd?'2.5px solid #2B5FB8':'1px solid var(--line)'))+';border-radius:10px;display:flex;flex-direction:column'+(_isTd?';box-shadow:0 6px 18px rgba(43,95,184,.22);position:relative;z-index:2':';opacity:.97')+'">'+
+    x+='<div class="dayCol dayCol-'+day+(_isTd?' dayCol-today':'')+'" style="'+(state.dayView?'flex:0 1 800px;max-width:800px;margin:0 auto;min-width:320px':(state.fitW?'flex:1;min-width:0':'flex:1;min-width:280px'))+';background:'+(isOff?'#FFF0F0':'var(--card)')+';border:'+(isOff?'2px solid var(--red)':(_isTd?'2.5px solid #2B5FB8':'1px solid var(--line)'))+';border-radius:10px;display:flex;flex-direction:column'+(_isTd?';box-shadow:0 6px 18px rgba(43,95,184,.22);position:relative;z-index:2':'')+'">'+   /* [R4.44] opacity:.97 제거 — 요일 기둥마다 쌓임 문맥이 생겨 말풍선이 옆 요일에 가려지던 원인 */
        (function(){ var isToday=(date===today());
          /* [R4.35] 오늘 요일 머리 — 파란 바탕 + 흰 글씨로 한눈에 */
       return '<div style="position:sticky;top:0;z-index:6;border-radius:8px 8px 0 0;padding:8px 10px;border-bottom:2px solid '+(isOff?'var(--red)':(isToday?'#1E3F7D':'var(--red)'))+';font-weight:900;font-size:15px;display:flex;justify-content:space-between;align-items:center;background:'+(isOff?'var(--red)':(isToday?'linear-gradient(135deg,#2B5FB8,#1E3F7D)':'#fff'))+((isOff||isToday)?';color:#fff':'')+'"><span>'+dayNm+
