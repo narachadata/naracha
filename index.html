@@ -889,7 +889,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.34";   /* R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.35";   /* R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -8368,7 +8368,10 @@ function renderWeekTab(){
    '</div>'+
    '</div>';
   var days = state.dayView ? W_DAYS.filter(function(d){return d[0]===state.dayView;}) : W_DAYS;
-  x+='<div id="weekScroll" style="display:flex;gap:8px;align-items:flex-start;overflow:auto;max-height:calc(100vh - 24px);padding-bottom:8px">';
+  /* [R4.35] 보드 바탕을 진하게 — 위 메뉴 영역과 시각적으로 분리 */
+  x+='<div id="weekScroll" style="display:flex;gap:9px;align-items:flex-start;overflow:auto;max-height:calc(100vh - 24px);'+
+     'background:linear-gradient(180deg,#DCD8CE 0%,#E4E0D6 100%);border:1px solid #C6C0B2;border-radius:14px;'+
+     'padding:12px;box-shadow:inset 0 3px 9px rgba(60,50,35,.14)">';
   if(!state.dayView){
     var fbtn='position:fixed;top:50%;transform:translateY(-50%);z-index:600;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.92);box-shadow:0 2px 10px rgba(0,0,0,.15);font-size:17px;color:var(--blue);cursor:pointer;display:none;font-family:inherit';
     x+='<button id="wkL" style="'+fbtn+';left:6px" onclick="scrollWeekBoard(-1)" title="이전 요일">◀</button>'+
@@ -8378,12 +8381,14 @@ function renderWeekTab(){
     var day=D[0], dayNm=D[1], date=addDays(wk,D[2]);
     var wmemo=(weekData().memo||{})[day]||"";
     var isOff=!!((weekData().off||{})[day]);
-    x+='<div class="dayCol dayCol-'+day+'" style="'+(state.dayView?'flex:0 1 800px;max-width:800px;margin:0 auto;min-width:320px':(state.fitW?'flex:1;min-width:0':'flex:1;min-width:280px'))+';background:'+(isOff?'#FFF0F0':'var(--card)')+';border:'+(isOff?'2px solid var(--red)':'1px solid var(--line)')+';border-radius:10px;display:flex;flex-direction:column">'+
+    var _isTd=(date===today());   /* [R4.35] 오늘 강조 */
+    x+='<div class="dayCol dayCol-'+day+(_isTd?' dayCol-today':'')+'" style="'+(state.dayView?'flex:0 1 800px;max-width:800px;margin:0 auto;min-width:320px':(state.fitW?'flex:1;min-width:0':'flex:1;min-width:280px'))+';background:'+(isOff?'#FFF0F0':'var(--card)')+';border:'+(isOff?'2px solid var(--red)':(_isTd?'2.5px solid #2B5FB8':'1px solid var(--line)'))+';border-radius:10px;display:flex;flex-direction:column'+(_isTd?';box-shadow:0 6px 18px rgba(43,95,184,.22);position:relative;z-index:2':';opacity:.97')+'">'+
        (function(){ var isToday=(date===today());
-         return '<div style="position:sticky;top:0;z-index:6;border-radius:12px 12px 0 0;padding:7px 10px;border-bottom:2px solid var(--red);font-weight:900;font-size:15px;display:flex;justify-content:space-between;align-items:center;background:'+(isOff?'var(--red)':(isToday?'var(--redSoft)':'#fff'))+(isOff?';color:#fff':'')+'"><span>'+dayNm+
-           (isOff?' <span style="font-size:10px;background:#fff;color:var(--red);border-radius:10px;padding:1px 6px;vertical-align:1px;font-weight:900">휴관</span>':(isToday?' <span style="font-size:10px;background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;vertical-align:1px">오늘</span>':''))+
-           '</span><span style="display:inline-flex;gap:6px;align-items:center"><span style="'+(isOff?'color:#fff':'color:var(--sub)')+';font-weight:900;font-size:15px">'+date.slice(5)+'</span>'+
-           '<button onclick="toggleDayOff(\''+day+'\')" style="font-size:10px;border:1px solid '+(isOff?'#fff':'var(--line)')+';border-radius:10px;background:'+(isOff?'transparent':'#fff')+';color:'+(isOff?'#fff':'var(--red)')+';cursor:pointer;padding:2px 7px;font-weight:800;font-family:inherit">'+(isOff?'휴관 해제':'휴관')+'</button></span></div>'; })()+
+         /* [R4.35] 오늘 요일 머리 — 파란 바탕 + 흰 글씨로 한눈에 */
+      return '<div style="position:sticky;top:0;z-index:6;border-radius:8px 8px 0 0;padding:8px 10px;border-bottom:2px solid '+(isOff?'var(--red)':(isToday?'#1E3F7D':'var(--red)'))+';font-weight:900;font-size:15px;display:flex;justify-content:space-between;align-items:center;background:'+(isOff?'var(--red)':(isToday?'linear-gradient(135deg,#2B5FB8,#1E3F7D)':'#fff'))+((isOff||isToday)?';color:#fff':'')+'"><span>'+dayNm+
+           (isOff?' <span style="font-size:10px;background:#fff;color:var(--red);border-radius:10px;padding:1px 6px;vertical-align:1px;font-weight:900">휴관</span>':(isToday?' <span style="font-size:10.5px;background:#fff;color:#1E3F7D;border-radius:10px;padding:1px 7px;vertical-align:1px;font-weight:900">오늘</span>':''))+
+           '</span><span style="display:inline-flex;gap:6px;align-items:center"><span style="'+((isOff||isToday)?'color:#fff':'color:var(--sub)')+';font-weight:900;font-size:15px">'+date.slice(5)+'</span>'+
+           '<button onclick="toggleDayOff(\''+day+'\')" style="font-size:10px;border:1px solid '+((isOff||isToday)?'rgba(255,255,255,.7)':'var(--line)')+';border-radius:10px;background:'+((isOff||isToday)?'transparent':'#fff')+';color:'+((isOff||isToday)?'#fff':'var(--red)')+';cursor:pointer;padding:2px 7px;font-weight:800;font-family:inherit">'+(isOff?'휴관 해제':'휴관')+'</button></span></div>'; })()+
        '<textarea class="input dayMemo" rows="2" style="border:none;border-bottom:1px dashed var(--line);border-radius:0;font-size:11.5px;padding:5px 10px;background:#FFFDF2;resize:none;overflow:hidden;line-height:1.5;display:block;width:100%;box-sizing:border-box;font-family:inherit" placeholder="📝 특이사항 메모" oninput="memoInput(\''+day+'\',this)" onchange="touchWeek()">'+esc(wmemo)+'</textarea>';
     slotHours(day).forEach(function(hh){
       if(hh===13 && day!=="sat" && state.schedule && state.schedule.hide13) return;  /* 13시 접기 (토요일 제외) */
