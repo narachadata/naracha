@@ -267,12 +267,17 @@ details[open] summary::before{content:"－ "}
 }
 .talk .t{font-size:11px;font-weight:800;letter-spacing:.12em;color:#A08A5F;margin-bottom:7px}
 .talk .c{font-size:13.5px;line-height:1.85;color:var(--ink2);white-space:pre-wrap}
-.storynav{display:flex;flex-wrap:wrap;gap:5px;margin-top:14px}
-.storynav b{
-  background:#fff;border:1px solid var(--line);border-radius:99px;padding:5px 11px;
-  font-size:12px;font-weight:700;color:var(--ink2);cursor:pointer;
-}
-.storynav b.on{background:#5C7A52;border-color:#5C7A52;color:#fff}
+.shelf{margin-top:15px;border-top:1px solid var(--line2);padding-top:12px}
+.shelfT{font-size:10.5px;font-weight:800;letter-spacing:.13em;color:#A08A5F;margin-bottom:8px}
+.story-item{display:flex;gap:11px;padding:9px 10px;border-radius:11px;cursor:pointer;align-items:flex-start}
+.story-item:active{background:#F2F6EE}
+.story-item.on{background:#EDF4E8;box-shadow:inset 0 0 0 1.5px #BFD6B2}
+.si-d{flex:0 0 auto;width:46px;font-size:13px;font-weight:800;color:#3E5138;letter-spacing:-.03em;padding-top:1px}
+.si-d span{display:block;font-size:10px;font-weight:700;color:#9AA894;margin-top:1px}
+.si-c{min-width:0}
+.si-t{font-size:13px;line-height:1.65;color:var(--ink2);word-break:keep-all}
+.story-item.on .si-t{color:var(--ink);font-weight:600}
+.si-w{font-size:11.5px;color:#A0A89A;margin-top:3px}
 .pelist{display:flex;flex-direction:column;gap:2px}
 .pe-day{display:flex;gap:12px;padding:11px 10px;border-radius:10px;align-items:flex-start}
 .pe-day.sel{background:#FBF1F2;box-shadow:inset 0 0 0 1px #F0D6D9}
@@ -787,12 +792,13 @@ function peRow(d){
 /* ⑥ 오늘의 인성 교육 — 동화책 한 쪽처럼 */
 function vChar(){
   var cl=ST.data.charLog||{};
-  var days=Object.keys(cl).sort();
+  var days=Object.keys(cl).filter(function(x){ var v=cl[x]; return v && (v.ko||v.en||v.talk); }).sort();
+
+  var head='<section class="card story-card" style="--tape:#5C7A52">'+
+    '<div class="card-hd"><span class="eyebrow" style="color:#5C7A52">인성</span><h2>오늘의 인성 교육</h2>';
 
   if(!days.length){
-    return '<section class="card story-card" style="--tape:#5C7A52">'+
-      '<div class="card-hd"><span class="eyebrow" style="color:#5C7A52">인성</span><h2>오늘의 인성 교육</h2></div>'+
-      '<div class="card-bd"><div class="empty"><div class="big">💌</div>'+
+    return head+'</div><div class="card-bd"><div class="empty"><div class="big">💌</div>'+
       '아직 인성 교육 기록이 올라오지 않았습니다.<br>'+
       '수업이 끝나면 그날 함께 읽은 글을 올려 드립니다.</div></div></section>';
   }
@@ -803,10 +809,7 @@ function vChar(){
   if(!d) d=days[0];
   var c=cl[d];
 
-  var h='<section class="card story-card" style="--tape:#5C7A52">'+
-    '<div class="card-hd"><span class="eyebrow" style="color:#5C7A52">인성</span><h2>오늘의 인성 교육</h2>'+
-      '<span class="when">'+esc(fmtD(d))+'</span></div>'+
-    '<div class="card-bd">'+
+  var h=head+'<span class="when">'+esc(fmtD(d))+'</span></div><div class="card-bd">'+
     '<div class="blob">'+
       (c.ko?'<div class="ko">'+esc(c.ko)+'</div>':'')+
       (c.en?'<div class="en">'+esc(c.en)+'</div>':'')+
@@ -815,19 +818,39 @@ function vChar(){
 
   if(c.talk) h+='<div class="talk"><div class="t">선생님 한마디</div><div class="c">'+esc(c.talk)+'</div></div>';
 
-  if(days.length>1){
-    h+='<div class="storynav">'+days.slice().reverse().slice(0,12).map(function(x){
-      return '<b class="'+(x===d?"on":"")+'" onclick="goStory(\''+x+'\')">'+shortD(x)+'</b>';
-    }).join("")+'</div>';
+  /* 지난 글 목록 — 눌러서 그날 글로 넘어갑니다 */
+  var others=days.slice().reverse();
+  if(others.length>1){
+    var show=others.slice(0,5), rest=others.slice(5);
+    h+='<div class="shelf"><div class="shelfT">지난 글 '+others.length+'편</div>'+
+       show.map(storyRow).join("");
+    if(rest.length){
+      h+='<details><summary>이전 글 더 보기 ('+rest.length+'편)</summary>'+
+         '<div style="margin-top:7px">'+rest.map(storyRow).join("")+'</div></details>';
+    }
+    h+='</div>';
   }
+
   h+='<div class="note">캠프에서는 매일 짧은 글 한 편을 함께 읽고 이야기를 나눕니다. '+
      '집에서도 아이와 한 번 더 나눠 보시면 좋겠습니다.</div>'+
      '</div></section>';
   return h;
 }
+/* 지난 글 한 줄 */
+function storyRow(d){
+  var c=(ST.data.charLog||{})[d]||{};
+  var cur=null, days=Object.keys(ST.data.charLog||{}).sort();
+  for(var i=0;i<days.length;i++){ if(days[i]<=ST.date) cur=days[i]; }
+  var on=(d===cur);
+  var txt=String(c.ko||c.en||"");
+  return '<div class="story-item'+(on?' on':'')+'" onclick="goStory(\''+d+'\')">'+
+    '<div class="si-d">'+shortD(d)+'<span>'+DOW[dowOf(d)]+'</span></div>'+
+    '<div class="si-c"><div class="si-t">'+esc(txt.slice(0,58))+(txt.length>58?'…':'')+'</div>'+
+    (c.who?'<div class="si-w">'+esc(c.who)+'</div>':'')+'</div></div>';
+}
 function goStory(d){ ST.date=d; render(); }
 
-/* 지난 캠프 (설정에서 켰을 때만) */
+/* 지난 캠프 (설정에서 켰을 때만) *//* 지난 캠프 (설정에서 켰을 때만) */
 function vHist(){
   var k=ST.kid, hs=k.hist||[];
   if(!hs.length) return "";
