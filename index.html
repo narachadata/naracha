@@ -945,7 +945,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.50";   /* R4.50: 변경 안내 [🚌 적용] — 요일·대상·동작(옮기기/추가/미탑승/빼기) 선택해 노선에 한 번에 반영 · 카톡 발송 문구 맨 위에 그날 변경 안내 자동 포함(토글) · R4.49: 차량 변경 예정 캘린더 신설 — 방학·개학 등 날짜별 변경 내용을 미리 적어 두면 그날 차량표 맨 위에 안내로 뜸(자동 배치 없음·[반영함] 체크) · R4.48: 차량 수정모드 재설계 — 왼쪽 고정 도구모음(스크롤 따라다님·구간 바로가기)·위계 정리(구간 헤더바>정류장 번호>탑승자 밑줄)·정류장마다 수련생 이름 검색 추가 · R4.47: 차량 노선(업무 창고) 동기화 — 휴대폰에서 다른 기기 변경이 화면에 반영 안 되던 문제(갱신 조건이 PC 업무화면 한정) 수정 · 차량표 열 때 즉시 수신 + [☁ 최신 불러오기] 버튼 · 클라우드 수신 전 주간 자동이월 금지(옛 노선이 최신 수정을 덮어쓰던 위험 차단) · R4.46: 회계 '차감 예정(선수금)' 신설 — 이미 낸 돈 중 안 쓰게 된 금액(예: 차량비)을 사유·메모와 함께 등록해 두면 다음 청구에서 자동 차감(여러 달 나눠 쓰기·되돌리기 지원) · R4.44~45: 시간표 표시 3건 — 요일 머리 위로 스크롤 글씨 비침 제거(보드 위 여백 padding→border) · 말풍선이 옆 요일에 가려지던 문제(기둥 opacity 쌓임 문맥 제거) · 말풍선 폭 확대(날짜 줄바꿈 개선) · R4.43: 결석관리 정합화 — 접속 시 기록과 어긋난 자동 결석 표시·옛 메모 잔재 전체 자동 청소 + 결석 등록/수정 시 확인창 없이 자동 반영(한 줄 안내) + 저장 직후 '겹칩니다' 오경고 제거 · R4.42: 결석 예정 수정·삭제·복귀 시 시간표의 자동 결석 표시도 함께 복원(기간 단축분 출석 대기로) — 기록만 바뀌고 표시가 남던 문제 · R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.51";   /* R4.51: [중요] 차량 노선 유실 방지 — 자동(출석반영·주간이월) 변경은 수정시각을 올리지 않고 클라우드로 밀지 않음 · 노선 병합을 요일별로 분리 · 클라우드 수신 전 자동처리 금지 · 노선 자동 스냅샷 12개 + [⟲ 되돌리기] · R4.50: 변경 안내 [🚌 적용] — 요일·대상·동작(옮기기/추가/미탑승/빼기) 선택해 노선에 한 번에 반영 · 카톡 발송 문구 맨 위에 그날 변경 안내 자동 포함(토글) · R4.49: 차량 변경 예정 캘린더 신설 — 방학·개학 등 날짜별 변경 내용을 미리 적어 두면 그날 차량표 맨 위에 안내로 뜸(자동 배치 없음·[반영함] 체크) · R4.48: 차량 수정모드 재설계 — 왼쪽 고정 도구모음(스크롤 따라다님·구간 바로가기)·위계 정리(구간 헤더바>정류장 번호>탑승자 밑줄)·정류장마다 수련생 이름 검색 추가 · R4.47: 차량 노선(업무 창고) 동기화 — 휴대폰에서 다른 기기 변경이 화면에 반영 안 되던 문제(갱신 조건이 PC 업무화면 한정) 수정 · 차량표 열 때 즉시 수신 + [☁ 최신 불러오기] 버튼 · 클라우드 수신 전 주간 자동이월 금지(옛 노선이 최신 수정을 덮어쓰던 위험 차단) · R4.46: 회계 '차감 예정(선수금)' 신설 — 이미 낸 돈 중 안 쓰게 된 금액(예: 차량비)을 사유·메모와 함께 등록해 두면 다음 청구에서 자동 차감(여러 달 나눠 쓰기·되돌리기 지원) · R4.44~45: 시간표 표시 3건 — 요일 머리 위로 스크롤 글씨 비침 제거(보드 위 여백 padding→border) · 말풍선이 옆 요일에 가려지던 문제(기둥 opacity 쌓임 문맥 제거) · 말풍선 폭 확대(날짜 줄바꿈 개선) · R4.43: 결석관리 정합화 — 접속 시 기록과 어긋난 자동 결석 표시·옛 메모 잔재 전체 자동 청소 + 결석 등록/수정 시 확인창 없이 자동 반영(한 줄 안내) + 저장 직후 '겹칩니다' 오경고 제거 · R4.42: 결석 예정 수정·삭제·복귀 시 시간표의 자동 결석 표시도 함께 복원(기간 단축분 출석 대기로) — 기록만 바뀌고 표시가 남던 문제 · R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -2308,6 +2308,7 @@ function closeTopModal(){
   if(state.markM){ closeMark(); return true; }                           /* 출결 표시창 */
   if(state.mkM){ closeMkM(); return true; }                              /* 보강 예약 */
   if(state.regM){ closeRegM(); return true; }                            /* 정규시간 변경 */
+  if(state.busBakM){ closeBusBakM(); return true; }                        /* [R4.51] 노선 되돌리기 팝업 */
   if(state.busApplyM){ closeBusApplyM(); return true; }                    /* [R4.50] 노선 적용 팝업 */
   if(state.busNoteM){ closeBusNoteM(); return true; }                      /* [R4.49] 차량 변경 예정 팝업 */
   if(state.creditM){ closeCreditM(); return true; }                       /* [R4.46] 차감 예정 팝업 */
@@ -13059,8 +13060,25 @@ function mergeWork(local, remote){
   applyWorkTomb(out, "busNotes", "tombBusNotes");   /* [R4.49] 차량 변경 예정 메모 */
   /* 차량 정보(단일 객체): 최신본 우선 */
   if(remote.carInfo && (remote.carInfo._t||0) > ((out.carInfo&&out.carInfo._t)||0)) out.carInfo=remote.carInfo;
-  /* [R3.35] 차량운행 노선(요일별 단일 객체): 최신본 우선 — 이게 없어서 다른 기기에 동기화되지 않았음 */
-  if(remote.bus && (remote.bus._t||0) > ((out.bus&&out.bus._t)||0)) out.bus=remote.bus;
+  /* [R3.35→R4.51] 차량운행 노선: **요일별로 따로** 병합.
+     예전엔 bus 객체를 통째로 최신본으로 바꿔서, 한 기기가 한 요일만 건드려도
+     다른 기기가 다른 요일에 새로 넣은 내용까지 전부 사라졌다. */
+  if(remote.bus){
+    var _rb=remote.bus; if(!out.bus) out.bus={};
+    var _ob=out.bus, _hasDayT=false;
+    BUS_DAYS.forEach(function(d){ if(((_rb[d]||{})._t)||((_ob[d]||{})._t)) _hasDayT=true; });
+    if(_hasDayT){
+      BUS_DAYS.forEach(function(d){
+        var rd=_rb[d], od=_ob[d];
+        if(!rd) return;
+        if(!od){ _ob[d]=rd; return; }
+        if((rd._t||0) > (od._t||0)) _ob[d]=rd;      /* 그 요일을 더 늦게 고친 쪽 채택 */
+      });
+      if((_rb._t||0) > (_ob._t||0)){ _ob._week=_rb._week||_ob._week; _ob._t=_rb._t; }
+    } else if((_rb._t||0) > (_ob._t||0)){
+      out.bus=_rb;                                   /* 옛 데이터(요일 도장 없음) 호환 */
+    }
+  }
   /* 백업 비밀번호(단일 객체): 최신본 우선 → 모든 PC 자동 동기화 */
   if(remote.backupPwSync && (remote.backupPwSync._t||0) > ((out.backupPwSync&&out.backupPwSync._t)||0)) out.backupPwSync=remote.backupPwSync;
   /* 구글폼 신규등록 연동 설정(단일 객체): 최신본 우선 → 모든 PC 자동 동기화 */
@@ -13126,6 +13144,7 @@ function workPull(cb){
       if(remote && remote.workV){
         /* [R4.47] 실제로 바뀐 게 있을 때만 다시 그린다 — 차량표 등 work 화면의 '변경이 반영 안 됨' 문제 해결 */
         var _sigBefore=""; try{ _sigBefore=_workSig(workData()); }catch(e){}
+        try{ busSnap('수신전'); }catch(e){}   /* [R4.51] 클라우드 반영 직전 이 기기 노선 보관 */
         state.work=mergeWork(workData(), remote); workSaveLocal();
         var _sigAfter=""; try{ _sigAfter=_workSig(workData()); }catch(e){}
         /* 입력 중(포커스가 입력칸)에는 화면을 다시 그리지 않음 — 타이핑 중 커서 튕김 방지. 데이터는 이미 병합되어 다음 화면에 반영됨 */
@@ -13151,7 +13170,7 @@ function workSync(){
       var joined="";
       if(rows && rows.length>=2){ for(var i=0;i<rows.length;i++){ if(rows[i][0]==="JSON" && i+1<rows.length){ for(var j=i+1;j<rows.length;j++) joined+=(rows[j][0]!=null?String(rows[j][0]):""); break; } } }
       var remote=null; try{ remote=JSON.parse(joined); }catch(e){}
-      if(remote && remote.workV){ state.work=mergeWork(workData(), remote); }
+      if(remote && remote.workV){ try{ busSnap('전송전'); }catch(e){} state.work=mergeWork(workData(), remote); }
       state.workPulledOnce=true;   /* [R4.47] */
       try{ _migrateMeasFromWork(); }catch(e){}   /* 원격에서 넘어온 옛 측정 데이터를 meas 창고로 구제한 뒤 */
       /* [잔재 정리] 측정 데이터는 meas 전용 창고가 정본 → work 창고 push에서는 제외해 서버의 옛 사본을 1회 정리 */
@@ -14373,7 +14392,37 @@ window.downloadTtImg=function(){
   }catch(e){ alert('다운로드에 실패했습니다.'); }
 };
 function busCourses(){ return busData()[busDay()].courses; }
-function busTouch(){ var w=workData(); w.bus._t=Date.now(); if(typeof workSaveDebounced==='function') workSaveDebounced(); }
+/* [R4.51] 차량 노선 저장 도장 — 사람이 고친 것만 '최신'으로 찍는다.
+   요일별(_t)로도 찍어, 한 요일 수정이 다른 요일을 통째로 밀어내지 않게 한다. */
+function busTouchDays(days){
+  var w=workData(); if(!w.bus) w.bus={};
+  var now=Date.now();
+  (days||[]).forEach(function(d){ if(!w.bus[d]) w.bus[d]={courses:[]}; w.bus[d]._t=now; });
+  w.bus._t=now;
+  try{ busSnap('수정'); }catch(e){}
+  if(typeof workSaveDebounced==='function') workSaveDebounced();
+}
+function busTouch(dayOpt){ busTouchDays([dayOpt||busDay()]); }
+/* [R4.51] 자동(파생) 변경 전용 — 출석 반영처럼 각 기기가 스스로 다시 계산하는 내용.
+   수정시각을 올리지도, 클라우드로 밀지도 않는다.
+   → 옛 데이터를 든 기기가 '방금 고친 것'처럼 도장을 찍어 다른 기기의 최신 수정을 덮어쓰던 사고 차단. */
+function busTouchAuto(){ try{ if(typeof workSaveLocal==='function') workSaveLocal(); }catch(e){} }
+/* [R4.51] 차량 노선 스냅샷 — 이 기기에 최근 12개 보관. 동기화 사고 시 되돌리기용 (로컬 전용) */
+function busSnap(tag){
+  try{
+    var w=workData(); if(!w.bus) return;
+    var n=0, cn=0;
+    BUS_DAYS.forEach(function(d){ var cs=((w.bus[d]||{}).courses)||[]; cn+=cs.length; cs.forEach(function(c){ n+=(c.stops||[]).length; }); });
+    if(!n) return;                                  /* 빈 노선은 보관하지 않음 (빈 상태로 되돌릴 일 없음) */
+    var data=JSON.stringify(w.bus);
+    var arr=[]; try{ arr=JSON.parse(localStorage.getItem('naracha-bus-bak')||'[]'); }catch(e){}
+    if(arr.length && arr[0].data===data) return;    /* 같은 내용 중복 보관 안 함 */
+    arr.unshift({ t:Date.now(), tag:tag||'', stops:n, courses:cn, data:data });
+    arr=arr.slice(0,12);
+    localStorage.setItem('naracha-bus-bak', JSON.stringify(arr));
+  }catch(e){}
+}
+function busSnapList(){ try{ return JSON.parse(localStorage.getItem('naracha-bus-bak')||'[]'); }catch(e){ return []; } }
 function busNewId(){ return 'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
 /* 탑승자 1명 표기 문자열 */
@@ -14706,8 +14755,7 @@ function busAutoCarry(){
       if(r.abs.length||r.mk.length||r.cleared.length) sum.push(d+'('+(r.abs.length?'결석'+r.abs.length:'')+(r.mk.length?' 보강'+r.mk.length:'')+(r.cleared.length?' 해제'+r.cleared.length:'')+')');
     });
     w.bus._week=wk;
-    w.bus._t=Date.now();
-    if(typeof workSaveDebounced==='function') workSaveDebounced();
+    busTouchAuto();   /* [R4.51] 주간 이월은 파생 처리 — 수정시각을 올리거나 클라우드로 밀지 않음 */
     if(had && sum.length) state.busCarryMsg='🔄 새 주가 시작되어 지난주 노선을 그대로 불러왔습니다. 출석 반영: '+sum.join(' · ');
     else if(had) state.busCarryMsg='🔄 새 주가 시작되어 지난주 노선을 그대로 불러왔습니다.';
   }catch(e){}
@@ -15097,7 +15145,7 @@ window.doBusApply=function(){
   var note=(w.busNotes||{})[m.id];
   if(note && okList.length){ note.done=true; note._t=Date.now(); }
   closeBusApplyM();
-  busTouch();
+  busTouchDays(days);   /* [R4.51] 적용한 요일 모두 도장 */
   try{ busApplyAttendance(busDay()); busTouch(); }catch(e){}
   state.busMsg='✅ '+ACT+' 적용 '+okList.length+'건'+(missList.length?' · 건너뜀 '+missList.length+'건':'');
   workPersist(); render();
@@ -15278,6 +15326,58 @@ function renderBusCal(mob){
     '적어 둔 내용은 <b>노선을 저절로 바꾸지 않습니다.</b> 해당 날짜가 되면 차량표 맨 위에 <b>📌 차량 변경 안내</b>로 떠서 보고 직접 처리하시면 됩니다. 처리한 뒤 [반영함]을 누르면 안내에서 내려갑니다.</div>';
   h+='</div>';
   return h;
+}
+/* ── [R4.51] 차량 노선 되돌리기 — 이 기기에 보관된 최근 노선으로 복구 ── */
+window.openBusBakM=function(){ state.busBakM=true; _renderBusBakOv(); };
+window.closeBusBakM=function(){ state.busBakM=null; var e=document.getElementById("busBakOv"); if(e&&e.parentNode) e.parentNode.removeChild(e); };
+window.restoreBusSnap=function(idx){
+  var arr=busSnapList(); var s=arr[idx]; if(!s) return;
+  var when=new Date(s.t); var wtx=when.getFullYear()+'-'+('0'+(when.getMonth()+1)).slice(-2)+'-'+('0'+when.getDate()).slice(-2)+' '+('0'+when.getHours()).slice(-2)+':'+('0'+when.getMinutes()).slice(-2);
+  if(!confirm('⟲ 이 시점의 차량 노선으로 되돌립니다.\n\n· 시각: '+wtx+' ('+(s.tag||'')+')\n· 구간 '+(s.courses||0)+'개 · 정류장 '+(s.stops||0)+'곳\n\n지금 노선은 되돌리기 전에 자동으로 한 번 더 보관됩니다.\n되돌린 뒤 다른 기기에도 이 내용이 퍼집니다.\n\n진행할까요?')) return;
+  try{ busSnap('되돌리기 전'); }catch(e){}
+  var bus=null; try{ bus=JSON.parse(s.data); }catch(e){}
+  if(!bus){ alert('보관된 내용을 읽지 못했습니다.'); return; }
+  var w=workData();
+  var now=Date.now();
+  bus._t=now;
+  BUS_DAYS.forEach(function(d){ if(bus[d]) bus[d]._t=now; });   /* 되돌린 내용이 최신이 되도록 도장 */
+  w.bus=bus;
+  closeBusBakM();
+  state.busMsg='⟲ '+wtx+' 시점의 노선으로 되돌렸습니다.';
+  workPersist(); render();
+};
+function _renderBusBakOv(){
+  var ex=document.getElementById("busBakOv"); if(ex&&ex.parentNode) ex.parentNode.removeChild(ex);
+  if(!state.busBakM) return;
+  var arr=busSnapList();
+  var rows='';
+  if(!arr.length){
+    rows='<div style="font-size:12.5px;color:var(--sub);padding:18px 0;text-align:center">이 기기에 보관된 노선이 아직 없습니다.<br><span style="font-size:11.5px">노선을 저장하거나 동기화가 일어날 때마다 자동으로 보관됩니다.</span></div>';
+  } else {
+    rows=arr.map(function(s,i){
+      var d=new Date(s.t);
+      var wtx=('0'+(d.getMonth()+1)).slice(-2)+'/'+('0'+d.getDate()).slice(-2)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+      var days=[]; try{ var o=JSON.parse(s.data); BUS_DAYS.forEach(function(dd){ var cn=((o[dd]||{}).courses||[]).length; if(cn) days.push(dd+cn); }); }catch(e){}
+      return '<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px dashed var(--line)">'+
+        '<span style="flex:0 0 auto;font-weight:900;font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink)">'+wtx+'</span>'+
+        '<span style="flex:0 0 auto;font-size:10.5px;font-weight:800;color:var(--sub);background:#F1F0EA;border-radius:6px;padding:1px 7px">'+esc(s.tag||'보관')+'</span>'+
+        '<span style="flex:1;min-width:0;font-size:11.5px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">구간 '+(s.courses||0)+' · 정류장 '+(s.stops||0)+(days.length?' · '+days.join(' '):'')+'</span>'+
+        '<button onclick="restoreBusSnap('+i+')" style="flex:0 0 auto;background:var(--brand);color:#fff;border:none;border-radius:9px;padding:7px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">이 상태로</button>'+
+      '</div>';
+    }).join('');
+  }
+  var ov=document.createElement("div"); ov.id="busBakOv";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(27,37,52,.55);z-index:2147483601;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto";
+  ov.onclick=function(ev){ if(ev.target===ov) closeBusBakM(); };
+  ov.innerHTML='<div style="background:#fff;border-radius:16px;max-width:520px;width:100%;padding:18px 20px 16px;box-shadow:0 14px 44px rgba(0,0,0,.32);max-height:90vh;overflow:auto" onclick="event.stopPropagation()">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'+
+        '<div style="font-size:16px;font-weight:900">⟲ 차량 노선 되돌리기</div>'+
+        '<button onclick="closeBusBakM()" style="background:none;border:none;font-size:24px;color:var(--sub);cursor:pointer;font-family:inherit;line-height:1">×</button></div>'+
+      '<div style="font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.6">이 기기에 자동으로 보관된 최근 노선입니다(최대 12개). 실수로 내용이 바뀌었을 때 그 시점으로 되돌릴 수 있습니다.<br><b style="color:var(--ink)">기기마다 따로 보관</b>되므로, PC에서 작업한 내용은 PC에서 되돌려 주세요.</div>'+
+      rows+
+      '<button onclick="closeBusBakM()" style="width:100%;margin-top:12px;background:#fff;border:1.5px solid var(--line);color:var(--sub);border-radius:11px;padding:11px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">닫기</button>'+
+    '</div>';
+  document.body.appendChild(ov);
 }
 /* [R4.48] 왼쪽 도구모음에서 구간으로 바로 이동 */
 window.busJumpTo=function(cid){
@@ -15496,6 +15596,7 @@ function _busCourseModal(){
 window.setBusEdit=function(on){
   if(!on){                                   /* 저장하고 보기로 전환 */
     busTouch();
+    try{ busSnap('저장'); }catch(e){}
     try{ if(typeof workSaveLocal==='function') workSaveLocal(); }catch(e){}
     try{ if(typeof workSync==='function') workSync(); }catch(e){}
     state.busEdit=false;
@@ -15691,9 +15792,11 @@ function renderBusTab(mobile){
      새로 미탑승이 된 사람은 강조 배지로 표시하고 1회 알림. */
   try{
     var _td2=new Date().getDay();
-    if(_td2>=1 && _td2<=5){                       /* 평일만 (오늘이 차량 운행일일 때) */
+    /* [R4.51] 클라우드 수신 전에는 자동 반영을 하지 않는다 —
+       옛 노선을 든 채 자동 반영이 돌면 그 내용이 저장·전송되어 다른 기기의 최신 수정을 덮어썼다. */
+    if(_td2>=1 && _td2<=5 && !(accessKey() && !state.workPulledOnce)){
       var _todayDay=BUS_DAYS[_td2-1];
-      if(!state.busEdit && !window.__busAutoSyncedWk || window.__busAutoSyncedWk!==busWeekKey()+'|'+_todayDay){
+      if(!state.busEdit && (!window.__busAutoSyncedWk || window.__busAutoSyncedWk!==busWeekKey()+'|'+_todayDay)){
         var _before={};
         var _cs=(busData()[_todayDay]||{courses:[]}).courses||[];
         _cs.forEach(function(c){ (c.stops||[]).forEach(function(st){ (st.riders||[]).forEach(function(r){ var n=(r.name||'').trim(); if(n) _before[n]=r.mark||''; }); }); });
@@ -15704,7 +15807,7 @@ function renderBusTab(mobile){
         (_r.abs||[]).forEach(function(n){ if(_before[n]!=='미탑승'){ window.__busLateAbsent[_todayDay+'|'+n]=Date.now(); _fresh.push(n); } });
         window.__busAutoSyncedWk=busWeekKey()+'|'+_todayDay;
         if(_fresh.length){
-          busTouch();
+          busTouchAuto();   /* [R4.51] 자동 반영은 이 기기에만 저장 — 클라우드로 밀지 않음 */
           if(typeof toast==='function') toast('🚫 뒤늦게 결석 처리된 '+_fresh.length+'명을 차량표에서 미탑승으로 반영했습니다: '+_fresh.join(', '));
         }
       }
@@ -15750,6 +15853,7 @@ function renderBusTab(mobile){
           '<button class="chip sm" onclick="clearBusMarks()" title="직접 지정을 모두 지우고 시간표 기준으로 되돌립니다">🧹 전체 자동으로</button>'
         : '<button onclick="setBusEdit(true)" style="background:var(--brand);color:#fff;border:none;border-radius:10px;padding:'+(mob?'10px 18px':'9px 20px')+';font-size:'+(mob?'13.5px':'13px')+';font-weight:800;cursor:pointer;font-family:inherit">✏️ 수정하기</button>'+
           '<button class="chip sm" onclick="busRefreshFromCloud()" title="다른 기기(행정PC 등)에서 바꾼 최신 노선을 지금 받아옵니다">☁ 최신 불러오기</button>'+
+          '<button class="chip sm" onclick="openBusBakM()" title="이 기기에 보관된 최근 노선으로 되돌립니다" style="color:#B45309;border-color:#F0D9A8;font-weight:800">⟲ 되돌리기</button>'+
           '<button class="chip sm" onclick="refreshBusAttendance()" title="이 요일 날짜의 결석·보강을 다시 읽어 표기를 갱신합니다">🔄 출석 반영</button>')+
       (state.busMsg?'<span style="font-size:12px;font-weight:700;color:'+(/⚠|❓/.test(state.busMsg)?'var(--red)':'var(--green)')+'">'+esc(state.busMsg)+'</span>':'')+
     '</div>'+
@@ -15910,6 +16014,7 @@ function renderBusTab(mobile){
           _tb('clearBusMarks()','🧹 전체 자동으로','#fff','#334155','#E2E8F0')+
           _tb('copyBusText()','📋 카톡 복사','#fff','#334155','#E2E8F0')+
           _tb('openBusNoteM(\'\')','📅 변경 예정 등록','#fff','#B45309','#F0D9A8')+
+          _tb('openBusBakM()','⟲ 노선 되돌리기','#fff','#B45309','#F0D9A8')+
           '<div style="display:flex;gap:5px;margin-bottom:6px">'+
             '<button onclick="busFoldAll(true)" style="flex:1;background:#fff;color:#334155;border:1.5px solid #E2E8F0;border-radius:9px;padding:7px 4px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">모두 접기</button>'+
             '<button onclick="busFoldAll(false)" style="flex:1;background:#fff;color:#334155;border:1.5px solid #E2E8F0;border-radius:9px;padding:7px 4px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">모두 펴기</button>'+
@@ -23779,8 +23884,11 @@ function moChip(name, c, dateStr){
 }
 /* ══════════ 휴대폰 전용 화면 (뷰어 + 업무일지 간편입력) ══════════ */
 window.setMoTab=function(t){ state.moTab=t; state.moStu=null; state.moEv=null; render();
-  /* [R4.47] 업무 창고(차량표·차계부·행사·일지·관리) 화면으로 들어오면 즉시 최신본을 받아온다 */
-  if(["bus","car","event","journal","manage"].indexOf(t)>-1){ try{ if(typeof workPull==="function") workPull(); }catch(e){} }
+  /* [R4.47] 업무 창고(차량표·차계부·행사·일지·관리) 화면으로 들어오면 즉시 최신본을 받아온다
+     [R4.51] 차량표는 최신본을 받은 뒤 다시 그린다 — 옛 화면에서 자동 처리가 도는 것을 막기 위함 */
+  if(["bus","car","event","journal","manage"].indexOf(t)>-1){
+    try{ if(typeof workPull==="function") workPull(function(){ try{ if(state.moTab===t) render(); }catch(e){} }); }catch(e){}
+  }
 };
 window.openMoStu=function(name){ state.moStu=name; render(); };
 window.closeMoStu=function(){ state.moStu=null; render(); };
