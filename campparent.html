@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>나라차X클래식리더 방학캠프 — 학부모 조회</title>
+<meta name="theme-color" content="#141C33">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="방학캠프 조회">
+<meta name="description" content="나라차태권도 X 클래식리더영어도서관 방학캠프 학부모 조회">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  :root{ --bg:#F5F3EE; --ink:#1B2233; --sub:#6B7280; --line:#E7E2D8; --card:#FFFFFF;
+         --blue:#1E2A52; --blueSoft:#EBEEF6; --red:#B5343F; --redSoft:#F9ECED;
+         --green:#1E7B3C; --greenSoft:#EAF6EE; --amber:#B07D1A; --amberSoft:#FBF3E2;
+         --navy:#141C33; --navyDim:#8C96AE; }
+  *{ box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+  body{ margin:0; background:var(--bg); color:var(--ink);
+        font-family:'Pretendard',-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+        letter-spacing:-0.02em; font-variant-numeric:tabular-nums; padding-bottom:40px; }
+  .belt{ height:4px; display:flex; }
+  .belt div:first-child{ flex:1; background:var(--red); }
+  .belt div:last-child{ flex:1; background:var(--blue); }
+  .hd{ background:var(--navy); color:#fff; padding:14px 16px 15px; }
+  .hd .brand{ font-size:11.5px; font-weight:700; letter-spacing:.02em; }
+  .hd .brand .x{ color:var(--red); font-weight:800; margin:0 2px; }
+  .hd .ttl{ font-size:17px; font-weight:800; margin-top:4px; }
+  .hd .sub{ font-size:11.5px; color:var(--navyDim); margin-top:3px; }
+  .wrap{ max-width:560px; margin:0 auto; padding:14px 13px; }
+  .card{ background:var(--card); border:1.5px solid var(--line); border-radius:14px;
+         padding:14px; margin-bottom:12px; }
+  .card h2{ margin:0 0 10px; font-size:15px; display:flex; align-items:center; gap:7px; }
+  .label{ display:block; font-size:12.5px; font-weight:700; color:var(--sub); margin:10px 0 5px; }
+  .input{ width:100%; padding:13px 14px; border:1.5px solid var(--line); border-radius:11px;
+          font-family:inherit; font-size:16px; background:#fff; color:var(--ink); }
+  .input:focus{ outline:none; border-color:var(--blue); }
+  .btn{ width:100%; padding:14px; border:none; border-radius:11px; background:var(--navy); color:#fff;
+        font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; }
+  .btn:active{ opacity:.85; }
+  .btn.line{ background:#fff; color:var(--ink); border:1.5px solid var(--line); font-weight:600; font-size:13.5px; padding:11px; }
+  .msg{ font-size:13px; margin-top:10px; padding:11px 13px; border-radius:10px; line-height:1.6; display:none; }
+  .msg.err{ display:block; background:var(--redSoft); color:var(--red); font-weight:600; }
+  .msg.info{ display:block; background:var(--blueSoft); color:var(--blue); }
+  .kidBar{ display:flex; align-items:center; gap:10px; background:var(--navy); color:#fff;
+           border-radius:14px; padding:13px 15px; margin-bottom:12px; }
+  .kidBar .nm{ font-size:18px; font-weight:800; }
+  .kidBar .gr{ font-size:12px; color:var(--navyDim); margin-top:2px; }
+  .kidBar button{ margin-left:auto; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22);
+                  color:#fff; font-family:inherit; font-size:12px; padding:7px 11px; border-radius:9px; cursor:pointer; }
+  .kidTabs{ display:flex; gap:7px; margin-bottom:11px; overflow-x:auto; padding-bottom:2px; }
+  .kidTab{ flex:0 0 auto; background:#fff; border:1.5px solid var(--line); border-radius:11px;
+           padding:9px 15px; font-family:inherit; font-size:14px; font-weight:700; color:var(--sub);
+           cursor:pointer; white-space:nowrap; }
+  .kidTab.on{ background:var(--navy); border-color:var(--navy); color:#fff; }
+  .kidTab .g{ display:block; font-size:10.5px; font-weight:600; opacity:.75; margin-top:1px; }
+  .anBox{ border:1.5px solid var(--line); border-radius:11px; padding:12px 14px; margin-top:10px; }
+  .anBox.an{ background:var(--amberSoft); border-color:var(--amber); }
+  .anBox.gd{ background:var(--greenSoft); border-color:var(--green); }
+  .anBox .t{ font-size:12px; font-weight:800; margin-bottom:5px; }
+  .anBox.an .t{ color:#8A5A00; } .anBox.gd .t{ color:var(--green); }
+  .anBox .c{ font-size:13.5px; line-height:1.75; white-space:pre-wrap; }
+  .nextBox{ display:flex; align-items:center; gap:11px; background:var(--blueSoft); border-radius:11px;
+            padding:11px 13px; margin-bottom:11px; }
+  .nextBox .ic{ font-size:20px; }
+  .nextBox .t1{ font-size:11.5px; color:var(--blue); font-weight:700; }
+  .nextBox .t2{ font-size:15.5px; font-weight:800; margin-top:1px; }
+  .nextBox.today{ background:var(--greenSoft); }
+  .nextBox.today .t1{ color:var(--green); }
+  .nextBox.done{ background:#F4F2ED; }
+  .nextBox.done .t1{ color:var(--sub); }
+  .chips{ display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+  .chip{ background:#fff; border:1.5px solid var(--line); border-radius:99px; padding:4px 10px;
+         font-size:12px; font-weight:700; }
+  .chip.mk{ border-color:var(--amber); color:#8A5A00; background:var(--amberSoft); }
+  .lvImg{ width:100%; border-radius:11px; border:1.5px solid var(--line); margin-top:10px; cursor:zoom-in; display:block; }
+  .imgCap{ font-size:11.5px; color:var(--sub); text-align:center; margin-top:5px; }
+  .busAll{ margin-top:12px; border-top:1px dashed var(--line); padding-top:11px; }
+  .busAllT{ font-size:12px; font-weight:800; color:var(--sub); margin-bottom:7px; }
+  .busFix{ display:flex; gap:9px; padding:7px 0; font-size:13.5px; align-items:baseline; }
+  .busFix .tt{ font-weight:800; width:56px; flex:none; }
+  .busFix .pp{ color:#3A3630; }
+  .busFix .dd{ font-size:11px; font-weight:800; color:var(--amber); background:var(--amberSoft);
+               border-radius:99px; padding:1px 7px; margin-left:4px; }
+  .kcal{ font-size:11px; font-weight:700; color:#C77B2B; margin-left:6px; }
+  .kcalSum{ text-align:right; font-size:12.5px; font-weight:800; color:#B45309; margin-top:9px;
+            border-top:1px dashed var(--line); padding-top:8px; }
+  .peBox{ background:var(--blueSoft); border-radius:11px; padding:12px 14px; font-size:13.5px;
+          line-height:1.8; white-space:pre-wrap; }
+  .peBox.gym{ background:var(--amberSoft); }
+  .peSec{ margin-bottom:12px; }
+  .peSec:last-of-type{ margin-bottom:0; }
+  .peT{ font-size:13px; font-weight:800; margin-bottom:6px; }
+  .peT.jump{ color:var(--blue); } .peT.gym{ color:#8A5A00; }
+  .peD{ font-size:11px; font-weight:600; color:var(--sub); margin-left:4px; }
+  .histRow{ border-left:3px solid var(--line); padding:2px 0 10px 12px; margin-bottom:4px; }
+  .histRow:last-of-type{ padding-bottom:2px; }
+  .histTop{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; font-size:14px; }
+  .histDay{ font-size:12px; color:var(--sub); font-weight:600; }
+  .histTxt{ font-size:13px; line-height:1.7; color:#3A3630; margin-top:4px; white-space:pre-wrap; }
+  .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin-bottom:11px; }
+  .stat{ background:#fff; border:1.5px solid var(--line); border-radius:11px; padding:9px 4px; text-align:center; }
+  .stat .n{ font-size:19px; font-weight:800; }
+  .stat .l{ font-size:10.5px; color:var(--sub); font-weight:600; margin-top:1px; }
+  .stat.ok .n{ color:var(--green); } .stat.ab .n{ color:var(--red); } .stat.left .n{ color:var(--blue); }
+  .dayGrid{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+  .day{ border:1.5px solid var(--line); border-radius:9px; padding:7px 2px; text-align:center; background:#fff; }
+  .day .d{ font-size:12.5px; font-weight:700; }
+  .day .s{ font-size:10px; font-weight:700; margin-top:2px; }
+  .day.on{ background:var(--greenSoft); border-color:var(--green); }
+  .day.on .s{ color:var(--green); }
+  .day.ab{ background:var(--redSoft); border-color:var(--red); }
+  .day.ab .s{ color:var(--red); }
+  .day.plan{ background:#fff; } .day.plan .s{ color:var(--sub); }
+  .day.no{ background:#FAF8F3; border-style:dashed; opacity:.55; }
+  .day.no .s{ color:#B8B2A6; }
+  .day.hol{ background:#F3EFE8; } .day.hol .s{ color:var(--amber); }
+  .day.mk{ box-shadow:inset 0 0 0 2px var(--amber); }
+  .lgd{ font-size:11.5px; color:var(--sub); margin-top:9px; line-height:1.7; }
+  .lvBox{ background:var(--blueSoft); border-radius:11px; padding:12px 14px; }
+  .lvNow{ font-size:22px; font-weight:800; color:var(--blue); }
+  .lvSub{ font-size:11.5px; color:var(--sub); margin-top:2px; }
+  .lvRow{ display:flex; justify-content:space-between; font-size:12.5px; padding:5px 0;
+          border-top:1px dashed var(--line); }
+  .pub{ background:var(--greenSoft); border:1.5px solid var(--green); border-radius:11px;
+        padding:12px 14px; font-size:13.5px; line-height:1.7; margin-top:10px; }
+  .pub b{ color:var(--green); }
+  .dateBar{ display:flex; align-items:center; gap:8px; margin-bottom:11px; }
+  .dateBar button{ background:#fff; border:1.5px solid var(--line); border-radius:10px; width:42px; height:40px;
+                   font-size:17px; cursor:pointer; font-family:inherit; color:var(--ink); }
+  .dateBar button:disabled{ opacity:.3; }
+  .dateBar .mid{ flex:1; text-align:center; background:#fff; border:1.5px solid var(--line);
+                 border-radius:10px; padding:8px; font-weight:800; font-size:14.5px; }
+  .dateBar .mid .t{ color:var(--red); font-size:11px; font-weight:700; }
+  .mrow{ display:flex; gap:10px; padding:9px 0; border-bottom:1px dashed var(--line); font-size:14px; }
+  .mrow:last-child{ border-bottom:none; }
+  .mrow .l{ width:88px; flex:none; color:var(--sub); font-size:12.5px; font-weight:700; padding-top:1px; }
+  .mrow .v{ font-weight:600; }
+  .busRow{ display:flex; align-items:center; gap:11px; padding:11px 0; border-bottom:1px dashed var(--line); }
+  .busRow:last-child{ border-bottom:none; }
+  .busIco{ width:38px; height:38px; border-radius:10px; display:flex; align-items:center;
+           justify-content:center; font-size:18px; flex:none; }
+  .busIco.go{ background:var(--blueSoft); } .busIco.back{ background:var(--greenSoft); }
+  .busT{ font-size:16px; font-weight:800; }
+  .busP{ font-size:12.5px; color:var(--sub); margin-top:1px; line-height:1.4; }
+  .badge{ font-size:10.5px; font-weight:800; padding:2px 7px; border-radius:99px; margin-left:5px; }
+  .badge.off{ background:var(--redSoft); color:var(--red); }
+  .badge.day{ background:var(--amberSoft); color:var(--amber); }
+  .empty{ text-align:center; color:var(--sub); font-size:13px; padding:18px 10px; line-height:1.6; }
+  .foot{ text-align:center; font-size:11.5px; color:var(--sub); line-height:1.8; margin-top:18px; }
+  .spin{ text-align:center; padding:40px 20px; color:var(--sub); font-size:14px; }
+</style>
+</head>
+<body>
+<div class="belt"><div></div><div></div></div>
+<div class="hd">
+  <div class="brand">나라차태권도 <span class="x">X</span> 클래식리더영어도서관</div>
+  <div class="ttl">방학캠프 학부모 조회</div>
+  <div class="sub" id="hdSub">우리 아이 캠프 생활을 확인하세요</div>
+</div>
+<div class="wrap" id="app"><div class="spin">불러오는 중…</div></div>
+
+<script>
+/* ══ 서버 주소 (관리 프로그램과 같은 주소) ══ */
+var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwZmWHCEGwXoOs2omyAgWiOE3ds0zQCtRy-Ta7lLqk1lXQMNFPXCkrSvlgTTXGdlK9E/exec";
+
+var ST = { data:null, kid:null, idx:0, date:"", loading:false, imgs:null };
+var LS = "naracha_parent_login";
+
+function esc(t){ return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function ymd(d){ var m=d.getMonth()+1, x=d.getDate();
+  return d.getFullYear()+"-"+(m<10?"0":"")+m+"-"+(x<10?"0":"")+x; }
+function today(){ return ymd(new Date()); }
+function fmtD(s){ var d=new Date(s+"T00:00:00");
+  return (d.getMonth()+1)+"월 "+d.getDate()+"일 ("+"일월화수목금토"[d.getDay()]+")"; }
+function shortD(s){ var d=new Date(s+"T00:00:00"); return (d.getMonth()+1)+"/"+d.getDate(); }
+function dowOf(s){ return new Date(s+"T00:00:00").getDay(); }
+var DOW=["일","월","화","수","목","금","토"];
+
+/* ══ 로그인 ══ */
+function saved(){ try{ return JSON.parse(localStorage.getItem(LS)||"null"); }catch(e){ return null; } }
+function saveLogin(code){ try{ localStorage.setItem(LS, JSON.stringify({code:code})); }catch(e){} }
+function logout(){
+  if(!confirm("조회를 마칠까요?")) return;
+  try{ localStorage.removeItem(LS); }catch(e){}
+  ST.data=null; ST.kid=null; render();
+}
+
+function doLogin(){
+  var c=String((document.getElementById("pCode")||{}).value||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+  if(c.length<4){ showMsg("err","캠프에서 안내해 드린 <b>가정 코드</b>를 넣어 주세요."); return; }
+  fetchKid(c,true);
+}
+function showMsg(kind,txt){
+  var m=document.getElementById("pMsg"); if(!m) return;
+  m.className="msg "+kind; m.innerHTML=txt;
+}
+function fetchKid(code,fromForm){
+  ST.loading=true;
+  if(fromForm) showMsg("info","확인 중입니다…");
+  fetch(GSHEET_URL+"?p=find&code="+encodeURIComponent(code))
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      ST.loading=false;
+      if(!j || j.error){
+        var t = j&&j.error==="NOTFOUND"
+              ? "일치하는 가정 코드가 없습니다.<br>· 캠프에서 보내 드린 <b>코드 그대로</b> 넣어 주세요.<br>· 코드를 잊으셨다면 캠프 카카오톡으로 문의해 주세요."
+              : j&&j.error==="NODATA" ? "아직 캠프 자료가 준비되지 않았습니다. 잠시 후 다시 확인해 주세요."
+              : j&&j.error==="BAD" ? "이름과 뒷 4자리를 다시 확인해 주세요."
+              : "잠시 후 다시 시도해 주세요.";
+        if(fromForm) showMsg("err",t); else { try{ localStorage.removeItem(LS); }catch(e){} render(); }
+        return;
+      }
+      ST.data=j; ST.idx=0; ST.kid=j.kids[0];
+      saveLogin(code);
+      pickDate();
+      render();
+      /* 레벨테스트 사진은 자료가 커서 따로 불러옵니다 */
+      if(j.kids.some(function(k){ return k.iid; })) loadImgs(code);
+    })
+    .catch(function(){
+      ST.loading=false;
+      if(fromForm) showMsg("err","인터넷 연결을 확인해 주세요.");
+      else render();
+    });
+}
+function loadImgs(code){
+  fetch(GSHEET_URL+"?p=img&code="+encodeURIComponent(code))
+    .then(function(r){ return r.json(); })
+    .then(function(j){ if(j && j.ok){ ST.imgs=j.imgs||{}; render(); } })
+    .catch(function(){});
+}
+/* 오늘이 캠프일이면 오늘, 아니면 가장 가까운 캠프일 */
+function pickDate(){
+  var ds=(ST.data.camp.dates)||[]; if(!ds.length) return;
+  var t=today();
+  if(ds.indexOf(t)>=0){ ST.date=t; return; }
+  var next=null;
+  for(var i=0;i<ds.length;i++){ if(ds[i]>=t){ next=ds[i]; break; } }
+  ST.date = next || ds[ds.length-1];
+}
+function pickKid(i){
+  if(!ST.data || !ST.data.kids[i]) return;
+  ST.idx=i; ST.kid=ST.data.kids[i];
+  render(); window.scrollTo(0,0);
+}
+function moveDate(step){
+  var ds=ST.data.camp.dates, i=ds.indexOf(ST.date);
+  if(i<0) return;
+  var j=i+step; if(j<0||j>=ds.length) return;
+  ST.date=ds[j]; render();
+}
+
+/* ══ 화면 ══ */
+function render(){
+  var app=document.getElementById("app");
+  var sub=document.getElementById("hdSub");
+  if(!ST.data){ app.innerHTML=vLogin(); sub.textContent="우리 아이 캠프 생활을 확인하세요"; return; }
+  sub.textContent=ST.data.camp.name;
+  app.innerHTML = vTabs()+vKid()+vAtt()+vEng()+vPe()+vHist()+vBus()+vMeal()+vFoot();
+}
+
+function vLogin(){
+  return '<div class="card">'+
+    '<h2>🔎 우리 아이 조회하기</h2>'+
+    '<div class="small" style="font-size:13px;color:var(--sub);line-height:1.7;margin-bottom:4px">'+
+    '캠프에서 안내해 드린 <b>가정 코드</b>를 넣어 주세요.<br>'+
+    '형제·자매는 <b>한 코드로 함께</b> 보이고, 다음 캠프에도 <b>같은 코드</b>를 쓰십니다.</div>'+
+    '<span class="label">가정 코드</span>'+
+    '<input class="input" id="pCode" maxlength="10" placeholder="예: 7KMD3P" autocomplete="off" '+
+      'style="text-transform:uppercase;letter-spacing:3px;font-weight:800;font-size:19px;text-align:center" '+
+      'oninput="this.value=this.value.toUpperCase()">'+
+    '<div class="small" style="color:var(--sub);margin-top:6px;line-height:1.6">'+
+      '※ 코드에는 헷갈리는 <b>0·1·I·O·S·B</b> 가 들어가지 않습니다.</div>'+
+    '<div style="height:14px"></div>'+
+    '<button class="btn" onclick="doLogin()">확인하기</button>'+
+    '<div class="msg" id="pMsg"></div>'+
+    '</div>'+
+    '<div class="foot">문의는 기존에 상담하시던 <b>캠프 카카오톡</b>으로 부탁드립니다.<br>'+
+    '이 화면은 <b>본인 자녀의 정보만</b> 보여 드립니다.<br>형제·자매가 함께 등록된 경우 <b>한 번에 확인</b>하실 수 있습니다.<br>'+
+    '<span style="color:#B8B2A6">코드를 모르시면 캠프 카카오톡으로 문의해 주세요.</span></div>';
+}
+
+/* 형제·자매가 함께 등록된 경우 위쪽에 선택 단추 */
+function vTabs(){
+  var ks=ST.data.kids||[];
+  if(ks.length<2) return "";
+  var h='<div class="kidTabs">';
+  ks.forEach(function(k,i){
+    h+='<button class="kidTab'+(i===ST.idx?" on":"")+'" onclick="pickKid('+i+')">'+esc(k.n)+
+       '<span class="g">'+esc(k.cn||k.g||"")+'</span></button>';
+  });
+  return h+'</div>';
+}
+function vKid(){
+  var k=ST.kid;
+  return '<div class="kidBar"><div><div class="nm">'+esc(k.n)+'</div>'+
+    '<div class="gr">'+esc(k.g||"")+(k.cn?' · 반번호 '+esc(k.cn):'')+'</div></div>'+
+    '<button onclick="logout()">나가기</button></div>';
+}
+
+function vAtt(){
+  var k=ST.kid, ds=ST.data.camp.dates, hol=ST.data.hol||{};
+  var plan=k.plan||[], att=k.att||{}, mk=k.mk||[];
+  var ok=0, ab=0, left=0, t=today();
+  var upcoming=[];
+  plan.forEach(function(d){
+    if(att[d]===1) ok++;
+    else if(att[d]===2) ab++;
+    else if(d>=t){ left++; upcoming.push(d); }
+  });
+  (mk||[]).forEach(function(d){ if(d>=t && upcoming.indexOf(d)<0) upcoming.push(d); });
+  upcoming.sort();
+
+  /* 다음 출석일 안내 */
+  var isTodayPlan = plan.indexOf(t)>=0 || mk.indexOf(t)>=0;
+  var nb;
+  if(isTodayPlan && att[t]!==2){
+    nb='<div class="nextBox today"><div class="ic">☀️</div><div>'+
+       '<div class="t1">오늘은 캠프 가는 날입니다</div>'+
+       '<div class="t2">'+fmtD(t)+'</div></div></div>';
+  } else if(upcoming.length){
+    nb='<div class="nextBox"><div class="ic">📌</div><div>'+
+       '<div class="t1">다음 출석일</div>'+
+       '<div class="t2">'+fmtD(upcoming[0])+'</div></div></div>';
+  } else {
+    nb='<div class="nextBox done"><div class="ic">🎓</div><div>'+
+       '<div class="t1">남은 출석일</div>'+
+       '<div class="t2">모든 일정을 마쳤습니다</div></div></div>';
+  }
+
+  var h='<div class="card"><h2>📅 출석 현황</h2>'+nb+
+    '<div class="stats">'+
+      '<div class="stat"><div class="n">'+plan.length+'</div><div class="l">등록일수</div></div>'+
+      '<div class="stat ok"><div class="n">'+ok+'</div><div class="l">출석</div></div>'+
+      '<div class="stat ab"><div class="n">'+ab+'</div><div class="l">결석</div></div>'+
+      '<div class="stat left"><div class="n">'+left+'</div><div class="l">남은일수</div></div>'+
+    '</div><div class="dayGrid">';
+  ds.forEach(function(d){
+    var isPlan=plan.indexOf(d)>=0, isMk=mk.indexOf(d)>=0, isHol=!!hol[d];
+    var cls, st;
+    if(isHol){ cls="hol"; st="휴일"; }
+    else if(!isPlan && !isMk){ cls="no"; st="—"; }
+    else if(att[d]===1){ cls="on"; st="출석"; }
+    else if(att[d]===2){ cls="ab"; st="결석"; }
+    else if(d<t){ cls="plan"; st="—"; }
+    else { cls="plan"; st="예정"; }
+    h+='<div class="day '+cls+(isMk?' mk':'')+'"><div class="d">'+shortD(d)+
+       '<span style="font-size:9.5px;font-weight:600;color:var(--sub)"> '+DOW[dowOf(d)]+'</span></div>'+
+       '<div class="s">'+st+'</div></div>';
+  });
+  h+='</div>';
+
+  if(upcoming.length){
+    h+='<div class="label" style="margin:12px 0 0">앞으로 오시는 날 '+
+       '<span style="font-weight:400;color:var(--sub)">'+upcoming.length+'일</span></div><div class="chips">';
+    upcoming.forEach(function(d){
+      h+='<span class="chip'+(mk.indexOf(d)>=0?' mk':'')+'">'+shortD(d)+'('+DOW[dowOf(d)]+')'+
+         (mk.indexOf(d)>=0?' 보강':'')+'</span>';
+    });
+    h+='</div>';
+  }
+  if(ab) h+='<div class="lgd" style="background:var(--redSoft);border-radius:9px;padding:9px 11px;margin-top:11px">'+
+     '결석 <b style="color:var(--red)">'+ab+'일</b>이 있습니다. 캠프 기간 안에는 <b>보강</b>이 가능하니 '+
+     '카카오톡으로 날짜를 잡아 주세요.</div>';
+  h+='<div class="lgd">'+
+     '<b style="color:var(--green)">출석</b> · <b style="color:var(--red)">결석</b> · '+
+     '<b>예정</b> = 앞으로 오실 날 · <b style="color:var(--amber)">주황 테두리</b> = 보강일<br>'+
+     '출석일이 실제와 다르면 캠프 카카오톡으로 알려 주세요.</div></div>';
+  return h;
+}
+function vEng(){
+  var k=ST.kid;
+  var h='<div class="card"><h2>📚 영어 독서 지도</h2>';
+  if(k.lv){
+    h+='<div class="lvBox"><div class="lvNow">'+esc(k.lv)+'</div>'+
+       '<div class="lvSub">현재 읽기 레벨(SR/AR 기준)'+(k.lvAt?' · '+esc(k.lvAt)+' 기록':'')+'</div></div>';
+  } else {
+    h+='<div class="empty">아직 레벨이 기록되지 않았습니다.<br>레벨 테스트 후 이곳에 표시됩니다.</div>';
+  }
+  var log=(k.lvLog||[]).filter(function(x){ return x.lv; });
+  if(log.length>1){
+    h+='<div style="margin-top:11px"><div class="label" style="margin:0 0 3px">레벨 변화</div>';
+    log.slice(-5).forEach(function(x){
+      h+='<div class="lvRow"><span style="color:var(--sub)">'+esc(x.d)+'</span><b>'+esc(x.lv)+'</b></div>';
+    });
+    h+='</div>';
+  }
+  if(k.an) h+='<div class="anBox an"><div class="t">🔎 레벨 분석</div><div class="c">'+esc(k.an)+'</div></div>';
+  if(k.gd) h+='<div class="anBox gd"><div class="t">🧭 지도 방향</div><div class="c">'+esc(k.gd)+'</div></div>';
+  if(k.pub) h+='<div class="anBox gd"><div class="t">👩‍🏫 선생님 기록</div><div class="c">'+esc(k.pub)+'</div></div>';
+  /* 레벨테스트 결과지 사진 */
+  if(k.iid){
+    var src=ST.imgs && ST.imgs[k.iid];
+    if(src) h+='<img class="lvImg" src="'+src+'" onclick="window.open(this.src)" alt="레벨테스트 결과지">'+
+               '<div class="imgCap">레벨테스트 결과지 · 눌러서 크게 보기</div>';
+    else h+='<div class="lgd" style="margin-top:10px">🖼 레벨테스트 결과지를 불러오는 중입니다…</div>';
+  }
+  if(!k.an && !k.gd && !k.pub && k.lv)
+    h+='<div class="lgd" style="margin-top:10px">담당 선생님이 아이의 독서 상태를 살펴본 뒤 <b>분석과 지도 방향</b>을 이곳에 올려 드립니다.</div>';
+  h+='<div class="lgd">영어독서는 스스로 수준에 맞는 책을 골라 읽는 <b>다독 프로그램</b>입니다. '+
+     '단기간에 점수로 드러나지 않더라도, 아이가 스스로 읽어 나가는 것을 응원해 주세요.</div></div>';
+  return h;
+}
+/* 체육 — 그날 수업 내용(전체 공통) + 우리 아이 기록 */
+function vPe(){
+  var k=ST.kid, pl=ST.data.peLog||{};
+  var days=Object.keys(pl).sort().reverse();
+  var mine=(k.jp||k.gy||k.pe);
+  if(!days.length && !mine) return "";
+
+  var h='<div class="card"><h2>🏃 체육</h2>';
+
+  /* ── 그날 한 수업 내용 (모든 캠프생 공통) ── */
+  if(days.length){
+    var cur=pl[ST.date];
+    h+='<div class="peSec">'+
+       '<div class="peT">📋 수업 내용 <span class="peD">'+esc(fmtD(ST.date))+'</span></div>';
+    if(cur && (cur.j||cur.g)){
+      if(cur.j) h+='<div class="peBox" style="margin-bottom:7px"><b style="color:var(--blue)">🪢 줄넘기</b><br>'+esc(cur.j)+'</div>';
+      if(cur.g) h+='<div class="peBox gym"><b style="color:#8A5A00">🤸 체조</b><br>'+esc(cur.g)+'</div>';
+    } else {
+      h+='<div class="empty" style="padding:12px">이 날 수업 기록은 아직 올라오지 않았습니다.</div>';
+    }
+    /* 최근 다른 날 기록 접어 보기 */
+    var others=days.filter(function(d){ return d!==ST.date; }).slice(0,5);
+    if(others.length){
+      h+='<details style="margin-top:8px"><summary style="font-size:12.5px;color:var(--blue);font-weight:700;cursor:pointer">'+
+         '지난 수업 내용 보기 ('+others.length+'일)</summary><div style="margin-top:7px">';
+      others.forEach(function(d){
+        var x=pl[d];
+        h+='<div class="histRow"><div class="histTop"><b>'+esc(fmtD(d))+'</b></div>'+
+           (x.j?'<div class="histTxt">🪢 '+esc(x.j)+'</div>':'')+
+           (x.g?'<div class="histTxt">🤸 '+esc(x.g)+'</div>':'')+'</div>';
+      });
+      h+='</div></details>';
+    }
+    h+='</div>';
+  }
+
+  /* ── 우리 아이 기록 ── */
+  if(mine){
+    h+='<div style="border-top:1px dashed var(--line);margin-top:12px;padding-top:12px">'+
+       '<div class="peT" style="color:var(--green);margin-bottom:8px">🌟 '+esc(k.n)+' 기록</div>';
+    if(k.jp) h+='<div class="peSec"><div class="peT jump">🪢 줄넘기 <span class="peD">월·수·금</span></div>'+
+      '<div class="peBox">'+esc(k.jp)+'</div></div>';
+    if(k.gy) h+='<div class="peSec"><div class="peT gym">🤸 체조 <span class="peD">화·목</span></div>'+
+      '<div class="peBox gym">'+esc(k.gy)+'</div></div>';
+    if(k.pe) h+='<div class="peSec"><div class="peT">📝 체육 기록</div>'+
+      '<div class="peBox">'+esc(k.pe)+'</div></div>';
+    h+='</div>';
+  }
+
+  h+='<div class="lgd">수업 내용은 그날 전체 활동이고, <b>'+esc(k.n)+' 기록</b>은 선생님이 아이를 보며 따로 적어 둔 내용입니다. '+
+     '아직 기록이 없는 날은 조금만 기다려 주세요.</div></div>';
+  return h;
+}
+/* 지난 캠프 기록 — 캠프를 거듭할수록 쌓입니다 */
+function vHist(){
+  var k=ST.kid, hs=k.hist||[];
+  if(!hs.length) return "";
+  var h='<div class="card"><h2>🌱 지난 캠프 기록</h2>';
+  hs.forEach(function(x){
+    h+='<div class="histRow">'+
+       '<div class="histTop"><b>'+esc(x.c)+'</b>'+
+       '<span class="histDay">'+(x.days||0)+'일 참여'+(x.lv?' · 레벨 '+esc(x.lv):'')+'</span></div>'+
+       (x.an?'<div class="histTxt">🔎 '+esc(x.an)+'</div>':'')+
+       (x.gd?'<div class="histTxt">🧭 '+esc(x.gd)+'</div>':'')+
+       '</div>';
+  });
+  h+='<div class="lgd">캠프에 참여할수록 아이의 기록이 이어서 쌓입니다.</div></div>';
+  return h;
+}
+function dateBar(){
+  var ds=ST.data.camp.dates, i=ds.indexOf(ST.date);
+  var isT=ST.date===today();
+  return '<div class="dateBar">'+
+    '<button onclick="moveDate(-1)"'+(i<=0?' disabled':'')+'>‹</button>'+
+    '<div class="mid">'+fmtD(ST.date)+(isT?' <span class="t">오늘</span>':'')+'</div>'+
+    '<button onclick="moveDate(1)"'+(i<0||i>=ds.length-1?' disabled':'')+'>›</button></div>';
+}
+
+function vMeal(){
+  var m=(ST.data.meals||{})[ST.date];
+  var hol=(ST.data.hol||{})[ST.date];
+  var h='<div class="card"><h2>🍚 이 날의 식단</h2>'+dateBar();
+  if(hol){ h+='<div class="empty">휴일입니다. ('+esc(typeof hol==="string"?hol:"휴일")+')</div></div>'; return h; }
+  if(!m){ h+='<div class="empty">아직 식단이 입력되지 않았습니다.</div></div>'; return h; }
+  if(m.sp){
+    h+='<div class="mrow"><div class="l">🍕 특식</div><div class="v">'+esc(m.note||"특식 제공")+'</div></div>';
+  } else {
+    (m.items||[]).forEach(function(it){
+      h+='<div class="mrow"><div class="l">'+esc(it.l)+'</div><div class="v">'+esc(it.n)+
+         (it.k?'<span class="kcal">'+it.k+'kcal</span>':'')+'</div></div>';
+    });
+    if(m.kc) h+='<div class="kcalSum">🔥 1인분 약 '+m.kc+'kcal'+
+      (m.unk?' <span style="font-weight:600;color:var(--sub)">(칼로리 정보가 없는 반찬 '+m.unk+'가지 제외)</span>'
+            :' <span style="font-weight:600;color:var(--sub)">(밥 제외)</span>')+'</div>';
+  }
+  h+='<div class="lgd">밥과 함께 배식됩니다. 칼로리는 초등학생 1인분 기준 어림값입니다.<br>'+
+     '알러지 등 특이사항은 캠프 카카오톡으로 알려 주세요.</div></div>';
+  return h;
+}
+
+function vBus(){
+  var k=ST.kid, b=k.bus||{go:[],back:[]};
+  var go=(b.go||[]), back=(b.back||[]);
+  if(!go.length && !back.length) return "";   /* 차량 미신청 */
+
+  var d=ST.date;
+  var isPlanDay=(k.plan||[]).indexOf(d)>=0 || (k.mk||[]).indexOf(d)>=0;
+  var absent=(k.att||{})[d]===2;
+  var skip=!!(k.skip||{})[d];
+  var pick=k.pick||{};
+
+  var h='<div class="card"><h2>🚌 우리 아이 차량</h2>'+dateBar();
+
+  var why = !isPlanDay ? "이 날은 등원일이 아닙니다"
+          : absent ? "결석으로 표시되어 차량에서 빠졌습니다"
+          : skip ? "이 날은 차량을 이용하지 않습니다"
+          : "";
+
+  /* 그날 실제로 타는 정류장 고르기
+     — 장소가 한 곳이면 그대로, 여러 곳이면 «그날 정해 둔 곳» */
+  var pickOne=function(list, key){
+    if(!list.length) return { none:true };
+    if(list.length===1) return { st:list[0] };
+    var want=pick[d+"|"+key];
+    if(!want) return { undecided:true };
+    var hit=null;
+    list.forEach(function(x){ if(x.k===want) hit=x; });
+    return hit ? { st:hit } : { undecided:true };
+  };
+  var g=pickOne(go,"go"), bk=pickOne(back,"back");
+
+  if(why){
+    h+='<div class="nextBox done"><div class="ic">ℹ️</div><div>'+
+       '<div class="t1">'+esc(fmtD(d))+'</div><div class="t2" style="font-size:14px">'+esc(why)+'</div></div></div>';
+  } else {
+    var row=function(r,isGo){
+      if(r.none) return "";
+      if(r.undecided){
+        return '<div class="busRow"><div class="busIco '+(isGo?"go":"back")+'" style="background:var(--amberSoft)">❓</div>'+
+          '<div style="min-width:0"><div class="busT" style="font-size:14px;color:#8A5A00">'+
+            (isGo?"승차":"하차")+' 장소가 아직 정해지지 않았습니다</div>'+
+          '<div class="busP">이 날은 아래 장소 중 한 곳입니다. 캠프 카카오톡으로 확인해 주세요.</div></div></div>';
+      }
+      var st=r.st;
+      return '<div class="busRow"><div class="busIco '+(isGo?"go":"back")+'">'+(isGo?"🚌":"🏠")+'</div>'+
+        '<div style="min-width:0"><div class="busT">'+esc(st.t||"시간 미정")+
+          '<span style="font-size:12px;font-weight:700;color:'+(isGo?"var(--blue)":"var(--green)")+'"> '+
+          (isGo?"등원 승차":"하원 하차")+'</span></div>'+
+        '<div class="busP">'+esc(st.place||"장소 미정")+'</div></div></div>';
+    };
+    var body=row(g,true)+row(bk,false);
+    h+= body || '<div class="empty">이 날은 차량 운행이 없습니다.</div>';
+  }
+
+  /* 장소가 여러 곳인 방향은 «날마다 달라짐»을 분명히 알려 줍니다 */
+  var fix=function(list,isGo){
+    if(!list.length) return "";
+    var many=list.length>1;
+    var out='<div class="busAllT">'+(isGo?"🚌 등원 승차":"🏠 하원 하차")+
+      (many?' <span style="color:#8A5A00">— 날마다 달라집니다</span>':'')+'</div>';
+    list.forEach(function(st){
+      var isNow = (isGo? (g.st&&g.st.k===st.k) : (bk.st&&bk.st.k===st.k));
+      out+='<div class="busFix"'+(many&&isNow?' style="background:var(--greenSoft);border-radius:8px;padding-left:6px"':'')+'>'+
+        '<div class="tt" style="color:'+(isGo?"var(--blue)":"var(--green)")+'">'+esc(st.t||"–")+'</div>'+
+        '<div class="pp">'+esc(st.place||"장소 미정")+
+        (many&&isNow?'<span class="dd" style="background:var(--greenSoft);color:var(--green)">이 날</span>':'')+
+        '</div></div>';
+    });
+    return out;
+  };
+  h+='<div class="busAll">'+fix(go,true)+fix(back,false)+'</div>';
+
+  if(go.length>1 || back.length>1)
+    h+='<div class="lgd" style="background:var(--amberSoft);border-radius:9px;padding:9px 11px;margin-top:9px">'+
+      '이 아이는 <b>날짜에 따라 타고 내리는 곳이 달라집니다.</b> 위 날짜를 바꾸면 그날 장소가 표시됩니다. '+
+      '«이 날» 표시가 그날의 장소입니다.</div>';
+
+  h+='<div class="lgd">차량은 <b>버스정류장·아파트 입구</b>에서 타고 내립니다. '+
+     '시간은 교통 상황에 따라 5분 내외 차이가 날 수 있습니다.<br>'+
+     '위 <b>시간과 장소가 실제와 다르면</b> 꼭 캠프 카카오톡으로 알려 주세요.</div></div>';
+  return h;
+}
+function vFoot(){
+  var at=ST.data.at?new Date(ST.data.at):null;
+  var w=at?(at.getMonth()+1)+"/"+at.getDate()+" "+
+    String(at.getHours()).padStart(2,"0")+":"+String(at.getMinutes()).padStart(2,"0"):"—";
+  return '<button class="btn line" onclick="reload()">↻ 최신 내용 불러오기</button>'+
+    '<div class="foot">자료 기준 : '+esc(w)+'<br>'+
+    '문의는 기존에 상담하시던 <b>캠프 카카오톡</b>으로 부탁드립니다.<br>'+
+    '<span style="color:#B8B2A6">나라차태권도 X 클래식리더영어도서관</span></div>';
+}
+function reload(){
+  var s=saved(); if(!s) return;
+  document.getElementById("app").innerHTML='<div class="spin">불러오는 중…</div>';
+  fetchKid(s.code, false);
+}
+
+/* ══ 시작 ══ */
+(function(){
+  var s=saved();
+  if(s && s.code) fetchKid(s.code, false);
+  else render();
+  /* 엔터로 조회 */
+  document.addEventListener("keydown", function(e){
+    if(e.key==="Enter" && document.getElementById("pCode")) doLogin();
+  });
+})();
+</script>
+</body>
+</html>
