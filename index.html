@@ -945,7 +945,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.48";   /* R4.48: 차량 수정모드 재설계 — 왼쪽 고정 도구모음(스크롤 따라다님·구간 바로가기)·위계 정리(구간 헤더바>정류장 번호>탑승자 밑줄)·정류장마다 수련생 이름 검색 추가 · R4.47: 차량 노선(업무 창고) 동기화 — 휴대폰에서 다른 기기 변경이 화면에 반영 안 되던 문제(갱신 조건이 PC 업무화면 한정) 수정 · 차량표 열 때 즉시 수신 + [☁ 최신 불러오기] 버튼 · 클라우드 수신 전 주간 자동이월 금지(옛 노선이 최신 수정을 덮어쓰던 위험 차단) · R4.46: 회계 '차감 예정(선수금)' 신설 — 이미 낸 돈 중 안 쓰게 된 금액(예: 차량비)을 사유·메모와 함께 등록해 두면 다음 청구에서 자동 차감(여러 달 나눠 쓰기·되돌리기 지원) · R4.44~45: 시간표 표시 3건 — 요일 머리 위로 스크롤 글씨 비침 제거(보드 위 여백 padding→border) · 말풍선이 옆 요일에 가려지던 문제(기둥 opacity 쌓임 문맥 제거) · 말풍선 폭 확대(날짜 줄바꿈 개선) · R4.43: 결석관리 정합화 — 접속 시 기록과 어긋난 자동 결석 표시·옛 메모 잔재 전체 자동 청소 + 결석 등록/수정 시 확인창 없이 자동 반영(한 줄 안내) + 저장 직후 '겹칩니다' 오경고 제거 · R4.42: 결석 예정 수정·삭제·복귀 시 시간표의 자동 결석 표시도 함께 복원(기간 단축분 출석 대기로) — 기록만 바뀌고 표시가 남던 문제 · R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.50";   /* R4.50: 변경 안내 [🚌 적용] — 요일·대상·동작(옮기기/추가/미탑승/빼기) 선택해 노선에 한 번에 반영 · 카톡 발송 문구 맨 위에 그날 변경 안내 자동 포함(토글) · R4.49: 차량 변경 예정 캘린더 신설 — 방학·개학 등 날짜별 변경 내용을 미리 적어 두면 그날 차량표 맨 위에 안내로 뜸(자동 배치 없음·[반영함] 체크) · R4.48: 차량 수정모드 재설계 — 왼쪽 고정 도구모음(스크롤 따라다님·구간 바로가기)·위계 정리(구간 헤더바>정류장 번호>탑승자 밑줄)·정류장마다 수련생 이름 검색 추가 · R4.47: 차량 노선(업무 창고) 동기화 — 휴대폰에서 다른 기기 변경이 화면에 반영 안 되던 문제(갱신 조건이 PC 업무화면 한정) 수정 · 차량표 열 때 즉시 수신 + [☁ 최신 불러오기] 버튼 · 클라우드 수신 전 주간 자동이월 금지(옛 노선이 최신 수정을 덮어쓰던 위험 차단) · R4.46: 회계 '차감 예정(선수금)' 신설 — 이미 낸 돈 중 안 쓰게 된 금액(예: 차량비)을 사유·메모와 함께 등록해 두면 다음 청구에서 자동 차감(여러 달 나눠 쓰기·되돌리기 지원) · R4.44~45: 시간표 표시 3건 — 요일 머리 위로 스크롤 글씨 비침 제거(보드 위 여백 padding→border) · 말풍선이 옆 요일에 가려지던 문제(기둥 opacity 쌓임 문맥 제거) · 말풍선 폭 확대(날짜 줄바꿈 개선) · R4.43: 결석관리 정합화 — 접속 시 기록과 어긋난 자동 결석 표시·옛 메모 잔재 전체 자동 청소 + 결석 등록/수정 시 확인창 없이 자동 반영(한 줄 안내) + 저장 직후 '겹칩니다' 오경고 제거 · R4.42: 결석 예정 수정·삭제·복귀 시 시간표의 자동 결석 표시도 함께 복원(기간 단축분 출석 대기로) — 기록만 바뀌고 표시가 남던 문제 · R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -2308,6 +2308,8 @@ function closeTopModal(){
   if(state.markM){ closeMark(); return true; }                           /* 출결 표시창 */
   if(state.mkM){ closeMkM(); return true; }                              /* 보강 예약 */
   if(state.regM){ closeRegM(); return true; }                            /* 정규시간 변경 */
+  if(state.busApplyM){ closeBusApplyM(); return true; }                    /* [R4.50] 노선 적용 팝업 */
+  if(state.busNoteM){ closeBusNoteM(); return true; }                      /* [R4.49] 차량 변경 예정 팝업 */
   if(state.creditM){ closeCreditM(); return true; }                       /* [R4.46] 차감 예정 팝업 */
   if(state.absM){ closeAbsM(); return true; }                            /* 결석 예정 */
   if(state.addBox){ closeAdd(); return true; }                           /* 시간표 원생 추가 */
@@ -13034,12 +13036,12 @@ function applyWorkTomb(w, coll, tk){
 function mergeWork(local, remote){
   if(!remote||!remote.workV) return local;
   var out=JSON.parse(JSON.stringify(local));
-  ["manage","flags","events","logs","tasks","routines","rchecks","staff","car","carFuel","carMaint","typeColors","holidays","holHidden","signupDone","measures","doneLog","mgContact","consult"].forEach(function(coll){
+  ["manage","flags","events","logs","tasks","routines","rchecks","staff","car","carFuel","carMaint","typeColors","holidays","holHidden","signupDone","measures","doneLog","mgContact","consult","busNotes"].forEach(function(coll){
     var rc=remote[coll]||{}, oc=out[coll]||(out[coll]={});
     for(var k in rc){ if(!oc[k] || (rc[k]._t||0)>(oc[k]._t||0)) oc[k]=rc[k]; }
   });
   /* 삭제 표식 병합 (양쪽 최신 시각 유지) */
-  ["tombEvents","tombFlags","tombTasks","tombRoutines","tombCar","tombFuel","tombCarMaint","tombTypes","tombMeas","tombDoneLog","tombConsult"].forEach(function(tk){
+  ["tombEvents","tombFlags","tombTasks","tombRoutines","tombCar","tombFuel","tombCarMaint","tombTypes","tombMeas","tombDoneLog","tombConsult","tombBusNotes"].forEach(function(tk){
     var rt=remote[tk]||{}, ot=out[tk]||(out[tk]={});
     for(var k in rt){ if(!ot[k] || rt[k]>ot[k]) ot[k]=rt[k]; }
   });
@@ -13054,6 +13056,7 @@ function mergeWork(local, remote){
   applyWorkTomb(out, "doneLog", "tombDoneLog");
   applyWorkTomb(out, "measures", "tombMeas");
   applyWorkTomb(out, "consult", "tombConsult");
+  applyWorkTomb(out, "busNotes", "tombBusNotes");   /* [R4.49] 차량 변경 예정 메모 */
   /* 차량 정보(단일 객체): 최신본 우선 */
   if(remote.carInfo && (remote.carInfo._t||0) > ((out.carInfo&&out.carInfo._t)||0)) out.carInfo=remote.carInfo;
   /* [R3.35] 차량운행 노선(요일별 단일 객체): 최신본 우선 — 이게 없어서 다른 기기에 동기화되지 않았음 */
@@ -13103,7 +13106,7 @@ function _workSig(w){
   try{
     parts.push("bus:"+((w.bus&&w.bus._t)||0)+"|"+((w.bus&&w.bus._week)||""));
     parts.push("carInfo:"+((w.carInfo&&w.carInfo._t)||0));
-    ["manage","flags","events","logs","tasks","routines","car","carFuel","carMaint","consult","doneLog"].forEach(function(coll){
+    ["manage","flags","events","logs","tasks","routines","car","carFuel","carMaint","consult","doneLog","busNotes"].forEach(function(coll){
       var o=w[coll]||{}, ks=Object.keys(o), mx=0;
       for(var i=0;i<ks.length;i++){ var v=o[ks[i]]; if(v && (v._t||0)>mx) mx=v._t||0; }
       parts.push(coll+":"+ks.length+":"+mx);
@@ -14393,11 +14396,34 @@ function busStopTx(st){
   return line.trim();
 }
 /* 카톡 발송 본문 생성 — 관장님이 쓰시던 형식 그대로 */
+/* 그 요일의 이번 주 날짜 (YYYY-MM-DD) */
+function busISODateForDay(day){
+  try{
+    var idx=BUS_DAYS.indexOf(day); if(idx<0) idx=0;
+    var now=new Date(), dow=now.getDay();
+    var mon=new Date(now); mon.setDate(now.getDate()-((dow===0?7:dow)-1));
+    mon.setDate(mon.getDate()+idx);
+    return mon.getFullYear()+'-'+('0'+(mon.getMonth()+1)).slice(-2)+'-'+('0'+mon.getDate()).slice(-2);
+  }catch(e){ return today(); }
+}
 function busKakaoText(dayOpt){
   var day=dayOpt||busDay();
   var courses=(busData()[day]||{courses:[]}).courses||[];
   var dt=busDateForDay(day);
   var L=['['+dt+' '+day+'요일 차량스케줄]'];
+  /* [R4.50] 그날 해당하는 차량 변경 안내를 맨 위에 붙여 기사님·지도진이 바로 볼 수 있게 */
+  if(state.busKkNote!==false){
+    try{
+      var _on=busNotesOn(busISODateForDay(day));
+      if(_on.length){
+        L.push('');
+        L.push('※ 오늘 변경 안내');
+        _on.forEach(function(n){
+          L.push('· ('+(n.kind||'기타')+') '+(n.names?n.names+' — ':'')+String(n.text||'').replace(/\s*\n\s*/g,' '));
+        });
+      }
+    }catch(e){}
+  }
   courses.forEach(function(c){
     L.push('');                                   /* [R3.55] 구간 사이 한 줄 띄우기 */
     var title='<'+((c.title||'').trim()||'구간')+'>'+((c.note||'').trim()?c.note.trim():'');
@@ -14873,6 +14899,386 @@ function busSearchHtml(cid,sid){
     return '<button onclick="busPickRider(\''+cid+'\',\''+sid+'\',\''+esc(s.n).replace(/'/g,"\\'")+'\')" style="border:1px solid #C8D9F0;background:#fff;color:var(--ink);border-radius:7px;padding:4px 9px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">'+esc(s.n)+' <span style="font-size:9.5px;font-weight:800;color:'+hcol+'">'+hint+'</span></button>';
   }).join('')+'</div>';
 }
+/* ══════════ [R4.49] 차량 변경 예정 (날짜별 메모 캘린더) ══════════
+   방학·개학처럼 "그날부터 이렇게 바뀐다"를 미리 적어 두는 곳.
+   자동으로 노선을 바꾸지 않는다 — 그 날짜가 되면 차량표 위에 안내로 떠서 보고 직접 처리한다. */
+var BUSNOTE_KINDS=[
+  {k:"시간변경", c:"#2B5FB8", bg:"#EEF4FF", bd:"#C8D9F0"},
+  {k:"미탑승",  c:"#B91C1C", bg:"#FFF1F1", bd:"#F3C9C9"},
+  {k:"임시탑승", c:"#1E7B3C", bg:"#F1FAF4", bd:"#BFE3CD"},
+  {k:"정류장변경", c:"#B45309", bg:"#FFF7E8", bd:"#F0D9A8"},
+  {k:"기타",    c:"#6D28D9", bg:"#F5F0FF", bd:"#DDD0FA"}
+];
+function busNoteKind(k){ return BUSNOTE_KINDS.filter(function(x){return x.k===k;})[0]||BUSNOTE_KINDS[4]; }
+function busNotesAll(){
+  var w=workData(); if(!w.busNotes) w.busNotes={};
+  return Object.keys(w.busNotes).map(function(id){ return w.busNotes[id]; })
+    .filter(function(n){ return n && n.from; })
+    .sort(function(a,b){ return String(a.from).localeCompare(String(b.from)) || String(a.text||'').localeCompare(String(b.text||'')); });
+}
+function busNoteEnd(n){ return (n.to && n.to>=n.from) ? n.to : n.from; }
+/* 그 날짜에 걸리는 메모 */
+function busNotesOn(date){ return busNotesAll().filter(function(n){ return n.from<=date && date<=busNoteEnd(n); }); }
+/* 오늘 + 앞으로 N일 안에 시작하거나 진행 중인 메모 */
+function busNotesSoon(days){
+  var td=today(), hi=addDays(td, days||7);
+  return busNotesAll().filter(function(n){ return busNoteEnd(n)>=td && n.from<=hi; });
+}
+window.busCalShift=function(d){
+  var y=state.busCalY||Number(today().slice(0,4)), m=state.busCalM||Number(today().slice(5,7));
+  m+=d; if(m<1){ m=12; y--; } if(m>12){ m=1; y++; }
+  state.busCalY=y; state.busCalM=m; render();
+};
+window.busCalToday=function(){ state.busCalY=Number(today().slice(0,4)); state.busCalM=Number(today().slice(5,7)); render(); };
+window.setBusView=function(v){ state.busView=v; render(); };
+/* ── 등록·수정 팝업 (본문 렌더와 분리된 오버레이) ── */
+window.openBusNoteM=function(date, id){
+  var n=id? (workData().busNotes||{})[id] : null;
+  state.busNoteM = n
+    ? { id:n.id, from:n.from, to:n.to||'', text:n.text||'', names:n.names||'', kind:n.kind||'기타' }
+    : { id:null, from:date||today(), to:'', text:'', names:'', kind:'시간변경' };
+  _renderBusNoteOv();
+};
+window.closeBusNoteM=function(){ state.busNoteM=null; var e=document.getElementById("busNoteOv"); if(e&&e.parentNode) e.parentNode.removeChild(e); };
+window.busNoteF=function(k,v){ if(state.busNoteM) state.busNoteM[k]=v; };
+window.busNoteKindPick=function(k){ if(!state.busNoteM) return; state.busNoteM.kind=k; _renderBusNoteOv(); };
+window.saveBusNoteM=function(){
+  var m=state.busNoteM; if(!m) return;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(m.from||'')){ alert("시작 날짜를 입력해 주세요."); return; }
+  if(m.to && !/^\d{4}-\d{2}-\d{2}$/.test(m.to)){ alert("종료 날짜 형식이 올바르지 않습니다."); return; }
+  if(m.to && m.to<m.from){ alert("종료 날짜가 시작 날짜보다 빠릅니다."); return; }
+  if(!String(m.text||'').trim()){ alert("변경 내용을 적어 주세요.\n(예: 방학 캠프로 2시부 승차 → 4시부 승차)"); return; }
+  var w=workData(); if(!w.busNotes) w.busNotes={};
+  var id=m.id || ('bn'+Date.now()+Math.round(Math.random()*999));
+  var prev=w.busNotes[id]||{};
+  w.busNotes[id]={ id:id, from:m.from, to:(m.to||''), text:String(m.text).trim(),
+    names:String(m.names||'').trim(), kind:m.kind||'기타',
+    done:!!prev.done, dev:workDev(), _t:Date.now() };
+  state.busNoteM=null; closeBusNoteM();
+  workPersist(); render();
+};
+window.delBusNote=function(id){
+  var w=workData(); var n=(w.busNotes||{})[id]; if(!n) return;
+  if(!confirm('이 차량 변경 예정을 삭제할까요?\n\n· '+esc(n.from)+(n.to?' ~ '+esc(n.to):'')+'\n· '+esc(n.text||''))) return;
+  if(!w.tombBusNotes) w.tombBusNotes={};
+  w.tombBusNotes[id]=Date.now(); delete w.busNotes[id];
+  workPersist(); render();
+};
+/* 처리 완료 표시 — 그날 차량표에 반영했으면 체크 (안내 배너에서 내려감) */
+window.toggleBusNoteDone=function(id){
+  var w=workData(); var n=(w.busNotes||{})[id]; if(!n) return;
+  n.done=!n.done; n._t=Date.now(); workPersist(); render();
+};
+function _renderBusNoteOv(){
+  var ex=document.getElementById("busNoteOv"); if(ex&&ex.parentNode) ex.parentNode.removeChild(ex);
+  var m=state.busNoteM; if(!m) return;
+  var isEdit=!!m.id;
+  var kindBtns=BUSNOTE_KINDS.map(function(K){
+    var on=(m.kind===K.k);
+    return '<button onclick="busNoteKindPick(\''+K.k+'\')" style="border:1.5px solid '+(on?K.c:'var(--line)')+';background:'+(on?K.bg:'#fff')+';color:'+(on?K.c:'var(--sub)')+';border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;margin:0 5px 5px 0">'+K.k+'</button>';
+  }).join('');
+  var ov=document.createElement("div"); ov.id="busNoteOv";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(27,37,52,.55);z-index:2147483600;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto";
+  ov.onclick=function(ev){ if(ev.target===ov) closeBusNoteM(); };
+  ov.innerHTML='<div style="background:#fff;border-radius:16px;max-width:440px;width:100%;padding:18px 20px 16px;box-shadow:0 14px 44px rgba(0,0,0,.32)" onclick="event.stopPropagation()">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'+
+        '<div style="font-size:16px;font-weight:900;color:#2B5FB8">🚌 '+(isEdit?'차량 변경 예정 수정':'차량 변경 예정 등록')+'</div>'+
+        '<button onclick="closeBusNoteM()" style="background:none;border:none;font-size:24px;color:var(--sub);cursor:pointer;font-family:inherit;line-height:1">×</button></div>'+
+      '<div style="font-size:12px;color:var(--sub);margin-bottom:13px">그 날짜가 되면 차량표 위에 <b style="color:var(--ink)">안내로 떠서</b> 알려 드립니다. 노선이 저절로 바뀌지는 않습니다.</div>'+
+      '<div style="display:flex;gap:8px;margin-bottom:10px">'+
+        '<div style="flex:1"><div style="font-size:11.5px;font-weight:800;color:var(--sub);margin-bottom:4px">시작 날짜 <span style="color:var(--red)">*</span></div>'+
+          '<input type="date" class="input" value="'+esc(m.from||'')+'" onchange="busNoteF(\'from\',this.value)" style="width:100%;height:42px;font-size:14px"></div>'+
+        '<div style="flex:1"><div style="font-size:11.5px;font-weight:800;color:var(--sub);margin-bottom:4px">종료 날짜 <span style="font-weight:600">(하루면 비움)</span></div>'+
+          '<input type="date" class="input" value="'+esc(m.to||'')+'" onchange="busNoteF(\'to\',this.value)" style="width:100%;height:42px;font-size:14px"></div>'+
+      '</div>'+
+      '<div style="font-size:11.5px;font-weight:800;color:var(--sub);margin-bottom:5px">구분</div>'+
+      '<div style="margin-bottom:9px">'+kindBtns+'</div>'+
+      '<div style="font-size:11.5px;font-weight:800;color:var(--sub);margin-bottom:4px">대상 수련생 <span style="font-weight:600">(선택 · 여러 명은 쉼표로)</span></div>'+
+      '<input class="input" placeholder="예: 남연재, 정다온" value="'+esc(m.names||'')+'" oninput="busNoteF(\'names\',this.value)" style="width:100%;height:42px;font-size:14px;margin-bottom:9px">'+
+      '<div style="font-size:11.5px;font-weight:800;color:var(--sub);margin-bottom:4px">변경 내용 <span style="color:var(--red)">*</span></div>'+
+      '<textarea id="busNoteTextIn" class="input" placeholder="예: 방학 캠프 기간 — 2시부 승차 대신 4시부 승차 / 하차는 그대로" oninput="busNoteF(\'text\',this.value)" style="width:100%;min-height:74px;font-size:14px;resize:vertical;font-family:inherit;line-height:1.6;padding:9px 11px">'+esc(m.text||'')+'</textarea>'+
+      '<div style="display:flex;gap:8px;margin-top:13px">'+
+        (isEdit?'<button onclick="delBusNote(\''+m.id+'\');closeBusNoteM()" style="flex:0 0 auto;background:#fff;border:1.5px solid #F1C0C0;color:var(--red);border-radius:11px;padding:12px 15px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit">삭제</button>':'')+
+        '<button onclick="closeBusNoteM()" style="flex:0 0 auto;background:#fff;border:1.5px solid var(--line);color:var(--sub);border-radius:11px;padding:12px 16px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit">취소</button>'+
+        '<button onclick="saveBusNoteM()" style="flex:1;background:var(--brand);color:#fff;border:none;border-radius:11px;padding:12px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit">'+(isEdit?'저장':'등록')+'</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(ov);
+  setTimeout(function(){ try{ var el=document.getElementById("busNoteTextIn"); if(el && !m.id) el.focus(); }catch(e){} }, 60);
+}
+/* ── [R4.50] 변경 안내 → 노선에 한 번에 적용 ── */
+function _busRemoveFromDay(courses, nm){
+  var n=0;
+  courses.forEach(function(c){ (c.stops||[]).forEach(function(s){
+    var b=(s.riders||[]).length;
+    s.riders=(s.riders||[]).filter(function(r){ return String(r.name||'').trim()!==nm; });
+    n += b-(s.riders||[]).length;
+  }); });
+  return n;
+}
+window.openBusApplyM=function(noteId){
+  var n=(workData().busNotes||{})[noteId]; if(!n) return;
+  var names=String(n.names||'').split(/[,·]/).map(function(s){return s.trim();}).filter(Boolean);
+  if(!names.length){ alert('이 변경 안내에는 대상 수련생이 없습니다.\n\n[수정]을 눌러 대상 수련생 이름을 넣어 주세요.\n(여러 명은 쉼표로 구분)'); return; }
+  var act = (n.kind==='미탑승') ? 'off' : (n.kind==='임시탑승' ? 'add' : 'move');
+  var m={ id:noteId, names:names, sel:{}, days:{}, act:act, cid:'', sid:'' };
+  names.forEach(function(nm){ m.sel[nm]=true; });
+  m.days[busDay()]=true;
+  var cs=busCourses();
+  if(cs.length){ m.cid=cs[0].id; var s0=(cs[0].stops||[])[0]; if(s0) m.sid=s0.id; }
+  state.busApplyM=m;
+  _renderBusApplyOv();
+};
+window.closeBusApplyM=function(){ state.busApplyM=null; var e=document.getElementById("busApplyOv"); if(e&&e.parentNode) e.parentNode.removeChild(e); };
+window.busApplyF=function(k,v){
+  var m=state.busApplyM; if(!m) return;
+  if(k==='cid'){ m.cid=v; var c=busCourses().filter(function(x){return x.id===v;})[0]; var s0=c&&(c.stops||[])[0]; m.sid=s0?s0.id:''; }
+  else m[k]=v;
+  _renderBusApplyOv();
+};
+window.busApplyToggle=function(kind,key){
+  var m=state.busApplyM; if(!m) return;
+  if(kind==='day') m.days[key]=!m.days[key]; else m.sel[key]=!m.sel[key];
+  _renderBusApplyOv();
+};
+window.doBusApply=function(){
+  var m=state.busApplyM; if(!m) return;
+  var days=BUS_DAYS.filter(function(d){ return m.days[d]; });
+  var names=m.names.filter(function(nm){ return m.sel[nm]; });
+  if(!days.length){ alert('적용할 요일을 하나 이상 선택해 주세요.'); return; }
+  if(!names.length){ alert('적용할 수련생을 하나 이상 선택해 주세요.'); return; }
+  var needTarget=(m.act==='move'||m.act==='add');
+  var tC=null, tS=null;
+  if(needTarget){
+    var cs=busCourses();
+    tC=cs.filter(function(c){return c.id===m.cid;})[0];
+    if(!tC){ alert('옮길 구간을 선택해 주세요.'); return; }
+    tS=(tC.stops||[]).filter(function(s){return s.id===m.sid;})[0];
+    if(!tS){ alert('옮길 정류장을 선택해 주세요.'); return; }
+  }
+  var ACT={move:'옮기기', add:'추가', off:'/미탑승/ 지정', del:'노선에서 빼기'}[m.act];
+  var tgtTx = needTarget ? ('\n· 옮길 곳: <'+(tC.title||'구간')+'> '+((tS.time||'')+' '+(tS.place||'')).trim()) : '';
+  if(!confirm('🚌 차량 노선에 적용합니다.\n\n· 동작: '+ACT+'\n· 요일: '+days.join(', ')+'\n· 대상: '+names.join(', ')+tgtTx+
+     '\n\n다른 요일은 같은 이름의 구간·정류장을 찾아 적용합니다.\n진행할까요?')) return;
+  var w=workData(); if(!w.bus) w.bus={};
+  var okList=[], missList=[];
+  days.forEach(function(day){
+    var dayObj=w.bus[day]||(w.bus[day]={courses:[]});
+    var courses=dayObj.courses||[];
+    var dc=null, dst=null;
+    if(needTarget){
+      dc=courses.filter(function(c){ return String(c.title||'')===String(tC.title||''); })[0];
+      if(dc){
+        dst=(dc.stops||[]).filter(function(s){ return String(s.place||'')===String(tS.place||'') && String(s.time||'')===String(tS.time||''); })[0]
+            || (dc.stops||[]).filter(function(s){ return String(s.place||'')===String(tS.place||''); })[0];
+      }
+      if(!dc || !dst){ missList.push(day+'요일 — 같은 구간·정류장 없음'); return; }
+      if(!dst.riders) dst.riders=[];
+    }
+    names.forEach(function(nm){
+      if(m.act==='off'){
+        var hit=0;
+        courses.forEach(function(c){ (c.stops||[]).forEach(function(s){ (s.riders||[]).forEach(function(r){
+          if(String(r.name||'').trim()===nm){ r.fix='미탑승'; r.ovr=''; r.ovrWk=''; r.mark='미탑승'; hit++; }
+        }); }); });
+        if(hit) okList.push(day+' '+nm); else missList.push(day+'요일 '+nm+' — 노선에 없음');
+        return;
+      }
+      if(m.act==='del'){
+        var rn=_busRemoveFromDay(courses, nm);
+        if(rn) okList.push(day+' '+nm); else missList.push(day+'요일 '+nm+' — 노선에 없음');
+        return;
+      }
+      if(m.act==='move') _busRemoveFromDay(courses, nm);
+      if(!(dst.riders||[]).some(function(r){ return String(r.name||'').trim()===nm; })) dst.riders.push({ name:nm, mark:'' });
+      okList.push(day+' '+nm);
+    });
+  });
+  var note=(w.busNotes||{})[m.id];
+  if(note && okList.length){ note.done=true; note._t=Date.now(); }
+  closeBusApplyM();
+  busTouch();
+  try{ busApplyAttendance(busDay()); busTouch(); }catch(e){}
+  state.busMsg='✅ '+ACT+' 적용 '+okList.length+'건'+(missList.length?' · 건너뜀 '+missList.length+'건':'');
+  workPersist(); render();
+  alert('✅ 적용 완료\n\n· '+ACT+' '+okList.length+'건\n'+okList.slice(0,10).join(', ')+(okList.length>10?' 외 '+(okList.length-10):'')+
+    (missList.length? '\n\n⚠️ 건너뜀 '+missList.length+'건\n'+missList.slice(0,8).join('\n') : '')+
+    '\n\n※ 변경 안내는 [반영함]으로 표시했습니다.');
+};
+function _renderBusApplyOv(){
+  var ex=document.getElementById("busApplyOv"); if(ex&&ex.parentNode) ex.parentNode.removeChild(ex);
+  var m=state.busApplyM; if(!m) return;
+  var n=(workData().busNotes||{})[m.id]||{};
+  var cs=busCourses();
+  var needTarget=(m.act==='move'||m.act==='add');
+  var chk=function(on){ return '<span style="flex:0 0 auto;width:17px;height:17px;border-radius:5px;border:2px solid '+(on?'var(--brand)':'#C7D0DB')+';background:'+(on?'var(--brand)':'#fff')+';color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900">'+(on?'✓':'')+'</span>'; };
+  var dayBtns=BUS_DAYS.map(function(d){
+    var on=!!m.days[d];
+    var cnt=0; try{ cnt=(((workData().bus||{})[d]||{courses:[]}).courses||[]).length; }catch(e){}
+    return '<button onclick="busApplyToggle(\'day\',\''+d+'\')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;border:1.5px solid '+(on?'var(--brand)':'var(--line)')+';background:'+(on?'#EEF4FF':'#fff')+';color:'+(on?'var(--brand)':'var(--sub)')+';border-radius:9px;padding:8px 2px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">'+d+(cnt?'':'<span style="font-size:9px;font-weight:600">없음</span>')+'</button>';
+  }).join('');
+  var nameBtns=m.names.map(function(nm){
+    var on=!!m.sel[nm];
+    var here=''; try{ var hrs=busPlacedHours(nm, busDay())||[]; here=hrs.length?hrs.join(',')+'시':'배치없음'; }catch(e){}
+    return '<button onclick="busApplyToggle(\'name\',\''+esc(nm).replace(/'/g,"\\'")+'\')" style="display:flex;align-items:center;gap:6px;border:1.5px solid '+(on?'var(--brand)':'var(--line)')+';background:'+(on?'#EEF4FF':'#fff')+';border-radius:9px;padding:7px 11px;font-size:13px;font-weight:800;color:var(--ink);cursor:pointer;font-family:inherit;margin:0 6px 6px 0">'+chk(on)+esc(nm)+'<span style="font-size:10px;font-weight:700;color:var(--sub)">'+here+'</span></button>';
+  }).join('');
+  var ACTS=[{k:'move',t:'옮기기',d:'지금 있는 자리에서 빼고 아래 정류장으로'},
+            {k:'add',t:'추가',d:'지금 자리는 그대로 두고 아래 정류장에 추가'},
+            {k:'off',t:'/미탑승/ 지정',d:'노선에 남기되 안 타는 것으로 표시'},
+            {k:'del',t:'노선에서 빼기',d:'그 요일 노선에서 이름을 지움'}];
+  var actBtns=ACTS.map(function(A){
+    var on=(m.act===A.k);
+    return '<button onclick="busApplyF(\'act\',\''+A.k+'\')" style="display:block;width:100%;text-align:left;border:1.5px solid '+(on?'var(--brand)':'var(--line)')+';background:'+(on?'#EEF4FF':'#fff')+';border-radius:10px;padding:9px 11px;margin-bottom:6px;cursor:pointer;font-family:inherit">'+
+      '<div style="font-size:13.5px;font-weight:800;color:'+(on?'var(--brand)':'var(--ink)')+'">'+A.t+'</div>'+
+      '<div style="font-size:11px;color:var(--sub);margin-top:1px">'+A.d+'</div></button>';
+  }).join('');
+  var tgt='';
+  if(needTarget){
+    if(!cs.length){
+      tgt='<div style="font-size:12px;color:#B91C1C;font-weight:700;background:#FFF1F1;border:1px solid #F3C9C9;border-radius:9px;padding:9px 11px">'+busDay()+'요일에 구간이 없습니다. 먼저 노선을 만들어 주세요.</div>';
+    } else {
+      var curC=cs.filter(function(c){return c.id===m.cid;})[0]||cs[0];
+      tgt='<div style="display:flex;gap:7px;flex-wrap:wrap">'+
+        '<select onchange="busApplyF(\'cid\',this.value)" style="flex:1;min-width:130px;height:40px;border:1.5px solid #C8D9F0;border-radius:9px;font-size:13px;font-family:inherit;background:#fff;padding:0 8px">'+
+          cs.map(function(c){ return '<option value="'+c.id+'"'+(c.id===curC.id?' selected':'')+'>'+esc(c.title||'구간')+'</option>'; }).join('')+
+        '</select>'+
+        '<select onchange="busApplyF(\'sid\',this.value)" style="flex:1.3;min-width:150px;height:40px;border:1.5px solid #C8D9F0;border-radius:9px;font-size:13px;font-family:inherit;background:#fff;padding:0 8px">'+
+          ((curC.stops||[]).length? (curC.stops||[]).map(function(s){ return '<option value="'+s.id+'"'+(s.id===m.sid?' selected':'')+'>'+esc(((s.time||'')+' '+(s.place||'')).trim()||'정류장')+'</option>'; }).join('') : '<option value="">정류장 없음</option>')+
+        '</select></div>'+
+        '<div style="font-size:10.5px;color:var(--sub);margin-top:5px;line-height:1.6">다른 요일은 <b>같은 이름의 구간·정류장</b>을 찾아 적용합니다. 못 찾으면 그 요일만 건너뛰고 알려 드립니다.</div>';
+    }
+  }
+  var ov=document.createElement("div"); ov.id="busApplyOv";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(27,37,52,.55);z-index:2147483601;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto";
+  ov.onclick=function(ev){ if(ev.target===ov) closeBusApplyM(); };
+  ov.innerHTML='<div style="background:#fff;border-radius:16px;max-width:470px;width:100%;padding:18px 20px 16px;box-shadow:0 14px 44px rgba(0,0,0,.32);max-height:92vh;overflow:auto" onclick="event.stopPropagation()">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'+
+        '<div style="font-size:16px;font-weight:900;color:var(--brand)">🚌 노선에 적용</div>'+
+        '<button onclick="closeBusApplyM()" style="background:none;border:none;font-size:24px;color:var(--sub);cursor:pointer;font-family:inherit;line-height:1">×</button></div>'+
+      '<div style="font-size:12px;color:var(--sub);background:#F7F6F2;border-radius:9px;padding:8px 10px;margin-bottom:12px;line-height:1.6">'+
+        '<b style="color:var(--ink)">'+esc(n.kind||'')+'</b> · '+esc(n.from||'')+(n.to&&n.to!==n.from?' ~ '+esc(n.to):'')+'<br>'+esc(n.text||'')+'</div>'+
+      '<div style="font-size:11.5px;font-weight:800;color:var(--sub);margin-bottom:5px">① 어떤 요일에 적용할까요?</div>'+
+      '<div style="display:flex;gap:5px;margin-bottom:11px">'+dayBtns+'</div>'+
+      '<div style="font-size:11.5px;font-weight:800;color:var(--sub);margin-bottom:5px">② 대상 수련생 <span style="font-weight:600">(눌러서 선택 해제 · 옆은 '+esc(busDay())+'요일 배치)</span></div>'+
+      '<div style="display:flex;flex-wrap:wrap;margin-bottom:6px">'+nameBtns+'</div>'+
+      '<div style="font-size:11.5px;font-weight:800;color:var(--sub);margin-bottom:5px">③ 무엇을 할까요?</div>'+
+      actBtns+
+      (needTarget? '<div style="font-size:11.5px;font-weight:800;color:var(--sub);margin:9px 0 5px">④ 어느 정류장으로?</div>'+tgt : '')+
+      '<div style="display:flex;gap:8px;margin-top:14px">'+
+        '<button onclick="closeBusApplyM()" style="flex:0 0 auto;background:#fff;border:1.5px solid var(--line);color:var(--sub);border-radius:11px;padding:12px 17px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit">취소</button>'+
+        '<button onclick="doBusApply()" style="flex:1;background:var(--brand);color:#fff;border:none;border-radius:11px;padding:12px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit">노선에 적용</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(ov);
+}
+/* ── 차량표 위 안내 배너: 오늘 + 앞으로 7일 ── */
+function _busNoteBanner(mob){
+  var td=today();
+  var soon=busNotesSoon(7).filter(function(n){ return !n.done || (n.from<=td && busNoteEnd(n)>=td); });
+  if(!soon.length) return '';
+  var todayN=soon.filter(function(n){ return n.from<=td && busNoteEnd(n)>=td; });
+  var nextN=soon.filter(function(n){ return n.from>td; });
+  var row=function(n, isToday){
+    var K=busNoteKind(n.kind);
+    var per=(n.from===busNoteEnd(n)) ? n.from.slice(5).replace('-','/')
+          : (n.from.slice(5).replace('-','/')+'~'+busNoteEnd(n).slice(5).replace('-','/'));
+    var dleft=Math.round((new Date(n.from+'T00:00:00')-new Date(td+'T00:00:00'))/86400000);
+    return '<div style="display:flex;align-items:flex-start;gap:7px;padding:6px 0;border-top:1px dashed '+K.bd+';font-size:12.5px">'+
+      '<span style="flex:0 0 auto;background:'+K.bg+';color:'+K.c+';border:1px solid '+K.bd+';border-radius:6px;padding:1px 7px;font-size:10.5px;font-weight:800;white-space:nowrap">'+esc(n.kind||'기타')+'</span>'+
+      '<span style="flex:0 0 auto;font-weight:900;color:'+(isToday?'#B91C1C':'var(--sub)')+';font-variant-numeric:tabular-nums;white-space:nowrap">'+per+(isToday?'':' <span style="font-weight:700">D-'+dleft+'</span>')+'</span>'+
+      '<span style="flex:1;min-width:0;color:var(--ink);line-height:1.55">'+(n.names?'<b style="color:#2B5FB8">'+esc(n.names)+'</b> · ':'')+esc(n.text||'')+'</span>'+
+      (n.names?'<button class="chip sm" style="flex:0 0 auto;padding:2px 9px;font-size:10.5px;color:var(--brand);border-color:#C8D9F0;font-weight:800" onclick="openBusApplyM(\''+n.id+'\')" title="이 내용을 노선에 바로 적용합니다">🚌 적용</button>':'')+
+      (isToday?'<button class="chip sm" style="flex:0 0 auto;padding:2px 8px;font-size:10.5px;color:'+(n.done?'#1E7B3C':'var(--sub)')+';border-color:'+(n.done?'#BFE3CD':'var(--line)')+'" onclick="toggleBusNoteDone(\''+n.id+'\')" title="차량표에 반영했으면 체크">'+(n.done?'✓ 반영함':'반영함')+'</button>':'')+
+      '<button class="chip sm" style="flex:0 0 auto;padding:2px 8px;font-size:10.5px;color:var(--sub)" onclick="openBusNoteM(\'\',\''+n.id+'\')">수정</button>'+
+    '</div>';
+  };
+  var h='<div class="card" style="padding:'+(mob?'10px 12px':'11px 15px')+';background:#FFFBF3;border:1.5px solid #F0D9A8;margin-bottom:9px">'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px">'+
+      '<b style="font-size:'+(mob?'13px':'13.5px')+';color:#B45309">📌 차량 변경 안내</b>'+
+      (todayN.length?'<span style="font-size:11.5px;font-weight:900;color:#fff;background:#B91C1C;border-radius:8px;padding:1px 8px">오늘 '+todayN.length+'건</span>':'')+
+      (nextN.length?'<span style="font-size:11.5px;font-weight:800;color:#B45309;background:#FFF3E0;border-radius:8px;padding:1px 8px">예정 '+nextN.length+'건</span>':'')+
+      '<span style="flex:1"></span>'+
+      '<button class="chip sm" style="color:#B45309;border-color:#F0D9A8;font-weight:800" onclick="setBusView(\'cal\')">📅 달력에서 보기</button>'+
+    '</div>'+
+    todayN.map(function(n){ return row(n,true); }).join('')+
+    nextN.map(function(n){ return row(n,false); }).join('')+
+  '</div>';
+  return h;
+}
+/* ── [R4.49] 차량 변경 예정 캘린더 화면 ── */
+function renderBusCal(mob){
+  var y=state.busCalY||Number(today().slice(0,4));
+  var mo=state.busCalM||Number(today().slice(5,7));
+  var td=today();
+  var firstDow=new Date(y,mo-1,1).getDay();
+  var dim=new Date(y,mo,0).getDate();
+  function ymd(d){ return y+'-'+p2(mo)+'-'+p2(d); }
+  var notes=busNotesAll();
+  var h='<div class="card" style="padding:'+(mob?'11px 12px':'14px 16px')+'">'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">'+
+      '<b style="font-size:'+(mob?'14.5px':'16px')+'">📅 차량 변경 예정</b>'+
+      '<span style="font-size:11.5px;color:var(--sub)">날짜를 누르면 그날의 변경 내용을 적을 수 있습니다</span>'+
+      '<span style="flex:1"></span>'+
+      '<button onclick="openBusNoteM(\'\')" style="background:var(--brand);color:#fff;border:none;border-radius:10px;padding:'+(mob?'9px 14px':'8px 16px')+';font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">＋ 변경 예정 등록</button>'+
+    '</div>'+
+    '<div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:9px">'+
+      '<button onclick="busCalShift(-1)" style="border:1px solid var(--line);background:#fff;border-radius:9px;width:34px;height:34px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:800">◀</button>'+
+      '<b style="font-size:16px;min-width:104px;text-align:center">'+y+'년 '+mo+'월</b>'+
+      '<button onclick="busCalShift(1)" style="border:1px solid var(--line);background:#fff;border-radius:9px;width:34px;height:34px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:800">▶</button>'+
+      '<button onclick="busCalToday()" style="margin-left:4px;border:1.5px solid #2B5FB8;background:#EEF4FF;color:#2B5FB8;border-radius:9px;height:34px;padding:0 12px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:800">오늘</button>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;font-size:11.5px;font-weight:800;margin-bottom:4px">'+
+      ['일','월','화','수','목','금','토'].map(function(dn,i){ return '<div style="color:'+(i===0?'#D0332A':i===6?'#2B5FB8':'var(--sub)')+'">'+dn+'</div>'; }).join('')+
+    '</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">';
+  for(var i=0;i<firstDow;i++) h+='<div style="min-height:'+(mob?'62px':'82px')+';background:#FAFBFD;border:1px solid #F1F3F7;border-radius:9px"></div>';
+  for(var d=1;d<=dim;d++){
+    var ds=ymd(d);
+    var on=busNotesOn(ds);
+    var isTd=(ds===td);
+    var dow=new Date(y,mo-1,d).getDay();
+    var numCol=isTd?'#fff':(dow===0?'#D0332A':dow===6?'#2B5FB8':'var(--ink)');
+    h+='<div onclick="openBusNoteM(\''+ds+'\')" title="'+ds+' — 눌러서 변경 예정 등록" style="min-height:'+(mob?'62px':'82px')+';background:'+(isTd?'#EEF4FF':'#fff')+';border:'+(isTd?'2px solid #2B5FB8':'1px solid #E6E9EE')+';border-radius:9px;padding:'+(mob?'3px 4px':'4px 5px')+';cursor:pointer;overflow:hidden">'+
+      '<div style="display:flex;align-items:center;gap:3px;margin-bottom:2px">'+
+        '<span style="'+(isTd?'background:#2B5FB8;border-radius:50%;width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;':'')+'font-size:'+(mob?'11px':'12px')+';font-weight:900;color:'+numCol+'">'+d+'</span>'+
+        (on.length>(mob?1:2)?'<span style="font-size:9px;font-weight:800;color:var(--sub);margin-left:auto">'+on.length+'</span>':'')+
+      '</div>'+
+      on.slice(0,(mob?1:2)).map(function(n){
+        var K=busNoteKind(n.kind);
+        var lbl=(n.names?n.names.split(',')[0].trim()+' ':'')+String(n.text||'').replace(/\s+/g,' ');
+        return '<div title="'+esc((n.names?n.names+' · ':'')+(n.text||''))+'" style="background:'+K.bg+';color:'+K.c+';border-left:2px solid '+K.c+';border-radius:3px;padding:1px 3px;font-size:'+(mob?'8.5px':'9.5px')+';font-weight:700;line-height:1.35;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"'+(n.done?' opacity:.55"':'')+'>'+esc(lbl.slice(0,mob?7:12))+'</div>';
+      }).join('')+
+      (on.length>(mob?1:2)?'<div style="font-size:8.5px;color:var(--sub);font-weight:700">+'+(on.length-(mob?1:2))+'건</div>':'')+
+      '</div>';
+  }
+  h+='</div>';
+  /* 이달의 변경 목록 */
+  var mPrefix=y+'-'+p2(mo);
+  var inMonth=notes.filter(function(n){ return (n.from.slice(0,7)===mPrefix) || (busNoteEnd(n).slice(0,7)===mPrefix) || (n.from<mPrefix+'-01' && busNoteEnd(n)>mPrefix+'-31'); });
+  h+='<div style="margin-top:12px;padding-top:11px;border-top:1px solid var(--line)">'+
+    '<div style="font-size:13px;font-weight:900;margin-bottom:7px">'+mo+'월 변경 목록 <span style="font-size:11.5px;color:var(--sub);font-weight:700">'+inMonth.length+'건</span></div>';
+  if(!inMonth.length){
+    h+='<div style="font-size:12.5px;color:var(--sub);padding:14px 0;text-align:center">이 달에 등록된 차량 변경 예정이 없습니다.<br>위 달력에서 날짜를 누르거나 [＋ 변경 예정 등록]을 눌러 주세요.</div>';
+  } else {
+    inMonth.forEach(function(n){
+      var K=busNoteKind(n.kind);
+      var per=(n.from===busNoteEnd(n)) ? n.from : (n.from+' ~ '+busNoteEnd(n));
+      var past=busNoteEnd(n)<td, now=(n.from<=td && busNoteEnd(n)>=td);
+      h+='<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-top:1px dashed var(--line);font-size:12.5px;'+(past?'opacity:.55':'')+'">'+
+        '<span style="flex:0 0 auto;background:'+K.bg+';color:'+K.c+';border:1px solid '+K.bd+';border-radius:6px;padding:1px 7px;font-size:10.5px;font-weight:800;white-space:nowrap">'+esc(n.kind||'기타')+'</span>'+
+        '<span style="flex:0 0 auto;font-weight:800;color:'+(now?'#B91C1C':'var(--sub)')+';font-variant-numeric:tabular-nums;white-space:nowrap">'+esc(per)+(now?' <span style="font-size:10px">진행중</span>':'')+'</span>'+
+        '<span style="flex:1;min-width:0;line-height:1.55">'+(n.names?'<b style="color:#2B5FB8">'+esc(n.names)+'</b> · ':'')+esc(n.text||'')+'</span>'+
+        (n.names?'<button class="chip sm" style="flex:0 0 auto;padding:2px 9px;font-size:10.5px;color:var(--brand);border-color:#C8D9F0;font-weight:800" onclick="openBusApplyM(\''+n.id+'\')" title="이 내용을 노선에 바로 적용합니다">🚌 적용</button>':'')+
+        '<button class="chip sm" style="flex:0 0 auto;padding:2px 9px;font-size:10.5px;color:var(--sub)" onclick="openBusNoteM(\'\',\''+n.id+'\')">수정</button>'+
+        '<button class="chip sm" style="flex:0 0 auto;padding:2px 8px;font-size:10.5px;color:var(--red);border-color:#F1C0C0" onclick="delBusNote(\''+n.id+'\')">✕</button>'+
+      '</div>';
+    });
+  }
+  h+='</div>';
+  h+='<div style="font-size:11px;color:var(--sub);line-height:1.7;margin-top:10px;background:#F7F6F2;border-radius:9px;padding:9px 11px">'+
+    '적어 둔 내용은 <b>노선을 저절로 바꾸지 않습니다.</b> 해당 날짜가 되면 차량표 맨 위에 <b>📌 차량 변경 안내</b>로 떠서 보고 직접 처리하시면 됩니다. 처리한 뒤 [반영함]을 누르면 안내에서 내려갑니다.</div>';
+  h+='</div>';
+  return h;
+}
 /* [R4.48] 왼쪽 도구모음에서 구간으로 바로 이동 */
 window.busJumpTo=function(cid){
   try{ var el=document.getElementById('busC_'+cid); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
@@ -15108,6 +15514,11 @@ function _busSendCard(day, mob){
       '<b style="font-size:'+(mob?'14px':'15px')+'">💬 카톡 발송</b>'+
       '<span style="font-size:11px;color:var(--sub)">차량운행 방</span>'+
       '<span style="flex:1"></span>'+
+      (function(){ var _on=0; try{ _on=busNotesOn(busISODateForDay(day)).length; }catch(e){}
+        if(!_on) return '';
+        var _inc=(state.busKkNote!==false);
+        return '<button onclick="state.busKkNote='+(_inc?'false':'true')+';render()" class="chip sm" style="font-weight:800;color:'+(_inc?'#B45309':'var(--sub)')+';border-color:'+(_inc?'#F0D9A8':'var(--line)')+'" title="발송 문구 맨 위에 그날 변경 안내를 넣습니다">'+(_inc?'📌 변경 안내 포함 ('+_on+')':'📌 변경 안내 제외')+'</button>';
+      })()+
       '<button onclick="state.busPre=!state.busPre;render()" class="chip sm" style="font-weight:700">'+(state.busPre?'미리보기 접기':'미리보기 펼치기')+'</button>'+
     '</div>'+
     (state.busPre?'<pre style="background:#FAF9F6;border:1px solid var(--line);border-radius:11px;padding:12px;font-size:'+(mob?'11.5px':'12.5px')+';line-height:1.75;white-space:pre-wrap;word-break:break-all;font-family:inherit;margin:0 0 10px;max-height:340px;overflow:auto">'+esc(preview)+'</pre>':'')+
@@ -15312,6 +15723,17 @@ function renderBusTab(mobile){
       '<span style="font-size:10.5px;color:var(--sub)">매주 같은 요일에 자동으로 이어집니다</span>'+
     '</div>'+
     (state.busCarryMsg?'<div style="background:#EAF1FB;border:1px solid #C8D9F0;border-radius:10px;padding:8px 11px;margin-bottom:9px;font-size:11.5px;color:#2B5FB8;font-weight:700;display:flex;align-items:flex-start;gap:7px"><span style="flex:1;min-width:0">'+esc(state.busCarryMsg)+'</span><button onclick="state.busCarryMsg=null;render()" style="background:none;border:none;color:#2B5FB8;font-size:16px;cursor:pointer;font-family:inherit;line-height:1;flex:0 0 auto">×</button></div>':'')+
+    /* [R4.49] 화면 전환: 노선 / 변경 예정 캘린더 */
+    (function(){
+      var _v=(state.busView==='cal')?'cal':'route';
+      var _soonN=0; try{ _soonN=busNotesSoon(7).filter(function(n){ return !n.done||(n.from<=today()&&busNoteEnd(n)>=today()); }).length; }catch(e){}
+      var _b=function(v,lbl,badge){
+        var on=(_v===v);
+        return '<button onclick="setBusView(\''+v+'\')" style="flex:1;background:'+(on?'var(--brand)':'#fff')+';color:'+(on?'#fff':'var(--ink)')+';border:1.5px solid '+(on?'var(--brand)':'var(--line)')+';border-radius:10px;padding:'+(mob?'9px 6px':'8px 10px')+';font-size:'+(mob?'13px':'13.5px')+';font-weight:800;cursor:pointer;font-family:inherit">'+lbl+
+          (badge?' <span style="background:'+(on?'#fff':'#B91C1C')+';color:'+(on?'var(--brand)':'#fff')+';border-radius:8px;padding:0 6px;font-size:11px;font-weight:900">'+badge+'</span>':'')+'</button>';
+      };
+      return '<div style="display:flex;gap:6px;margin-bottom:9px">'+_b('route','🚌 노선표','')+_b('cal','📅 변경 예정',_soonN||'')+'</div>';
+    })()+
     /* 요일 탭 */
     '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px">'+
       BUS_DAYS.map(function(d){ var on=(d===day);
@@ -15333,6 +15755,12 @@ function renderBusTab(mobile){
     '</div>'+
   '</div>';
 
+  /* [R4.49] 변경 예정 캘린더 화면 */
+  if(state.busView==='cal'){
+    return h + renderBusCal(mob) + _busScopeModal() + _busCourseModal() + _busTelModal();
+  }
+  /* [R4.49] 오늘·다가오는 차량 변경 안내 (노선표 화면 맨 위) */
+  h+=_busNoteBanner(mob);
   /* [R3.70] 시간대 미배정 경고 배너 — 출석 반영 시 채워짐 */
   if(state.busTimeWarn){
     h+='<div class="card" style="padding:'+(mob?'11px 13px':'12px 15px')+';background:#FFF4E5;border-color:#F5C97A;margin-top:8px">'+
@@ -15481,6 +15909,7 @@ function renderBusTab(mobile){
           _tb('refreshBusAttendance()','🔄 출석 반영','#fff','#334155','#E2E8F0')+
           _tb('clearBusMarks()','🧹 전체 자동으로','#fff','#334155','#E2E8F0')+
           _tb('copyBusText()','📋 카톡 복사','#fff','#334155','#E2E8F0')+
+          _tb('openBusNoteM(\'\')','📅 변경 예정 등록','#fff','#B45309','#F0D9A8')+
           '<div style="display:flex;gap:5px;margin-bottom:6px">'+
             '<button onclick="busFoldAll(true)" style="flex:1;background:#fff;color:#334155;border:1.5px solid #E2E8F0;border-radius:9px;padding:7px 4px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">모두 접기</button>'+
             '<button onclick="busFoldAll(false)" style="flex:1;background:#fff;color:#334155;border:1.5px solid #E2E8F0;border-radius:9px;padding:7px 4px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">모두 펴기</button>'+
