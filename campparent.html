@@ -11,6 +11,9 @@
 <!-- 글꼴은 화면을 막지 않도록 나중에 불러옵니다 (느린 통신·카톡 브라우저 대응) -->
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css">
+<!-- 인성 교육 문구에만 쓰는 손글씨 글꼴 (동화책 느낌) -->
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap">
 <style>
 :root{
   /* 잉크 */
@@ -235,6 +238,41 @@ summary{font-size:12.5px;font-weight:700;color:var(--t-pe);cursor:pointer;list-s
 summary::-webkit-details-marker{display:none}
 summary::before{content:"＋ ";font-weight:800}
 details[open] summary::before{content:"－ "}
+/* ══ 인성 교육 — 동화책 한 쪽처럼 ══ */
+.story-card{background:#FCFAF4}
+.blob{
+  position:relative;background:#E6F0DE;margin:2px 0 0;padding:26px 22px 20px;
+  border-radius:52% 48% 46% 54% / 9% 8% 10% 9%;
+}
+.blob::before,.blob::after{
+  content:"";position:absolute;top:-5px;width:9px;height:9px;border-radius:50%;
+  background:#BFD6B2;box-shadow:0 -6px 0 -2px #BFD6B2;
+}
+.blob::before{left:24px} .blob::after{left:44px;top:-1px}
+.blob .ko{
+  font-family:'Gaegu','Pretendard',sans-serif;
+  font-size:21px;line-height:1.72;font-weight:700;color:#243024;letter-spacing:.005em;
+  word-break:keep-all;
+}
+.blob .en{
+  font-family:'Gaegu','Pretendard',sans-serif;
+  font-size:15px;line-height:1.65;color:#C4573C;margin-top:13px;letter-spacing:.02em;
+}
+.blob .who{
+  text-align:right;font-family:'Gaegu','Pretendard',sans-serif;
+  font-size:15px;font-weight:700;color:#4A5A46;margin-top:11px;
+}
+.talk{
+  background:#fff;border:1px dashed #D9CFBB;border-radius:13px;padding:14px 16px;margin-top:14px;
+}
+.talk .t{font-size:11px;font-weight:800;letter-spacing:.12em;color:#A08A5F;margin-bottom:7px}
+.talk .c{font-size:13.5px;line-height:1.85;color:var(--ink2);white-space:pre-wrap}
+.storynav{display:flex;flex-wrap:wrap;gap:5px;margin-top:14px}
+.storynav b{
+  background:#fff;border:1px solid var(--line);border-radius:99px;padding:5px 11px;
+  font-size:12px;font-weight:700;color:var(--ink2);cursor:pointer;
+}
+.storynav b.on{background:#5C7A52;border-color:#5C7A52;color:#fff}
 .pelist{display:flex;flex-direction:column;gap:2px}
 .pe-day{display:flex;gap:12px;padding:11px 10px;border-radius:10px;align-items:flex-start}
 .pe-day.sel{background:#FBF1F2;box-shadow:inset 0 0 0 1px #F0D6D9}
@@ -416,7 +454,7 @@ function render(){
     return;
   }
   sub.textContent=ST.data.camp.name;
-  app.innerHTML = vKids()+vHero()+vAtt()+vDate()+vBus()+vMeal()+vEng()+vPe()+vHist()+vFoot();
+  app.innerHTML = vKids()+vHero()+vAtt()+vDate()+vBus()+vMeal()+vEng()+vPe()+vChar()+vHist()+vFoot();
 }
 
 function vLogin(){
@@ -774,6 +812,42 @@ function peRow(d){
       (x.g?'<div class="pe-line"><b class="gym">체조</b>'+esc(x.g)+'</div>':'')+
     '</div></div>';
 }
+
+/* ⑥ 오늘의 인성 교육 — 동화책 한 쪽처럼 */
+function vChar(){
+  var cl=ST.data.charLog||{};
+  var days=Object.keys(cl).sort();
+  if(!days.length) return "";
+
+  /* 고른 날짜에 기록이 있으면 그날, 없으면 그 이전 가장 가까운 날 */
+  var d=null;
+  for(var i=0;i<days.length;i++){ if(days[i]<=ST.date) d=days[i]; }
+  if(!d) d=days[0];
+  var c=cl[d];
+
+  var h='<section class="card story-card" style="--tape:#5C7A52">'+
+    '<div class="card-hd"><span class="eyebrow" style="color:#5C7A52">인성</span><h2>오늘의 인성 교육</h2>'+
+      '<span class="when">'+esc(fmtD(d))+'</span></div>'+
+    '<div class="card-bd">'+
+    '<div class="blob">'+
+      (c.ko?'<div class="ko">'+esc(c.ko)+'</div>':'')+
+      (c.en?'<div class="en">'+esc(c.en)+'</div>':'')+
+      (c.who?'<div class="who">— '+esc(c.who)+' —</div>':'')+
+    '</div>';
+
+  if(c.talk) h+='<div class="talk"><div class="t">선생님 한마디</div><div class="c">'+esc(c.talk)+'</div></div>';
+
+  if(days.length>1){
+    h+='<div class="storynav">'+days.slice().reverse().slice(0,12).map(function(x){
+      return '<b class="'+(x===d?"on":"")+'" onclick="goStory(\''+x+'\')">'+shortD(x)+'</b>';
+    }).join("")+'</div>';
+  }
+  h+='<div class="note">캠프에서는 매일 짧은 글 한 편을 함께 읽고 이야기를 나눕니다. '+
+     '집에서도 아이와 한 번 더 나눠 보시면 좋겠습니다.</div>'+
+     '</div></section>';
+  return h;
+}
+function goStory(d){ ST.date=d; render(); }
 
 /* 지난 캠프 (설정에서 켰을 때만) */
 function vHist(){
