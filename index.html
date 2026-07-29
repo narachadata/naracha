@@ -1064,7 +1064,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.63";   /* R4.63: [근본수정] 행사 참가비 "미청구" 오탐 반복 — 청구·납부까지 끝난 수련생이 행사 화면에서 미청구로 보이던 문제. 원인: ①행사를 지웠다 다시 만들면 번호(evId)가 바뀌는데 옛 번호를 단 청구를 무조건 남의 것으로 취급 ②수동 청구는 메모가 제목과 "완전히 같을 때"만 인정(메모를 조금만 고쳐도 탈락). 수정: 지워진 행사 번호+같은 제목이면 인정, 메모에 제목이 포함되면 인정(행사 날짜 앞뒤 120일 안·살아있는 다른 행사 청구는 제외 — 연례 같은제목 행사 중복 방지), 그래도 안 잡히는 건은 [미청구 🔗] 칩을 눌러 회계 기록에서 찾아 행사에 영구 연결(변경이력 기록) · R4.62: 회계입력 청구·수납 내역에서 바로 납부 — 원생을 고르면 뜨는 내역 패널의 미납 줄 오른쪽에 [납부] 버튼 추가(날짜·결제방법 한 팝업, R4.58과 동일), 미납 여러 건이면 [모두 납부]로 일괄 처리, 처리 후 같은 화면에서 녹색 완료 메시지·내역 즉시 갱신 · R4.61: 회계 동선 통합(연결) — 개인 납부내역 화면에 [＋ 청구·납부 입력] 버튼 신설: 누르면 그 원생이 선택된 채로 회계입력이 열리고(복귀 안내 표시), 저장하면 그 원생 납부내역 화면으로 자동 복귀해 저장 결과와 내역을 바로 확인. 같은 사람을 세 번 검색하던 확인→입력→확인 동선이 한 화면 왕복으로 줄어듦. 다른 원생을 고르거나 탭을 옮기면 자동 복귀는 해제(예상 밖 화면 이동 방지) · 기존 데이터·저장 방식은 변경 없음 · R4.60: 차량 변경 예정 — 어디서든 수정·삭제. 차량표 위 [📌 차량 변경 안내]의 각 줄에 삭제(✕) 추가(전에는 수정만), 안내에 안 뜨는 건(7일 밖·지난 안내)이 있으면 건수와 [전체 목록 열기] 안내 표시, 달력 화면 목록에 [전체 보기] 토글 신설 — 지난 안내·먼 날짜까지 한 곳에서 수정·삭제 · 삭제 확인창에 대상 수련생·내용 함께 표시 · R4.59: 홈(시간표) 화면 상단 [등록상담] 오른쪽에 [🚌 차량운행관리] 바로가기 추가 — 지도진 모두 함께 관리하는 항목이라 업무관리를 거치지 않고 한 번에 열리고, 열 때 다른 기기 변경분을 바로 받아옴. 현재 차량 화면일 때는 버튼이 파랗게 표시됨 · R4.58: 개인 납부내역에 "청구된 내역(미납)" 카드 신설 — 차감 예정 위에 청구 건을 모아 보여 주고 [💳 납부 처리]를 누르면 납부일·결제방법을 한 팝업에서 골라 바로 처리(아래 상세 결제내역까지 내려갈 필요 없음). 여러 건은 [모두 납부 처리]로 같은 날짜·방법 일괄 처리 · 마감월 포함 시 한 번만 확인 · 변경이력에 건별 기록 · R4.57: [중요] 학적부 대회이력·행사참여이력 삭제가 되살아나던 문제 수정 — 삭제 표시(묘비)를 병합 결과에서 지워 버려 "삭제했다"는 사실이 남지 않았고, 아직 안 고쳐진 다른 기기·클라우드 사본과 다시 합쳐질 때 지운 항목이 부활했다. 이제 삭제 표시를 보존(400일 후 자동 정리)하고 화면·출력에서만 제외 · 학적부 리포트·인쇄에서 삭제한 대회이력이 "(내용 없음)"으로 찍히던 문제 함께 수정 · R4.56: 보강 배차 확인 — 평소 다른 요일에 차량을 타는 수련생이 보강으로 오는 날, 그 요일 차량표(보기·수정 모두) 위에 "🔁 보강으로 오는 차량 이용 수련생 N명" 안내 표시(보강 시간·평소 탑승 요일·평소 정류장 함께). [🚌 이 날 태우기] 한 번으로 그 날 노선에 추가(보강 시간에 맞는 구간·평소 정류장 자동 선택) · R4.55: 설치형 앱 구분 수정 — 같은 주소(폴더)에 올린 다른 앱(방학캠프 등)을 설치하면 이 앱이 "이미 설치됨"으로 잡혀 설치 버튼이 안 뜨던 문제. 앱 고유번호(id)를 고정값(naracha-admin)으로 지정하고 앱 영역(scope)을 폴더가 아닌 이 파일로 좁혀 서로 겹치지 않게 함 · R4.54: [안전] 클라우드 덮어쓰기 방지 강화 — 업무·차량/심사/사진/측정 창고도 회계·출석과 동일한 fail-closed 규칙 적용(서버 확인 실패·형식 이상·해석 실패 시 전송 중단, 빈 기기가 서버를 덮지 못하도록 차단) · 전송 실패 시 자동 재시도(최대 60초 간격) · 아이폰 설치형에서 상단 시계/배터리에 화면이 가리지 않도록 상태표시줄 처리 수정 · R4.53: 설치형(PWA) 지원 — 홈 화면에 추가하면 주소창 없이 전용 앱으로 실행(아이폰·안드로이드·PC 공통) · 매니페스트/아이콘 내장(파일 1개 유지) · 앱 설치 버튼·설치 방법 안내·설치형용 새로고침 버튼 · R4.52: 심사앱 v9.0 채점 개편 탑재 — 합격판정=수련태도(P)20점+기술80점, NMPA N·M 4항목은 관찰 전용(점수 미반영), 미입력 자동 3점 부여 폐지(미확정 처리), 과거 기록 보존+구채점 배지 · R4.51: [중요] 차량 노선 유실 방지 — 자동(출석반영·주간이월) 변경은 수정시각을 올리지 않고 클라우드로 밀지 않음 · 노선 병합을 요일별로 분리 · 클라우드 수신 전 자동처리 금지 · 노선 자동 스냅샷 12개 + [⟲ 되돌리기] · R4.50: 변경 안내 [🚌 적용] — 요일·대상·동작(옮기기/추가/미탑승/빼기) 선택해 노선에 한 번에 반영 · 카톡 발송 문구 맨 위에 그날 변경 안내 자동 포함(토글) · R4.49: 차량 변경 예정 캘린더 신설 — 방학·개학 등 날짜별 변경 내용을 미리 적어 두면 그날 차량표 맨 위에 안내로 뜸(자동 배치 없음·[반영함] 체크) · R4.48: 차량 수정모드 재설계 — 왼쪽 고정 도구모음(스크롤 따라다님·구간 바로가기)·위계 정리(구간 헤더바>정류장 번호>탑승자 밑줄)·정류장마다 수련생 이름 검색 추가 · R4.47: 차량 노선(업무 창고) 동기화 — 휴대폰에서 다른 기기 변경이 화면에 반영 안 되던 문제(갱신 조건이 PC 업무화면 한정) 수정 · 차량표 열 때 즉시 수신 + [☁ 최신 불러오기] 버튼 · 클라우드 수신 전 주간 자동이월 금지(옛 노선이 최신 수정을 덮어쓰던 위험 차단) · R4.46: 회계 '차감 예정(선수금)' 신설 — 이미 낸 돈 중 안 쓰게 된 금액(예: 차량비)을 사유·메모와 함께 등록해 두면 다음 청구에서 자동 차감(여러 달 나눠 쓰기·되돌리기 지원) · R4.44~45: 시간표 표시 3건 — 요일 머리 위로 스크롤 글씨 비침 제거(보드 위 여백 padding→border) · 말풍선이 옆 요일에 가려지던 문제(기둥 opacity 쌓임 문맥 제거) · 말풍선 폭 확대(날짜 줄바꿈 개선) · R4.43: 결석관리 정합화 — 접속 시 기록과 어긋난 자동 결석 표시·옛 메모 잔재 전체 자동 청소 + 결석 등록/수정 시 확인창 없이 자동 반영(한 줄 안내) + 저장 직후 '겹칩니다' 오경고 제거 · R4.42: 결석 예정 수정·삭제·복귀 시 시간표의 자동 결석 표시도 함께 복원(기간 단축분 출석 대기로) — 기록만 바뀌고 표시가 남던 문제 · R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.64";   /* R4.64: 수납관리 화면 정리 — ①차감예정·회계변경이력을 큰 카드 대신 한 줄 소형 버튼으로(누르면 펼침) ②필터 3위계 정리: ①유형·납부상태 / ②항목 / ③기간 — 기간에 연·월 직접 지정 추가(예: 2026년 7월), 지정 시 해당 조건의 행사·대회 제목을 건수와 함께 표시 ③명단을 카드 격자 대신 한 명=한 줄 리스트로(넓은 화면에서 여러 단으로 흘려 세로 스크롤 최소화 · 이름·반·나이·상태·납부월 한 줄) · R4.63: [근본수정] 행사 참가비 "미청구" 오탐 반복 — 청구·납부까지 끝난 수련생이 행사 화면에서 미청구로 보이던 문제. 원인: ①행사를 지웠다 다시 만들면 번호(evId)가 바뀌는데 옛 번호를 단 청구를 무조건 남의 것으로 취급 ②수동 청구는 메모가 제목과 "완전히 같을 때"만 인정(메모를 조금만 고쳐도 탈락). 수정: 지워진 행사 번호+같은 제목이면 인정, 메모에 제목이 포함되면 인정(행사 날짜 앞뒤 120일 안·살아있는 다른 행사 청구는 제외 — 연례 같은제목 행사 중복 방지), 그래도 안 잡히는 건은 [미청구 🔗] 칩을 눌러 회계 기록에서 찾아 행사에 영구 연결(변경이력 기록) · R4.62: 회계입력 청구·수납 내역에서 바로 납부 — 원생을 고르면 뜨는 내역 패널의 미납 줄 오른쪽에 [납부] 버튼 추가(날짜·결제방법 한 팝업, R4.58과 동일), 미납 여러 건이면 [모두 납부]로 일괄 처리, 처리 후 같은 화면에서 녹색 완료 메시지·내역 즉시 갱신 · R4.61: 회계 동선 통합(연결) — 개인 납부내역 화면에 [＋ 청구·납부 입력] 버튼 신설: 누르면 그 원생이 선택된 채로 회계입력이 열리고(복귀 안내 표시), 저장하면 그 원생 납부내역 화면으로 자동 복귀해 저장 결과와 내역을 바로 확인. 같은 사람을 세 번 검색하던 확인→입력→확인 동선이 한 화면 왕복으로 줄어듦. 다른 원생을 고르거나 탭을 옮기면 자동 복귀는 해제(예상 밖 화면 이동 방지) · 기존 데이터·저장 방식은 변경 없음 · R4.60: 차량 변경 예정 — 어디서든 수정·삭제. 차량표 위 [📌 차량 변경 안내]의 각 줄에 삭제(✕) 추가(전에는 수정만), 안내에 안 뜨는 건(7일 밖·지난 안내)이 있으면 건수와 [전체 목록 열기] 안내 표시, 달력 화면 목록에 [전체 보기] 토글 신설 — 지난 안내·먼 날짜까지 한 곳에서 수정·삭제 · 삭제 확인창에 대상 수련생·내용 함께 표시 · R4.59: 홈(시간표) 화면 상단 [등록상담] 오른쪽에 [🚌 차량운행관리] 바로가기 추가 — 지도진 모두 함께 관리하는 항목이라 업무관리를 거치지 않고 한 번에 열리고, 열 때 다른 기기 변경분을 바로 받아옴. 현재 차량 화면일 때는 버튼이 파랗게 표시됨 · R4.58: 개인 납부내역에 "청구된 내역(미납)" 카드 신설 — 차감 예정 위에 청구 건을 모아 보여 주고 [💳 납부 처리]를 누르면 납부일·결제방법을 한 팝업에서 골라 바로 처리(아래 상세 결제내역까지 내려갈 필요 없음). 여러 건은 [모두 납부 처리]로 같은 날짜·방법 일괄 처리 · 마감월 포함 시 한 번만 확인 · 변경이력에 건별 기록 · R4.57: [중요] 학적부 대회이력·행사참여이력 삭제가 되살아나던 문제 수정 — 삭제 표시(묘비)를 병합 결과에서 지워 버려 "삭제했다"는 사실이 남지 않았고, 아직 안 고쳐진 다른 기기·클라우드 사본과 다시 합쳐질 때 지운 항목이 부활했다. 이제 삭제 표시를 보존(400일 후 자동 정리)하고 화면·출력에서만 제외 · 학적부 리포트·인쇄에서 삭제한 대회이력이 "(내용 없음)"으로 찍히던 문제 함께 수정 · R4.56: 보강 배차 확인 — 평소 다른 요일에 차량을 타는 수련생이 보강으로 오는 날, 그 요일 차량표(보기·수정 모두) 위에 "🔁 보강으로 오는 차량 이용 수련생 N명" 안내 표시(보강 시간·평소 탑승 요일·평소 정류장 함께). [🚌 이 날 태우기] 한 번으로 그 날 노선에 추가(보강 시간에 맞는 구간·평소 정류장 자동 선택) · R4.55: 설치형 앱 구분 수정 — 같은 주소(폴더)에 올린 다른 앱(방학캠프 등)을 설치하면 이 앱이 "이미 설치됨"으로 잡혀 설치 버튼이 안 뜨던 문제. 앱 고유번호(id)를 고정값(naracha-admin)으로 지정하고 앱 영역(scope)을 폴더가 아닌 이 파일로 좁혀 서로 겹치지 않게 함 · R4.54: [안전] 클라우드 덮어쓰기 방지 강화 — 업무·차량/심사/사진/측정 창고도 회계·출석과 동일한 fail-closed 규칙 적용(서버 확인 실패·형식 이상·해석 실패 시 전송 중단, 빈 기기가 서버를 덮지 못하도록 차단) · 전송 실패 시 자동 재시도(최대 60초 간격) · 아이폰 설치형에서 상단 시계/배터리에 화면이 가리지 않도록 상태표시줄 처리 수정 · R4.53: 설치형(PWA) 지원 — 홈 화면에 추가하면 주소창 없이 전용 앱으로 실행(아이폰·안드로이드·PC 공통) · 매니페스트/아이콘 내장(파일 1개 유지) · 앱 설치 버튼·설치 방법 안내·설치형용 새로고침 버튼 · R4.52: 심사앱 v9.0 채점 개편 탑재 — 합격판정=수련태도(P)20점+기술80점, NMPA N·M 4항목은 관찰 전용(점수 미반영), 미입력 자동 3점 부여 폐지(미확정 처리), 과거 기록 보존+구채점 배지 · R4.51: [중요] 차량 노선 유실 방지 — 자동(출석반영·주간이월) 변경은 수정시각을 올리지 않고 클라우드로 밀지 않음 · 노선 병합을 요일별로 분리 · 클라우드 수신 전 자동처리 금지 · 노선 자동 스냅샷 12개 + [⟲ 되돌리기] · R4.50: 변경 안내 [🚌 적용] — 요일·대상·동작(옮기기/추가/미탑승/빼기) 선택해 노선에 한 번에 반영 · 카톡 발송 문구 맨 위에 그날 변경 안내 자동 포함(토글) · R4.49: 차량 변경 예정 캘린더 신설 — 방학·개학 등 날짜별 변경 내용을 미리 적어 두면 그날 차량표 맨 위에 안내로 뜸(자동 배치 없음·[반영함] 체크) · R4.48: 차량 수정모드 재설계 — 왼쪽 고정 도구모음(스크롤 따라다님·구간 바로가기)·위계 정리(구간 헤더바>정류장 번호>탑승자 밑줄)·정류장마다 수련생 이름 검색 추가 · R4.47: 차량 노선(업무 창고) 동기화 — 휴대폰에서 다른 기기 변경이 화면에 반영 안 되던 문제(갱신 조건이 PC 업무화면 한정) 수정 · 차량표 열 때 즉시 수신 + [☁ 최신 불러오기] 버튼 · 클라우드 수신 전 주간 자동이월 금지(옛 노선이 최신 수정을 덮어쓰던 위험 차단) · R4.46: 회계 '차감 예정(선수금)' 신설 — 이미 낸 돈 중 안 쓰게 된 금액(예: 차량비)을 사유·메모와 함께 등록해 두면 다음 청구에서 자동 차감(여러 달 나눠 쓰기·되돌리기 지원) · R4.44~45: 시간표 표시 3건 — 요일 머리 위로 스크롤 글씨 비침 제거(보드 위 여백 padding→border) · 말풍선이 옆 요일에 가려지던 문제(기둥 opacity 쌓임 문맥 제거) · 말풍선 폭 확대(날짜 줄바꿈 개선) · R4.43: 결석관리 정합화 — 접속 시 기록과 어긋난 자동 결석 표시·옛 메모 잔재 전체 자동 청소 + 결석 등록/수정 시 확인창 없이 자동 반영(한 줄 안내) + 저장 직후 '겹칩니다' 오경고 제거 · R4.42: 결석 예정 수정·삭제·복귀 시 시간표의 자동 결석 표시도 함께 복원(기간 단축분 출석 대기로) — 기록만 바뀌고 표시가 남던 문제 · R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -4906,7 +4906,13 @@ window.setBriefYearAcct=function(y){ state.briefYearAcct=Number(y); render(); };
 window.setReSort=function(s){ state.reSort=s; render(); };
 window.setStuView=function(v){ state.stuView=v; render(); };
 window.setStuCat=function(c){ state.stuCat=c; render(); };
-window.setStuPeriod=function(p){ state.stuPeriod=p; render(); };
+window.setStuPeriod=function(p){ state.stuPeriod=p; state.stuYm=null; render(); };
+/* [R4.64] 기간: 연·월 직접 지정 */
+window.setStuYmPart=function(kind,val){
+  if(kind==='y') state.stuYmY=val; else state.stuYmM=val;
+  if(state.stuYmY && state.stuYmM){ state.stuYm=state.stuYmY+"-"+state.stuYmM; state.stuPeriod="ym"; }
+  render();
+};
 window.setStuType=function(t){ state.stuType=t; render(); };
 window.setBillFilter=function(f){ state.billFilter=f; render(); };
 window.setStuStatYear=function(y){ state.stuStatYear=y; render(); };
@@ -22881,16 +22887,23 @@ function render(){
         ico(ICO.cal),'만료·임박', urgent.length?urgent.length+'명':'', urgent.length?'만료 지남·이번달 만료 · 클릭=임박순 정렬':'','gray')+
       '</div>';
 
-    /* ── [R4.46] 차감 예정(선수금) 요약 — 다음 청구 때 빼 줘야 할 금액 ── */
+    /* ── [R4.64] 차감 예정 + 회계 변경 이력: 한 줄 소형 버튼 (누르면 아래에 펼침) ── */
+    (function(){
+      var cs=creditSummary();
+      var clN=(state.changeLog||[]).length;
+      if(!cs.names.length && !clN) return;
+      h+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">'+
+        (cs.names.length? '<button onclick="state.creditOpen=!state.creditOpen;state.changeLogOpen=false;render()" style="display:inline-flex;align-items:center;gap:6px;border:1.5px solid '+(state.creditOpen?'#6D28D9':'#C9B8E8')+';background:'+(state.creditOpen?'#F3EEFF':'#FAF9FF')+';color:#6D28D9;border-radius:10px;padding:7px 13px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">💳 차감 예정 '+cs.names.length+'명 · '+won(cs.total)+' <span style="font-size:10px">'+(state.creditOpen?'▲':'▼')+'</span></button>':'')+
+        (clN? '<button onclick="state.changeLogOpen=!state.changeLogOpen;state.creditOpen=false;render()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid '+(state.changeLogOpen?'var(--ink)':'var(--line)')+';background:'+(state.changeLogOpen?'#F4F4F6':'#fff')+';color:var(--ink);border-radius:10px;padding:7px 13px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit">🧾 변경 이력 '+clN+'건 <span style="font-size:10px">'+(state.changeLogOpen?'▲':'▼')+'</span></button>':'')+
+        '</div>';
+    })();
     (function(){
       var cs=creditSummary();
       if(!cs.names.length) return;
+      if(!state.creditOpen) return;
       h+='<div class="card" style="border:1.5px solid #C9B8E8;background:#FAF9FF;margin-bottom:10px">'+
-        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;cursor:pointer" onclick="state.creditOpen=!state.creditOpen;render()">'+
-        '<b style="font-size:13.5px;color:#6D28D9">💳 차감 예정 (선수금) '+cs.names.length+'명 · '+won(cs.total)+'</b>'+
-        '<span style="font-size:11.5px;color:var(--sub)">다음 청구 때 빼 드려야 할 금액입니다 — 회계입력에서 그 원생을 고르면 자동으로 안내됩니다</span>'+
-        '<span style="flex:1"></span><span style="font-size:11.5px;color:var(--sub)">'+(state.creditOpen?'▲ 접기':'▼ 펼치기')+'</span></div>'+
-        (state.creditOpen? cs.names.map(function(nm){
+        '<div style="font-size:11.5px;color:var(--sub);margin-bottom:2px">다음 청구 때 빼 드려야 할 금액입니다 — 회계입력에서 그 원생을 고르면 자동으로 안내됩니다</div>'+
+        (true? cs.names.map(function(nm){
           var eN=nm.replace(/'/g,"\\'");
           var det=creditsOf(nm).map(function(c){ return esc(c.reason||'사유 없음')+' '+won(creditRemain(c)); }).join(' · ');
           return '<div style="display:grid;grid-template-columns:24px 150px 1fr 110px 96px;gap:0 10px;align-items:center;padding:6px 0;border-top:1px dashed #DCD3F2;font-size:13.5px">'+
@@ -22997,13 +23010,11 @@ function render(){
          '</div>';
     }
 
-    /* 회계 변경 이력 (감사추적) — 금액수정·납부취소·삭제·환불·부분납부 기록 */
-    if((state.changeLog||[]).length){
+    /* 회계 변경 이력 (감사추적) — [R4.64] 위 소형 버튼으로 열림 */
+    if((state.changeLog||[]).length && state.changeLogOpen){
       var _cl=state.changeLog;
       h+='<div class="card" style="border:1px solid var(--line)">'+
-        '<div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="state.changeLogOpen=!state.changeLogOpen;render()">'+
-          '<b style="font-size:13px">🧾 회계 변경 이력 <span style="font-weight:500;font-size:11.5px;color:var(--sub)">'+_cl.length+'건 · 금액수정·납부취소·삭제·환불 기록</span></b>'+
-          '<span style="flex:1"></span><span style="font-size:11.5px;color:var(--sub)">'+(state.changeLogOpen?'▲ 접기':'▼ 펼치기')+'</span></div>'+
+        '<b style="font-size:13px">🧾 회계 변경 이력 <span style="font-weight:500;font-size:11.5px;color:var(--sub)">'+_cl.length+'건 · 금액수정·납부취소·삭제·환불 기록</span></b>'+
         (state.changeLogOpen? '<div style="margin-top:8px;max-height:340px;overflow-y:auto">'+
           _cl.slice(0,80).map(function(e){
             var col={"삭제":"var(--red)","납부취소":"#B45309","환불":"#B23A48","부분납부":"#7A5AF8","금액수정":"#2B5FB8","납부":"#1E8E3E"}[e.act]||"var(--sub)";
@@ -23112,7 +23123,7 @@ function render(){
 
       /* 유형 + 청구·납부 상태 필터 (1줄 통합) */
       h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+
-         '<span style="font-size:11.5px;color:var(--sub);font-weight:700">유형</span>'+
+         '<span style="font-size:11.5px;color:var(--sub);font-weight:700">① 유형</span>'+
          '<button class="chip tier2'+(state.stuType==="all"?" on":"")+'" onclick="setStuType(\'all\')">전체 '+alerts.length+'</button>'+
          '<button class="chip tier2'+(state.stuType==="long"?" on":"")+'" onclick="setStuType(\'long\')">장기등록 '+alerts.filter(function(a){return isLongTerm(a.n);}).length+'</button>'+
          '<button class="chip tier2'+(state.stuType==="normal"?" on":"")+'" onclick="setStuType(\'normal\')">일반 '+alerts.filter(function(a){return !isLongTerm(a.n);}).length+'</button>'+
@@ -23124,22 +23135,40 @@ function render(){
          '<button class="chip tier3'+(state.billFilter==="paid"?" on":"")+'" onclick="setBillFilter(\'paid\')">납부 완료</button>'+
          '</div>';
 
-      /* ── 항목·기간 필터 (수련비 외 행사·심사·대회 등으로도 명단을 좁혀서 봄) ── */
+      /* ── [R4.64] 필터 3위계: ①유형·납부상태(위) ②항목 ③기간(연·월 지정 포함) ── */
       if(state.stuCat==null) state.stuCat="all";
       if(state.stuPeriod==null) state.stuPeriod="all";
       var STU_CATS=["all","수련비","승급심사","국기원심사","대회출전","시범단행사","일반행사","해외행사","기타행사","용품구입"];
-      h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+
-         '<span style="font-size:11.5px;color:var(--sub);font-weight:700">항목</span>'+
+      /* ② 항목 */
+      h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+
+         '<span style="font-size:11.5px;color:var(--sub);font-weight:700;flex:0 0 52px">② 항목</span>'+
          STU_CATS.map(function(c){ return '<button class="chip tier5'+(state.stuCat===c?" on":"")+'" onclick="setStuCat(\''+c+'\')">'+esc(c==="all"?"전체 항목":c)+'</button>'; }).join('')+
-         '<span style="width:1px;height:18px;background:var(--line);margin:0 6px"></span>'+
-         '<span style="font-size:11.5px;color:var(--sub);font-weight:700">기간</span>'+
-         [["all","전체 기간"],["month","이번달"],["3m","최근3개월"],["year","올해"]].map(function(o){ return '<button class="chip tier4'+(state.stuPeriod===o[0]?" on":"")+'" onclick="setStuPeriod(\''+o[0]+'\')">'+o[1]+'</button>'; }).join('')+
          '</div>';
+      /* ③ 기간 — 빠른 선택 + 연·월 직접 지정 */
+      (function(){
+        var yset={}; (state.payments||[]).forEach(function(p){ var y=String(p.date||"").slice(0,4); if(/^\d{4}$/.test(y)) yset[y]=1; });
+        try{ for(var hn in HISTORY){ (HISTORY[hn]||[]).forEach(function(r){ if(r&&r[0]) yset[String(r[0])]=1; }); } }catch(e){}
+        yset[today().slice(0,4)]=1;
+        var years=Object.keys(yset).sort().reverse();
+        var selY=state.stuYmY||"", selM=state.stuYmM||"";
+        h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+
+           '<span style="font-size:11.5px;color:var(--sub);font-weight:700;flex:0 0 52px">③ 기간</span>'+
+           [["all","전체 기간"],["month","이번달"],["3m","최근3개월"],["year","올해"]].map(function(o){ return '<button class="chip tier4'+(state.stuPeriod===o[0]?" on":"")+'" onclick="setStuPeriod(\''+o[0]+'\')">'+o[1]+'</button>'; }).join('')+
+           '<span style="width:1px;height:18px;background:var(--line);margin:0 4px"></span>'+
+           '<span style="font-size:11.5px;color:var(--sub);font-weight:700">연·월 지정</span>'+
+           '<select onchange="setStuYmPart(\'y\',this.value)" style="height:30px;border:1.5px solid '+(state.stuPeriod==="ym"?'var(--blue)':'var(--line)')+';border-radius:8px;font-size:12.5px;font-family:inherit;background:#fff;padding:0 6px">'+
+             '<option value="">연도</option>'+years.map(function(y){ return '<option value="'+y+'"'+(selY===y?' selected':'')+'>'+y+'년</option>'; }).join('')+'</select>'+
+           '<select onchange="setStuYmPart(\'m\',this.value)" style="height:30px;border:1.5px solid '+(state.stuPeriod==="ym"?'var(--blue)':'var(--line)')+';border-radius:8px;font-size:12.5px;font-family:inherit;background:#fff;padding:0 6px">'+
+             '<option value="">월</option>'+['01','02','03','04','05','06','07','08','09','10','11','12'].map(function(m){ return '<option value="'+m+'"'+(selM===m?' selected':'')+'>'+Number(m)+'월</option>'; }).join('')+'</select>'+
+           (state.stuPeriod==="ym"&&state.stuYm? '<span style="font-size:12px;font-weight:800;color:var(--blue);background:#EEF4FF;border-radius:8px;padding:3px 9px">'+state.stuYm.slice(0,4)+'년 '+Number(state.stuYm.slice(5,7))+'월 보는 중</span>':'')+
+           '</div>';
+      })();
 
       /* 항목·기간에 맞는 청구를 학생별로 집계 (선택 시 명단을 그 학생들로 좁힘) */
       function _inStuPeriod(dstr){
         if(!state.stuPeriod||state.stuPeriod==="all") return true;
         var _ym=String(dstr||"").slice(0,7), _tm=today().slice(0,7);
+        if(state.stuPeriod==="ym") return state.stuYm && _ym===state.stuYm;   /* [R4.64] 연·월 지정 */
         if(state.stuPeriod==="month") return _ym===_tm;
         if(state.stuPeriod==="3m") return _ym>=addMonths(_tm,-2)&&_ym<=_tm;
         if(state.stuPeriod==="year") return _ym.slice(0,4)===_tm.slice(0,4);
@@ -23157,6 +23186,28 @@ function render(){
           if(String(p.date).slice(0,10)>o.last) o.last=String(p.date).slice(0,10);
         });
         filteredAlerts=filteredAlerts.filter(function(a){ return _stuItemInfo[a.n]; });
+        /* [R4.64] 이 조건에 잡힌 청구가 행사·대회면 제목을 함께 보여 준다 */
+        (function(){
+          var titles={};
+          (state.payments||[]).forEach(function(p){
+            if((p.amount||0)<0) return;
+            if(state.stuCat!=="all" && p.cat!==state.stuCat) return;
+            if(!_inStuPeriod(p.date)) return;
+            var t=String(p.evTitle||"").trim();
+            if(!t && p.evId){ try{ var _e=(workData().events||{})[p.evId]; if(_e) t=String(_e.title||"").trim(); }catch(e){} }
+            if(!t) return;
+            if(!titles[t]) titles[t]={n:0,cat:p.cat||""};
+            titles[t].n++;
+          });
+          var keys=Object.keys(titles);
+          if(keys.length){
+            h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+
+               '<span style="font-size:11.5px;color:#6D28D9;font-weight:800;flex:0 0 52px">🎪 행사</span>'+
+               keys.slice(0,8).map(function(t){ return '<span style="font-size:12px;font-weight:700;color:#6D28D9;background:#F5F0FF;border:1px solid #DDD0FA;border-radius:8px;padding:3px 10px">'+esc(t)+' <b>'+titles[t].n+'건</b></span>'; }).join('')+
+               (keys.length>8?'<span style="font-size:11px;color:var(--sub)">외 '+(keys.length-8)+'개</span>':'')+
+               '</div>';
+          }
+        })();
       }
       function _unpaidOf(n){
         if(state.stuCat!=="all") return (_stuItemInfo[n]?_stuItemInfo[n].unpaid:0);
@@ -23257,21 +23308,21 @@ function render(){
           return a.n.localeCompare(b.n,"ko");
         });
       }
-      /* ── 다단 타일: 한 명 = 한 카드 (세로 길이 절감 · 시인성 ↑ · 조금 큰 글씨) ── */
-      h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-top:4px">'+
+      /* ── [R4.64] 한 명 = 한 줄 리스트 (여러 단으로 흘려 세로 스크롤 최소화) ── */
+      h+='<div style="column-width:340px;column-gap:26px;margin-top:4px">'+
       sorted.map(function(a, idx){
         var recentTag="";
         if(state.reSort==="recent"){
           var d=lastInput[a.n];
-          if(d) recentTag='<span style="color:var(--blue);font-size:12.5px;font-weight:700">'+d+' 결제</span>';
+          if(d) recentTag='<span style="color:var(--blue);font-size:11.5px;font-weight:700;white-space:nowrap">'+d.slice(2)+'</span>';
         }
         /* 항목 필터 선택 시: 그 항목의 납부/미납 배지 (수련비 외도 한눈에) */
         if(state.stuCat!=="all" && _stuItemInfo[a.n]){
           var _oi=_stuItemInfo[a.n], _pd=(_oi.unpaid<=0);
-          recentTag='<span class="pill" style="background:'+(_pd?'var(--greenSoft)':'#FFF3E0')+';color:'+(_pd?'var(--green)':'#B45309')+';font-size:12.5px;font-weight:700'+(_pd?'':';border:1px solid #F0D9A8')+'">'+esc(state.stuCat)+' '+(_pd?'납부 '+won(_oi.paid):'미납 '+won(_oi.unpaid))+'</span>';
+          recentTag='<span style="font-size:11px;font-weight:800;white-space:nowrap;border-radius:6px;padding:1px 7px;background:'+(_pd?'var(--greenSoft)':'#FFF3E0')+';color:'+(_pd?'var(--green)':'#B45309')+(_pd?'':';border:1px solid #F0D9A8')+'">'+(_pd?'납부':'미납 '+won(_oi.unpaid))+'</span>';
         }
         var pu=paidUntil(a.n);
-        var paidCell = pu ? '<span style="color:var(--green);font-size:13.5px;font-weight:800;white-space:nowrap">'+Number(pu.slice(5,7))+'월까지</span>' : '<span style="color:#B0B6BE;font-size:13px;white-space:nowrap">–</span>';
+        var paidCell = pu ? '<span style="color:var(--green);font-size:12px;font-weight:800;white-space:nowrap;flex:0 0 52px;text-align:right">'+Number(pu.slice(5,7))+'월까지</span>' : '<span style="color:#B0B6BE;font-size:12px;white-space:nowrap;flex:0 0 52px;text-align:right">–</span>';
         var stuInfo=null;
         for(var si=0;si<STUDENTS.length;si++){ if(STUDENTS[si].n===a.n){ stuInfo=STUDENTS[si]; break; } }
         var ageTag="";
@@ -23279,19 +23330,17 @@ function render(){
           var age=new Date().getFullYear()-Number(stuInfo.by.slice(0,4));
           ageTag=age+'세';
         }
+        var banShort=String(a.b||"").split("(")[0].replace(/^[0-9]/,"");
         var nameSafe=a.n.replace(/'/g,"\\'");
-        var expPill='<span class="pill" style="background:'+a.st.s+';color:'+a.st.c+';font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap">'+(a.e?a.e+' · ':'')+a.st.label+'</span>';
-        return '<div style="border:1px solid var(--line);border-radius:12px;padding:11px 13px;cursor:pointer;background:#fff" onmouseover="this.style.borderColor=\'var(--blue)\';this.style.boxShadow=\'0 1px 6px rgba(0,0,0,.09)\'" onmouseout="this.style.borderColor=\'var(--line)\';this.style.boxShadow=\'none\'" onclick="showDetail(\''+nameSafe+'\')">'+
-          '<div style="display:flex;align-items:center;gap:9px">'+
-            demoSlot(a.n)+
-            '<b style="flex:1;min-width:0;color:var(--blue);font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(a.n)+'</b>'+
-            paidCell+
-          '</div>'+
-          '<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'+
-            '<span style="flex:1;min-width:0;color:var(--sub);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(a.b)+(ageTag?' · '+ageTag:'')+'</span>'+
-            expPill+
-          '</div>'+
-          (recentTag?'<div style="margin-top:8px">'+recentTag+'</div>':'')+
+        var expPill='<span style="background:'+a.st.s+';color:'+a.st.c+';font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:6px;padding:1px 7px;flex:0 0 auto">'+a.st.label+'</span>';
+        return '<div style="break-inside:avoid;display:flex;align-items:center;gap:7px;padding:5px 4px;border-bottom:1px solid #EEF0F3;cursor:pointer" '+
+          'onmouseover="this.style.background=\'#F4F8FE\'" onmouseout="this.style.background=\'\'" onclick="showDetail(\''+nameSafe+'\')">'+
+          demoSlot(a.n)+
+          '<b style="flex:0 0 76px;min-width:0;color:var(--blue);font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(a.n)+'</b>'+
+          '<span style="flex:1;min-width:0;color:var(--sub);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(banShort)+(ageTag?'·'+ageTag:'')+'</span>'+
+          (recentTag||'')+
+          expPill+
+          paidCell+
         '</div>';
       }).join('')+'</div>';
     } else {
