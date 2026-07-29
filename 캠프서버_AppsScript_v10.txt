@@ -1,0 +1,292 @@
+/* ═══════════════════════════════════════════════════
+   나라차X클래식리더 방학캠프 데이터 서버 v10
+   - v9 기능 + 학부모 열람 기록 (누가 조회 페이지를 열어 봤는지)
+   - 기존 코드를 전부 지우고 이 코드로 교체한 뒤
+     "배포 → 배포 관리 → 연필(수정) → 버전: 새 버전 → 배포"
+   - 키는 기존에 쓰던 값을 그대로 아래 두 줄에 넣으세요.
+   ═══════════════════════════════════════════════════ */
+
+var ADMIN_KEY = "naracha-camp-19031227";   // 기존 관리자 키 그대로
+var COACH_KEY = "naracha-camp-teacher";   // 기존 선생님 키 그대로
+
+/* ───── 이 아래는 수정할 필요 없습니다 ───── */
+
+function keyRole_(key){
+  if (key === ADMIN_KEY) return "admin";
+  if (key === COACH_KEY) return "coach";
+  return "";
+}
+function allowed_(role, store){
+  if (!role) return false;
+  if (store === "plog") return false;   /* 열람 기록은 프로그램이 덮어쓰지 못합니다 */
+  if (store === "acct") return role === "admin";
+  return true;
+}
+function sheet_(name){
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(name);
+  if (!sh) sh = ss.insertSheet(name);
+  return sh;
+}
+function out_(obj){
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e){
+  /* ── 학부모 조회 (접속키 없이 사용 · 본인 아이 자료만 나갑니다) ── */
+  if (e.parameter.p === "find") return parentFind_(e);
+  if (e.parameter.p === "img")  return parentImg_(e);
+
+  /* ── 열람 현황 읽기 (관리 프로그램 전용 · 접속키 필요) ── */
+  if (e.parameter.p === "plog") return plogRead_(e);
+
+  var key = (e.parameter.key || "");
+  var store = (e.parameter.store || "camp");
+  var role = keyRole_(key);
+  if (!allowed_(role, store)) return out_({ error: "AUTH" });
+
+  /* 구글 폼 응답 시트 읽기: ?store=apply&sid=응답시트ID */
+  if (store === "apply"){
+    var sid = (e.parameter.sid || "").trim();
+    if (!sid) return out_({ error: "NOSID" });
+    try {
+      var ss = SpreadsheetApp.openById(sid);
+      var sh = ss.getSheets()[0];
+      return out_(sh.getDataRange().getDisplayValues());
+    } catch (err){
+      return out_({ error: "OPEN" });
+    }
+  }
+
+  var vals = sheet_(store).getDataRange().getValues();
+  return out_(vals);
+}
+
+function doPost(e){
+  var body = {};
+  try { body = JSON.parse(e.postData.contents || "{}"); } catch (err) {}
+  var role = keyRole_(body.key || "");
+  var store = body.store || "camp";
+  if (!allowed_(role, store)) return out_({ error: "AUTH" });
+
+  var lock = LockService.getScriptLock();
+  lock.tryLock(8000);
+  try {
+    var sh = sheet_(store);
+    sh.clearContents();
+    var rows = body.rows || [];
+    if (rows.length){
+      sh.getRange(1, 1, rows.length, 1)
+        .setValues(rows.map(function(r){ return [r[0]]; }));
+    }
+  } finally {
+    lock.releaseLock();
+  }
+  cacheClear_("S_" + store);   /* 새 자료가 올라왔으니 기억을 지웁니다 */
+  return out_({ ok: true });
+}
+
+/* ═══════════ 학부모 조회 ═══════════
+   보안 원칙 : 학부모 기기로는 «본인 아이 한 명분» 만 내려갑니다.
+   전체 명단은 이 서버 안에서만 읽고, 밖으로 나가지 않습니다. */
+
+function pNorm_(s){ return String(s || "").replace(/\s/g, "").toLowerCase(); }
+
+/* ══ 임시기억(캐시) ══
+   구글 시트를 읽는 데 몇 초가 걸립니다.
+   한 번 읽은 내용을 10분간 기억해 두면 학부모 화면이 훨씬 빨리 열립니다.
+   (선생님이 새 자료를 올리면 그 즉시 기억을 지워 최신 내용이 나갑니다) */
+var CACHE_SEC = 600;      // 10분
+var CHUNK     = 30000;    // 한 칸에 담을 글자 수
+
+function cacheGetStr_(key){
+  try {
+    var c = CacheService.getScriptCache();
+    var n = c.get(key + "__n");
+    if (!n) return null;
+    n = Number(n);
+    var keys = [];
+    for (var i = 0; i < n; i++) keys.push(key + "__" + i);
+    var got = c.getAll(keys), s = "";
+    for (var j = 0; j < n; j++){
+      var part = got[key + "__" + j];
+      if (part === null || part === undefined) return null;   // 조각이 빠지면 새로 읽습니다
+      s += part;
+    }
+    return s;
+  } catch (err){ return null; }
+}
+function cachePutStr_(key, s){
+  try {
+    var c = CacheService.getScriptCache();
+    var n = Math.ceil(s.length / CHUNK);
+    if (n > 60) return;                     // 너무 크면 기억하지 않습니다
+    var obj = {};
+    obj[key + "__n"] = String(n);
+    for (var i = 0; i < n; i++) obj[key + "__" + i] = s.substr(i * CHUNK, CHUNK);
+    c.putAll(obj, CACHE_SEC);
+  } catch (err){}
+}
+function cacheClear_(key){
+  try {
+    var c = CacheService.getScriptCache();
+    var n = c.get(key + "__n");
+    var keys = [key + "__n"];
+    if (n){ for (var i = 0; i < Number(n); i++) keys.push(key + "__" + i); }
+    c.removeAll(keys);
+  } catch (err){}
+}
+
+/* 시트에 나눠 저장된 JSON 조각을 다시 이어 붙여 읽기 (기억해 둔 게 있으면 그것부터) */
+function readStore_(name){
+  var hit = cacheGetStr_("S_" + name);
+  if (hit){
+    try { return JSON.parse(hit); } catch (err){}
+  }
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(name);
+  if (!sh) return null;
+  var vals = sh.getDataRange().getValues();
+  var s = "";
+  for (var i = 0; i < vals.length; i++){
+    if (String(vals[i][0]) === "JSON"){
+      for (var j = i + 1; j < vals.length; j++){
+        s += (vals[j][0] == null ? "" : String(vals[j][0]));
+      }
+      break;
+    }
+  }
+  if (!s) return null;
+  cachePutStr_("S_" + name, s);
+  try { return JSON.parse(s); } catch (err){ return null; }
+}
+
+/* 코드 표기 정리 : 소문자·공백·하이픈 무시 */
+function pCode_(v){
+  return String(v || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+function parentFind_(e){
+  var code = pCode_(e.parameter.code);
+
+  /* 입력이 형식에 안 맞으면 조회 자체를 하지 않습니다 */
+  if (code.length < 4) return out_({ error: "BAD" });
+
+  var data = readStore_("pview");
+  if (!data || !data.kids) return out_({ error: "NODATA" });
+
+  /* 가정 코드가 같은 자녀를 모두 찾습니다 (형제·자매 함께 보기) */
+  var hits = data.kids.filter(function(k){
+    return pCode_(k.code) === code;
+  });
+
+  if (!hits.length) return out_({ error: "NOTFOUND" });
+
+  plogTouch_(code);   /* 이 가정이 열어 봤다고 적어 둡니다 */
+
+  /* 이름순 정렬 (형제·자매) */
+  var family = hits.slice().sort(function(a, b){
+    return String(a.n).localeCompare(String(b.n), "ko");
+  });
+
+  /* 내부 조회용 항목은 지우고 내보냅니다 */
+  var kids = family.map(function(k){
+    var c = JSON.parse(JSON.stringify(k));
+    delete c.code; delete c.l8; delete c.ph; delete c.nk; delete c.l4;
+    return c;
+  });
+
+  return out_({
+    ok: true, at: data.at,
+    camp: data.camp, hol: data.hol, meals: data.meals,
+    peLog: data.peLog || {},      /* 체육 수업 기록 (전체 공통) */
+    charLog: data.charLog || {},  /* 인성 교육 기록 (전체 공통) */
+    kids: kids
+  });
+}
+
+/* ═══════════ 학부모 열람 기록 ═══════════
+   학부모가 조회 페이지를 열면 «plog» 시트에 한 줄로 남습니다.
+     코드 | 마지막 열람 | 방문 횟수 | 처음 열람
+
+   ※ 10분 안에 다시 열면 같은 «방문»으로 봅니다.
+      (학부모 앱이 3분마다 스스로 새로 고치기 때문에, 그때마다 적으면 기록이 넘칩니다)
+   ※ 기록에 실패해도 조회는 정상 진행됩니다. */
+
+function plogTouch_(code){
+  try {
+    var c = CacheService.getScriptCache();
+    var ck = "PL_" + code;
+    if (c.get(ck)) return;          /* 10분 안에 이미 적었으면 넘어갑니다 */
+    c.put(ck, "1", 600);
+
+    var lock = LockService.getScriptLock();
+    if (!lock.tryLock(5000)) return;   /* 자리가 없으면 그냥 넘어갑니다 */
+    try {
+      var sh = sheet_("plog");
+      var now = new Date();
+      if (sh.getLastRow() === 0){
+        sh.appendRow(["코드", "마지막 열람", "방문 횟수", "처음 열람"]);
+      }
+      var vals = sh.getDataRange().getValues();
+      for (var i = 1; i < vals.length; i++){
+        if (pCode_(vals[i][0]) === code){
+          sh.getRange(i + 1, 2).setValue(now);
+          sh.getRange(i + 1, 3).setValue(Number(vals[i][2] || 0) + 1);
+          return;
+        }
+      }
+      sh.appendRow([code, now, 1, now]);   /* 처음 열어 본 가정 */
+    } finally {
+      lock.releaseLock();
+    }
+  } catch (err){}
+}
+
+/* 관리 프로그램이 열람 현황을 읽어 갑니다 */
+function plogRead_(e){
+  var role = keyRole_(e.parameter.key || "");
+  if (!role) return out_({ error: "AUTH" });
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName("plog");
+  if (!sh || sh.getLastRow() < 2) return out_({ ok: true, rows: [] });
+
+  var vals = sh.getDataRange().getValues();
+  var rows = [];
+  for (var i = 1; i < vals.length; i++){
+    if (!vals[i][0]) continue;
+    var d = vals[i][1];
+    rows.push([
+      String(vals[i][0]),
+      (d instanceof Date) ? d.toISOString() : String(d || ""),
+      Number(vals[i][2] || 0)
+    ]);
+  }
+  return out_({ ok: true, rows: rows });
+}
+
+/* 레벨테스트 사진 : 본인 자녀 것만 내보냅니다.
+   사진은 «pimg» 창고에 따로 보관되어 있고, 자료가 커서 필요할 때만 따로 불러갑니다. */
+function parentImg_(e){
+  var code = pCode_(e.parameter.code);
+  if (code.length < 4) return out_({ error: "BAD" });
+
+  var data = readStore_("pview");
+  if (!data || !data.kids) return out_({ error: "NODATA" });
+
+  /* 이 가정의 자녀 중 사진이 있는 사람의 번호만 모읍니다 */
+  var want = {};
+  data.kids.forEach(function(k){
+    if (pCode_(k.code) === code && k.iid) want[k.iid] = 1;
+  });
+  var ids = Object.keys(want);
+  if (!ids.length) return out_({ ok: true, imgs: {} });
+
+  var all = readStore_("pimg") || {};
+  var imgs = {};
+  ids.forEach(function(id){ if (all[id]) imgs[id] = all[id]; });
+
+  return out_({ ok: true, imgs: imgs });
+}
