@@ -197,9 +197,10 @@ button{font-family:inherit;cursor:pointer}
 .stop .tag{font-size:11px;font-weight:800;background:var(--ok);color:#fff;border-radius:99px;padding:2px 8px;margin-left:6px}
 
 /* ══ 식단 ══ */
-.menu{display:flex;gap:13px;padding:12px 0;border-bottom:1px dashed var(--line)}
+.menu{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px dashed var(--line)}
 .menu:last-of-type{border-bottom:none}
-.menu .k{font-size:12.5px;font-weight:800;letter-spacing:.05em;color:var(--ink3);width:78px;flex:0 0 auto;padding-top:3px}
+.menu .k{font-size:12.5px;font-weight:800;letter-spacing:.02em;color:var(--ink3);
+         flex:0 0 auto;min-width:104px;white-space:nowrap;padding-top:3px}
 .menu .v{font-size:16.5px;font-weight:700;letter-spacing:-.025em;line-height:1.5}
 .menu .kc{font-size:12.5px;font-weight:700;color:var(--t-meal);margin-left:8px;white-space:nowrap}
 .kcsum{display:flex;justify-content:space-between;align-items:baseline;margin-top:13px;
@@ -338,7 +339,7 @@ details[open] summary::before{content:"－ "}
 
 <script>
 /* ══ 서버 주소 (관리 프로그램과 같은 주소) ══ */
-var APP_VER = "v20260729.4";
+var APP_VER = "v20260729.5";
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwauy3dqK7YSM892fZ7aVhBaVFQunbvFq8oREPLEwsJN9FbdZHvAkQYovz_QUTSb_KH/exec";
 
 var ST = { data:null, kid:null, idx:0, date:"", loading:false, imgs:null, imgLoading:false };
