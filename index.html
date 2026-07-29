@@ -1064,7 +1064,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.55";   /* R4.55: 설치형 앱 구분 수정 — 같은 주소(폴더)에 올린 다른 앱(방학캠프 등)을 설치하면 이 앱이 "이미 설치됨"으로 잡혀 설치 버튼이 안 뜨던 문제. 앱 고유번호(id)를 고정값(naracha-admin)으로 지정하고 앱 영역(scope)을 폴더가 아닌 이 파일로 좁혀 서로 겹치지 않게 함 · R4.54: [안전] 클라우드 덮어쓰기 방지 강화 — 업무·차량/심사/사진/측정 창고도 회계·출석과 동일한 fail-closed 규칙 적용(서버 확인 실패·형식 이상·해석 실패 시 전송 중단, 빈 기기가 서버를 덮지 못하도록 차단) · 전송 실패 시 자동 재시도(최대 60초 간격) · 아이폰 설치형에서 상단 시계/배터리에 화면이 가리지 않도록 상태표시줄 처리 수정 · R4.53: 설치형(PWA) 지원 — 홈 화면에 추가하면 주소창 없이 전용 앱으로 실행(아이폰·안드로이드·PC 공통) · 매니페스트/아이콘 내장(파일 1개 유지) · 앱 설치 버튼·설치 방법 안내·설치형용 새로고침 버튼 · R4.52: 심사앱 v9.0 채점 개편 탑재 — 합격판정=수련태도(P)20점+기술80점, NMPA N·M 4항목은 관찰 전용(점수 미반영), 미입력 자동 3점 부여 폐지(미확정 처리), 과거 기록 보존+구채점 배지 · R4.51: [중요] 차량 노선 유실 방지 — 자동(출석반영·주간이월) 변경은 수정시각을 올리지 않고 클라우드로 밀지 않음 · 노선 병합을 요일별로 분리 · 클라우드 수신 전 자동처리 금지 · 노선 자동 스냅샷 12개 + [⟲ 되돌리기] · R4.50: 변경 안내 [🚌 적용] — 요일·대상·동작(옮기기/추가/미탑승/빼기) 선택해 노선에 한 번에 반영 · 카톡 발송 문구 맨 위에 그날 변경 안내 자동 포함(토글) · R4.49: 차량 변경 예정 캘린더 신설 — 방학·개학 등 날짜별 변경 내용을 미리 적어 두면 그날 차량표 맨 위에 안내로 뜸(자동 배치 없음·[반영함] 체크) · R4.48: 차량 수정모드 재설계 — 왼쪽 고정 도구모음(스크롤 따라다님·구간 바로가기)·위계 정리(구간 헤더바>정류장 번호>탑승자 밑줄)·정류장마다 수련생 이름 검색 추가 · R4.47: 차량 노선(업무 창고) 동기화 — 휴대폰에서 다른 기기 변경이 화면에 반영 안 되던 문제(갱신 조건이 PC 업무화면 한정) 수정 · 차량표 열 때 즉시 수신 + [☁ 최신 불러오기] 버튼 · 클라우드 수신 전 주간 자동이월 금지(옛 노선이 최신 수정을 덮어쓰던 위험 차단) · R4.46: 회계 '차감 예정(선수금)' 신설 — 이미 낸 돈 중 안 쓰게 된 금액(예: 차량비)을 사유·메모와 함께 등록해 두면 다음 청구에서 자동 차감(여러 달 나눠 쓰기·되돌리기 지원) · R4.44~45: 시간표 표시 3건 — 요일 머리 위로 스크롤 글씨 비침 제거(보드 위 여백 padding→border) · 말풍선이 옆 요일에 가려지던 문제(기둥 opacity 쌓임 문맥 제거) · 말풍선 폭 확대(날짜 줄바꿈 개선) · R4.43: 결석관리 정합화 — 접속 시 기록과 어긋난 자동 결석 표시·옛 메모 잔재 전체 자동 청소 + 결석 등록/수정 시 확인창 없이 자동 반영(한 줄 안내) + 저장 직후 '겹칩니다' 오경고 제거 · R4.42: 결석 예정 수정·삭제·복귀 시 시간표의 자동 결석 표시도 함께 복원(기간 단축분 출석 대기로) — 기록만 바뀌고 표시가 남던 문제 · R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.56";   /* R4.56: 보강 배차 확인 — 평소 다른 요일에 차량을 타는 수련생이 보강으로 오는 날, 그 요일 차량표(보기·수정 모두) 위에 "🔁 보강으로 오는 차량 이용 수련생 N명" 안내 표시(보강 시간·평소 탑승 요일·평소 정류장 함께). [🚌 이 날 태우기] 한 번으로 그 날 노선에 추가(보강 시간에 맞는 구간·평소 정류장 자동 선택) · R4.55: 설치형 앱 구분 수정 — 같은 주소(폴더)에 올린 다른 앱(방학캠프 등)을 설치하면 이 앱이 "이미 설치됨"으로 잡혀 설치 버튼이 안 뜨던 문제. 앱 고유번호(id)를 고정값(naracha-admin)으로 지정하고 앱 영역(scope)을 폴더가 아닌 이 파일로 좁혀 서로 겹치지 않게 함 · R4.54: [안전] 클라우드 덮어쓰기 방지 강화 — 업무·차량/심사/사진/측정 창고도 회계·출석과 동일한 fail-closed 규칙 적용(서버 확인 실패·형식 이상·해석 실패 시 전송 중단, 빈 기기가 서버를 덮지 못하도록 차단) · 전송 실패 시 자동 재시도(최대 60초 간격) · 아이폰 설치형에서 상단 시계/배터리에 화면이 가리지 않도록 상태표시줄 처리 수정 · R4.53: 설치형(PWA) 지원 — 홈 화면에 추가하면 주소창 없이 전용 앱으로 실행(아이폰·안드로이드·PC 공통) · 매니페스트/아이콘 내장(파일 1개 유지) · 앱 설치 버튼·설치 방법 안내·설치형용 새로고침 버튼 · R4.52: 심사앱 v9.0 채점 개편 탑재 — 합격판정=수련태도(P)20점+기술80점, NMPA N·M 4항목은 관찰 전용(점수 미반영), 미입력 자동 3점 부여 폐지(미확정 처리), 과거 기록 보존+구채점 배지 · R4.51: [중요] 차량 노선 유실 방지 — 자동(출석반영·주간이월) 변경은 수정시각을 올리지 않고 클라우드로 밀지 않음 · 노선 병합을 요일별로 분리 · 클라우드 수신 전 자동처리 금지 · 노선 자동 스냅샷 12개 + [⟲ 되돌리기] · R4.50: 변경 안내 [🚌 적용] — 요일·대상·동작(옮기기/추가/미탑승/빼기) 선택해 노선에 한 번에 반영 · 카톡 발송 문구 맨 위에 그날 변경 안내 자동 포함(토글) · R4.49: 차량 변경 예정 캘린더 신설 — 방학·개학 등 날짜별 변경 내용을 미리 적어 두면 그날 차량표 맨 위에 안내로 뜸(자동 배치 없음·[반영함] 체크) · R4.48: 차량 수정모드 재설계 — 왼쪽 고정 도구모음(스크롤 따라다님·구간 바로가기)·위계 정리(구간 헤더바>정류장 번호>탑승자 밑줄)·정류장마다 수련생 이름 검색 추가 · R4.47: 차량 노선(업무 창고) 동기화 — 휴대폰에서 다른 기기 변경이 화면에 반영 안 되던 문제(갱신 조건이 PC 업무화면 한정) 수정 · 차량표 열 때 즉시 수신 + [☁ 최신 불러오기] 버튼 · 클라우드 수신 전 주간 자동이월 금지(옛 노선이 최신 수정을 덮어쓰던 위험 차단) · R4.46: 회계 '차감 예정(선수금)' 신설 — 이미 낸 돈 중 안 쓰게 된 금액(예: 차량비)을 사유·메모와 함께 등록해 두면 다음 청구에서 자동 차감(여러 달 나눠 쓰기·되돌리기 지원) · R4.44~45: 시간표 표시 3건 — 요일 머리 위로 스크롤 글씨 비침 제거(보드 위 여백 padding→border) · 말풍선이 옆 요일에 가려지던 문제(기둥 opacity 쌓임 문맥 제거) · 말풍선 폭 확대(날짜 줄바꿈 개선) · R4.43: 결석관리 정합화 — 접속 시 기록과 어긋난 자동 결석 표시·옛 메모 잔재 전체 자동 청소 + 결석 등록/수정 시 확인창 없이 자동 반영(한 줄 안내) + 저장 직후 '겹칩니다' 오경고 제거 · R4.42: 결석 예정 수정·삭제·복귀 시 시간표의 자동 결석 표시도 함께 복원(기간 단축분 출석 대기로) — 기록만 바뀌고 표시가 남던 문제 · R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -14817,6 +14817,101 @@ function busRiderWarn(r, day, courseHour){
   return {lv:'',msg:'', hrs:hrs};
 }
 /* 한 요일 전체 경고 모으기 */
+/* ══════ [R4.56] 보강으로 오는 '평소 차량 이용' 수련생 배차 확인 ══════
+   평소 다른 요일에 차량을 타던 수련생이 보강으로 오는 날은, 그 날 노선에 이름이 없어
+   그냥 지나치기 쉽다. 차량 운행표(보기·수정 모두)에서 미리 알려 준다. */
+
+/* 이 날짜에 보강으로 오는 수련생 → [{name, hours:[시]}] */
+function busMakeupNamesOn(ymd){
+  var out={};
+  var add=function(n,h){
+    n=String(n||'').trim(); if(!n) return;
+    if(!out[n]) out[n]={name:n, hours:[]};
+    if(h!=null && !isNaN(h) && out[n].hours.indexOf(h)<0) out[n].hours.push(h);
+  };
+  try{   /* ① 보강 예약(보강 관리) */
+    var mk=state.makeups||{};
+    for(var n in mk){
+      (mk[n]||[]).forEach(function(e){ if(e && !e.del && e.date===ymd) add(n, (e.hour!=null?Number(e.hour):null)); });
+    }
+  }catch(e){}
+  try{   /* ② 시간표에서 바로 '보강'으로 배치한 경우 */
+    var tok=null;
+    for(var d in BUS_DAYTOK){ if(busYmdForDay(d)===ymd){ tok=BUS_DAYTOK[d]; break; } }
+    if(tok){
+      var wd=state.weeks && state.weeks[busWeekKey()];
+      if(wd && wd.cells){
+        for(var key in wd.cells){
+          if(key.split('-')[0]!==tok) continue;
+          var c=wd.cells[key]; if(!c||!c.lv) continue;
+          var hh=parseInt(key.split('-')[1],10);
+          for(var li=0;li<3;li++){
+            (c.lv[li]||[]).forEach(function(nm){
+              var mm=(c.marks||{})[nm]||{};
+              if(mm.k==='보강' && mm.s!=='결석') add(nm, hh);
+            });
+          }
+        }
+      }
+    }
+  }catch(e){}
+  var arr=[]; for(var k in out) arr.push(out[k]);
+  return arr;
+}
+/* 평소 차량을 타는 수련생인지 — 다른 요일 노선에서 탑승 요일·정류장을 모은다 */
+function busRegularRide(name, exceptDay){
+  var res={days:[], place:'', time:'', course:''};
+  try{
+    var bus=busData();
+    BUS_DAYS.forEach(function(d){
+      if(d===exceptDay) return;
+      ((bus[d]||{}).courses||[]).forEach(function(c){
+        (c.stops||[]).forEach(function(st){
+          (st.riders||[]).forEach(function(r){
+            if(String(r.name||'').trim()!==name) return;
+            if(res.days.indexOf(d)<0) res.days.push(d);
+            if(!res.place){ res.place=st.place||''; res.time=st.time||''; res.course=c.title||''; }
+          });
+        });
+      });
+    });
+    res.days.sort(function(a,b){ return BUS_DAYS.indexOf(a)-BUS_DAYS.indexOf(b); });
+  }catch(e){}
+  return res;
+}
+/* 그 요일 노선에 이미 이름이 있는지 */
+function busOnDayRoute(name, day){
+  try{
+    var cs=(busData()[day]||{}).courses||[];
+    for(var i=0;i<cs.length;i++){
+      var sts=cs[i].stops||[];
+      for(var j=0;j<sts.length;j++){
+        var rds=sts[j].riders||[];
+        for(var k=0;k<rds.length;k++){ if(String(rds[k].name||'').trim()===name) return true; }
+      }
+    }
+  }catch(e){}
+  return false;
+}
+/* 이 요일에 '보강으로 오는데 차량표에 없는 평소 차량 이용자' 목록 */
+function busMakeupRideAlerts(day){
+  var out=[];
+  try{
+    var ymd=busYmdForDay(day); if(!ymd) return out;
+    busMakeupNamesOn(ymd).forEach(function(o){
+      var nm=o.name;
+      if(busIsActiveStudent(nm)!==true) return;   /* 재원생만 */
+      if(busOnDayRoute(nm, day)) return;          /* 이미 이 날 노선에 있음 → 기존 (보강) 표시로 처리됨 */
+      if(busIsAbsentOn(nm, ymd)) return;          /* 그날 결석이면 제외 */
+      var reg=busRegularRide(nm, day);
+      if(!reg.days.length) return;                /* 평소 차량 이용자가 아니면 알리지 않음 */
+      out.push({ name:nm, hours:o.hours.slice().sort(function(a,b){return a-b;}),
+                 days:reg.days, place:reg.place, time:reg.time, course:reg.course });
+    });
+    out.sort(function(a,b){ return (a.hours[0]||99)-(b.hours[0]||99); });
+  }catch(e){}
+  return out;
+}
 function busDayWarnings(day){
   var out=[];
   var courses=(busData()[day]||{courses:[]}).courses||[];
@@ -15225,6 +15320,32 @@ function _busRemoveFromDay(courses, nm){
   }); });
   return n;
 }
+/* [R4.56] 보강 안내에서 [🚌 이 날 태우기] — 평소 타던 정류장을 미리 골라 준다 */
+window.openBusAddMakeup=function(nm){
+  nm=String(nm||'').trim(); if(!nm) return;
+  var cs=busCourses();
+  if(!cs.length){ alert('이 요일에는 아직 차량 구간이 없습니다.\n\n먼저 [+ 구간 추가]로 구간을 만든 뒤 다시 눌러 주세요.'); return; }
+  var m={ id:'', names:[nm], sel:{}, days:{}, act:'add', cid:cs[0].id, sid:'',
+          why:'보강으로 오는 날 배차 — 평소 타던 정류장을 미리 골라 두었습니다.' };
+  m.sel[nm]=true; m.days[busDay()]=true;
+  var s0=(cs[0].stops||[])[0]; if(s0) m.sid=s0.id;
+  var reg=busRegularRide(nm, busDay());
+  /* 보강 시간에 맞는 구간을 먼저 찾고(예: 3시 보강 → 3시부), 그 안에서 평소 정류장을 고른다 */
+  var _hrs=[];
+  try{ (busMakeupNamesOn(busYmdForDay(busDay()))||[]).forEach(function(o){ if(o.name===nm) _hrs=o.hours||[]; }); }catch(e){}
+  var pick=function(list){
+    for(var i=0;i<list.length;i++){
+      var c=list[i], sts=c.stops||[]; if(!sts.length) continue;
+      var hit=reg.place ? sts.filter(function(x){ return String(x.place||'')===String(reg.place); })[0] : null;
+      if(hit || !reg.place){ m.cid=c.id; m.sid=(hit||sts[0]).id; return true; }
+    }
+    return false;
+  };
+  var sameHour=cs.filter(function(c){ var ch=busCourseHour(c.title); return ch!=null && _hrs.indexOf(ch)>-1; });
+  if(!(sameHour.length && pick(sameHour))) pick(cs);
+  state.busApplyM=m;
+  _renderBusApplyOv();
+};
 window.openBusApplyM=function(noteId){
   var n=(workData().busNotes||{})[noteId]; if(!n) return;
   var names=String(n.names||'').split(/[,·]/).map(function(s){return s.trim();}).filter(Boolean);
@@ -15312,7 +15433,7 @@ window.doBusApply=function(){
   workPersist(); render();
   alert('✅ 적용 완료\n\n· '+ACT+' '+okList.length+'건\n'+okList.slice(0,10).join(', ')+(okList.length>10?' 외 '+(okList.length-10):'')+
     (missList.length? '\n\n⚠️ 건너뜀 '+missList.length+'건\n'+missList.slice(0,8).join('\n') : '')+
-    '\n\n※ 변경 안내는 [반영함]으로 표시했습니다.');
+    (note? '\n\n※ 변경 안내는 [반영함]으로 표시했습니다.' : ''));
 };
 function _renderBusApplyOv(){
   var ex=document.getElementById("busApplyOv"); if(ex&&ex.parentNode) ex.parentNode.removeChild(ex);
@@ -15364,8 +15485,9 @@ function _renderBusApplyOv(){
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'+
         '<div style="font-size:16px;font-weight:900;color:var(--brand)">🚌 노선에 적용</div>'+
         '<button onclick="closeBusApplyM()" style="background:none;border:none;font-size:24px;color:var(--sub);cursor:pointer;font-family:inherit;line-height:1">×</button></div>'+
-      '<div style="font-size:12px;color:var(--sub);background:#F7F6F2;border-radius:9px;padding:8px 10px;margin-bottom:12px;line-height:1.6">'+
-        '<b style="color:var(--ink)">'+esc(n.kind||'')+'</b> · '+esc(n.from||'')+(n.to&&n.to!==n.from?' ~ '+esc(n.to):'')+'<br>'+esc(n.text||'')+'</div>'+
+      (m.why? '<div style="font-size:12px;color:#1D4ED8;background:#F2F7FF;border:1px solid #C3D7F5;border-radius:9px;padding:8px 10px;margin-bottom:12px;line-height:1.6;font-weight:700">🔁 '+esc(m.why)+'</div>'
+            : '<div style="font-size:12px;color:var(--sub);background:#F7F6F2;border-radius:9px;padding:8px 10px;margin-bottom:12px;line-height:1.6">'+
+              '<b style="color:var(--ink)">'+esc(n.kind||'')+'</b> · '+esc(n.from||'')+(n.to&&n.to!==n.from?' ~ '+esc(n.to):'')+'<br>'+esc(n.text||'')+'</div>')+
       '<div style="font-size:11.5px;font-weight:800;color:var(--sub);margin-bottom:5px">① 어떤 요일에 적용할까요?</div>'+
       '<div style="display:flex;gap:5px;margin-bottom:11px">'+dayBtns+'</div>'+
       '<div style="font-size:11.5px;font-weight:800;color:var(--sub);margin-bottom:5px">② 대상 수련생 <span style="font-weight:600">(눌러서 선택 해제 · 옆은 '+esc(busDay())+'요일 배치)</span></div>'+
@@ -16105,6 +16227,26 @@ function renderBusTab(mobile){
         '<span style="background:#FEF3E2;color:#B45309;border-radius:5px;padding:1px 5px;font-weight:800;font-size:10.5px">📅 이번주</span> 이번 주만 · '+
         '<span style="background:#EDE9FE;color:#6D28D9;border-radius:5px;padding:1px 5px;font-weight:800;font-size:10.5px">📌 계속</span> 매주 유지'+
       '</div>':'')+
+    '</div>';
+  }
+
+  /* [R4.56] 보강으로 오는 '평소 차량 이용' 수련생 — 배차 확인 안내 (보기·수정 모두) */
+  var _mkw=busMakeupRideAlerts(day);
+  if(_mkw.length){
+    h+='<div class="card" style="padding:'+(mob?'11px 12px':'12px 14px')+';background:#F2F7FF;border-color:#C3D7F5">'+
+      '<div style="font-size:13px;font-weight:900;color:#1D4ED8;margin-bottom:7px">🔁 보강으로 오는 차량 이용 수련생 '+_mkw.length+'명 — 배차 확인</div>'+
+      _mkw.map(function(o){
+        var _hr=o.hours.length? o.hours.map(function(x){ return (x>12?x-12:x)+'시'; }).join('·')+' 보강' : '보강';
+        var _stop=((o.time||'')+' '+(o.place||'')).trim();
+        return '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11.5px;color:var(--ink);line-height:1.7;padding:3px 0;border-top:1px dashed #D6E4F8">'+
+          '<b style="font-size:12.5px">'+esc(o.name)+'</b>'+
+          '<span style="background:#DBEAFE;color:#1D4ED8;border-radius:6px;padding:1px 7px;font-size:10.5px;font-weight:800">'+esc(_hr)+'</span>'+
+          '<span style="color:var(--sub)">평소 '+esc(o.days.join('·'))+'요일 탑승'+(_stop?' · '+esc((o.course?o.course+' ':'')+_stop):'')+'</span>'+
+          '<span style="flex:1"></span>'+
+          '<button onclick="openBusAddMakeup(\''+esc(o.name).replace(/'/g,"\\'")+'\')" style="flex:0 0 auto;background:var(--brand);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit" title="이 요일 노선에 태웁니다">🚌 이 날 태우기</button>'+
+        '</div>';
+      }).join('')+
+      '<div style="font-size:11px;color:var(--sub);margin-top:7px;padding-top:7px;border-top:1px dashed #C3D7F5;line-height:1.6">평소 다른 요일에 차량을 타는 수련생입니다. 오늘은 노선에 이름이 없으니 <b>태울지 확인</b>해 주세요. 안 태우시면 그대로 두시면 됩니다.</div>'+
     '</div>';
   }
 
