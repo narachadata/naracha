@@ -207,6 +207,15 @@ button{font-family:inherit;cursor:pointer}
 .kcsum .a{font-size:13px;font-weight:700;color:var(--ink3)}
 .kcsum .b{font-size:18px;font-weight:800;color:var(--t-meal);letter-spacing:-.03em}
 
+/* ══ 특식 ══ */
+.sp{
+  background:linear-gradient(135deg,#FFF6E3 0%,#FDF0D5 100%);
+  border:1.5px solid #E8C87A;border-radius:14px;padding:18px 18px 19px;text-align:center;
+}
+.sp .t{font-size:12px;font-weight:800;letter-spacing:.13em;color:#9A7318}
+.sp .v{font-size:22px;font-weight:800;letter-spacing:-.035em;color:#6B4E0C;margin-top:7px;
+       line-height:1.4;word-break:keep-all}
+
 /* ══ 영어 ══ */
 .level{background:#EFF5F1;border-radius:14px;padding:17px 18px;position:relative;overflow:hidden}
 .level .v{font-size:34px;font-weight:800;letter-spacing:-.05em;color:var(--t-eng);line-height:1}
@@ -329,7 +338,7 @@ details[open] summary::before{content:"－ "}
 
 <script>
 /* ══ 서버 주소 (관리 프로그램과 같은 주소) ══ */
-var APP_VER = "v20260729.3";
+var APP_VER = "v20260729.4";
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwauy3dqK7YSM892fZ7aVhBaVFQunbvFq8oREPLEwsJN9FbdZHvAkQYovz_QUTSb_KH/exec";
 
 var ST = { data:null, kid:null, idx:0, date:"", loading:false, imgs:null, imgLoading:false };
@@ -767,7 +776,11 @@ function vMeal(){
   if(hol){ return h+'<div class="empty"><div class="big">🗓</div>휴일입니다.</div></div></section>'; }
   if(!m){ return h+'<div class="empty"><div class="big">🍚</div>아직 식단이 올라오지 않았습니다.</div></div></section>'; }
   if(m.sp){
-    h+='<div class="menu"><div class="k">특식</div><div class="v">'+esc(m.note||"특식 제공")+'</div></div>';
+    /* 특식인 날은 칼로리 없이 «무엇이 나오는지»만 알려 드립니다 */
+    return h+'<div class="sp"><div class="t">오늘은 특식</div>'+
+      '<div class="v">'+esc(m.note||"특식이 제공됩니다")+'</div></div>'+
+      '<div class="note">이 날은 평소 반찬 대신 <b>특식</b>이 나옵니다. '+
+      '알러지 등 특이사항은 캠프 카카오톡으로 알려 주세요.</div></div></section>';
   } else {
     (m.items||[]).forEach(function(it){
       h+='<div class="menu"><div class="k">'+esc(it.l)+'</div>'+
