@@ -297,6 +297,12 @@ details[open] summary::before{content:"－ "}
 .foot{text-align:center;font-size:12.5px;line-height:1.95;color:var(--ink3);margin-top:20px;padding-bottom:10px}
 .foot b{color:var(--ink2)}
 .spin{text-align:center;padding:48px 20px;color:var(--ink3);font-size:15px}
+#newsBar{position:fixed;left:0;right:0;top:0;z-index:950;background:#1E7B3C;color:#fff;
+         font-size:13.5px;font-weight:600;text-align:center;padding:11px 12px;letter-spacing:-.01em;
+         cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.16)}
+#newsBar b{font-weight:800;margin-right:6px}
+#newsBar .x{display:inline-block;margin-left:9px;font-size:11.5px;font-weight:700;opacity:.75;
+            border:1px solid rgba(255,255,255,.5);border-radius:99px;padding:2px 8px}
 #busyBar{position:fixed;left:0;right:0;top:0;z-index:900;background:var(--navy);color:#fff;
          font-size:13px;font-weight:700;text-align:center;padding:9px 10px;letter-spacing:-.01em}
 
@@ -323,6 +329,7 @@ details[open] summary::before{content:"－ "}
 
 <script>
 /* ══ 서버 주소 (관리 프로그램과 같은 주소) ══ */
+var APP_VER = "v20260729.2";
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwauy3dqK7YSM892fZ7aVhBaVFQunbvFq8oREPLEwsJN9FbdZHvAkQYovz_QUTSb_KH/exec";
 
 var ST = { data:null, kid:null, idx:0, date:"", loading:false, imgs:null, imgLoading:false };
@@ -368,7 +375,7 @@ function logout(){
 /* ══ 조회 ══ */
 function doLogin(){
   var c=String((document.getElementById("pCode")||{}).value||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
-  if(c.length<4){ showMsg("err","캠프에서 안내해 드린 <b>가정 코드</b>를 넣어 주세요."); return; }
+  if(c.length<4){ showMsg("err","캠프에서 안내해 드린 <b>로그인 코드</b>를 넣어 주세요."); return; }
   fetchKid(c,true);
 }
 function showMsg(kind,txt){
@@ -376,7 +383,8 @@ function showMsg(kind,txt){
   m.className="msg "+kind; m.innerHTML=txt;
 }
 function fetchKid(code,fromForm){
-  ST.loading=true;
+  ST.loading=true; ST.lastFetch=Date.now();
+  var prevJ = ST.data || (cacheGet(code)||{}).j || null;
   /* ① 전에 본 내용이 있으면 먼저 보여 드립니다 */
   var cached=cacheGet(code);
   if(cached && !ST.data){
@@ -389,22 +397,37 @@ function fetchKid(code,fromForm){
   /* ② 서버에서 최신 내용 */
   var ctrl = (window.AbortController ? new AbortController() : null);
   var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, 25000);
-  fetch(GSHEET_URL+"?p=find&code="+encodeURIComponent(code), ctrl?{signal:ctrl.signal}:{})
+  var opt = { cache:"no-store" };            /* 카톡 브라우저가 옛 내용을 쥐고 있지 않게 */
+  if(ctrl) opt.signal = ctrl.signal;
+  fetch(GSHEET_URL+"?p=find&code="+encodeURIComponent(code)+"&t="+Date.now(), opt)
     .then(function(r){ clearTimeout(timer); return r.json(); })
     .then(function(j){
       ST.loading=false; setBusy(false);
       if(!j || j.error){
         var t = j&&j.error==="NOTFOUND"
-              ? "일치하는 가정 코드가 없습니다.<br>· 캠프에서 보내 드린 <b>코드 그대로</b> 넣어 주세요.<br>· 코드를 잊으셨다면 캠프 카카오톡으로 문의해 주세요."
+              ? "일치하는 로그인 코드가 없습니다.<br>· 캠프에서 보내 드린 <b>코드 그대로</b> 넣어 주세요.<br>· 코드를 잊으셨다면 캠프 카카오톡으로 문의해 주세요."
               : j&&j.error==="NODATA" ? "아직 캠프 자료가 준비되지 않았습니다. 잠시 후 다시 확인해 주세요."
-              : j&&j.error==="BAD" ? "가정 코드를 다시 확인해 주세요."
+              : j&&j.error==="BAD" ? "로그인 코드를 다시 확인해 주세요."
               : "잠시 후 다시 시도해 주세요.";
         if(fromForm) showMsg("err",t); else { try{ localStorage.removeItem(LS); }catch(e){} render(); }
         return;
       }
-      ST.data=j; ST.idx=0; ST.kid=j.kids[0];
+      /* 무엇이 새로 올라왔는지 견주어 봅니다 */
+      var news = whatsNew(prevJ, j);
+      var same = prevJ && JSON.stringify(prevJ)===JSON.stringify(j);
+
+      var keep = (!fromForm && ST.kid) ? ST.idx : 0;
+      ST.data=j;
+      ST.idx = (j.kids && j.kids[keep]) ? keep : 0;
+      ST.kid = j.kids[ST.idx];
       saveLogin(code); cacheSet(code,j);
-      pickDate(); render();
+      if(!ST.date || (j.camp.dates||[]).indexOf(ST.date)<0) pickDate();
+
+      if(same) return;                       /* 달라진 게 없으면 화면을 건드리지 않습니다 */
+      var sy = window.scrollY||0;
+      render();
+      if(!fromForm) window.scrollTo(0,sy);   /* 읽던 자리를 지켜 드립니다 */
+      showNews(news);
     })
     .catch(function(){
       clearTimeout(timer);
@@ -423,6 +446,62 @@ function loadImgs(){
     .then(function(j){ ST.imgLoading=false; setBusy(false);
       if(j && j.ok){ ST.imgs=j.imgs||{}; render(); } })
     .catch(function(){ ST.imgLoading=false; setBusy(false); render(); });
+}
+/* 지난번 자료와 견주어 새로 올라온 것 추리기 */
+function whatsNew(a,b){
+  if(!a||!b) return [];
+  var out=[], cnt=function(o){ return o?Object.keys(o).length:0; }, d;
+  d=cnt(b.charLog)-cnt(a.charLog); if(d>0) out.push("인성 교육 "+d+"편");
+  d=cnt(b.peLog)-cnt(a.peLog);     if(d>0) out.push("체육 활동 "+d+"일");
+  d=cnt(b.meals)-cnt(a.meals);     if(d>0) out.push("식단 "+d+"일");
+  var ka=a.kids||[], att=0, eng=0, bus=0;
+  (b.kids||[]).forEach(function(k){
+    var o=null; ka.forEach(function(x){ if(x.n===k.n) o=x; });
+    if(!o) return;
+    var oa=o.att||{}, na=k.att||{};
+    Object.keys(na).forEach(function(x){ if(oa[x]!==na[x]) att++; });
+    if((o.lv||"")!==(k.lv||"")||(o.an||"")!==(k.an||"")||
+       (o.gd||"")!==(k.gd||"")||(o.pub||"")!==(k.pub||"")) eng++;
+    ["bus","pick","skip","skipAll"].forEach(function(f){
+      if(JSON.stringify(o[f]||{})!==JSON.stringify(k[f]||{})) bus++;
+    });
+  });
+  if(att) out.push("출결 "+att+"건");
+  if(eng) out.push("영어 지도 내용");
+  if(bus) out.push("차량 안내");
+  return out;
+}
+/* 새 소식 띠 — 눌러서 닫습니다 */
+function showNews(list){
+  if(!list||!list.length) return;
+  var el=document.getElementById("newsBar");
+  if(!el){
+    el=document.createElement("div"); el.id="newsBar";
+    el.onclick=function(){ el.style.display="none"; };
+    document.body.appendChild(el);
+  }
+  el.innerHTML='<b>새로 올라왔습니다</b> '+esc(list.join(" · "))+
+               '<span class="x">닫기</span>';
+  el.style.display="block";
+  clearTimeout(showNews._t);
+  showNews._t=setTimeout(function(){ el.style.display="none"; }, 9000);
+}
+/* 저절로 새로 고치기 — 화면을 다시 볼 때·열어 둔 채로 3분마다 */
+function autoRefresh(force){
+  var s=saved(); if(!s||!s.code) return;
+  if(ST.loading) return;
+  if(!force && Date.now()-(ST.lastFetch||0) < 30000) return;
+  fetchKid(s.code,false);
+}
+/* 새 화면판이 올라왔으면 조용히 바꿔 답니다 (열자마자 한 번만) */
+function checkFileUpdate(){
+  if(!/^https?:/.test(location.protocol)) return;
+  fetch(location.origin+location.pathname+"?chk="+Date.now(),{cache:"no-store"})
+    .then(function(r){ return r.text(); })
+    .then(function(t){
+      var m=t.match(/APP_VER\s*=\s*"([^"]+)"/);
+      if(m && m[1]!==APP_VER) location.replace(location.pathname+"?v="+Date.now());
+    }).catch(function(){});
 }
 function pickDate(){
   var ds=(ST.data.camp.dates)||[]; if(!ds.length) return;
@@ -464,9 +543,9 @@ function render(){
 function vLogin(){
   return '<div class="card" style="--tape:var(--navy)"><div class="login">'+
     '<h2>우리 아이 조회하기</h2>'+
-    '<p>캠프에서 안내해 드린 <b>가정 코드</b>를 넣어 주세요.<br>'+
+    '<p>캠프에서 안내해 드린 <b>로그인 코드</b>를 넣어 주세요.<br>'+
     '형제·자매는 한 코드로 함께 보이고, 다음 캠프에도 같은 코드를 쓰십니다.</p>'+
-    '<span class="lab">가정 코드</span>'+
+    '<span class="lab">로그인 코드</span>'+
     '<input class="code-in" id="pCode" maxlength="10" placeholder="7KMD3P" autocomplete="off" '+
       'inputmode="latin" oninput="this.value=this.value.toUpperCase()">'+
     '<div class="hint">코드에는 헷갈리는 <b>0 · 1 · I · O · S · B</b> 가 들어가지 않습니다.</div>'+
@@ -885,6 +964,12 @@ function vFoot(){
   document.addEventListener("keydown", function(e){
     if(e.key==="Enter" && document.getElementById("pCode")) doLogin();
   });
+  checkFileUpdate();
+  document.addEventListener("visibilitychange", function(){
+    if(!document.hidden) autoRefresh();
+  });
+  window.addEventListener("pageshow", function(e){ if(e.persisted) autoRefresh(true); });
+  setInterval(function(){ if(!document.hidden) autoRefresh(); }, 180000);
 })();
 </script>
 </body>
