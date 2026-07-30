@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════
-   나라차X클래식리더 방학캠프 데이터 서버 v10
-   - v9 기능 + 학부모 열람 기록 (누가 조회 페이지를 열어 봤는지)
+   나라차X클래식리더 방학캠프 데이터 서버 v11
+   - v10 기능 + 설문 응답 가져오기 오류 원인 그대로 알려주기
+     (오류가 나도 «오류 페이지» 대신 원인이 담긴 자료를 돌려줍니다)
    - 기존 코드를 전부 지우고 이 코드로 교체한 뒤
      "배포 → 배포 관리 → 연필(수정) → 버전: 새 버전 → 배포"
    - 키는 기존에 쓰던 값을 그대로 아래 두 줄에 넣으세요.
@@ -33,7 +34,19 @@ function out_(obj){
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+/* 어떤 오류가 나도 «오류 페이지»가 아니라 원인이 담긴 자료를 돌려줍니다.
+   (오류 페이지가 오면 프로그램이 «인터넷 연결» 로 잘못 안내하게 됩니다) */
 function doGet(e){
+  try { return doGet_(e); }
+  catch (err) { return out_({ error: "SERVER", msg: String(err && err.message || err) }); }
+}
+function doPost(e){
+  try { return doPost_(e); }
+  catch (err) { return out_({ error: "SERVER", msg: String(err && err.message || err) }); }
+}
+
+function doGet_(e){
+  e = e || {}; if (!e.parameter) e.parameter = {};
   /* ── 학부모 조회 (접속키 없이 사용 · 본인 아이 자료만 나갑니다) ── */
   if (e.parameter.p === "find") return parentFind_(e);
   if (e.parameter.p === "img")  return parentImg_(e);
@@ -50,12 +63,27 @@ function doGet(e){
   if (store === "apply"){
     var sid = (e.parameter.sid || "").trim();
     if (!sid) return out_({ error: "NOSID" });
+    /* 주소 전체를 넣어도 ID만 추려냅니다 */
+    var m = sid.match(/\/d\/([a-zA-Z0-9_-]{20,})/);
+    if (m) sid = m[1];
+    var ss;
     try {
-      var ss = SpreadsheetApp.openById(sid);
-      var sh = ss.getSheets()[0];
-      return out_(sh.getDataRange().getDisplayValues());
+      ss = SpreadsheetApp.openById(sid);
     } catch (err){
-      return out_({ error: "OPEN" });
+      return out_({ error: "OPEN", msg: String(err && err.message || err) });
+    }
+    try {
+      /* 응답이 가장 많이 쌓인 시트를 고릅니다 (시트가 여러 개여도 안전) */
+      var all = ss.getSheets(), pick = null, best = -1;
+      for (var i = 0; i < all.length; i++){
+        var n = all[i].getLastRow();
+        if (n > best){ best = n; pick = all[i]; }
+      }
+      if (!pick) return out_({ error: "NOSHEET", msg: "시트가 없습니다" });
+      if (pick.getLastRow() === 0) return out_([]);
+      return out_(pick.getDataRange().getDisplayValues());
+    } catch (err2){
+      return out_({ error: "NOSHEET", msg: String(err2 && err2.message || err2) });
     }
   }
 
@@ -63,7 +91,7 @@ function doGet(e){
   return out_(vals);
 }
 
-function doPost(e){
+function doPost_(e){
   var body = {};
   try { body = JSON.parse(e.postData.contents || "{}"); } catch (err) {}
   var role = keyRole_(body.key || "");
