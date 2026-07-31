@@ -339,10 +339,10 @@ details[open] summary::before{content:"－ "}
 
 <script>
 /* ══ 서버 주소 (관리 프로그램과 같은 주소) ══ */
-var APP_VER = "v20260729.5";
+var APP_VER = "v20260729.7"   /* .7: 안내 문자 링크로 자동 로그인 + 버전 갱신 중에도 코드 유지 */;
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwauy3dqK7YSM892fZ7aVhBaVFQunbvFq8oREPLEwsJN9FbdZHvAkQYovz_QUTSb_KH/exec";
 
-var ST = { data:null, kid:null, idx:0, date:"", loading:false, imgs:null, imgLoading:false };
+var ST = { data:null, kid:null, idx:0, date:"", loading:false, imgs:null, imgLoading:false, linkCode:"" };
 var LS = "naracha_parent_login";
 var DOW = ["일","월","화","수","목","금","토"];
 
@@ -358,6 +358,26 @@ function dowOf(s){ return new Date(s+"T00:00:00").getDay(); }
 
 /* ══ 저장·캐시 ══ */
 function saved(){ try{ return JSON.parse(localStorage.getItem(LS)||"null"); }catch(e){ return null; } }
+/* ══ 자동 로그인 ══════════════════════════════════════════
+   안내 문자의 주소 뒤에 코드를 붙여 보내면(…/campparent.html#7KMD3P)
+   학부모가 아무것도 입력하지 않아도 바로 열립니다.
+   «#» 뒤는 인터넷 서버로 전송되지 않으므로 «?» 보다 안전합니다.
+   (혹시 ?code= 형태로 보내진 링크도 함께 받아 줍니다) */
+function codeFromUrl(){
+  try{
+    var v=String(location.hash||"").replace(/^#/,"");
+    if(!v){
+      var m=String(location.search||"").match(/[?&]code=([^&]+)/i);
+      v = m ? decodeURIComponent(m[1]) : "";
+    }
+    v=v.toUpperCase().replace(/[^A-Z0-9]/g,"");
+    return v.length>=4 ? v : "";
+  }catch(e){ return ""; }
+}
+/* 주소창에서 코드를 지웁니다 — 화면을 남에게 보이거나 사진을 찍어도 코드가 남지 않게 */
+function wipeUrl(){
+  try{ if(history && history.replaceState) history.replaceState(null,"",location.pathname); }catch(e){}
+}
 function saveLogin(code){ try{ localStorage.setItem(LS, JSON.stringify({code:code})); }catch(e){} }
 function cacheKey(code){ return "naracha_pcache_"+code; }
 function cacheGet(code){
@@ -419,7 +439,14 @@ function fetchKid(code,fromForm){
               : j&&j.error==="NODATA" ? "아직 캠프 자료가 준비되지 않았습니다. 잠시 후 다시 확인해 주세요."
               : j&&j.error==="BAD" ? "로그인 코드를 다시 확인해 주세요."
               : "잠시 후 다시 시도해 주세요.";
-        if(fromForm) showMsg("err",t); else { try{ localStorage.removeItem(LS); }catch(e){} render(); }
+        if(fromForm){ showMsg("err",t); }
+        else {
+          /* 저장해 둔 코드로 자동 조회하다 실패했을 때만 저장을 지웁니다.
+             링크로 들어온 코드가 틀렸다고 기존 로그인까지 지우면 안 됩니다. */
+          var sv=saved();
+          if(sv && sv.code===code){ try{ localStorage.removeItem(LS); }catch(e){} }
+          render(); showMsg("err",t);   /* 코드가 채워진 로그인 화면 + 안내 */
+        }
         return;
       }
       /* 무엇이 새로 올라왔는지 견주어 봅니다 */
@@ -444,7 +471,10 @@ function fetchKid(code,fromForm){
       ST.loading=false; setBusy(false);
       if(ST.data) return;
       if(fromForm) showMsg("err","연결이 느리거나 끊겼습니다.<br>잠시 후 <b>확인하기</b>를 다시 눌러 주세요.");
-      else render();
+      else {
+        render();
+        if(ST.linkCode) showMsg("err","연결이 느리거나 끊겼습니다.<br>코드를 미리 넣어 두었으니 <b>확인하기</b>를 눌러 주세요.");
+      }
     });
 }
 function loadImgs(){
@@ -510,7 +540,12 @@ function checkFileUpdate(){
     .then(function(r){ return r.text(); })
     .then(function(t){
       var m=t.match(/APP_VER\s*=\s*"([^"]+)"/);
-      if(m && m[1]!==APP_VER) location.replace(location.pathname+"?v="+Date.now());
+      if(m && m[1]!==APP_VER){
+        /* 새 버전으로 바꿔 여는 중에도 «링크로 받은 로그인 코드»를 잃지 않도록 다시 붙여 줍니다.
+           (이게 없으면 새 버전을 받은 그 한 번은 로그인 화면이 떠 버립니다) */
+        var keep = ST.linkCode ? ("#"+ST.linkCode) : "";
+        location.replace(location.pathname+"?v="+Date.now()+keep);
+      }
     }).catch(function(){});
 }
 function pickDate(){
@@ -556,9 +591,12 @@ function vLogin(){
     '<p>캠프에서 안내해 드린 <b>로그인 코드</b>를 넣어 주세요.<br>'+
     '형제·자매는 한 코드로 함께 보이고, 다음 캠프에도 같은 코드를 쓰십니다.</p>'+
     '<span class="lab">로그인 코드</span>'+
-    '<input class="code-in" id="pCode" maxlength="10" placeholder="7KMD3P" autocomplete="off" '+
+    /* 안내 문자의 링크로 들어오셨다면 코드를 미리 채워 둡니다 — 누르기만 하시면 됩니다 */
+    '<input class="code-in" id="pCode" maxlength="10" value="'+esc(ST.linkCode||"")+'" placeholder="7KMD3P" autocomplete="off" '+
       'inputmode="latin" oninput="this.value=this.value.toUpperCase()">'+
-    '<div class="hint">코드에는 헷갈리는 <b>0 · 1 · I · O · S · B</b> 가 들어가지 않습니다.</div>'+
+    (ST.linkCode
+      ? '<div class="hint" style="color:var(--navy);font-weight:700">안내 문자의 코드를 미리 넣어 두었습니다. 아래 <b>확인하기</b>만 눌러 주세요.</div>'
+      : '<div class="hint">코드에는 헷갈리는 <b>0 · 1 · I · O · S · B</b> 가 들어가지 않습니다.</div>')+
     '<div style="height:15px"></div>'+
     '<button class="btn" onclick="doLogin()">확인하기</button>'+
     '<div class="msg" id="pMsg"></div>'+
@@ -969,8 +1007,14 @@ function vFoot(){
 
 /* ══ 시작 ══ */
 (function(){
+  var link=codeFromUrl();      /* 안내 문자 링크로 들어오셨나? */
   var s=saved();
-  if(s && s.code) fetchKid(s.code, false);
+  if(link){
+    ST.linkCode=link;          /* 실패하면 로그인칸에 미리 채워 드리기 위해 기억 */
+    wipeUrl();                 /* 주소창에서 코드 지우기 */
+    fetchKid(link, false);
+  }
+  else if(s && s.code) fetchKid(s.code, false);
   else render();
   document.addEventListener("keydown", function(e){
     if(e.key==="Enter" && document.getElementById("pCode")) doLogin();
