@@ -1064,7 +1064,7 @@ var HISTORY2 = {};  /* payments로 이관 완료. 중복 표시 방지 위해 �
 var CAT2LABEL = {0:"수련비", 1:"승급심사", 2:"용품구입", 3:"대회출전", 4:"행사참여", 5:"기타", 6:"해외행사", 7:"시범단연회비", 8:"국기원심사"};
 /* [내부 버전] 자동 새로고침(버전 감지)용 — 항상 증가만 함. 절대 낮추지 말 것.
    옛 v1~v9.99(개발·베타)와의 연속성을 위해 v10.0부터 이어감. */
-var APP_VER = "v13.79";   /* R4.79: 차량 운행표 ①수련생 검색(보기·수정 공용) — 월~금 전체 노선에서 이름을 찾아 요일·구간·시간·정류장·표기(미탑승/보강/등·하원)를 목록으로 보여주고, 누르면 그 요일로 이동+구간 펼침+스크롤·강조. 입력 중에는 결과 상자만 갱신해 한글 입력이 끊기지 않음 ②보기 모드 컴팩트 디자인(기본) — 구간 카드를 가로로 나란히 배치(자동 줄바꿈)하고 줄 간격·글자를 조밀하게 줄여 스크롤 없이 한눈에 파악, 큰 요약 카드는 상단 한 줄로 압축. [⊞ 한눈에]/[☰ 크게 보기] 토글로 기존 보기(글자 큼)와 전환 가능(기기별 기억). 접기·연락처 팝업·미탑승 강조·이번주/계속 배지 유지 · R4.78: 선납 월별 "횟수"도 직접 입력 — R4.77 월별 금액 칸 옆에 횟수 칸 추가(선택). 입력한 달만 ①그 달 결제기록의 기준수련횟수(w) ②그 달 전용 기준횟수(refCntMap, 출석현황 1순위)에 함께 기록되어 기준월 고정 횟수와 다른 달(예: 7월 6회·8월 8회)이 출석현황에 정확히 반영됨. 비우면 기존대로 기준수련횟수 적용 · R4.77: 선납 월별 금액 직접 입력 — 2·6·12개월 수련비 선납 때 달마다 수련 횟수가 달라 금액이 다른 경우(예: 7월 6회 135,000 + 8월 8회 180,000 = 315,000) 지원. 금액 아래 [✎ 월별 금액 다르게] 버튼으로 월별 칸을 열어 직접 입력(균등값이 미리 채워짐), 합계가 총액과 다르면 빨간 안내 + 저장 차단, 청구·바로납부 모두 동일 적용, 확인 팝업에 월별 내역 표시. 기본 동작(균등 분할)은 그대로 · R4.76: 결석예정관리 정렬 수정 — "최근 등록순"이 입력 시각이 아니라 결석 시작일로 정렬되어 방금 입력한 건이 아래로 가던 문제. ①목록 구성에 입력 시각(t) 동봉 ②startDesc를 입력(수정) 시각 내림차순으로 교체(시각 동률이면 시작일 늦은 순) ③이름을 "최근입력순"으로 변경 ④짝이 되는 "오래된순"은 동작 그대로 두되 혼동을 막기 위해 "시작일 빠른순"으로 명칭만 정정 · R4.75: [구조] 사진 창고를 대용량 저장소(IndexedDB)로 이전 — 사진이 이 컴퓨터 임시 보관함(약 5MB)의 절반을 차지해 천장을 압박하던 문제의 근본 해결. 사진만 큰 창고로 옮기고 회계·출석·업무·심사·측정은 그대로. 데이터 모양(photoState)·클라우드 동기화(photoPull/photoSync/mergePhoto)·묘비 구조·백업 파일 형식은 전혀 바꾸지 않아 옛 백업↔새 버전 상호 복구 가능. 이사는 앱 열 때 자동 1회(복사→다시 읽어 대조→성공 시에만 작은 서랍 비움, 실패 시 원본 보존). 큰 창고를 못 쓰는 환경(사생활 모드 등)은 자동으로 옛 방식 폴백. 백업 수집·복구도 사진만 큰 창고 경유로 분리 처리. 용량 점검 화면은 사진을 5MB 합계에서 제외하고 별도 표시 · R4.74: 데이터 용량 최적화 1단계 — ①퇴관 후 1년이 지난 수련생 사진 정리 도구 (설정→데이터 용량 점검에 대상 인원·확보 용량 표시 + [🧹 사진 정리], 관리자 전용). 목록에서 그냥 빼지 않고 빈 묘비({d:"",t})로 남겨 다른 기기·클라우드와 합칠 때 되살아나지 않게 함(절대규칙 3) · 사진만 지우고 출석·회계·심사 기록은 보존 ②용량 점검 화면에 사진 보관 인원수 표시(원인 진단) ③navigator.storage.persist() 요청 — 기기 공간이 부족할 때 브라우저가 임시 보관함을 말없이 비우는 것 방지 · R4.73: [개인정보] 공개 배포 파일에서 수련생 실명 시드 제거 — INIT_CLOSED(휴관 547명 실명+휴원 시작일)를 빈 값으로 교체(기존 [PII 제거] 시드 3곳과 동일 방식). 휴관 기록의 정본은 회계 창고(클라우드·로컬 저장소)이며 시드는 저장된 것이 없을 때만 1회 채우는 용도라, 제거해도 기존 기기의 휴관 표시·병합·복관 로직에 영향 없음(제거 전 데이터는 로컬 백업 폴더에 보관) · 측정 결과지 머리글의 관장 개인 휴대전화(010) 하드코딩을 도장 정보(BIZ)의 대표번호 참조로 교체 · R4.72: 복귀 예정에서 하루짜리(일일) 결석 제외 — 결석 예정의 종료일이 시작일과 같은 '하루 결석'은 다음날 정상 복귀라 홈 '복귀 예정' 목록·카톡 알림 '복관 예정'에서 자동 제외(목록 시인성 개선, 기존 데이터·저장방식 변경 없음) · R4.71: 차량 카톡 표기 원칙 구멍 수정 — [🚌 이 날 태우기]로 보강 학생을 노선에 넣으면 표시 없이 맨이름으로 들어가 카톡에 (이름) 괄호 없이 나가던 문제. 보강 배차는 "이번 주만 (보강)"으로 자동 지정되어 카톡에 (이름)으로 나가고 다음 주엔 자동 소멸 · 정규인데 이번 주만 안 타는 학생은 기존대로 /미탑승/ 지정 시 /이름/으로 표기(변화 없음) · R4.70: 차량표 보기 모드 개선 ①이번 주만/계속 지정 탑승자에게 저장 후 보기에서도 작은 배지(이번주·계속) 표시 ②시인성 — 이름 칩 글자 확대(13.5px)·굵게, 시간·정류장 글자 확대, 정류장 줄무늬 배경·구분선 강화, 구간 머리에 왼쪽 색 띠 ③구간 접기(보기 모드·PC/모바일 공통) — 구간 머리를 누르면 접힘/펴짐, 오늘 요일이면 지나간 시간대 구간은 자동으로 접힘(접힌 줄에 정류장·인원 요약 표시, 직접 누른 선택이 자동보다 우선) · R4.69: 차량 수정 ①정류장 시간을 입력하고 칸에서 나가면 그 구간 정류장이 시간순 자동 정렬(1~9시는 오후로 해석 · 시간 없는 정류장은 맨 뒤) ②적용 범위 선택이 잘 안 보이던 문제 — 이름 옆 배지를 이모지만(📌·📅)에서 색 채운 글자 배지(📌 계속 · 📅 이번주)로, 선택 직후 화면 위에 "○○○ → (보강) · 📅 이번 주만 적용됨" 안내 표시 · R4.68: 차량 운행표 오른쪽 당일 시간표 패널 — 수정 모드에서만 보이던 것을 보기 모드에서도 상시 표시(기본 펼침 · 접기 가능) · R4.67: 심사앱 v9.0.1 — v9.0 잔여 수정 7건(정밀검토판 지시서 전체 반영): ①4관점 태권도 카드 환산 오류(80점 만점을 /10로 나눠 8.0/5.0 표시) → 채점 버전별 환산(구:/10·신:/16) ②미관찰이 3점으로 되채워지던 _domainVals → null 유지·카드 "기록 없음" 표시 ③성장 비교 배너: 구 채점 기록과 총점 비교 중단·null은 – 표시·옛 기록 오류 가드 ④자동 소견이 미관찰 영역을 보완 대상으로 지목하던 문제 → 강·약점 판단에서 제외, 전 항목 미관찰 시 소견 미생성 ⑤미관찰 문구 마침표 중복(없습니다..) 제거 ⑥일부만 관찰 시 "관찰된 N개 항목 기준으로" 명시 ⑦합격 카드 점수줄 20/80 반영·미확정 표기·등급 F → 한글 척도(뛰어남~함께노력중)·레이더 제목 "기술 영역별 결과" · R4.66: ①카카오 알림 방 삭제가 안 되던 문제 — 목록에서만 빼서 다른 기기·클라우드와 합칠 때 합집합 병합이 지운 방을 도로 살려냈음. 삭제 도장(묘비)+되살리기 시각으로 수정(같은 이름 재추가 가능) ②동기화 상태 표시를 남색 상단바에만(흰 줄 중복 제거) · 글자 축소, 회계·출석 문구가 같으면 하나만 ③⚙ 통합 설정 신설 — 비밀번호·기기·접속키·카카오 알림·금액 설정·백업·구글폼·시간표 이미지·이름/중복 정리·노선 되돌리기·앱 설치 안내를 한 화면에서 열도록(기존 설정 창 그대로 사용, 입구만 통합) · R4.64.1: 수납관리 이어서 — 모든 항목에서 제목(행사·대회) 있으면 명단을 제목별로 묶어 표시(🎪 제목·인원·금액 머리줄), 제목 없으면 월별(📅 2026년 7월)로 묶음 · 명단 열 사이 세로 구분선 · 정렬을 ④행(기간 다음)으로 이동 — 필터로 좁힌 결과를 늘어놓는 단계이므로 위계상 마지막이 맞음 · 행 높이·간격 축소로 더 컴팩트하게 · R4.64: 수납관리 화면 정리 — ①차감예정·회계변경이력을 큰 카드 대신 한 줄 소형 버튼으로(누르면 펼침) ②필터 3위계 정리: ①유형·납부상태 / ②항목 / ③기간 — 기간에 연·월 직접 지정 추가(예: 2026년 7월), 지정 시 해당 조건의 행사·대회 제목을 건수와 함께 표시 ③명단을 카드 격자 대신 한 명=한 줄 리스트로(넓은 화면에서 여러 단으로 흘려 세로 스크롤 최소화 · 이름·반·나이·상태·납부월 한 줄) · R4.63: [근본수정] 행사 참가비 "미청구" 오탐 반복 — 청구·납부까지 끝난 수련생이 행사 화면에서 미청구로 보이던 문제. 원인: ①행사를 지웠다 다시 만들면 번호(evId)가 바뀌는데 옛 번호를 단 청구를 무조건 남의 것으로 취급 ②수동 청구는 메모가 제목과 "완전히 같을 때"만 인정(메모를 조금만 고쳐도 탈락). 수정: 지워진 행사 번호+같은 제목이면 인정, 메모에 제목이 포함되면 인정(행사 날짜 앞뒤 120일 안·살아있는 다른 행사 청구는 제외 — 연례 같은제목 행사 중복 방지), 그래도 안 잡히는 건은 [미청구 🔗] 칩을 눌러 회계 기록에서 찾아 행사에 영구 연결(변경이력 기록) · R4.62: 회계입력 청구·수납 내역에서 바로 납부 — 원생을 고르면 뜨는 내역 패널의 미납 줄 오른쪽에 [납부] 버튼 추가(날짜·결제방법 한 팝업, R4.58과 동일), 미납 여러 건이면 [모두 납부]로 일괄 처리, 처리 후 같은 화면에서 녹색 완료 메시지·내역 즉시 갱신 · R4.61: 회계 동선 통합(연결) — 개인 납부내역 화면에 [＋ 청구·납부 입력] 버튼 신설: 누르면 그 원생이 선택된 채로 회계입력이 열리고(복귀 안내 표시), 저장하면 그 원생 납부내역 화면으로 자동 복귀해 저장 결과와 내역을 바로 확인. 같은 사람을 세 번 검색하던 확인→입력→확인 동선이 한 화면 왕복으로 줄어듦. 다른 원생을 고르거나 탭을 옮기면 자동 복귀는 해제(예상 밖 화면 이동 방지) · 기존 데이터·저장 방식은 변경 없음 · R4.60: 차량 변경 예정 — 어디서든 수정·삭제. 차량표 위 [📌 차량 변경 안내]의 각 줄에 삭제(✕) 추가(전에는 수정만), 안내에 안 뜨는 건(7일 밖·지난 안내)이 있으면 건수와 [전체 목록 열기] 안내 표시, 달력 화면 목록에 [전체 보기] 토글 신설 — 지난 안내·먼 날짜까지 한 곳에서 수정·삭제 · 삭제 확인창에 대상 수련생·내용 함께 표시 · R4.59: 홈(시간표) 화면 상단 [등록상담] 오른쪽에 [🚌 차량운행관리] 바로가기 추가 — 지도진 모두 함께 관리하는 항목이라 업무관리를 거치지 않고 한 번에 열리고, 열 때 다른 기기 변경분을 바로 받아옴. 현재 차량 화면일 때는 버튼이 파랗게 표시됨 · R4.58: 개인 납부내역에 "청구된 내역(미납)" 카드 신설 — 차감 예정 위에 청구 건을 모아 보여 주고 [💳 납부 처리]를 누르면 납부일·결제방법을 한 팝업에서 골라 바로 처리(아래 상세 결제내역까지 내려갈 필요 없음). 여러 건은 [모두 납부 처리]로 같은 날짜·방법 일괄 처리 · 마감월 포함 시 한 번만 확인 · 변경이력에 건별 기록 · R4.57: [중요] 학적부 대회이력·행사참여이력 삭제가 되살아나던 문제 수정 — 삭제 표시(묘비)를 병합 결과에서 지워 버려 "삭제했다"는 사실이 남지 않았고, 아직 안 고쳐진 다른 기기·클라우드 사본과 다시 합쳐질 때 지운 항목이 부활했다. 이제 삭제 표시를 보존(400일 후 자동 정리)하고 화면·출력에서만 제외 · 학적부 리포트·인쇄에서 삭제한 대회이력이 "(내용 없음)"으로 찍히던 문제 함께 수정 · R4.56: 보강 배차 확인 — 평소 다른 요일에 차량을 타는 수련생이 보강으로 오는 날, 그 요일 차량표(보기·수정 모두) 위에 "🔁 보강으로 오는 차량 이용 수련생 N명" 안내 표시(보강 시간·평소 탑승 요일·평소 정류장 함께). [🚌 이 날 태우기] 한 번으로 그 날 노선에 추가(보강 시간에 맞는 구간·평소 정류장 자동 선택) · R4.55: 설치형 앱 구분 수정 — 같은 주소(폴더)에 올린 다른 앱(방학캠프 등)을 설치하면 이 앱이 "이미 설치됨"으로 잡혀 설치 버튼이 안 뜨던 문제. 앱 고유번호(id)를 고정값(naracha-admin)으로 지정하고 앱 영역(scope)을 폴더가 아닌 이 파일로 좁혀 서로 겹치지 않게 함 · R4.54: [안전] 클라우드 덮어쓰기 방지 강화 — 업무·차량/심사/사진/측정 창고도 회계·출석과 동일한 fail-closed 규칙 적용(서버 확인 실패·형식 이상·해석 실패 시 전송 중단, 빈 기기가 서버를 덮지 못하도록 차단) · 전송 실패 시 자동 재시도(최대 60초 간격) · 아이폰 설치형에서 상단 시계/배터리에 화면이 가리지 않도록 상태표시줄 처리 수정 · R4.53: 설치형(PWA) 지원 — 홈 화면에 추가하면 주소창 없이 전용 앱으로 실행(아이폰·안드로이드·PC 공통) · 매니페스트/아이콘 내장(파일 1개 유지) · 앱 설치 버튼·설치 방법 안내·설치형용 새로고침 버튼 · R4.52: 심사앱 v9.0 채점 개편 탑재 — 합격판정=수련태도(P)20점+기술80점, NMPA N·M 4항목은 관찰 전용(점수 미반영), 미입력 자동 3점 부여 폐지(미확정 처리), 과거 기록 보존+구채점 배지 · R4.51: [중요] 차량 노선 유실 방지 — 자동(출석반영·주간이월) 변경은 수정시각을 올리지 않고 클라우드로 밀지 않음 · 노선 병합을 요일별로 분리 · 클라우드 수신 전 자동처리 금지 · 노선 자동 스냅샷 12개 + [⟲ 되돌리기] · R4.50: 변경 안내 [🚌 적용] — 요일·대상·동작(옮기기/추가/미탑승/빼기) 선택해 노선에 한 번에 반영 · 카톡 발송 문구 맨 위에 그날 변경 안내 자동 포함(토글) · R4.49: 차량 변경 예정 캘린더 신설 — 방학·개학 등 날짜별 변경 내용을 미리 적어 두면 그날 차량표 맨 위에 안내로 뜸(자동 배치 없음·[반영함] 체크) · R4.48: 차량 수정모드 재설계 — 왼쪽 고정 도구모음(스크롤 따라다님·구간 바로가기)·위계 정리(구간 헤더바>정류장 번호>탑승자 밑줄)·정류장마다 수련생 이름 검색 추가 · R4.47: 차량 노선(업무 창고) 동기화 — 휴대폰에서 다른 기기 변경이 화면에 반영 안 되던 문제(갱신 조건이 PC 업무화면 한정) 수정 · 차량표 열 때 즉시 수신 + [☁ 최신 불러오기] 버튼 · 클라우드 수신 전 주간 자동이월 금지(옛 노선이 최신 수정을 덮어쓰던 위험 차단) · R4.46: 회계 '차감 예정(선수금)' 신설 — 이미 낸 돈 중 안 쓰게 된 금액(예: 차량비)을 사유·메모와 함께 등록해 두면 다음 청구에서 자동 차감(여러 달 나눠 쓰기·되돌리기 지원) · R4.44~45: 시간표 표시 3건 — 요일 머리 위로 스크롤 글씨 비침 제거(보드 위 여백 padding→border) · 말풍선이 옆 요일에 가려지던 문제(기둥 opacity 쌓임 문맥 제거) · 말풍선 폭 확대(날짜 줄바꿈 개선) · R4.43: 결석관리 정합화 — 접속 시 기록과 어긋난 자동 결석 표시·옛 메모 잔재 전체 자동 청소 + 결석 등록/수정 시 확인창 없이 자동 반영(한 줄 안내) + 저장 직후 '겹칩니다' 오경고 제거 · R4.42: 결석 예정 수정·삭제·복귀 시 시간표의 자동 결석 표시도 함께 복원(기간 단축분 출석 대기로) — 기록만 바뀌고 표시가 남던 문제 · R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
+var APP_VER = "v13.80";   /* R4.80: 차량 ①수정 모드도 컴팩트(기본) — 구간 카드를 가로로 나란히 + 입력 줄 조밀화, 정류장별 [탑승자 추가] 상자는 접이식(평소엔 칩 하나·누르면 검색/직접입력/배치명단), [⊞ 한눈에]/[☰ 크게 보기] 토글은 보기·수정 공용(크게 보기 코드는 무수정 보존) ②같은 시간대 정류장 옮기기 — A정류장에서 /미탑승/으로 지정한 수련생을 같은 구간의 다른 정류장에 추가할 수 없던 문제(검색 결과 ✓ 잠김·배치명단 제외). 구간 내 "타는 사람" 판정에서 미탑승 항목을 제외해 재배치 허용, 검색 결과에 [재배치] 힌트 표시. 카톡 표기는 기존 원칙 그대로(A는 /이름/, B는 표기대로) · R4.79: 차량 운행표 ①수련생 검색(보기·수정 공용) — 월~금 전체 노선에서 이름을 찾아 요일·구간·시간·정류장·표기(미탑승/보강/등·하원)를 목록으로 보여주고, 누르면 그 요일로 이동+구간 펼침+스크롤·강조. 입력 중에는 결과 상자만 갱신해 한글 입력이 끊기지 않음 ②보기 모드 컴팩트 디자인(기본) — 구간 카드를 가로로 나란히 배치(자동 줄바꿈)하고 줄 간격·글자를 조밀하게 줄여 스크롤 없이 한눈에 파악, 큰 요약 카드는 상단 한 줄로 압축. [⊞ 한눈에]/[☰ 크게 보기] 토글로 기존 보기(글자 큼)와 전환 가능(기기별 기억). 접기·연락처 팝업·미탑승 강조·이번주/계속 배지 유지 · R4.78: 선납 월별 "횟수"도 직접 입력 — R4.77 월별 금액 칸 옆에 횟수 칸 추가(선택). 입력한 달만 ①그 달 결제기록의 기준수련횟수(w) ②그 달 전용 기준횟수(refCntMap, 출석현황 1순위)에 함께 기록되어 기준월 고정 횟수와 다른 달(예: 7월 6회·8월 8회)이 출석현황에 정확히 반영됨. 비우면 기존대로 기준수련횟수 적용 · R4.77: 선납 월별 금액 직접 입력 — 2·6·12개월 수련비 선납 때 달마다 수련 횟수가 달라 금액이 다른 경우(예: 7월 6회 135,000 + 8월 8회 180,000 = 315,000) 지원. 금액 아래 [✎ 월별 금액 다르게] 버튼으로 월별 칸을 열어 직접 입력(균등값이 미리 채워짐), 합계가 총액과 다르면 빨간 안내 + 저장 차단, 청구·바로납부 모두 동일 적용, 확인 팝업에 월별 내역 표시. 기본 동작(균등 분할)은 그대로 · R4.76: 결석예정관리 정렬 수정 — "최근 등록순"이 입력 시각이 아니라 결석 시작일로 정렬되어 방금 입력한 건이 아래로 가던 문제. ①목록 구성에 입력 시각(t) 동봉 ②startDesc를 입력(수정) 시각 내림차순으로 교체(시각 동률이면 시작일 늦은 순) ③이름을 "최근입력순"으로 변경 ④짝이 되는 "오래된순"은 동작 그대로 두되 혼동을 막기 위해 "시작일 빠른순"으로 명칭만 정정 · R4.75: [구조] 사진 창고를 대용량 저장소(IndexedDB)로 이전 — 사진이 이 컴퓨터 임시 보관함(약 5MB)의 절반을 차지해 천장을 압박하던 문제의 근본 해결. 사진만 큰 창고로 옮기고 회계·출석·업무·심사·측정은 그대로. 데이터 모양(photoState)·클라우드 동기화(photoPull/photoSync/mergePhoto)·묘비 구조·백업 파일 형식은 전혀 바꾸지 않아 옛 백업↔새 버전 상호 복구 가능. 이사는 앱 열 때 자동 1회(복사→다시 읽어 대조→성공 시에만 작은 서랍 비움, 실패 시 원본 보존). 큰 창고를 못 쓰는 환경(사생활 모드 등)은 자동으로 옛 방식 폴백. 백업 수집·복구도 사진만 큰 창고 경유로 분리 처리. 용량 점검 화면은 사진을 5MB 합계에서 제외하고 별도 표시 · R4.74: 데이터 용량 최적화 1단계 — ①퇴관 후 1년이 지난 수련생 사진 정리 도구 (설정→데이터 용량 점검에 대상 인원·확보 용량 표시 + [🧹 사진 정리], 관리자 전용). 목록에서 그냥 빼지 않고 빈 묘비({d:"",t})로 남겨 다른 기기·클라우드와 합칠 때 되살아나지 않게 함(절대규칙 3) · 사진만 지우고 출석·회계·심사 기록은 보존 ②용량 점검 화면에 사진 보관 인원수 표시(원인 진단) ③navigator.storage.persist() 요청 — 기기 공간이 부족할 때 브라우저가 임시 보관함을 말없이 비우는 것 방지 · R4.73: [개인정보] 공개 배포 파일에서 수련생 실명 시드 제거 — INIT_CLOSED(휴관 547명 실명+휴원 시작일)를 빈 값으로 교체(기존 [PII 제거] 시드 3곳과 동일 방식). 휴관 기록의 정본은 회계 창고(클라우드·로컬 저장소)이며 시드는 저장된 것이 없을 때만 1회 채우는 용도라, 제거해도 기존 기기의 휴관 표시·병합·복관 로직에 영향 없음(제거 전 데이터는 로컬 백업 폴더에 보관) · 측정 결과지 머리글의 관장 개인 휴대전화(010) 하드코딩을 도장 정보(BIZ)의 대표번호 참조로 교체 · R4.72: 복귀 예정에서 하루짜리(일일) 결석 제외 — 결석 예정의 종료일이 시작일과 같은 '하루 결석'은 다음날 정상 복귀라 홈 '복귀 예정' 목록·카톡 알림 '복관 예정'에서 자동 제외(목록 시인성 개선, 기존 데이터·저장방식 변경 없음) · R4.71: 차량 카톡 표기 원칙 구멍 수정 — [🚌 이 날 태우기]로 보강 학생을 노선에 넣으면 표시 없이 맨이름으로 들어가 카톡에 (이름) 괄호 없이 나가던 문제. 보강 배차는 "이번 주만 (보강)"으로 자동 지정되어 카톡에 (이름)으로 나가고 다음 주엔 자동 소멸 · 정규인데 이번 주만 안 타는 학생은 기존대로 /미탑승/ 지정 시 /이름/으로 표기(변화 없음) · R4.70: 차량표 보기 모드 개선 ①이번 주만/계속 지정 탑승자에게 저장 후 보기에서도 작은 배지(이번주·계속) 표시 ②시인성 — 이름 칩 글자 확대(13.5px)·굵게, 시간·정류장 글자 확대, 정류장 줄무늬 배경·구분선 강화, 구간 머리에 왼쪽 색 띠 ③구간 접기(보기 모드·PC/모바일 공통) — 구간 머리를 누르면 접힘/펴짐, 오늘 요일이면 지나간 시간대 구간은 자동으로 접힘(접힌 줄에 정류장·인원 요약 표시, 직접 누른 선택이 자동보다 우선) · R4.69: 차량 수정 ①정류장 시간을 입력하고 칸에서 나가면 그 구간 정류장이 시간순 자동 정렬(1~9시는 오후로 해석 · 시간 없는 정류장은 맨 뒤) ②적용 범위 선택이 잘 안 보이던 문제 — 이름 옆 배지를 이모지만(📌·📅)에서 색 채운 글자 배지(📌 계속 · 📅 이번주)로, 선택 직후 화면 위에 "○○○ → (보강) · 📅 이번 주만 적용됨" 안내 표시 · R4.68: 차량 운행표 오른쪽 당일 시간표 패널 — 수정 모드에서만 보이던 것을 보기 모드에서도 상시 표시(기본 펼침 · 접기 가능) · R4.67: 심사앱 v9.0.1 — v9.0 잔여 수정 7건(정밀검토판 지시서 전체 반영): ①4관점 태권도 카드 환산 오류(80점 만점을 /10로 나눠 8.0/5.0 표시) → 채점 버전별 환산(구:/10·신:/16) ②미관찰이 3점으로 되채워지던 _domainVals → null 유지·카드 "기록 없음" 표시 ③성장 비교 배너: 구 채점 기록과 총점 비교 중단·null은 – 표시·옛 기록 오류 가드 ④자동 소견이 미관찰 영역을 보완 대상으로 지목하던 문제 → 강·약점 판단에서 제외, 전 항목 미관찰 시 소견 미생성 ⑤미관찰 문구 마침표 중복(없습니다..) 제거 ⑥일부만 관찰 시 "관찰된 N개 항목 기준으로" 명시 ⑦합격 카드 점수줄 20/80 반영·미확정 표기·등급 F → 한글 척도(뛰어남~함께노력중)·레이더 제목 "기술 영역별 결과" · R4.66: ①카카오 알림 방 삭제가 안 되던 문제 — 목록에서만 빼서 다른 기기·클라우드와 합칠 때 합집합 병합이 지운 방을 도로 살려냈음. 삭제 도장(묘비)+되살리기 시각으로 수정(같은 이름 재추가 가능) ②동기화 상태 표시를 남색 상단바에만(흰 줄 중복 제거) · 글자 축소, 회계·출석 문구가 같으면 하나만 ③⚙ 통합 설정 신설 — 비밀번호·기기·접속키·카카오 알림·금액 설정·백업·구글폼·시간표 이미지·이름/중복 정리·노선 되돌리기·앱 설치 안내를 한 화면에서 열도록(기존 설정 창 그대로 사용, 입구만 통합) · R4.64.1: 수납관리 이어서 — 모든 항목에서 제목(행사·대회) 있으면 명단을 제목별로 묶어 표시(🎪 제목·인원·금액 머리줄), 제목 없으면 월별(📅 2026년 7월)로 묶음 · 명단 열 사이 세로 구분선 · 정렬을 ④행(기간 다음)으로 이동 — 필터로 좁힌 결과를 늘어놓는 단계이므로 위계상 마지막이 맞음 · 행 높이·간격 축소로 더 컴팩트하게 · R4.64: 수납관리 화면 정리 — ①차감예정·회계변경이력을 큰 카드 대신 한 줄 소형 버튼으로(누르면 펼침) ②필터 3위계 정리: ①유형·납부상태 / ②항목 / ③기간 — 기간에 연·월 직접 지정 추가(예: 2026년 7월), 지정 시 해당 조건의 행사·대회 제목을 건수와 함께 표시 ③명단을 카드 격자 대신 한 명=한 줄 리스트로(넓은 화면에서 여러 단으로 흘려 세로 스크롤 최소화 · 이름·반·나이·상태·납부월 한 줄) · R4.63: [근본수정] 행사 참가비 "미청구" 오탐 반복 — 청구·납부까지 끝난 수련생이 행사 화면에서 미청구로 보이던 문제. 원인: ①행사를 지웠다 다시 만들면 번호(evId)가 바뀌는데 옛 번호를 단 청구를 무조건 남의 것으로 취급 ②수동 청구는 메모가 제목과 "완전히 같을 때"만 인정(메모를 조금만 고쳐도 탈락). 수정: 지워진 행사 번호+같은 제목이면 인정, 메모에 제목이 포함되면 인정(행사 날짜 앞뒤 120일 안·살아있는 다른 행사 청구는 제외 — 연례 같은제목 행사 중복 방지), 그래도 안 잡히는 건은 [미청구 🔗] 칩을 눌러 회계 기록에서 찾아 행사에 영구 연결(변경이력 기록) · R4.62: 회계입력 청구·수납 내역에서 바로 납부 — 원생을 고르면 뜨는 내역 패널의 미납 줄 오른쪽에 [납부] 버튼 추가(날짜·결제방법 한 팝업, R4.58과 동일), 미납 여러 건이면 [모두 납부]로 일괄 처리, 처리 후 같은 화면에서 녹색 완료 메시지·내역 즉시 갱신 · R4.61: 회계 동선 통합(연결) — 개인 납부내역 화면에 [＋ 청구·납부 입력] 버튼 신설: 누르면 그 원생이 선택된 채로 회계입력이 열리고(복귀 안내 표시), 저장하면 그 원생 납부내역 화면으로 자동 복귀해 저장 결과와 내역을 바로 확인. 같은 사람을 세 번 검색하던 확인→입력→확인 동선이 한 화면 왕복으로 줄어듦. 다른 원생을 고르거나 탭을 옮기면 자동 복귀는 해제(예상 밖 화면 이동 방지) · 기존 데이터·저장 방식은 변경 없음 · R4.60: 차량 변경 예정 — 어디서든 수정·삭제. 차량표 위 [📌 차량 변경 안내]의 각 줄에 삭제(✕) 추가(전에는 수정만), 안내에 안 뜨는 건(7일 밖·지난 안내)이 있으면 건수와 [전체 목록 열기] 안내 표시, 달력 화면 목록에 [전체 보기] 토글 신설 — 지난 안내·먼 날짜까지 한 곳에서 수정·삭제 · 삭제 확인창에 대상 수련생·내용 함께 표시 · R4.59: 홈(시간표) 화면 상단 [등록상담] 오른쪽에 [🚌 차량운행관리] 바로가기 추가 — 지도진 모두 함께 관리하는 항목이라 업무관리를 거치지 않고 한 번에 열리고, 열 때 다른 기기 변경분을 바로 받아옴. 현재 차량 화면일 때는 버튼이 파랗게 표시됨 · R4.58: 개인 납부내역에 "청구된 내역(미납)" 카드 신설 — 차감 예정 위에 청구 건을 모아 보여 주고 [💳 납부 처리]를 누르면 납부일·결제방법을 한 팝업에서 골라 바로 처리(아래 상세 결제내역까지 내려갈 필요 없음). 여러 건은 [모두 납부 처리]로 같은 날짜·방법 일괄 처리 · 마감월 포함 시 한 번만 확인 · 변경이력에 건별 기록 · R4.57: [중요] 학적부 대회이력·행사참여이력 삭제가 되살아나던 문제 수정 — 삭제 표시(묘비)를 병합 결과에서 지워 버려 "삭제했다"는 사실이 남지 않았고, 아직 안 고쳐진 다른 기기·클라우드 사본과 다시 합쳐질 때 지운 항목이 부활했다. 이제 삭제 표시를 보존(400일 후 자동 정리)하고 화면·출력에서만 제외 · 학적부 리포트·인쇄에서 삭제한 대회이력이 "(내용 없음)"으로 찍히던 문제 함께 수정 · R4.56: 보강 배차 확인 — 평소 다른 요일에 차량을 타는 수련생이 보강으로 오는 날, 그 요일 차량표(보기·수정 모두) 위에 "🔁 보강으로 오는 차량 이용 수련생 N명" 안내 표시(보강 시간·평소 탑승 요일·평소 정류장 함께). [🚌 이 날 태우기] 한 번으로 그 날 노선에 추가(보강 시간에 맞는 구간·평소 정류장 자동 선택) · R4.55: 설치형 앱 구분 수정 — 같은 주소(폴더)에 올린 다른 앱(방학캠프 등)을 설치하면 이 앱이 "이미 설치됨"으로 잡혀 설치 버튼이 안 뜨던 문제. 앱 고유번호(id)를 고정값(naracha-admin)으로 지정하고 앱 영역(scope)을 폴더가 아닌 이 파일로 좁혀 서로 겹치지 않게 함 · R4.54: [안전] 클라우드 덮어쓰기 방지 강화 — 업무·차량/심사/사진/측정 창고도 회계·출석과 동일한 fail-closed 규칙 적용(서버 확인 실패·형식 이상·해석 실패 시 전송 중단, 빈 기기가 서버를 덮지 못하도록 차단) · 전송 실패 시 자동 재시도(최대 60초 간격) · 아이폰 설치형에서 상단 시계/배터리에 화면이 가리지 않도록 상태표시줄 처리 수정 · R4.53: 설치형(PWA) 지원 — 홈 화면에 추가하면 주소창 없이 전용 앱으로 실행(아이폰·안드로이드·PC 공통) · 매니페스트/아이콘 내장(파일 1개 유지) · 앱 설치 버튼·설치 방법 안내·설치형용 새로고침 버튼 · R4.52: 심사앱 v9.0 채점 개편 탑재 — 합격판정=수련태도(P)20점+기술80점, NMPA N·M 4항목은 관찰 전용(점수 미반영), 미입력 자동 3점 부여 폐지(미확정 처리), 과거 기록 보존+구채점 배지 · R4.51: [중요] 차량 노선 유실 방지 — 자동(출석반영·주간이월) 변경은 수정시각을 올리지 않고 클라우드로 밀지 않음 · 노선 병합을 요일별로 분리 · 클라우드 수신 전 자동처리 금지 · 노선 자동 스냅샷 12개 + [⟲ 되돌리기] · R4.50: 변경 안내 [🚌 적용] — 요일·대상·동작(옮기기/추가/미탑승/빼기) 선택해 노선에 한 번에 반영 · 카톡 발송 문구 맨 위에 그날 변경 안내 자동 포함(토글) · R4.49: 차량 변경 예정 캘린더 신설 — 방학·개학 등 날짜별 변경 내용을 미리 적어 두면 그날 차량표 맨 위에 안내로 뜸(자동 배치 없음·[반영함] 체크) · R4.48: 차량 수정모드 재설계 — 왼쪽 고정 도구모음(스크롤 따라다님·구간 바로가기)·위계 정리(구간 헤더바>정류장 번호>탑승자 밑줄)·정류장마다 수련생 이름 검색 추가 · R4.47: 차량 노선(업무 창고) 동기화 — 휴대폰에서 다른 기기 변경이 화면에 반영 안 되던 문제(갱신 조건이 PC 업무화면 한정) 수정 · 차량표 열 때 즉시 수신 + [☁ 최신 불러오기] 버튼 · 클라우드 수신 전 주간 자동이월 금지(옛 노선이 최신 수정을 덮어쓰던 위험 차단) · R4.46: 회계 '차감 예정(선수금)' 신설 — 이미 낸 돈 중 안 쓰게 된 금액(예: 차량비)을 사유·메모와 함께 등록해 두면 다음 청구에서 자동 차감(여러 달 나눠 쓰기·되돌리기 지원) · R4.44~45: 시간표 표시 3건 — 요일 머리 위로 스크롤 글씨 비침 제거(보드 위 여백 padding→border) · 말풍선이 옆 요일에 가려지던 문제(기둥 opacity 쌓임 문맥 제거) · 말풍선 폭 확대(날짜 줄바꿈 개선) · R4.43: 결석관리 정합화 — 접속 시 기록과 어긋난 자동 결석 표시·옛 메모 잔재 전체 자동 청소 + 결석 등록/수정 시 확인창 없이 자동 반영(한 줄 안내) + 저장 직후 '겹칩니다' 오경고 제거 · R4.42: 결석 예정 수정·삭제·복귀 시 시간표의 자동 결석 표시도 함께 복원(기간 단축분 출석 대기로) — 기록만 바뀌고 표시가 남던 문제 · R4.41: 휴대폰에서 구글 드라이브 백업 로그인 화면이 저절로 새 탭으로 뜨던 문제 — 자동 인증은 PC + 인증 이력 있는 기기 + 6시간 쿨다운일 때만 · R4.40: 차량 보기모드 — 탑승자 이름 두 번 탭 시 전화가 저절로 걸리던 동작 제거(연락처 팝업 → [전화 걸기] 눌러야만 연결) · R4.39: 차량운행관리 구간 추가·수정 — prompt 연속 2회(두 번째 빈칸) → 이름·메모 한 팝업으로 통합 (휴대폰에서 빈 창이 또 뜨던 문제) · R4.38: 심사확정 잔여 체크 자동 청소(마지막 심사일 이전 확정·지도진추천 자동 해제 — 로드·목록 열기·심사저장 시) · R4.37: 심사완료처리=완료 기준 통일(심사확정·신청서·테이프·지도진추천 자동 해제 + 수련횟수 0부터 재카운트 · 출력은 명단 무관) · 대회준비 시간 = 수련횟수 미포함 + 주간 복사 제외 · R4.36: 차량운행관리 수정모드 간결화 · 차계부 수정모드 표시 · R4.35: 수련시간표 보드 배경·오늘 강조 · R4.34: 심사일까지 예상 도달 자동계산 · R4.33: 2026 캘린더 일괄등록(심사 25건 포함) · R4.32: 캘린더 일괄 등록 · R4.31: 장기(연간등록) 수련생 배지·필터·집계 · R4.30: 청구방식 판정 버그 수정(횟수제 성인 오청구) · R4.29: 출석 날짜 누적 보기(이 달·3개월·심사 이후) · R4.28: 저장공간 사전경고 · 모바일 차계부 삭제 · R4.27: 모바일 차계부 개편(월·주 누계 · 단가 · 수정) · R4.26: 최종체크 수동항목 표기 정리 · R4.25: 행사당일→최종체크 표기 변경 · R4.24: 행사 준비항목 정렬(미완료 상단·완료 최신순) · R4.23: 완료=기록 자동보장(5경로 봉인)+미저장 경고배너 · R4.22: 완료자 일괄 기록 저장(종합결과 탭) · R4.21: 성장기록 기본필터 전체 + 초기 빈명단 가드 · R4.20: 차계부 월별·주별 누계 그룹 + 운행·주유 수정 · R4.19: 주유 단가 자동계산 · R4.18: 동기화 안정화 — 심사 진입·수신 시 iframe 즉시 최신화 · 스테일 저장 가드(완료 부활 차단) · 자동반영 장부 병합 보존 · 새 사이클 초기화 알림 */
 /* [표시 버전] 사람이 보는 버전 — 정식 출시 기념 1.0부터 새로 시작.
    내부 v10.x → 표시 "R1.x", v11.x → "R2.x" 로 자동 환산(옛 v1.0과 혼동 방지 위해 'R'(Release) 표기). */
 function appLabel(){ var m=String(APP_VER).replace(/^v/,'').split('.'); var maj=(Number(m[0])||0)-9; return "R"+maj+"."+(Number(m[1])||0); }
@@ -15720,6 +15720,19 @@ function busCourseNames(c){
   });
   return set;
 }
+/* [R4.80] 구간 내 "실제로 타는" 사람만 — 미탑승으로 지정된 항목은 제외.
+   같은 시간대에서 정류장을 옮길 때(A정류장 미탑승 → B정류장 추가) 재배치가 막히지 않게 한다. */
+function busCourseActiveNames(c){
+  var set={};
+  (c.stops||[]).forEach(function(st){
+    (st.riders||[]).forEach(function(r){
+      var n=(r.name||'').trim(); if(!n) return;
+      if(busEffMark(r)==='미탑승') return;   /* 미탑승은 "타는 사람"이 아님 → 다른 정류장 추가 허용 */
+      set[n]=1;
+    });
+  });
+  return set;
+}
 /* [R3.55] 배치 명단에서 한 명 추가 */
 /* [R4.48] 정류장별 수련생 검색 — 시간표 배치에 없는 사람도 이름으로 찾아 바로 넣는다.
    (예전엔 그 시간 배치 명단 칩 아니면 [＋ 직접 입력]으로 손으로 쳐야 해서 오타가 났다) */
@@ -15733,7 +15746,8 @@ function busSearchHtml(cid,sid){
   var q=String(((state.busQ||{})[cid+'|'+sid])||'').trim();
   if(!q) return '';
   var c=busCourses().find(function(x){return x.id===cid;}); if(!c) return '';
-  var used=busCourseNames(c);
+  var used=busCourseActiveNames(c);              /* [R4.80] 미탑승 항목은 사용중으로 안 봄 */
+  var allNames=busCourseNames(c);
   var hits=(STUDENTS||[]).filter(function(s){
     if(!s||!s.n) return false;
     if(state.closedMap && state.closedMap[s.n]) return false;
@@ -15747,6 +15761,8 @@ function busSearchHtml(cid,sid){
     var hint=hrs.length? hrs.join(',')+'시' : '배치없음';
     var hcol=hrs.length? '#2B5FB8' : '#B45309';
     if(inHere) return '<span style="border:1px solid #D8DDE4;background:#F4F5F7;color:#9AA1AA;border-radius:7px;padding:4px 9px;font-size:11.5px;font-weight:700;white-space:nowrap">'+esc(s.n)+' ✓</span>';
+    var reloc=(!inHere && allNames[s.n]);         /* [R4.80] 이 구간에 미탑승으로만 있음 → 정류장 옮기기 */
+    if(reloc){ hint='재배치'; hcol='#B45309'; }
     return '<button onclick="busPickRider(\''+cid+'\',\''+sid+'\',\''+esc(s.n).replace(/'/g,"\\'")+'\')" style="border:1px solid #C8D9F0;background:#fff;color:var(--ink);border-radius:7px;padding:4px 9px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">'+esc(s.n)+' <span style="font-size:9.5px;font-weight:800;color:'+hcol+'">'+hint+'</span></button>';
   }).join('')+'</div>';
 }
@@ -16566,6 +16582,111 @@ function _busDenseToggleHtml(cur, extra){
     b('compact','⊞ 한눈에','여러 구간을 옆으로 나란히 놓고 줄을 조밀하게 — 스크롤 최소')+
     b('roomy','☰ 크게 보기','구간을 세로로 크게 — 글자가 큼')+'</div>';
 }
+/* [R4.80] 컴팩트 수정 모드 — 구간 카드를 가로로 나란히 + 조밀한 입력 줄.
+   기능은 전부 유지(이름·표기·삭제·정류장·추가검색·배치명단), 탑승자 추가 상자만 접이식으로. */
+window.busAddToggle=function(cid, stid){
+  if(!state.busAddOpen) state.busAddOpen={};
+  var k=cid+'|'+stid;
+  state.busAddOpen[k]=!state.busAddOpen[k];
+  render();
+};
+function busEditCompactHtml(day, mob, courses){
+  var h='<div style="display:grid;grid-template-columns:'+(mob?'1fr':'repeat(auto-fill,minmax(min(430px,100%),1fr))')+';gap:8px;align-items:start;margin-bottom:10px">';
+  courses.forEach(function(c,ci){
+    var stops=c.stops||[];
+    var isDrop=/하차/.test(c.title||'');
+    var acc2=isDrop?'#1E7B3C':'#2B5FB8';
+    var accBg2=isDrop?'#F4FBF6':'#EEF4FF';
+    var accBd2=isDrop?'#BFE3CD':'#C8D9F0';
+    var riderN=0; stops.forEach(function(s2){ riderN+=((s2.riders||[]).filter(function(r){return (r.name||'').trim();})).length; });
+    var _fold=!!((state.busFold||{})[c.id]);
+    h+='<div class="card" id="busC_'+c.id+'" style="padding:0;overflow:hidden;border:1.5px solid '+accBd2+';margin:0">'+
+      '<div style="background:'+accBg2+';border-left:4px solid '+acc2+';padding:'+(mob?'7px 9px':'6px 10px')+';display:flex;align-items:center;gap:5px">'+
+        '<b style="font-size:12.5px;color:'+acc2+';flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" onclick="busToggleFold(\''+c.id+'\')" title="누르면 접기/펴기">'+esc(c.title||'구간')+
+          (c.note?' <span style="font-size:9.5px;font-weight:800;background:#FEF3E2;color:#B45309;border-radius:5px;padding:1px 5px;vertical-align:1px">'+esc(c.note)+'</span>':'')+
+          ' <span style="font-weight:700;font-size:10px;color:var(--sub)">'+stops.length+'곳·'+riderN+'명 '+(_fold?'▸':'▾')+'</span></b>'+
+        (ci>0?'<button class="chip sm" onclick="moveBusCourse(\''+c.id+'\',-1)" style="padding:2px 6px;font-size:10px">▲</button>':'')+
+        (ci<courses.length-1?'<button class="chip sm" onclick="moveBusCourse(\''+c.id+'\',1)" style="padding:2px 6px;font-size:10px">▼</button>':'')+
+        '<button class="chip sm" onclick="editBusCourse(\''+c.id+'\')" style="padding:2px 6px;font-size:10px" title="이름·메모 수정">✎</button>'+
+        '<button class="chip sm" onclick="delBusCourse(\''+c.id+'\')" style="padding:2px 6px;font-size:10px;color:var(--red);border-color:#F3C9C9" title="구간 삭제">✕</button>'+
+      '</div>';
+    if(_fold){
+      h+='<div style="padding:5px 10px;font-size:10.5px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+
+        (stops.length? stops.map(function(s2){ return esc((s2.time||'')+' '+(s2.place||'')).trim(); }).join(' · ') : '정류장 없음')+'</div></div>';
+      return;
+    }
+    if(!stops.length) h+='<div style="padding:8px 10px;font-size:11.5px;color:var(--sub)">정류장이 없습니다 — 아래 [＋ 정류장]을 눌러 주세요.</div>';
+    stops.forEach(function(st,si){
+      var riders=st.riders||[];
+      h+='<div style="border-top:1px solid #EDF0F4;background:'+(si%2?'#FBFBF9':'#fff')+';padding:'+(mob?'5px 8px':'4px 9px')+'">'+
+        '<div style="display:flex;gap:4px;align-items:center;margin-bottom:'+(riders.length?'3px':'1px')+'">'+
+          '<span style="flex:0 0 auto;width:15px;height:15px;border-radius:50%;background:'+acc2+';color:#fff;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center">'+(si+1)+'</span>'+
+          '<input class="input" placeholder="2:45" value="'+esc(st.time||'')+'" oninput="setBusStopField(\''+c.id+'\',\''+st.id+'\',\'time\',this.value)" onchange="sortBusStopsByTime(\''+c.id+'\')" style="flex:0 0 52px;height:26px;font-size:12px;font-weight:900;text-align:center;padding:0 2px;border:1px solid #D9DEE6;border-radius:5px;background:#fff;color:'+acc2+'">'+
+          '<input class="input" placeholder="정류장" value="'+esc(st.place||'')+'" oninput="setBusStopField(\''+c.id+'\',\''+st.id+'\',\'place\',this.value)" style="flex:1;min-width:0;height:26px;font-size:12px;font-weight:800;padding:0 7px;border:1px solid #D9DEE6;border-radius:5px;background:#fff">'+
+          (si>0?'<button class="chip sm" onclick="moveBusStop(\''+c.id+'\',\''+st.id+'\',-1)" style="padding:2px 5px;font-size:10px">▲</button>':'')+
+          (si<stops.length-1?'<button class="chip sm" onclick="moveBusStop(\''+c.id+'\',\''+st.id+'\',1)" style="padding:2px 5px;font-size:10px">▼</button>':'')+
+          '<button class="chip sm" onclick="delBusStop(\''+c.id+'\',\''+st.id+'\')" style="padding:2px 5px;font-size:10px;color:var(--red);border-color:#F3C9C9">✕</button>'+
+        '</div>';
+      riders.forEach(function(r,ri){
+        var mk=busEffMark(r), src=busMarkSrc(r);
+        var col=mk==='미탑승'?'#B91C1C':mk==='보강'?'#B45309':mk?'#1E7B3C':'var(--ink)';
+        var badge = src==='fix' ? '<span title="계속 적용" style="flex:0 0 auto;background:#6D28D9;color:#fff;border-radius:4px;padding:1px 4px;font-size:8.5px;font-weight:900">계속</span>'
+                  : src==='ovr' ? '<span title="이번 주만" style="flex:0 0 auto;background:#B45309;color:#fff;border-radius:4px;padding:1px 4px;font-size:8.5px;font-weight:900">주</span>' : '';
+        var selVal = (src==='auto') ? ((mk==='등'||mk==='하')?mk:'auto') : ((src==='fix'?r.fix:r.ovr)||'auto');
+        var wn=busRiderWarn(r, day);
+        var wcol=wn.lv==='red'?'#B91C1C':wn.lv==='amber'?'#B45309':'';
+        h+='<div style="display:flex;gap:3px;align-items:center;margin:0 0 1px 19px">'+
+          '<span style="flex:0 0 auto;width:4px;height:4px;border-radius:50%;background:'+(wn.lv?(wn.lv==='red'?'#B91C1C':'#B45309'):'#C8D0DA')+'"></span>'+
+          '<input class="input" placeholder="이름" value="'+esc(r.name||'')+'" oninput="setBusRider(\''+c.id+'\',\''+st.id+'\','+ri+',\'name\',this.value)" onblur="checkBusRiderName(\''+c.id+'\',\''+st.id+'\','+ri+')" style="flex:1;min-width:60px;height:24px;font-size:12px;padding:0 3px;color:'+(wcol||col)+';font-weight:700;border:none;border-bottom:1px solid '+(wn.lv?(wn.lv==='red'?'#F3C9C9':'#F0D9A8'):'#E8ECF1')+';border-radius:0;background:transparent">'+
+          badge+
+          '<select onchange="setBusMark(\''+c.id+'\',\''+st.id+'\','+ri+',this.value)" title="탑승 표기" style="flex:0 0 84px;height:24px;border:1px solid '+(src==='auto'?'#E8ECF1':'#C4B5FD')+';border-radius:5px;font-size:10.5px;font-family:inherit;background:'+(src==='auto'?'#fff':'#FBFAFF')+';padding:0 2px">'+
+            '<option value="auto"'+(selVal==='auto'?' selected':'')+'>자동</option>'+
+            '<option value="정상"'+(selVal==='정상'?' selected':'')+'>탑승</option>'+
+            '<option value="미탑승"'+(selVal==='미탑승'?' selected':'')+'>/미탑승/</option>'+
+            '<option value="보강"'+(selVal==='보강'?' selected':'')+'>(보강)</option>'+
+            '<option value="등"'+(selVal==='등'?' selected':'')+'>(등)만</option>'+
+            '<option value="하"'+(selVal==='하'?' selected':'')+'>(하)만</option>'+
+          '</select>'+
+          '<button class="chip sm" onclick="delBusRider(\''+c.id+'\',\''+st.id+'\','+ri+')" style="padding:1px 5px;font-size:10px;color:var(--red);border-color:#F3C9C9">✕</button>'+
+        '</div>'+
+        (wn.lv?'<div style="font-size:9.5px;font-weight:700;color:'+wcol+';margin:0 0 2px 27px">'+(wn.lv==='red'?'⚠️':'❓')+' '+esc(wn.msg)+'</div>':'');
+      });
+      var _ak=c.id+'|'+st.id;
+      var _aOpen=!!((state.busAddOpen||{})[_ak]);
+      if(!_aOpen){
+        h+='<div style="margin:2px 0 2px 19px"><button onclick="busAddToggle(\''+c.id+'\',\''+st.id+'\')" style="border:1px dashed #C8D9F0;background:#F7FAFF;color:#2B5FB8;border-radius:6px;padding:2px 9px;font-size:10.5px;font-weight:800;cursor:pointer;font-family:inherit">＋ 탑승자</button></div>';
+      } else {
+        h+='<div style="margin:3px 0 3px 19px;background:#F7FAFF;border:1px solid #DCE7F7;border-radius:8px;padding:6px 8px">'+
+          '<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">'+
+            '<input class="input" placeholder="🔍 이름 검색" value="'+esc(((state.busQ||{})[_ak])||'')+'" oninput="busSearchQ(\''+c.id+'\',\''+st.id+'\',this.value)" style="flex:1;min-width:100px;height:26px;font-size:12px;padding:0 8px;border:1px solid #C8D9F0;border-radius:6px;background:#fff">'+
+            '<button class="chip sm" onclick="addBusRider(\''+c.id+'\',\''+st.id+'\')" style="padding:3px 8px;font-size:10.5px" title="명단에 없는 사람 직접 입력">＋ 직접</button>'+
+            '<button class="chip sm" onclick="busAddToggle(\''+c.id+'\',\''+st.id+'\')" style="padding:3px 8px;font-size:10.5px">접기</button>'+
+          '</div>'+
+          '<div id="busQ_'+c.id+'_'+st.id+'">'+busSearchHtml(c.id, st.id)+'</div>'+
+          (function(){
+            var _hh=busCourseHour(c.title);
+            if(_hh==null) return '';
+            var _list=busSlotStudents(day, _hh);
+            var _used=busCourseActiveNames(c);   /* [R4.80] 미탑승 제외 → 재배치 가능 */
+            var _rem=_list.filter(function(n){ return !_used[n]; });
+            if(!_list.length) return '<div style="font-size:9.5px;color:var(--sub);margin-top:3px">'+_hh+'시 배치 명단 없음</div>';
+            if(!_rem.length) return '<div style="font-size:9.5px;color:#1E7B3C;font-weight:700;margin-top:3px">✅ '+_hh+'시 배치 인원 모두 포함됨</div>';
+            return '<div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap;align-items:center"><span style="font-size:9.5px;font-weight:800;color:#2B5FB8">👥 '+_hh+'시:</span>'+_rem.map(function(n){
+              return '<button onclick="busPickRider(\''+c.id+'\',\''+st.id+'\',\''+esc(n).replace(/'/g,"\\'")+'\')" style="border:1px solid #C8D9F0;background:#fff;border-radius:6px;padding:1px 7px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit">'+esc(n)+'</button>';
+            }).join('')+'</div>';
+          })()+
+        '</div>';
+      }
+      h+='</div>';
+    });
+    h+='<div style="display:flex;gap:4px;padding:5px 9px;border-top:1px solid #EDF0F4;background:#FAFBFC">'+
+      '<button class="chip sm" onclick="addBusStop(\''+c.id+'\')" style="font-weight:800;color:var(--brand);border-color:var(--brand);padding:3px 9px;font-size:10.5px">＋ 정류장</button>'+
+      (stops.length>1?'<button class="chip sm" onclick="sortBusStops(\''+c.id+'\')" style="padding:3px 9px;font-size:10.5px">⏱ 시간순</button>':'')+
+    '</div></div>';
+  });
+  h+='</div>';
+  return h;
+}
 /* [R4.79] 컴팩트 보기 — 구간을 가로로 나란히(자동 줄바꿈) + 조밀한 줄. 접기·연락처 팝업·미탑승 강조 그대로 */
 function renderBusViewCompact(day, mob){
   var courses=(busData()[day]||{courses:[]}).courses||[];
@@ -17101,7 +17222,10 @@ function renderBusTab(mobile){
     h+='<div class="card" style="text-align:center;padding:26px 14px;color:var(--sub);font-size:13px">'+
       day+'요일 노선이 아직 없습니다.<br>[＋ 구간 추가]로 <b>&lt;3시부 승차&gt;</b> 같은 구간을 먼저 만들어 주세요.</div>';
   }
-  courses.forEach(function(c,ci){
+  /* [R4.80] 밀도 토글 + 컴팩트 수정 분기 (크게 보기는 기존 코드 그대로) */
+  h+=_busDenseToggleHtml(busDense()!=='roomy'?'compact':'roomy','');
+  if(busDense()!=='roomy'){ h+=busEditCompactHtml(day, mob, courses); }
+  else courses.forEach(function(c,ci){
     var stops=c.stops||[];
     var isDrop=/하차/.test(c.title||'');
     var acc=isDrop?'#1E7B3C':'#2B5FB8';
@@ -17196,7 +17320,7 @@ function renderBusTab(mobile){
           var _hh=busCourseHour(c.title);
           if(_hh==null) return '<div style="font-size:10.5px;color:var(--sub);margin-top:5px">구간 이름에 시간을 넣으면(예: <b>3시부 승차</b>) 그 시간 배치 명단이 여기 나옵니다.</div>';
           var _list=busSlotStudents(busDay(), _hh);
-          var _used=busCourseNames(c);
+          var _used=busCourseActiveNames(c);   /* [R4.80] 미탑승 제외 → 재배치 가능 */
           if(!_list.length) return '<div style="font-size:10.5px;color:var(--sub);margin-top:4px">'+_hh+'시 배치 명단 없음 — 위 검색으로 추가</div>';
           var _rem=_list.filter(function(n){ return !_used[n]; });
           if(!_rem.length) return '<div style="font-size:10.5px;color:#1E7B3C;font-weight:700;margin-top:5px">✅ '+_hh+'시 배치 인원이 모두 이 구간에 들어가 있습니다.</div>';
