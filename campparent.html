@@ -339,7 +339,7 @@ details[open] summary::before{content:"－ "}
 
 <script>
 /* ══ 서버 주소 (관리 프로그램과 같은 주소) ══ */
-var APP_VER = "v20260729.7"   /* .7: 안내 문자 링크로 자동 로그인 + 버전 갱신 중에도 코드 유지 */;
+var APP_VER = "v20260729.8"   /* .8: 🎟 다음 캠프 할인 쿠폰 카드 — 캠프에서 발행하면 표시 (금액·사용 조건·환불 원칙 안내) */;
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwauy3dqK7YSM892fZ7aVhBaVFQunbvFq8oREPLEwsJN9FbdZHvAkQYovz_QUTSb_KH/exec";
 
 var ST = { data:null, kid:null, idx:0, date:"", loading:false, imgs:null, imgLoading:false, linkCode:"" };
@@ -582,9 +582,32 @@ function render(){
     return;
   }
   sub.textContent=ST.data.camp.name;
-  app.innerHTML = vKids()+vHero()+vAtt()+vDate()+vBus()+vMeal()+vEng()+vPe()+vChar()+vHist()+vFoot();
+  app.innerHTML = vKids()+vHero()+vCoupon()+vAtt()+vDate()+vBus()+vMeal()+vEng()+vPe()+vChar()+vHist()+vFoot();
 }
 
+/* ══ 🎟 쿠폰 — 캠프에서 발행한 경우에만 표시 ══ */
+function vCoupon(){
+  var k=ST.kid||{}; var cp=k.cp;
+  if(!cp || !(cp.amt>0)) return "";
+  return '<div class="card" style="--tape:#B45309;border:2px solid #E8B44A;background:#FFFBF0">'+
+    '<div style="padding:16px 16px 14px">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'+
+      '<span style="font-size:22px">🎟</span>'+
+      '<b style="font-size:15.5px;color:#8A5A00">다음 캠프 할인 쿠폰</b>'+
+      '<span style="margin-left:auto;font-size:11px;color:#A08650">'+esc(cp.from||"")+' 발행</span></div>'+
+    '<div style="text-align:center;background:#fff;border:1.5px dashed #E8B44A;border-radius:12px;padding:14px 10px;margin:8px 0 10px">'+
+      '<div style="font-size:12px;color:#8A5A00;font-weight:700">'+esc(k.n||"")+' · 참석하지 못한 '+cp.missed+'일</div>'+
+      '<div style="font-size:30px;font-weight:900;color:#B45309;letter-spacing:-1px;margin-top:2px">'+
+        (Number(cp.amt)||0).toLocaleString("ko-KR")+'<span style="font-size:16px;font-weight:800">원</span></div></div>'+
+    '<div style="font-size:12.5px;line-height:1.85;color:#5A4A26">'+
+      '· 이 쿠폰은 <b>'+esc(cp.target||"다음 캠프")+'</b>를 <b>'+cp.minDays+'일 이상 등록하실 때만</b> 등록비에서 차감됩니다.<br>'+
+      '· 쿠폰 금액은 <b>식사비를 제외한 수업료</b> 기준입니다.</div>'+
+    '<div style="font-size:11.5px;line-height:1.8;color:#8B7A54;background:#FBF3DD;border-radius:9px;padding:8px 11px;margin-top:9px">'+
+      '※ 처음 등록 때 안내드린 환불 원칙상, 캠프 개시 후 개인 사정에 의한 결석은 '+
+      '환불해 드리지 않는 것이 원칙인 점 참고 부탁드립니다. 대신 다음 캠프에서 '+
+      '쓰실 수 있도록 쿠폰으로 담아 보내드립니다.</div>'+
+    '</div></div>';
+}
 function vLogin(){
   return '<div class="card" style="--tape:var(--navy)"><div class="login">'+
     '<h2>우리 아이 조회하기</h2>'+
