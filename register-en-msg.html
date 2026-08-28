@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>영문 등록안내 문구 만들기</title>
+<title>등록안내 문구 만들기 (한/영)</title>
 <style>
   :root{
     --red:#a41e22; --navy:#1e2a5a; --olive:#7d7d4e;
@@ -60,6 +60,9 @@
   }
   .toast.show{opacity:1}
   .hint{font-size:12.5px;color:var(--ink-soft);margin-top:8px}
+  .lang-seg{display:flex;gap:0;border:2px solid var(--red);border-radius:12px;overflow:hidden;margin-bottom:14px}
+  .lang-seg button{flex:1;border:0;border-radius:0;padding:12px;font-size:15.5px;font-weight:700;background:#fff;color:var(--red);cursor:pointer}
+  .lang-seg button.on{background:var(--red);color:#fff}
   .ver{text-align:center;font-size:11.5px;color:#aaa;margin-top:26px}
 </style>
 </head>
@@ -67,11 +70,19 @@
 
 <header>
   <div class="logo">NARACHA</div>
-  <h1>영문 등록안내 문구 만들기</h1>
-  <p>금액을 입력하면 영어 안내 문구가 자동으로 완성됩니다</p>
+  <h1>등록안내 문구 만들기 (한/영)</h1>
+  <p>금액을 입력하면 한글·영어 안내 문구가 자동으로 완성됩니다</p>
 </header>
 
 <div class="wrap">
+
+  <section>
+    <h2>언어 선택</h2>
+    <div class="lang-seg">
+      <button type="button" id="langKo">한국어 문구</button>
+      <button type="button" id="langEn">English</button>
+    </div>
+  </section>
 
   <section>
     <h2>1. 수련비용</h2>
@@ -132,7 +143,7 @@
   </section>
 
   <section>
-    <h2>4. 완성된 영문 문구</h2>
+    <h2>4. 완성된 안내 문구</h2>
     <textarea id="out" spellcheck="false"></textarea>
     <div class="btns">
       <button class="b-copy" id="btnCopy">📋 복사하기</button>
@@ -148,18 +159,24 @@
 <div class="toast" id="toast"></div>
 
 <script>
-var APP_VER = "v20260828.1"; // 최초 제작: 영문 등록안내 문구 생성기
+var APP_VER = "v20260828.2"; // .2 한국어/영어 선택 추가 · .1 최초 제작
 document.getElementById('verLabel').textContent = APP_VER;
 
 var LS_KEY = 'naracha_en_msg_tool';
 var PAGE_LINK = 'https://narachadata.github.io/naracha/register-en.html';
 var BANK_LINE = '1. Bank transfer : NH Bank (Nonghyup) 302-1687-0248-31, Lim Mi-hwa (NARACHA Taekwondo)';
+var BANK_LINE_KO = '1. 계좌입금 : 농협 302-1687-0248-31 임미화(나라차태권도)';
+var PERIOD_KO = {
+  'January–February':'1·2월', 'March–April':'3·4월', 'May–June':'5·6월',
+  'July–August':'7·8월', 'September–October':'9·10월', 'November–December':'11·12월'
+};
+var lang = 'ko'; // 'ko' | 'en'
 
 var ids = ['period','perMonth','totalCnt','fee','todayOn','todayFee','joinFee','uniformFee','incPay','incLink','incInfo'];
 function $(id){ return document.getElementById(id); }
 function val(id){ var e=$(id); return e.type==='checkbox' ? e.checked : e.value; }
 function num(id){ var n=parseInt(val(id),10); return isNaN(n)||n<0 ? 0 : n; }
-function won(n){ return '₩' + n.toLocaleString('en-US'); }
+function won(n){ return lang==='ko' ? n.toLocaleString('ko-KR') + '원' : '₩' + n.toLocaleString('en-US'); }
 
 // 두 달 등록이 기본: 월 횟수 바뀌면 총 횟수 = 월 횟수 × 2 로 자동 갱신
 var MONTHS = 2;
@@ -188,53 +205,101 @@ function build(){
   c += '<div class="total"><span>최종 비용</span><span>' + grand.toLocaleString() + '원</span></div>';
   $('calcBox').innerHTML = c;
 
-  // 영문 문구
-  var L = [];
-  L.push('The first registration cost is as follows.');
-  L.push('');
-  L.push('■ Registration Cost (First Registration)');
-  L.push('');
-  L.push('<Training Fee>');
-  if (todayOn) L.push('○ Today’s session fee = ' + won(today));
-  L.push('○ ' + period + ' (' + perMonth + ' sessions/month × ' + MONTHS + ' months) = ' + totalCnt + ' sessions total × ' + won(fee) + ' : ' + won(train));
-  if (other > 0){
-    L.push('');
-    L.push('■ Other Fees');
-    if (join > 0) L.push('○ Enrollment fee : ' + won(join));
-    if (uni > 0) L.push('○ Uniform (dobok) fee : ' + won(uni));
-    L.push('--------------------------');
-    L.push('Other fees total : ' + won(other));
-  }
-  L.push('');
-  L.push('★ Total cost for first registration : ' + won(grand));
+  // 합산 내역 문자열
   var parts = [];
   if (todayOn) parts.push(won(today));
   parts.push(won(train));
   if (other > 0) parts.push(won(other));
-  if (parts.length > 1) L.push('(' + parts.join(' + ') + ')');
-  if (join > 0){
+
+  var L = [];
+  if (lang === 'ko'){
+    // 한국어 문구
+    L.push('첫 등록비용은 다음과 같습니다.');
     L.push('');
-    L.push('Please note that the enrollment fee above covers insurance and computer registration, and it is a one-time fee — you only pay it once, at your very first registration.');
-  }
-  if (val('incPay')){
+    L.push('■ 등록비용(첫 등록)');
     L.push('');
-    L.push('■ Payment Methods');
-    L.push(BANK_LINE);
-    L.push('2. Card payment in person at the dojang');
-  }
-  if (val('incLink')){
+    L.push('<수련비용>');
+    if (todayOn) L.push('○ 오늘 수련비용 = ' + won(today));
+    L.push('○ ' + PERIOD_KO[period] + '(월 ' + perMonth + '회 × ' + MONTHS + '개월) = 총 ' + totalCnt + '회 × ' + won(fee) + ' : ' + won(train));
+    if (other > 0){
+      L.push('');
+      L.push('■ 기타비용');
+      if (join > 0) L.push('○ 입회비 : ' + won(join));
+      if (uni > 0) L.push('○ 도복비 : ' + won(uni));
+      L.push('--------------------------');
+      L.push('기타비용 총계 : ' + won(other));
+    }
     L.push('');
-    L.push('▶ For full details about our programs — tuition, class schedule, make-up class policy, and more — please see the page below:');
-    L.push(PAGE_LINK);
-  }
-  if (val('incInfo')){
+    L.push('★ 첫 등록 최종비용 : ' + won(grand));
+    if (parts.length > 1) L.push('(' + parts.join(' + ') + ')');
+    if (join > 0){
+      L.push('');
+      L.push('위 기타비용 중 입회비는 보험 및 전산 등록비 등에 쓰이며, 평생 처음에만 내는 비용이니 참고해 주세요.');
+    }
+    if (val('incPay')){
+      L.push('');
+      L.push('■ 결제방법');
+      L.push(BANK_LINE_KO);
+      L.push('2. 도장 방문 카드결제');
+    }
+    if (val('incLink')){
+      L.push('');
+      L.push('▶ 수련비·시간표·보강 제도 등 자세한 안내는 아래 페이지를 참고해 주세요:');
+      L.push(PAGE_LINK);
+    }
+    if (val('incInfo')){
+      L.push('');
+      L.push('마지막으로, 전산 등록에 필요하니 아래 내용을 보내주시면 감사하겠습니다!');
+      L.push('');
+      L.push('학생 이름 :');
+      L.push('학생 생년월일 :');
+      L.push('보호자 연락처 :');
+      L.push('보호자 이름 :');
+    }
+  } else {
+    // 영문 문구
+    L.push('The first registration cost is as follows.');
     L.push('');
-    L.push('Lastly, could you kindly send us the following information? We need it for the computer registration. Thank you!');
+    L.push('■ Registration Cost (First Registration)');
     L.push('');
-    L.push('Student’s name :');
-    L.push('Student’s date of birth :');
-    L.push('Parent/Guardian’s phone number :');
-    L.push('Parent/Guardian’s name :');
+    L.push('<Training Fee>');
+    if (todayOn) L.push('○ Today’s session fee = ' + won(today));
+    L.push('○ ' + period + ' (' + perMonth + ' sessions/month × ' + MONTHS + ' months) = ' + totalCnt + ' sessions total × ' + won(fee) + ' : ' + won(train));
+    if (other > 0){
+      L.push('');
+      L.push('■ Other Fees');
+      if (join > 0) L.push('○ Enrollment fee : ' + won(join));
+      if (uni > 0) L.push('○ Uniform (dobok) fee : ' + won(uni));
+      L.push('--------------------------');
+      L.push('Other fees total : ' + won(other));
+    }
+    L.push('');
+    L.push('★ Total cost for first registration : ' + won(grand));
+    if (parts.length > 1) L.push('(' + parts.join(' + ') + ')');
+    if (join > 0){
+      L.push('');
+      L.push('Please note that the enrollment fee above covers insurance and computer registration, and it is a one-time fee — you only pay it once, at your very first registration.');
+    }
+    if (val('incPay')){
+      L.push('');
+      L.push('■ Payment Methods');
+      L.push(BANK_LINE);
+      L.push('2. Card payment in person at the dojang');
+    }
+    if (val('incLink')){
+      L.push('');
+      L.push('▶ For full details about our programs — tuition, class schedule, make-up class policy, and more — please see the page below:');
+      L.push(PAGE_LINK);
+    }
+    if (val('incInfo')){
+      L.push('');
+      L.push('Lastly, could you kindly send us the following information? We need it for the computer registration. Thank you!');
+      L.push('');
+      L.push('Student’s name :');
+      L.push('Student’s date of birth :');
+      L.push('Parent/Guardian’s phone number :');
+      L.push('Parent/Guardian’s name :');
+    }
   }
   $('out').value = L.join('\n');
   save();
@@ -242,7 +307,7 @@ function build(){
 
 function save(){
   try{
-    var o = {};
+    var o = {lang: lang};
     ids.forEach(function(id){ o[id] = val(id); });
     localStorage.setItem(LS_KEY, JSON.stringify(o));
   }catch(e){}
@@ -251,6 +316,7 @@ function load(){
   try{
     var o = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
     if (!o) return;
+    if (o.lang === 'ko' || o.lang === 'en') lang = o.lang;
     ids.forEach(function(id){
       var e = $(id);
       if (!(id in o)) return;
@@ -258,6 +324,15 @@ function load(){
     });
   }catch(e){}
 }
+
+function setLang(l){
+  lang = l;
+  $('langKo').classList.toggle('on', l === 'ko');
+  $('langEn').classList.toggle('on', l === 'en');
+  build();
+}
+$('langKo').onclick = function(){ setLang('ko'); };
+$('langEn').onclick = function(){ setLang('en'); };
 
 function toast(msg){
   var t = $('toast');
@@ -300,7 +375,7 @@ ids.forEach(function(id){
 $('perMonth').addEventListener('input', function(){ autoTotal(); build(); });
 
 load();
-build();
+setLang(lang);
 </script>
 </body>
 </html>
