@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NARACHA Taekwondo — Registration Guide</title>
+<style>
+  :root{
+    --red:#a41e22;
+    --red-dark:#8a181c;
+    --navy:#1e2a5a;
+    --olive:#7d7d4e;
+    --olive-light:#efefdf;
+    --peach:#fde3c8;
+    --blue-light:#e8eefb;
+    --ink:#222;
+    --ink-soft:#555;
+    --line:#d8d4c8;
+    --bg:#faf8f4;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:0 16px 64px}
+
+  /* ---------- header ---------- */
+  header{
+    background:var(--red);color:#fff;text-align:center;
+    padding:44px 20px 40px;
+  }
+  header .logo{
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:34px;letter-spacing:6px;font-weight:700;
+    border-top:3px solid #fff;border-bottom:3px solid #fff;
+    display:inline-block;padding:6px 18px;margin-bottom:6px;
+  }
+  header .sub{font-size:13px;letter-spacing:8px;font-weight:700;text-transform:uppercase}
+  header h1{font-size:20px;font-weight:600;margin-top:22px;letter-spacing:.5px}
+  header p{font-size:14px;opacity:.85;margin-top:6px}
+
+  /* ---------- sections ---------- */
+  section{margin-top:44px}
+  .sec-title{
+    display:flex;align-items:center;gap:12px;margin-bottom:18px;
+  }
+  .sec-title .num{
+    flex:0 0 auto;width:34px;height:34px;border-radius:50%;
+    background:var(--red);color:#fff;font-weight:700;font-size:15px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .sec-title h2{font-size:20px;color:var(--navy);line-height:1.3}
+  .sec-note{font-size:13px;color:var(--ink-soft);margin:-10px 0 14px 46px}
+
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:22px 20px;box-shadow:0 1px 4px rgba(0,0,0,.05);
+  }
+
+  /* ---------- greeting ---------- */
+  .greeting p{margin-bottom:14px;font-size:15.5px}
+  .greeting p:last-child{margin-bottom:0}
+  .greeting .highlight{
+    background:var(--olive-light);border-left:4px solid var(--olive);
+    padding:10px 14px;border-radius:0 8px 8px 0;font-weight:700;color:var(--navy);
+  }
+
+  /* ---------- tables ---------- */
+  .tbl-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+  table{border-collapse:collapse;width:100%;min-width:640px;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:9px 10px;text-align:center;white-space:nowrap}
+  thead th{background:var(--olive);color:#fff;font-weight:700}
+  thead .subhead th{background:#96965f;font-size:12.5px}
+  tbody th{background:#f4f2e8;color:var(--navy);font-weight:700}
+  .row-month td{background:var(--blue-light);font-weight:700;font-size:14.5px}
+  .row-two td{background:var(--peach);font-weight:800;font-size:15px}
+  .col-basic{outline:2px solid var(--navy);outline-offset:-2px}
+  .row-pay td{background:var(--peach);font-weight:800;font-size:14.5px}
+  .swipe-hint{font-size:12px;color:var(--ink-soft);text-align:right;margin-top:6px}
+  @media(min-width:760px){.swipe-hint{display:none}}
+
+  /* ---------- notes list ---------- */
+  ol.notes{margin:16px 0 0 20px;font-size:14px;color:var(--ink-soft)}
+  ol.notes li{margin-bottom:6px}
+  ol.notes b{color:var(--ink)}
+
+  /* ---------- fee cards ---------- */
+  .fee-grid{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.fee-grid{grid-template-columns:1fr 1fr}}
+  .fee-card{
+    background:#fffbe6;border:1px solid #e8dfa8;border-radius:14px;padding:20px;
+  }
+  .fee-card .fee-name{font-size:15px;font-weight:700;color:var(--navy)}
+  .fee-card .fee-amt{font-size:26px;font-weight:800;color:var(--red);margin:4px 0 8px}
+  .fee-card ul{margin-left:18px;font-size:13.5px;color:var(--ink-soft)}
+  .fee-card ul li{margin-bottom:4px}
+
+  /* ---------- make-up steps ---------- */
+  .steps{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:720px){.steps{grid-template-columns:1fr 1fr 1fr}}
+  .step{
+    background:#fff;border:2px solid var(--olive);border-radius:14px;padding:18px 16px;
+    position:relative;
+  }
+  .step.mid{border-color:#2c7a44;background:#f7fbf5}
+  .step h3{
+    display:inline-block;background:var(--olive);color:#fff;font-size:14px;
+    padding:4px 12px;border-radius:8px;margin-bottom:12px;
+  }
+  .step.mid h3{background:#2c7a44}
+  .step p{font-size:14px;margin-bottom:8px}
+  .step .ex{
+    background:var(--olive-light);border-radius:8px;padding:10px 12px;
+    font-size:13px;color:var(--ink-soft);margin-top:10px;
+  }
+  .step.mid .ex{background:#e8f3e4}
+  .step .warn{color:var(--red);font-size:13px;font-weight:700;margin-top:10px}
+  .mk-earn{color:var(--red);font-weight:700}
+  .mk-use{color:#2c7a44;font-weight:700}
+  .mk-tbl td{white-space:normal}
+
+  /* ---------- schedule ---------- */
+  .sched th,.sched td{white-space:normal;min-width:96px;font-size:12.5px;padding:8px 6px}
+  .sched thead th{background:var(--navy)}
+  .sched tbody th{white-space:nowrap}
+  .sched .time{font-size:11.5px;color:var(--ink-soft);display:block;font-weight:400}
+  .tag{display:inline-block;border-radius:6px;padding:2px 6px;margin:1px;font-size:11.5px;font-weight:600;line-height:1.5}
+  .t-kinder{background:#fff3a8;color:#6b5b00}
+  .t-jr{background:#ffe0c2;color:#8a4a00}
+  .t-sr{background:#cfe0f7;color:#1e3f77}
+  .t-teen{background:#2b2b2b;color:#fff}
+  .t-adult{background:#2b2b2b;color:#fff}
+  .t-demo{background:#2e2159;color:#fff}
+  .t-spar{background:#5b2d91;color:#fff}
+  .t-level{background:#dfeadf;color:#2c5b2c}
+  .t-priv{background:#d8f2df;color:#1e5b32}
+  .t-all{background:#e8e8e8;color:#333}
+  .t-xtreme{background:#c400e0;color:#fff}
+  .legend{margin-top:16px;font-size:13.5px}
+  .legend li{margin-bottom:4px;list-style:none}
+  .legend li::before{content:"★";color:var(--olive);margin-right:8px;font-size:12px}
+
+  /* ---------- philosophy ---------- */
+  .phil-lead{text-align:center;font-size:16px;color:var(--ink);margin-bottom:20px}
+  .phil-item{
+    display:flex;gap:12px;align-items:flex-start;
+    padding:12px 14px;border-radius:10px;margin-bottom:10px;font-size:14.5px;
+  }
+  .phil-item .badge{
+    flex:0 0 auto;width:26px;height:26px;border-radius:6px;margin-top:2px;
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;
+  }
+  .p1{background:#fdf3dc}.p1 .badge{background:#d99a1b}
+  .p2{background:#eaf0e2}.p2 .badge{background:#5c7a3f}
+  .p3{background:#e4ebf5}.p3 .badge{background:#2f4b7c}
+  .p4{background:#efe6e0}.p4 .badge{background:#7a4a2f}
+  .p5{background:#f7e4e6}.p5 .badge{background:#a4324a}
+  .quote{
+    text-align:center;font-size:16px;margin-top:22px;color:var(--ink);
+    padding:16px;border-top:1px solid var(--line);
+  }
+  .quote b{color:var(--red)}
+
+  /* ---------- promises ---------- */
+  .promise{list-style:none}
+  .promise li{
+    position:relative;padding-left:30px;margin-bottom:12px;font-size:14.5px;
+  }
+  .promise li::before{
+    content:"";position:absolute;left:0;top:5px;width:16px;height:16px;
+    border-radius:50%;background:var(--red);
+    box-shadow:inset 0 0 0 4px #fff,inset 0 0 0 5px var(--red);
+  }
+  .promise b{color:var(--navy)}
+
+  /* ---------- symbol ---------- */
+  .sym-grid{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.sym-grid{grid-template-columns:1fr 1fr}}
+  .sym-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;text-align:center}
+  .sym-card h3{color:var(--navy);font-size:16px;margin-bottom:10px}
+  .sym-card p{font-size:14px;color:var(--ink-soft);text-align:left}
+  .sym-card svg{margin-bottom:12px}
+
+  /* ---------- contact / footer ---------- */
+  .contact{
+    background:var(--navy);color:#fff;border-radius:14px;padding:26px 22px;text-align:center;
+  }
+  .contact h2{font-size:19px;margin-bottom:10px}
+  .contact p{font-size:14.5px;opacity:.9;margin-bottom:4px}
+  footer{
+    text-align:center;padding:34px 16px 12px;color:var(--ink-soft);font-size:12.5px;
+  }
+  footer .flogo{
+    font-family:Georgia,serif;font-size:18px;letter-spacing:4px;font-weight:700;color:var(--ink);
+    border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);
+    display:inline-block;padding:3px 12px;margin-bottom:4px;
+  }
+  footer .fsub{font-size:10px;letter-spacing:5px;font-weight:700;color:var(--ink);margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">NARACHA</div>
+  <div class="sub">Taekwondo</div>
+  <h1>Registration Guide for New Members</h1>
+  <p>Welcome to NARACHA Taekwondo</p>
+</header>
+
+<div class="wrap">
+
+  <!-- 1. Greeting -->
+  <section>
+    <div class="sec-title"><div class="num">1</div><h2>Greetings</h2></div>
+    <div class="card greeting">
+      <p>Hello,</p>
+      <p>First of all, thank you for your interest in NARACHA Taekwondo and for reaching out about registration.</p>
+      <p>At NARACHA Taekwondo, our training is built on the experience of martial-arts physical conditioning and the fundamental techniques of Taekwondo. Our goal is to help each student grow step by step until they are able to defend themselves.</p>
+      <p>Of course, the training methods may vary depending on the student's age and individual needs.</p>
+      <p>Please take a look at the materials below — we hope you find them helpful.</p>
+      <p class="highlight">Standard plan: Twice a week (Basic Training)</p>
+      <p>Please look through the class schedule, decide which time slot you would like to train in, and let us know. Thank you very much.</p>
+    </div>
+  </section>
+
+  <!-- 2. Tuition -->
+  <section>
+    <div class="sec-title"><div class="num">2</div><h2>Types of Registration &amp; Tuition</h2></div>
+    <p class="sec-note">As of September 2025 · Unit: Korean Won (₩)</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th rowspan="2">Category</th>
+            <th colspan="4">Registration Types</th>
+            <th colspan="2">Immediate-Family Discount</th>
+          </tr>
+          <tr class="subhead">
+            <th>Light</th>
+            <th class="col-basic">Basic ★</th>
+            <th>Intensive</th>
+            <th>Free Pass</th>
+            <th>A. 2 family members</th>
+            <th>B. 3 or more</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Sessions / month</th>
+            <td>4</td><td class="col-basic"><b>8</b></td><td>12</td><td>Unlimited</td><td>8</td><td>8</td>
+          </tr>
+          <tr>
+            <th>Fee / session</th>
+            <td>₩25,000</td><td class="col-basic">₩22,500</td><td>₩20,000</td><td>—</td><td>₩20,000</td><td>₩17,500</td>
+          </tr>
+          <tr class="row-month">
+            <th>Monthly tuition</th>
+            <td>₩100,000</td><td class="col-basic">₩180,000</td><td>₩240,000</td><td>₩300,000</td><td>₩160,000</td><td>₩140,000</td>
+          </tr>
+          <tr class="row-two">
+            <th>Two-month tuition</th>
+            <td>₩200,000</td><td class="col-basic">₩360,000</td><td>₩480,000</td><td>₩600,000</td><td>₩320,000</td><td>₩280,000</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="swipe-hint">← Swipe sideways to see the full table →</p>
+    <ol class="notes">
+      <li>The standard training plan at NARACHA Taekwondo is <b>8 sessions per month</b>.</li>
+      <li>Registration is made in <b>two-month blocks</b>: Jan–Feb / Mar–Apr / May–Jun / Jul–Aug / Sep–Oct / Nov–Dec.</li>
+      <li>For <b>Intensive Training</b>, make-up classes are available, but refunds and period extensions are not.</li>
+      <li>For <b>Free Pass</b>, make-up classes, refunds, and period extensions are not available.</li>
+      <li>Annual membership registration comes with a discount benefit.</li>
+      <li>The immediate-family discount applies to 1 person when 2 family members register, and to 2 people when 3 register (1 person at rate A + 1 person at rate B).</li>
+      <li>For further details on refunds, make-up classes, etc., please refer to the NARACHA Taekwondo tuition regulations.</li>
+      <li>Extra sessions beyond your registered plan: <b>₩16,000 per session</b>.</li>
+    </ol>
+  </section>
+
+  <!-- 3. Annual membership -->
+  <section>
+    <div class="sec-title"><div class="num">3</div><h2>Annual Membership Payment Guide</h2></div>
+    <p class="sec-note">As of September 2025 · Unit: Korean Won (₩)</p>
+
+    <h3 style="color:var(--navy);font-size:16px;margin:6px 0 10px">12-Month Registration — 10% discount</h3>
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr class="subhead">
+            <th>12 months</th>
+            <th>1x/week (4/mo)</th>
+            <th>2x/week (8/mo)</th>
+            <th>3x/week (12/mo)</th>
+            <th>Free Pass</th>
+            <th>Family A (8/mo)</th>
+            <th>Family B (8/mo)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th>Monthly tuition</th><td>₩100,000</td><td>₩180,000</td><td>₩240,000</td><td>₩300,000</td><td>₩160,000</td><td>₩140,000</td></tr>
+          <tr><th>12-month total</th><td>₩1,200,000</td><td>₩2,160,000</td><td>₩2,880,000</td><td>₩3,600,000</td><td>₩1,920,000</td><td>₩1,680,000</td></tr>
+          <tr><th>10% discount</th><td>−₩120,000</td><td>−₩216,000</td><td>−₩288,000</td><td>−₩360,000</td><td>−₩192,000</td><td>−₩168,000</td></tr>
+          <tr class="row-pay"><th>Amount due</th><td>₩1,080,000</td><td>₩1,944,000</td><td>₩2,592,000</td><td>₩3,240,000</td><td>₩1,728,000</td><td>₩1,512,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="swipe-hint">← Swipe sideways to see the full table →</p>
+
+    <h3 style="color:var(--navy);font-size:16px;margin:22px 0 10px">6-Month Registration — 5% discount</h3>
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr class="subhead">
+            <th>6 months</th>
+            <th>1x/week (4/mo)</th>
+            <th>2x/week (8/mo)</th>
+            <th>3x/week (12/mo)</th>
+            <th>Free Pass</th>
+            <th>Family A (8/mo)</th>
+            <th>Family B (8/mo)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th>Monthly tuition</th><td>₩100,000</td><td>₩180,000</td><td>₩240,000</td><td>₩300,000</td><td>₩160,000</td><td>₩140,000</td></tr>
+          <tr><th>6-month total</th><td>₩600,000</td><td>₩1,080,000</td><td>₩1,440,000</td><td>₩1,800,000</td><td>₩960,000</td><td>₩840,000</td></tr>
+          <tr><th>5% discount</th><td>−₩30,000</td><td>−₩54,000</td><td>−₩72,000</td><td>−₩90,000</td><td>−₩48,000</td><td>−₩42,000</td></tr>
+          <tr class="row-pay"><th>Amount due</th><td>₩570,000</td><td>₩1,026,000</td><td>₩1,368,000</td><td>₩1,710,000</td><td>₩912,000</td><td>₩798,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="swipe-hint">← Swipe sideways to see the full table →</p>
+    <p style="font-size:13px;color:var(--ink-soft);margin-top:10px">* Family A / Family B: discounted per-person rates when 2 or 3+ immediate family members enroll together (8 sessions/month).</p>
+  </section>
+
+  <!-- 4. Required fees -->
+  <section>
+    <div class="sec-title"><div class="num">4</div><h2>Required Fees at Registration</h2></div>
+    <div class="fee-grid">
+      <div class="fee-card">
+        <div class="fee-name">A. Enrollment Fee</div>
+        <div class="fee-amt">₩50,000</div>
+        <ul>
+          <li>Covers computer registration and insurance enrollment.</li>
+          <li>Paid only once, at first registration.</li>
+          <li>If you have already paid a trial-lesson fee, it will be deducted from this amount.</li>
+        </ul>
+      </div>
+      <div class="fee-card">
+        <div class="fee-name">B. Uniform (Dobok) Fee</div>
+        <div class="fee-amt">₩50,000</div>
+        <ul>
+          <li>Official NARACHA Taekwondo training uniform.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Make-up class policy -->
+  <section>
+    <div class="sec-title"><div class="num">5</div><h2>Make-up Class Policy</h2></div>
+    <p class="sec-note">Based on two-month registration · The months below (Jul–Aug, etc.) are examples — the same rule applies to every registration period.</p>
+
+    <div class="steps">
+      <div class="step">
+        <h3>① Jul–Aug registration period</h3>
+        <p>For every regular session you miss, you <span class="mk-earn">earn a make-up session</span>.</p>
+        <div class="ex">e.g. Attended 14 of the standard 16 sessions<br>→ <b>2 make-up sessions</b> earned</div>
+      </div>
+      <div class="step mid">
+        <h3>② Use them in Sep–Oct</h3>
+        <p>When you attend, your <b>regular sessions are counted first</b> → <span class="mk-use">then your make-ups are used</span>.</p>
+        <div class="ex">e.g. Standard 16 + 2 make-ups<br>= you can train <b>up to 18 sessions</b></div>
+        <p class="warn">※ Make-ups you do not use during this period expire at the next registration.</p>
+      </div>
+      <div class="step">
+        <h3>③ Make-ups for Nov–Dec?</h3>
+        <p>New make-ups are earned <b>only</b> for the Sep–Oct regular sessions you missed.</p>
+        <div class="ex">Make-ups from the previous period (Jul–Aug) <b>do not carry over</b> (no accumulation).</div>
+      </div>
+    </div>
+
+    <div class="tbl-scroll" style="margin-top:18px">
+      <table class="mk-tbl">
+        <thead>
+          <tr class="subhead">
+            <th>Example</th><th>Jul–Aug</th><th>Sep–Oct</th><th>Nov–Dec</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Attendance (standard: 16)</th>
+            <td>14 sessions</td><td>18 sessions</td><td>15 sessions</td>
+          </tr>
+          <tr>
+            <th>Result</th>
+            <td><span class="mk-earn">2 make-ups earned</span></td>
+            <td><span class="mk-use">16 regular + 2 make-ups used</span><br>= no extra fee</td>
+            <td><span class="mk-earn">1 make-up earned</span><br>(usable in Jan–Feb)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="swipe-hint">← Swipe sideways to see the full table →</p>
+
+    <ol class="notes">
+      <li>Make-up sessions are earned <b>only for the regular sessions you miss</b>.</li>
+      <li>Make-ups can be used <b>only in the very next registration period (two months)</b>; if not used, they <b>expire</b>.</li>
+      <li>When you attend in the next period, your <b>regular sessions are counted first</b>, and make-ups are used for attendance beyond the regular count.</li>
+      <li>Sessions beyond your standard count + make-ups are charged as extra session fees. (Demo Team members pay a fixed tuition, with no extra fees or make-ups.)</li>
+    </ol>
+  </section>
+
+  <!-- 6. Schedule -->
+  <section>
+    <div class="sec-title"><div class="num">6</div><h2>Class Schedule</h2></div>
+    <p class="sec-note">Effective from January 19, 2026</p>
+    <div class="tbl-scroll">
+      <table class="sched">
+        <thead>
+          <tr><th>Time</th><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>12:00–2:00</th>
+            <td colspan="5"><span class="tag t-priv">1:1 Private lessons — by appointment</span></td>
+          </tr>
+          <tr>
+            <th>Class 1 <span class="time">2:00–2:50</span></th>
+            <td><span class="tag t-priv">1:1 Private lesson</span></td>
+            <td><span class="tag t-jr">Elem. Junior (1st&nbsp;grade)</span></td>
+            <td><span class="tag t-priv">1:1 Private lesson</span></td>
+            <td><span class="tag t-jr">Elem. Junior (1st&nbsp;grade)</span></td>
+            <td><span class="tag t-jr">Elem. Junior (1st&nbsp;grade)</span></td>
+          </tr>
+          <tr>
+            <th>Class 2 <span class="time">3:00–3:50</span></th>
+            <td><span class="tag t-jr">Elem. Junior</span> <span class="tag t-sr">Elem. Senior</span></td>
+            <td><span class="tag t-jr">Elem. Junior</span> <span class="tag t-sr">Elem. Senior</span></td>
+            <td><span class="tag t-kinder">Kinder (ages 5–6)</span></td>
+            <td><span class="tag t-jr">Elem. Junior</span> <span class="tag t-sr">Elem. Senior</span></td>
+            <td><span class="tag t-kinder">Kinder</span></td>
+          </tr>
+          <tr>
+            <th>Class 3 <span class="time">4:00–4:50</span></th>
+            <td><span class="tag t-kinder">Kinder</span></td>
+            <td><span class="tag t-kinder">Kinder</span> <span class="tag t-jr">Elem. Junior</span></td>
+            <td><span class="tag t-kinder">Kinder</span></td>
+            <td><span class="tag t-kinder">Kinder</span> <span class="tag t-jr">Elem. Junior</span></td>
+            <td><span class="tag t-kinder">Kinder</span> <span class="tag t-jr">Elem. Junior</span></td>
+          </tr>
+          <tr>
+            <th>Class 4 <span class="time">5:00–5:50</span></th>
+            <td><span class="tag t-jr">Elem. Junior</span> <span class="tag t-sr">Elem. Senior</span></td>
+            <td><span class="tag t-jr">Elem. Junior</span> <span class="tag t-sr">Elem. Senior</span></td>
+            <td><span class="tag t-jr">Elem. Junior</span> <span class="tag t-sr">Elem. Senior</span></td>
+            <td><span class="tag t-jr">Elem. Junior</span> <span class="tag t-sr">Elem. Senior</span></td>
+            <td><span class="tag t-jr">Elem. Junior</span> <span class="tag t-sr">Elem. Senior</span></td>
+          </tr>
+          <tr>
+            <th>Class 5 <span class="time">6:00–6:50</span></th>
+            <td><span class="tag t-level">Intermediate &amp; Advanced</span><br><span class="time">No class in the last week — belt promotion test</span></td>
+            <td><span class="tag t-teen">Teens &amp; Adults</span></td>
+            <td><span class="tag t-level">Intermediate &amp; Advanced</span></td>
+            <td><span class="tag t-teen">Teens &amp; Adults</span></td>
+            <td><span class="tag t-spar">Sparring Class (Intermediate)</span></td>
+          </tr>
+          <tr>
+            <th>Class 6 <span class="time">7:00–7:50</span></th>
+            <td><span class="tag t-demo">NARACHA Demo Team (Elem.)</span></td>
+            <td><span class="tag t-demo">NARACHA Demo Team (Elem.)</span></td>
+            <td><span class="tag t-demo">NARACHA Demo Team (Elem.)</span></td>
+            <td><span class="tag t-demo">NARACHA Demo Team (Elem.)</span></td>
+            <td><span class="tag t-spar">Sparring Class (Advanced)</span></td>
+          </tr>
+          <tr>
+            <th>Class 7 <span class="time">8:00–8:50</span></th>
+            <td><span class="tag t-teen">Teens &amp; Adults</span></td>
+            <td><span class="tag t-teen">Teens</span></td>
+            <td><span class="tag t-teen">Teens &amp; Adults</span></td>
+            <td><span class="tag t-teen">Teens</span></td>
+            <td><span class="tag t-teen">Teens</span></td>
+          </tr>
+          <tr>
+            <th>Class 8 <span class="time">9:00–9:50</span></th>
+            <td><span class="tag t-teen">Teens &amp; Adults</span></td>
+            <td><span class="tag t-demo">Teen Demo Team — technique practice</span></td>
+            <td><span class="tag t-teen">Teens &amp; Adults</span></td>
+            <td><span class="tag t-demo">Demo Team — technique practice</span></td>
+            <td><span class="tag t-demo">Teen Demo Team — technique practice</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="swipe-hint">← Swipe sideways to see the full table →</p>
+
+    <h3 style="color:var(--navy);font-size:16px;margin:22px 0 10px">Saturday</h3>
+    <div class="tbl-scroll">
+      <table class="sched" style="min-width:420px">
+        <thead>
+          <tr><th style="width:130px">Time</th><th>Class</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>9:00–9:50</th><td><span class="tag t-priv">1:1 Private lesson</span></td></tr>
+          <tr><th>10:00–10:50</th><td><span class="tag t-all">All elementary students</span></td></tr>
+          <tr><th>11:00–11:50</th><td><span class="tag t-level">Intermediate &amp; Advanced class</span></td></tr>
+          <tr><th>12:00–13:30</th><td><span class="tag t-demo">NARACHA Demo Team — Special Training (twice a month)</span></td></tr>
+          <tr><th>13:40–15:10</th><td><span class="tag t-xtreme">Extreme Taekwondo Class</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ul class="legend">
+      <li><b>Kinder</b>: preschool children, ages 5–7 (Korean age)</li>
+      <li><b>Elementary Junior</b>: elementary school grades 1–3</li>
+      <li><b>Elementary Senior</b>: elementary school grades 4–6</li>
+      <li><b>Teens</b>: middle school &amp; high school students</li>
+      <li><b>Adults</b>: ages 19 and up</li>
+    </ul>
+  </section>
+
+  <!-- 6. Philosophy -->
+  <section>
+    <div class="sec-title"><div class="num">7</div><h2>Our Educational Philosophy</h2></div>
+    <div class="card">
+      <p class="phil-lead">NARACHA Taekwondo's principled education helps students grow into people this society truly needs —<br>building <b>right thinking</b>, a <b>generous heart</b>, and a <b>healthy body</b>.</p>
+      <div class="phil-item p1"><div class="badge">1</div><div>A dojang with age-based classes and a belt-level curriculum.</div></div>
+      <div class="phil-item p2"><div class="badge">2</div><div>A dojang that raises the quality of education through the use of respectful language and strictly separated classes by level.</div></div>
+      <div class="phil-item p3"><div class="badge">3</div><div>A dojang with a caring class atmosphere, where students never hold back praise and encouragement for one another.</div></div>
+      <div class="phil-item p4"><div class="badge">4</div><div>A dojang of character education, where students build physical strength through physical activity and learn what it means to be a good person.</div></div>
+      <div class="phil-item p5"><div class="badge">5</div><div>A dojang taught by professional instructors from top university Taekwondo programs and demonstration teams.</div></div>
+      <p class="quote">"A true dojang that practices <b>physical training</b> and <b>character education</b> through Taekwondo."</p>
+    </div>
+  </section>
+
+  <!-- 7. Promises -->
+  <section>
+    <div class="sec-title"><div class="num">8</div><h2>Our Promises with Our Students</h2></div>
+    <div class="card">
+      <ul class="promise">
+        <li>NARACHA students remember the <b>training rules</b> and do their best to keep them.</li>
+        <li>When entering the dojang, students wear their uniform neatly and <b>bow</b> with respect, treating the dojang as a place of self-discipline where body and mind are trained.</li>
+        <li>During training, students wear their <b>uniform and belt</b> properly as a matter of principle.</li>
+        <li>Students always show <b>courtesy and respect</b> to their instructors and fellow students.</li>
+        <li>During training, students <b>focus</b> on the instructor's words and follow them well.</li>
+        <li>Students take part in training with an <b>active, sincere attitude</b>.</li>
+        <li>During training, students focus on <b>effort and improvement</b>, and value the spirit of <b>challenge</b>.</li>
+        <li>After training, students put their equipment back <b>neatly in its place</b>.</li>
+        <li>Students must <b>protect themselves</b> well, and must never misuse the techniques they have learned.</li>
+      </ul>
+      <p class="quote">Taekwondo is a martial art of <b>character cultivation</b>,<br>through which we work to overcome our own shortcomings.</p>
+    </div>
+  </section>
+
+  <!-- 8. Symbol -->
+  <section>
+    <div class="sec-title"><div class="num">9</div><h2>The Symbol of NARACHA Taekwondo</h2></div>
+    <div class="sym-grid">
+      <div class="sym-card">
+        <svg width="90" height="90" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="38" cy="22" r="10" fill="#c22"/>
+          <path d="M30 40 Q45 25 70 30 Q88 34 84 46 Q80 56 62 52 Q45 48 32 52 Z" fill="#c22" opacity=".85"/>
+          <path d="M28 48 Q50 40 74 46 Q92 52 86 64 Q80 74 60 68 Q44 63 30 66 Z" fill="#1e2a5a"/>
+          <path d="M34 68 Q30 84 20 92 Q28 78 26 66 Z" fill="#1e2a5a"/>
+        </svg>
+        <h3>Emblem</h3>
+        <p>The emblem depicts a kick — the most iconic movement of Taekwondo — shaped by combining the Yin and Yang of the Taegeuk. It expresses the dynamic spirit and integrity of NARACHA.</p>
+      </div>
+      <div class="sym-card">
+        <svg width="90" height="90" viewBox="0 0 100 100" aria-hidden="true">
+          <ellipse cx="50" cy="62" rx="26" ry="30" fill="#2b2b2b"/>
+          <ellipse cx="50" cy="66" rx="18" ry="22" fill="#fff"/>
+          <circle cx="50" cy="30" r="18" fill="#2b2b2b"/>
+          <ellipse cx="50" cy="34" rx="12" ry="11" fill="#fff"/>
+          <circle cx="44" cy="28" r="2.5" fill="#111"/>
+          <circle cx="56" cy="28" r="2.5" fill="#111"/>
+          <path d="M46 34 Q50 40 54 34 Q52 32 50 33 Q48 32 46 34Z" fill="#f5a300"/>
+          <rect x="30" y="74" width="40" height="6" rx="3" fill="#111"/>
+          <ellipse cx="38" cy="93" rx="9" ry="4" fill="#f5a300"/>
+          <ellipse cx="62" cy="93" rx="9" ry="4" fill="#f5a300"/>
+        </svg>
+        <h3>Characters</h3>
+        <p>The penguin — a bird that cannot fly — carries a special meaning: through Taekwondo training, students gain the wings of confidence to realize their dreams and ideals.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section>
+    <div class="contact">
+      <h2>Ready to Join Us?</h2>
+      <p>Please check the class schedule above and let us know your preferred time slot.</p>
+      <p>We are happy to answer any questions via KakaoTalk or in person.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="flogo">NARACHA</div>
+    <div class="fsub">TAEKWONDO</div>
+    <div>© NARACHA Taekwondo. All rights reserved.</div>
+  </footer>
+
+</div>
+</body>
+</html>
