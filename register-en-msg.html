@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>영문 등록안내 문구 만들기</title>
+<style>
+  :root{
+    --red:#a41e22; --navy:#1e2a5a; --olive:#7d7d4e;
+    --ink:#222; --ink-soft:#666; --line:#d8d4c8; --bg:#faf8f4; --card:#fff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:720px;margin:0 auto;padding:0 14px 60px}
+  header{background:var(--red);color:#fff;text-align:center;padding:22px 16px}
+  header .logo{font-family:Georgia,serif;font-size:20px;letter-spacing:4px;font-weight:700;border-top:2px solid #fff;border-bottom:2px solid #fff;display:inline-block;padding:2px 10px}
+  header h1{font-size:17px;margin-top:10px;font-weight:600}
+  header p{font-size:12.5px;opacity:.85;margin-top:4px}
+
+  section{margin-top:22px}
+  h2{font-size:15.5px;color:var(--navy);margin-bottom:10px;padding-left:10px;border-left:4px solid var(--red)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 14px}
+
+  .row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .row label{flex:0 0 128px;font-size:13.5px;color:var(--ink-soft)}
+  .row input[type=text],.row input[type=number],.row select{
+    flex:1;min-width:120px;border:1px solid var(--line);border-radius:8px;
+    padding:9px 10px;font-size:15px;background:#fff;color:var(--ink);
+  }
+  .row input:focus,.row select:focus{outline:2px solid var(--navy);border-color:var(--navy)}
+  .row .unit{font-size:13px;color:var(--ink-soft)}
+  .chk{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:10px;cursor:pointer}
+  .chk input{width:18px;height:18px;accent-color:var(--red)}
+
+  .calc{
+    background:#f4f2e8;border-radius:10px;padding:12px 14px;font-size:14px;margin-top:6px;
+  }
+  .calc .line{display:flex;justify-content:space-between;margin-bottom:4px}
+  .calc .line b{color:var(--navy)}
+  .calc .total{border-top:1px dashed #bbb;margin-top:8px;padding-top:8px;font-size:16px;font-weight:800;display:flex;justify-content:space-between;color:var(--red)}
+
+  textarea{
+    width:100%;min-height:420px;border:1px solid var(--line);border-radius:12px;
+    padding:14px;font-size:14px;line-height:1.6;background:#fff;color:var(--ink);
+    font-family:inherit;resize:vertical;
+  }
+  .btns{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  button{
+    flex:1;min-width:130px;border:0;border-radius:10px;padding:14px 10px;
+    font-size:15.5px;font-weight:700;cursor:pointer;
+  }
+  .b-copy{background:var(--red);color:#fff}
+  .b-sms{background:var(--navy);color:#fff}
+  .b-reset{background:#e8e4da;color:var(--ink);flex:0 0 auto;min-width:90px;font-size:13.5px}
+  button:active{opacity:.8}
+  .toast{
+    position:fixed;left:50%;bottom:30px;transform:translateX(-50%);
+    background:#222;color:#fff;padding:10px 18px;border-radius:20px;font-size:14px;
+    opacity:0;transition:opacity .25s;pointer-events:none;z-index:9;
+  }
+  .toast.show{opacity:1}
+  .hint{font-size:12.5px;color:var(--ink-soft);margin-top:8px}
+  .ver{text-align:center;font-size:11.5px;color:#aaa;margin-top:26px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">NARACHA</div>
+  <h1>영문 등록안내 문구 만들기</h1>
+  <p>금액을 입력하면 영어 안내 문구가 자동으로 완성됩니다</p>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <h2>1. 수련비용</h2>
+    <div class="card">
+      <div class="row">
+        <label>등록 기간</label>
+        <select id="period">
+          <option value="January–February">1·2월 (January–February)</option>
+          <option value="March–April">3·4월 (March–April)</option>
+          <option value="May–June">5·6월 (May–June)</option>
+          <option value="July–August">7·8월 (July–August)</option>
+          <option value="September–October">9·10월 (September–October)</option>
+          <option value="November–December">11·12월 (November–December)</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>월 수련 횟수</label>
+        <input type="number" id="perMonth" value="8" min="1"> <span class="unit">회</span>
+      </div>
+      <div class="row">
+        <label>총 수련 횟수</label>
+        <input type="number" id="totalCnt" value="16" min="1"> <span class="unit">회 (자동계산, 수정 가능)</span>
+      </div>
+      <div class="row">
+        <label>회당 수련비</label>
+        <input type="number" id="fee" value="22500" step="500" min="0"> <span class="unit">원</span>
+      </div>
+      <label class="chk"><input type="checkbox" id="todayOn" checked> 오늘 수련비(체험) 포함</label>
+      <div class="row" id="todayRow">
+        <label>오늘 수련비</label>
+        <input type="number" id="todayFee" value="22500" step="500" min="0"> <span class="unit">원</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. 기타비용</h2>
+    <div class="card">
+      <div class="row">
+        <label>입회비</label>
+        <input type="number" id="joinFee" value="50000" step="10000" min="0"> <span class="unit">원 (0이면 문구에서 빠짐)</span>
+      </div>
+      <div class="row">
+        <label>도복비</label>
+        <input type="number" id="uniformFee" value="50000" step="10000" min="0"> <span class="unit">원 (0이면 문구에서 빠짐)</span>
+      </div>
+      <div class="calc" id="calcBox"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. 포함할 내용</h2>
+    <div class="card">
+      <label class="chk"><input type="checkbox" id="incPay" checked> 결제방법 (계좌·카드)</label>
+      <label class="chk"><input type="checkbox" id="incLink" checked> 안내 웹페이지 링크</label>
+      <label class="chk"><input type="checkbox" id="incInfo" checked> 학생 정보 요청 (이름·생년월일·보호자)</label>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. 완성된 영문 문구</h2>
+    <textarea id="out" spellcheck="false"></textarea>
+    <div class="btns">
+      <button class="b-copy" id="btnCopy">📋 복사하기</button>
+      <button class="b-sms" id="btnSms">💬 문자로 보내기</button>
+      <button class="b-reset" id="btnReset">초기화</button>
+    </div>
+    <p class="hint">· 복사한 뒤 카톡·문자에 붙여넣으면 됩니다. 문구를 직접 고쳐서 복사해도 됩니다.<br>· 금액 설정은 이 기기에 저장되어 다음에 다시 열어도 유지됩니다.</p>
+  </section>
+
+  <div class="ver" id="verLabel"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var APP_VER = "v20260828.1"; // 최초 제작: 영문 등록안내 문구 생성기
+document.getElementById('verLabel').textContent = APP_VER;
+
+var LS_KEY = 'naracha_en_msg_tool';
+var PAGE_LINK = 'https://narachadata.github.io/naracha/register-en.html';
+var BANK_LINE = '1. Bank transfer : NH Bank (Nonghyup) 302-1687-0248-31, Lim Mi-hwa (NARACHA Taekwondo)';
+
+var ids = ['period','perMonth','totalCnt','fee','todayOn','todayFee','joinFee','uniformFee','incPay','incLink','incInfo'];
+function $(id){ return document.getElementById(id); }
+function val(id){ var e=$(id); return e.type==='checkbox' ? e.checked : e.value; }
+function num(id){ var n=parseInt(val(id),10); return isNaN(n)||n<0 ? 0 : n; }
+function won(n){ return '₩' + n.toLocaleString('en-US'); }
+
+// 두 달 등록이 기본: 월 횟수 바뀌면 총 횟수 = 월 횟수 × 2 로 자동 갱신
+var MONTHS = 2;
+function autoTotal(){ $('totalCnt').value = num('perMonth') * MONTHS; }
+
+function build(){
+  var period = val('period');
+  var perMonth = num('perMonth');
+  var totalCnt = num('totalCnt');
+  var fee = num('fee');
+  var train = totalCnt * fee;
+  var todayOn = val('todayOn');
+  var today = todayOn ? num('todayFee') : 0;
+  var join = num('joinFee');
+  var uni = num('uniformFee');
+  var other = join + uni;
+  var grand = today + train + other;
+
+  $('todayRow').style.display = todayOn ? '' : 'none';
+
+  // 계산 요약(한국어)
+  var c = '';
+  if (todayOn) c += '<div class="line"><span>오늘 수련비</span><b>' + today.toLocaleString() + '원</b></div>';
+  c += '<div class="line"><span>수련비 (' + totalCnt + '회 × ' + fee.toLocaleString() + '원)</span><b>' + train.toLocaleString() + '원</b></div>';
+  if (other > 0) c += '<div class="line"><span>기타비용 (입회비+도복비)</span><b>' + other.toLocaleString() + '원</b></div>';
+  c += '<div class="total"><span>최종 비용</span><span>' + grand.toLocaleString() + '원</span></div>';
+  $('calcBox').innerHTML = c;
+
+  // 영문 문구
+  var L = [];
+  L.push('The first registration cost is as follows.');
+  L.push('');
+  L.push('■ Registration Cost (First Registration)');
+  L.push('');
+  L.push('<Training Fee>');
+  if (todayOn) L.push('○ Today’s session fee = ' + won(today));
+  L.push('○ ' + period + ' (' + perMonth + ' sessions/month × ' + MONTHS + ' months) = ' + totalCnt + ' sessions total × ' + won(fee) + ' : ' + won(train));
+  if (other > 0){
+    L.push('');
+    L.push('■ Other Fees');
+    if (join > 0) L.push('○ Enrollment fee : ' + won(join));
+    if (uni > 0) L.push('○ Uniform (dobok) fee : ' + won(uni));
+    L.push('--------------------------');
+    L.push('Other fees total : ' + won(other));
+  }
+  L.push('');
+  L.push('★ Total cost for first registration : ' + won(grand));
+  var parts = [];
+  if (todayOn) parts.push(won(today));
+  parts.push(won(train));
+  if (other > 0) parts.push(won(other));
+  if (parts.length > 1) L.push('(' + parts.join(' + ') + ')');
+  if (join > 0){
+    L.push('');
+    L.push('Please note that the enrollment fee above covers insurance and computer registration, and it is a one-time fee — you only pay it once, at your very first registration.');
+  }
+  if (val('incPay')){
+    L.push('');
+    L.push('■ Payment Methods');
+    L.push(BANK_LINE);
+    L.push('2. Card payment in person at the dojang');
+  }
+  if (val('incLink')){
+    L.push('');
+    L.push('▶ For full details about our programs — tuition, class schedule, make-up class policy, and more — please see the page below:');
+    L.push(PAGE_LINK);
+  }
+  if (val('incInfo')){
+    L.push('');
+    L.push('Lastly, could you kindly send us the following information? We need it for the computer registration. Thank you!');
+    L.push('');
+    L.push('Student’s name :');
+    L.push('Student’s date of birth :');
+    L.push('Parent/Guardian’s phone number :');
+    L.push('Parent/Guardian’s name :');
+  }
+  $('out').value = L.join('\n');
+  save();
+}
+
+function save(){
+  try{
+    var o = {};
+    ids.forEach(function(id){ o[id] = val(id); });
+    localStorage.setItem(LS_KEY, JSON.stringify(o));
+  }catch(e){}
+}
+function load(){
+  try{
+    var o = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+    if (!o) return;
+    ids.forEach(function(id){
+      var e = $(id);
+      if (!(id in o)) return;
+      if (e.type === 'checkbox') e.checked = !!o[id]; else e.value = o[id];
+    });
+  }catch(e){}
+}
+
+function toast(msg){
+  var t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tm);
+  t._tm = setTimeout(function(){ t.classList.remove('show'); }, 1800);
+}
+
+$('btnCopy').onclick = function(){
+  var text = $('out').value;
+  function ok(){ toast('복사됐습니다. 카톡·문자에 붙여넣으세요.'); }
+  function fallback(){
+    var ta = $('out');
+    ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+    try{ document.execCommand('copy'); ok(); }
+    catch(e){ toast('길게 눌러 직접 복사해 주세요.'); }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(ok, fallback);
+  } else { fallback(); }
+};
+
+$('btnSms').onclick = function(){
+  var body = encodeURIComponent($('out').value);
+  var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  location.href = isIOS ? ('sms:&body=' + body) : ('sms:?body=' + body);
+};
+
+$('btnReset').onclick = function(){
+  if (!confirm('설정을 기본값으로 되돌릴까요?')) return;
+  try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  location.reload();
+};
+
+ids.forEach(function(id){
+  $(id).addEventListener('input', build);
+  $(id).addEventListener('change', build);
+});
+$('perMonth').addEventListener('input', function(){ autoTotal(); build(); });
+
+load();
+build();
+</script>
+</body>
+</html>
