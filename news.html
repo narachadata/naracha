@@ -1,0 +1,1247 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>나라차 소식지 제작기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{ --brown:#7a4a1f; --tan:#c9a86b; --bg:#faf6ee; --line:#e5dcc8; }
+*{ box-sizing:border-box; }
+body{ margin:0; font-family:'Noto Sans KR',sans-serif; background:var(--bg); color:#333; }
+header{ background:#fff; border-bottom:2px solid var(--line); padding:14px 20px; display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:10; }
+header h1{ font-family:'Jua'; font-size:22px; color:var(--brown); margin:0; font-weight:400; }
+header .ver{ font-size:12px; color:#999; }
+main{ max-width:860px; margin:0 auto; padding:16px 14px 80px; }
+section.card{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin:14px 0; }
+section.card h2{ font-family:'Jua'; font-weight:400; font-size:18px; color:var(--brown); margin:0 0 10px; display:flex; align-items:center; gap:8px; }
+section.card h2 .step{ background:var(--tan); color:#fff; border-radius:999px; font-size:13px; padding:2px 10px; }
+label.fl{ display:block; font-size:13px; font-weight:700; color:#666; margin:10px 0 4px; }
+input[type=text], input[type=password], select, textarea{ width:100%; border:1px solid #d8cfba; border-radius:8px; padding:8px 10px; font-size:14px; font-family:inherit; background:#fffdf8; }
+textarea{ resize:vertical; }
+button{ font-family:inherit; border:0; border-radius:8px; padding:9px 16px; font-size:14px; font-weight:700; cursor:pointer; }
+button.pri{ background:var(--brown); color:#fff; }
+button.sec{ background:#eee3cd; color:var(--brown); }
+button.min{ padding:4px 10px; font-size:12px; }
+.row{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+.row > div{ flex:1; min-width:120px; }
+.hint{ font-size:12px; color:#999; margin-top:4px; line-height:1.5; }
+.status{ font-size:13px; margin-top:8px; padding:8px 10px; border-radius:8px; background:#f4f0e6; color:#555; white-space:pre-line; }
+.status.ok{ background:#e8f5e4; color:#2c6b2f; }
+.status.err{ background:#fdeaea; color:#b23b3b; }
+.pgToggle{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; color:#444; padding:6px 0; }
+.pgToggle input{ width:18px; height:18px; }
+.sub{ border-left:3px solid var(--line); margin:6px 0 14px 8px; padding:2px 0 2px 14px; }
+.chipList{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.chip{ display:flex; align-items:center; gap:5px; background:#f6f1e4; border:1px solid var(--line); border-radius:999px; padding:4px 10px; font-size:13px; }
+.chip input{ width:15px; height:15px; }
+.chip .lv{ color:#a4783a; font-weight:900; }
+.calGrid{ display:grid; grid-template-columns:repeat(6,1fr); gap:4px; margin-top:8px; }
+.calGrid .hd{ text-align:center; font-size:12px; font-weight:900; color:#888; }
+.calGrid .cell{ border:1px solid var(--line); border-radius:6px; padding:2px; background:#fffdf8; }
+.calGrid .cell .d{ font-size:11px; font-weight:900; color:#777; padding:0 2px; }
+.calGrid .cell textarea{ border:0; background:transparent; font-size:11px; padding:2px; height:64px; width:100%; }
+.thumbs{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.thumbs .t{ position:relative; width:92px; height:92px; border-radius:8px; overflow:hidden; border:1px solid var(--line); }
+.thumbs .t img{ width:100%; height:100%; object-fit:cover; }
+.thumbs .t button{ position:absolute; top:2px; right:2px; background:rgba(0,0,0,.55); color:#fff; border-radius:6px; padding:1px 6px; font-size:12px; }
+#previewArea{ display:flex; flex-wrap:wrap; gap:14px; margin-top:14px; }
+.pv{ width:250px; }
+.pv canvas{ width:100%; border:1px solid #ddd; border-radius:10px; display:block; background:#fff; }
+.pv .pvBar{ display:flex; justify-content:space-between; align-items:center; margin-top:4px; }
+.pv .pvBar span{ font-size:12px; color:#777; }
+details.help{ font-size:13px; color:#666; background:#f6f1e4; border-radius:8px; padding:8px 12px; margin-top:8px; }
+details.help li{ margin:4px 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📰 나라차 소식지 제작기</h1>
+  <span class="ver" id="verLabel"></span>
+</header>
+<main>
+
+<!-- 1단계: 데이터 -->
+<section class="card">
+  <h2><span class="step">1단계</span> 나라차 프로그램 데이터 불러오기</h2>
+  <div class="row">
+    <div style="flex:2">
+      <label class="fl">접속키 (나라차 프로그램에서 쓰는 키와 같은 것)</label>
+      <input type="password" id="inKey" placeholder="접속키 입력">
+    </div>
+    <div style="flex:0 0 auto">
+      <button class="pri" id="btnPull">데이터 불러오기</button>
+    </div>
+    <div style="flex:0 0 auto">
+      <button class="sec" id="btnDemo">데모 데이터</button>
+    </div>
+  </div>
+  <div class="status" id="pullStatus">아직 데이터를 불러오지 않았습니다. 접속키를 넣고 [데이터 불러오기]를 누르세요.</div>
+  <details class="help"><summary>도움말</summary>
+    <ul>
+      <li>데이터는 나라차 프로그램의 클라우드 창고(구글 시트)에서 <b>읽기만</b> 합니다. 원본 데이터는 절대 바뀌지 않습니다.</li>
+      <li>명단(생일)·국기원 심사 정보·수련생 사진을 가져옵니다.</li>
+      <li>인터넷이 안 되거나 키가 없으면 [데모 데이터]로 미리 화면을 볼 수 있습니다.</li>
+    </ul>
+  </details>
+</section>
+
+<!-- 2단계: 기본 설정 -->
+<section class="card">
+  <h2><span class="step">2단계</span> 소식지 기본 설정</h2>
+  <div class="row">
+    <div><label class="fl">연도</label><select id="inYear"></select></div>
+    <div><label class="fl">월 (소식지의 달)</label><select id="inMonth"></select></div>
+    <div>
+      <label class="fl">이미지 비율</label>
+      <select id="inRatio">
+        <option value="916">9:16 세로형 (핸드폰 화면, 1080×1920)</option>
+        <option value="45">4:5 세로형 (1080×1350)</option>
+        <option value="11">1:1 정사각형 (1080×1080)</option>
+      </select>
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label class="fl">도장 로고 이미지 (선택 — 표지·사진 없는 사람 자리에 사용)</label>
+      <input type="file" id="inLogo" accept="image/*">
+      <div class="hint" id="logoHint">로고를 안 넣으면 글자 로고(NARACHA)로 그려집니다.</div>
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label class="fl">표지 이미지 (선택 — 직접 만든 계절 표지를 올리면 그대로 표지가 됩니다)</label>
+      <input type="file" id="inCover" accept="image/*">
+      <div class="hint" id="coverHint">안 올리면 프로그램이 계절 색으로 표지를 그립니다. 월마다 새로 올리면 됩니다.</div>
+      <button class="sec min" id="btnCoverDel" style="margin-top:4px">표지 이미지 제거</button>
+    </div>
+    <div>
+      <label class="fl">배경 이미지 (선택 — 본문 페이지들의 바탕 디자인으로 사용)</label>
+      <input type="file" id="inBg" accept="image/*">
+      <div class="hint" id="bgHint">안 올리면 프로그램이 계절 색으로 배경을 그립니다.</div>
+      <button class="sec min" id="btnBgDel" style="margin-top:4px">배경 이미지 제거</button>
+      <div class="pgToggle" style="font-size:13px"><input type="checkbox" id="inBgPanel" checked><span>배경 위에 흰 판을 깔아 글씨를 잘 보이게</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3단계: 페이지 내용 -->
+<section class="card">
+  <h2><span class="step">3단계</span> 페이지 내용 채우기</h2>
+  <div class="hint">체크를 끄면 그 페이지는 빠집니다. 목차는 자동으로 만들어집니다.</div>
+
+  <div class="pgToggle"><input type="checkbox" id="pgCover" checked><span>표지</span></div>
+  <div class="pgToggle"><input type="checkbox" id="pgToc" checked><span>목차 (자동)</span></div>
+
+  <div class="pgToggle"><input type="checkbox" id="pgVirtue" checked><span>인성덕목</span></div>
+  <div class="sub" id="subVirtue">
+    <div class="row">
+      <div><label class="fl">이달의 덕목</label><input type="text" id="inVirtueName" placeholder="예: 정의"></div>
+    </div>
+    <label class="fl">덕목 정의 (한두 문장)</label>
+    <textarea id="inVirtueDef" rows="2" placeholder="예: 옳고 그름을 판단하여 옳은 것은 지키고 잘못된 것은 따르지 않는 것."></textarea>
+    <label class="fl">실천 항목 (한 줄에 하나씩, 번호는 자동)</label>
+    <textarea id="inVirtueItems" rows="5" placeholder="나는 항상 올바른 결정을 하기 위해 노력한다."></textarea>
+  </div>
+
+  <div class="pgToggle"><input type="checkbox" id="pgSchedule" checked><span>월 SCHEDULE (주요 일정)</span></div>
+  <div class="sub" id="subSchedule">
+    <label class="fl">주요 일정 (한 줄에 하나씩)</label>
+    <textarea id="inSchedMain" rows="4" placeholder="09/20(일) : 국기원 승품단 심사일"></textarea>
+    <label class="fl">휴관 안내 (한 줄에 하나씩 · 빨간색으로 표시)</label>
+    <textarea id="inSchedClosed" rows="2" placeholder="09/24(목)~27(일) : 추석 연휴"></textarea>
+  </div>
+
+  <div class="pgToggle"><input type="checkbox" id="pgCal" checked><span>월 수련계획표 (달력)</span></div>
+  <div class="sub" id="subCal">
+    <div class="hint">칸에 그날의 수련 내용을 적으세요(월~토, 일요일 없음). 칸에 「휴관」이 들어가면 빨간색으로 표시됩니다.</div>
+    <div class="calGrid" id="calEditor"></div>
+    <label class="fl">달력 아래 문구 (선택)</label>
+    <textarea id="inCalNote" rows="2" placeholder="예: 인성덕목 : 정의 — 정직하고 공정한 마음을 갖고 떳떳하게 생활하는 것."></textarea>
+  </div>
+
+  <div class="pgToggle"><input type="checkbox" id="pgKkw" checked><span>국기원 승품(단) 심사 응시예정자</span></div>
+  <div class="sub" id="subKkw">
+    <label class="fl">부제목</label>
+    <input type="text" id="inKkwSub" placeholder="예: 26년 9월, 12월 국기원 심사 응시예정자">
+    <label class="fl">대상자 선택 (자동 후보 — 체크된 사람만 실립니다)</label>
+    <div class="chipList" id="kkwList"><span class="hint">1단계에서 데이터를 불러오면 후보가 나타납니다.</span></div>
+    <div class="row" style="margin-top:8px">
+      <div><input type="text" id="inKkwAddName" placeholder="직접 추가: 이름"></div>
+      <div><input type="text" id="inKkwAddLv" placeholder="표기 (예: 1품)"></div>
+      <div style="flex:0 0 auto"><button class="sec min" id="btnKkwAdd">추가</button></div>
+    </div>
+  </div>
+
+  <div class="pgToggle"><input type="checkbox" id="pgBday" checked><span>이달의 생일자</span></div>
+  <div class="sub" id="subBday">
+    <div class="chipList" id="bdayList"><span class="hint">1단계에서 데이터를 불러오면 이달 생일자가 나타납니다.</span></div>
+    <div class="hint">성인 수련생은 사진 대신 로고와 「님」 호칭으로 표시됩니다.</div>
+  </div>
+
+  <div class="pgToggle"><input type="checkbox" id="pgAlbum" checked><span>지난달 사진첩</span></div>
+  <div class="sub" id="subAlbum">
+    <div class="row">
+      <div><label class="fl">사진첩 제목</label><input type="text" id="inAlbumTitle" placeholder="예: 8월 사진첩"></div>
+      <div style="flex:0 0 auto"><label class="fl">&nbsp;</label><input type="file" id="inAlbum" accept="image/*" multiple></div>
+    </div>
+    <div class="thumbs" id="albumThumbs"></div>
+    <div class="hint">사진은 여러 장 선택할 수 있고, 한 페이지에 자동으로 나눠 실립니다. (이 컴퓨터에만 임시 저장됩니다)</div>
+  </div>
+</section>
+
+<!-- 4단계: 만들기 -->
+<section class="card">
+  <h2><span class="step">4단계</span> 소식지 만들기</h2>
+  <div class="row">
+    <div style="flex:0 0 auto"><button class="pri" id="btnMake">🖼️ 소식지 만들기 (미리보기)</button></div>
+    <div style="flex:0 0 auto"><button class="sec" id="btnSaveAll">💾 전체 PNG 저장</button></div>
+  </div>
+  <div class="hint">전체 저장 시 브라우저가 「여러 파일 다운로드 허용」을 물으면 허용을 누르세요. 저장된 PNG를 밴드 글에 순서대로 올리면 됩니다.</div>
+  <div id="previewArea"></div>
+</section>
+
+</main>
+<script>
+"use strict";
+/* ============================================================
+   나라차 소식지 제작기
+   var APP_VER 규칙: 수정할 때마다 +0.1, 내리지 않는다.
+   ============================================================ */
+var APP_VER = "v1.1"; /* R1.1: 표지 이미지·배경 이미지 업로드 적용(직접 만든 계절 디자인을 올리면 그대로 사용, 흰 판 겹치기 선택) · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 표지·목차·인성덕목·SCHEDULE·수련계획표·국기원응시예정자·생일자·사진첩 8종 페이지, 9:16/4:5/1:1 비율, PNG 저장 */
+document.getElementById("verLabel").textContent = APP_VER;
+
+var GAS = "https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
+var LSK = "naracha-newsletter";   /* 편집 내용(글) 저장 — 이 프로그램 전용 키 */
+
+/* ── 편집 상태 ── */
+var S = {
+  key:"", year:(new Date()).getFullYear(), month:(new Date()).getMonth()+1, ratio:"916",
+  virtueName:"", virtueDef:"", virtueItems:"",
+  schedMain:"", schedClosed:"",
+  calDays:{}, calNote:"",
+  kkwSub:"", kkwSel:{}, kkwManual:[],
+  bdayOff:{},
+  albumTitle:"", bgPanel:true,
+  pages:{cover:true,toc:true,virtue:true,schedule:true,cal:true,kkw:true,bday:true,album:true}
+};
+try{ var _s=JSON.parse(localStorage.getItem(LSK)||"null"); if(_s&&_s.year){ for(var k in _s) S[k]=_s[k]; } }catch(e){}
+function saveS(){ try{ localStorage.setItem(LSK, JSON.stringify(S)); }catch(e){} }
+
+/* ── 불러온 데이터 ── */
+var DATA = { att:null, photoMap:{}, loaded:false, demo:false };
+var ALBUM = [];         /* 사진첩 dataURL 배열 */
+var LOGO = null;        /* 로고 dataURL */
+var COVERIMG = null;    /* 직접 올린 표지 dataURL */
+var BGIMG = null;       /* 직접 올린 배경 dataURL */
+try{ LOGO = localStorage.getItem(LSK+"-logo") || null; }catch(e){}
+
+/* ── IndexedDB (사진첩 임시 보관) ── */
+function idbOpen(){ return new Promise(function(res,rej){
+  if(!window.indexedDB){ rej(new Error("no-idb")); return; }
+  var rq = indexedDB.open("naracha-newsletter", 1);
+  rq.onupgradeneeded = function(){ try{ rq.result.createObjectStore("kv"); }catch(e){} };
+  rq.onsuccess = function(){ res(rq.result); };
+  rq.onerror = function(){ rej(rq.error); };
+});}
+function idbSet(key,val){ return idbOpen().then(function(db){ return new Promise(function(res,rej){
+  var tx=db.transaction("kv","readwrite"); tx.objectStore("kv").put(val,key);
+  tx.oncomplete=function(){ db.close(); res(); }; tx.onerror=function(){ db.close(); rej(tx.error); };
+});}).catch(function(){});}
+function idbGet(key){ return idbOpen().then(function(db){ return new Promise(function(res,rej){
+  var tx=db.transaction("kv","readonly"), rq=tx.objectStore("kv").get(key);
+  rq.onsuccess=function(){ db.close(); res(rq.result==null?null:rq.result); };
+  rq.onerror=function(){ db.close(); rej(rq.error); };
+});}).catch(function(){ return null; });}
+
+/* ============================================================
+   클라우드 읽기 (GET 전용 — 절대 POST하지 않는다)
+   ============================================================ */
+function joinChunks(rows){
+  if(!rows) return null;
+  if(!Array.isArray(rows) && Array.isArray(rows.rows)) rows = rows.rows;
+  if(!Array.isArray(rows) || rows.length < 2) return null;
+  var joined = "";
+  for(var i=0;i<rows.length;i++){
+    if(rows[i][0]==="JSON" && i+1<rows.length){
+      for(var j=i+1;j<rows.length;j++) joined += (rows[j][0]!=null?String(rows[j][0]):"");
+      break;
+    }
+  }
+  try{ return JSON.parse(joined); }catch(e){ return null; }
+}
+function pullStore(store){
+  return fetch(GAS+"?key="+encodeURIComponent(S.key)+"&store="+store)
+    .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+    .then(function(rows){
+      if(rows && rows.error==="AUTH") throw new Error("AUTH");
+      if(rows && rows.error) throw new Error(String(rows.error));
+      return joinChunks(rows);
+    });
+}
+function setStatus(msg, cls){
+  var el=document.getElementById("pullStatus");
+  el.textContent=msg; el.className="status"+(cls?(" "+cls):"");
+}
+function doPull(){
+  S.key = document.getElementById("inKey").value.trim();
+  if(!S.key){ setStatus("접속키를 입력해 주세요.","err"); return; }
+  saveS();
+  setStatus("클라우드에서 데이터를 불러오는 중…");
+  Promise.all([ pullStore("att"), pullStore("photo") ]).then(function(rs){
+    var att=rs[0], photo=rs[1];
+    if(!att || !att.attV || !att.roster || !Array.isArray(att.roster.list)){
+      setStatus("명단 데이터를 해석하지 못했습니다. 접속키를 확인해 주세요.","err"); return;
+    }
+    DATA.att=att; DATA.demo=false;
+    DATA.photoMap=(photo && photo.photoV && photo.map)?photo.map:{};
+    DATA.loaded=true;
+    afterLoad();
+  }).catch(function(e){
+    if(String(e.message)==="AUTH") setStatus("접속키가 맞지 않습니다.","err");
+    else setStatus("불러오기 실패: "+e.message+"\n인터넷 연결을 확인하고 다시 시도해 주세요.","err");
+  });
+}
+
+/* ── 데모 데이터 ── */
+function doDemo(){
+  var names=["김태권","이도장","박선수","최수련","정품새","한겨루","송미트","윤발차","장회축","임뒤차","성인님"];
+  var list=[], pm={};
+  var mm=("0"+S.month).slice(-2);
+  var grades=["1급","1급","1품 2급","1품 1급","2품 2급","3품 2급","8급","5급","2품","3단","1급"];
+  for(var i=0;i<names.length;i++){
+    var dd=("0"+(2+i*2)).slice(-2);
+    list.push({ n:names[i], by:(names[i]==="성인님"?"1988":"201"+(2+(i%6)))+"-"+mm+"-"+dd, g:(i%2?"여":"남"), grade:grades[i], b:(names[i]==="성인님"?"5성인1(20-39)":"2초주니어(8~10)") });
+  }
+  /* 데모 얼굴(색 원) */
+  names.forEach(function(n,i){
+    if(n==="성인님") return;
+    var c=document.createElement("canvas"); c.width=c.height=96; var x=c.getContext("2d");
+    x.fillStyle=["#f7d8b5","#cfe6f7","#f9d9e7","#e4f0d5","#efe1f7"][i%5]; x.fillRect(0,0,96,96);
+    x.fillStyle="#8a6a4a"; x.beginPath(); x.arc(48,38,20,0,7); x.fill();
+    x.beginPath(); x.arc(48,95,32,3.14,0); x.fill();
+    pm[n]={d:c.toDataURL("image/jpeg",0.8), t:1};
+  });
+  DATA.att={ attV:1, roster:{list:list},
+    quitMapAtt:{map:{}}, closedMapAtt:{map:{}},
+    kkw:{list:["장회축"], info:{}, dan:{}},
+    examConfirm:{map:{ "김태권":{kconf:1}, "박선수":{kconf:1}, "최수련":{mkkw:1} }},
+    saengByFix:{map:{}} };
+  DATA.photoMap=pm; DATA.loaded=true; DATA.demo=true;
+  afterLoad();
+}
+
+/* ============================================================
+   데이터 해석 (나라차 프로그램과 같은 규칙)
+   ============================================================ */
+function mget(x){ if(!x) return {}; return x.map||x; }   /* {map,t} 또는 맨 맵 */
+function isQuitN(n){
+  var q=mget(DATA.att && DATA.att.quitMapAtt)[n];
+  return !!(q && !q.del);
+}
+function isClosedN(n){
+  var c=mget(DATA.att && DATA.att.closedMapAtt)[n];
+  return !!(c && !c.del);
+}
+function activeStudents(){
+  if(!DATA.att) return [];
+  return (DATA.att.roster.list||[]).filter(function(s){
+    return s && s.n && !isQuitN(s.n) && !isClosedN(s.n);
+  });
+}
+function fixedBy(s){
+  var fx=mget(DATA.att && DATA.att.saengByFix)[s.n];
+  if(fx && fx.v) return fx.v;
+  return s.by||"";
+}
+function ageOf(s){
+  var by=fixedBy(s);
+  if(!/^\d{4}/.test(by)) return null;
+  var b=new Date(by); if(isNaN(b)) return null;
+  var t=new Date(), a=t.getFullYear()-b.getFullYear();
+  var mo=t.getMonth()-b.getMonth();
+  if(mo<0||(mo===0&&t.getDate()<b.getDate())) a--;
+  return (a>=0&&a<120)?a:null;
+}
+function isAdult(s){
+  var a=ageOf(s);
+  if(a!=null) return a>=20;
+  return !!(s.b && (s.b.indexOf("5성인")===0 || s.b.indexOf("6성인")===0));
+}
+function isAdult15(s){
+  var a=ageOf(s);
+  if(a!=null) return a>=15;
+  return !!(s.b && (s.b.indexOf("5성인")===0 || s.b.indexOf("6성인")===0));
+}
+function photoOf(name){
+  var p=DATA.photoMap[name];
+  return (p && p.d) ? p.d : "";
+}
+/* 이달의 생일자 */
+function bdayCandidates(){
+  var out=[];
+  activeStudents().forEach(function(s){
+    var by=fixedBy(s), mmdd="";
+    if(/^\d{4}-\d{2}-\d{2}/.test(by)) mmdd=by.slice(5,10);
+    else if(/^\d{2}-\d{2}$/.test(s.bd||"")) mmdd=s.bd;
+    if(!/^\d{2}-\d{2}$/.test(mmdd)) return;
+    if(Number(mmdd.slice(0,2))!==Number(S.month)) return;
+    out.push({ n:s.n, dd:Number(mmdd.slice(3,5)), adult:isAdult(s), photo:photoOf(s.n) });
+  });
+  out.sort(function(a,b){ return a.dd-b.dd || (a.n<b.n?-1:1); });
+  return out;
+}
+/* 국기원 심사: 자격 판정 + 합격 시 획득 품·단 (나라차 프로그램 kkwExamName 규칙) */
+function kkwTarget(grade, adult15){
+  var g=(grade||"").trim(), m;
+  if(g==="1급") return adult15?"1단":"1품";
+  m=g.match(/^(\d+)품\s*[12]급$/);
+  if(m){ var n=+m[1]; return n>=4 ? "4단" : (n+1)+"품"; }
+  m=g.match(/^(\d+)단(\s*[12]급)?$/);
+  if(m) return (+m[1]+1)+"단";
+  return "";
+}
+function kkwLvOrder(lv){
+  var m=(lv||"").match(/^(\d+)(품|단)$/);
+  if(!m) return 99;
+  return (+m[1]) + (m[2]==="단"?10:0);
+}
+function kkwCandidates(){
+  if(!DATA.att) return [];
+  var ec=mget(DATA.att.examConfirm);
+  var kl=(DATA.att.kkw && DATA.att.kkw.list)||[];
+  var out=[];
+  activeStudents().forEach(function(s){
+    var target=kkwTarget(s.grade, isAdult15(s));
+    var inList=kl.indexOf(s.n)>-1;   /* 국기원 접수 완료(단증 대기) 명단 */
+    if(!target && !inList) return;
+    if(!target) target=(s.grade||"").trim();
+    var e=ec[s.n]||{};
+    var auto=!!(e.kconf || e.mkkw || inList);
+    out.push({ n:s.n, grade:s.grade||"", target:target, adult:isAdult(s), photo:photoOf(s.n), auto:auto });
+  });
+  out.sort(function(a,b){ return kkwLvOrder(a.target)-kkwLvOrder(b.target) || (a.n<b.n?-1:1); });
+  return out;
+}
+
+/* ============================================================
+   불러온 뒤 화면 갱신
+   ============================================================ */
+function afterLoad(){
+  var act=activeStudents().length;
+  var pc=0; for(var k in DATA.photoMap){ if(DATA.photoMap[k]&&DATA.photoMap[k].d) pc++; }
+  setStatus((DATA.demo?"[데모] ":"")+"불러오기 완료 — 재원생 "+act+"명 · 사진 "+pc+"장\n생일자·국기원 후보가 아래 3단계에 채워졌습니다.","ok");
+  renderKkwEditor();
+  renderBdayEditor();
+}
+function renderKkwEditor(){
+  var box=document.getElementById("kkwList");
+  box.innerHTML="";
+  var cands=kkwCandidates();
+  if(!cands.length && !S.kkwManual.length){
+    box.innerHTML='<span class="hint">후보가 없습니다. (1급·N품 1/2급·유단자만 후보가 됩니다)</span>'; return;
+  }
+  cands.forEach(function(c){
+    var checked = (S.kkwSel[c.n]!=null) ? !!S.kkwSel[c.n] : c.auto;
+    var lab=document.createElement("label"); lab.className="chip";
+    var cb=document.createElement("input"); cb.type="checkbox"; cb.checked=checked;
+    cb.onchange=function(){ S.kkwSel[c.n]=cb.checked; saveS(); };
+    var lv=document.createElement("span"); lv.className="lv"; lv.textContent=c.target;
+    lab.appendChild(cb); lab.appendChild(lv);
+    lab.appendChild(document.createTextNode(c.n+(c.adult?"님":"")+" ("+c.grade+")"));
+    box.appendChild(lab);
+  });
+  S.kkwManual.forEach(function(m,i){
+    var lab=document.createElement("label"); lab.className="chip";
+    var lv=document.createElement("span"); lv.className="lv"; lv.textContent=m.lv;
+    lab.appendChild(lv);
+    lab.appendChild(document.createTextNode(m.n+" (직접)"));
+    var del=document.createElement("button"); del.className="min"; del.textContent="✕"; del.style.background="none";
+    del.onclick=function(){ S.kkwManual.splice(i,1); saveS(); renderKkwEditor(); };
+    lab.appendChild(del);
+    box.appendChild(lab);
+  });
+}
+function renderBdayEditor(){
+  var box=document.getElementById("bdayList");
+  box.innerHTML="";
+  var bs=bdayCandidates();
+  if(!bs.length){ box.innerHTML='<span class="hint">'+S.month+'월 생일자가 없습니다.</span>'; return; }
+  bs.forEach(function(b){
+    var lab=document.createElement("label"); lab.className="chip";
+    var cb=document.createElement("input"); cb.type="checkbox"; cb.checked=!S.bdayOff[b.n];
+    cb.onchange=function(){ if(cb.checked) delete S.bdayOff[b.n]; else S.bdayOff[b.n]=1; saveS(); };
+    lab.appendChild(cb);
+    lab.appendChild(document.createTextNode(S.month+"/"+b.dd+" "+b.n+(b.adult?"님":"")+(b.photo?"":" 📷없음")));
+    box.appendChild(lab);
+  });
+}
+
+/* ── 달력 편집칸 ── */
+function calKey(d){ return S.year+"-"+("0"+S.month).slice(-2)+"-"+("0"+d).slice(-2); }
+function monthDays(){ return new Date(S.year, S.month, 0).getDate(); }
+function renderCalEditor(){
+  var box=document.getElementById("calEditor");
+  box.innerHTML="";
+  ["월","화","수","목","금","토"].forEach(function(h){
+    var d=document.createElement("div"); d.className="hd"; d.textContent=h; box.appendChild(d);
+  });
+  var last=monthDays();
+  var first=new Date(S.year, S.month-1, 1).getDay();  /* 0=일 */
+  /* 첫 주 빈칸: 월요일 시작 그리드(일요일 제외) */
+  var col=(first===0)?-1:(first-1);   /* 일요일이면 다음 줄 월요일부터 */
+  for(var i=0;i<(col<0?0:col);i++){ var e=document.createElement("div"); box.appendChild(e); }
+  for(var d=1; d<=last; d++){
+    var dow=new Date(S.year, S.month-1, d).getDay();
+    if(dow===0) continue;   /* 일요일 제외 */
+    var cell=document.createElement("div"); cell.className="cell";
+    var dn=document.createElement("div"); dn.className="d"; dn.textContent=d;
+    var ta=document.createElement("textarea");
+    ta.value=S.calDays[calKey(d)]||"";
+    (function(key){ ta.oninput=function(){ S.calDays[key]=this.value; saveS(); }; })(calKey(d));   /* this.value — var ta는 반복문 마지막 칸을 가리키므로 쓰면 안 됨 */
+    cell.appendChild(dn); cell.appendChild(ta);
+    box.appendChild(cell);
+  }
+}
+
+/* ── 사진첩 편집 ── */
+function renderAlbumThumbs(){
+  var box=document.getElementById("albumThumbs");
+  box.innerHTML="";
+  ALBUM.forEach(function(d,i){
+    var t=document.createElement("div"); t.className="t";
+    var img=document.createElement("img"); img.src=d;
+    var del=document.createElement("button"); del.textContent="✕";
+    del.onclick=function(){ ALBUM.splice(i,1); idbSet("album", JSON.stringify(ALBUM)); renderAlbumThumbs(); };
+    t.appendChild(img); t.appendChild(del);
+    box.appendChild(t);
+  });
+}
+function readImageFile(file, maxPx, q){
+  return new Promise(function(res,rej){
+    var fr=new FileReader();
+    fr.onload=function(){
+      var img=new Image();
+      img.onload=function(){
+        var s=Math.min(1, maxPx/Math.max(img.width,img.height));
+        var c=document.createElement("canvas");
+        c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
+        c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+        res(c.toDataURL("image/jpeg", q||0.85));
+      };
+      img.onerror=rej;
+      img.src=fr.result;
+    };
+    fr.onerror=rej;
+    fr.readAsDataURL(file);
+  });
+}
+
+/* ============================================================
+   그리기 (캔버스)
+   ============================================================ */
+function pageH(){ return S.ratio==="916"?1920:(S.ratio==="45"?1350:1080); }
+var W=1080;
+
+function theme(){
+  var m=Number(S.month);
+  if(m>=3&&m<=5) return { name:"봄", sky:"#e8f4ff", ground:"#fbdde9", groundDeep:"#f3b9cf", title:"#a44f72", monthColor:"#f08cb2", accent:"#e9a8c4", emo:["🌸","🌷","🦋"] };
+  if(m>=6&&m<=8) return { name:"여름", sky:"#ddf1ff", ground:"#ffe9b3", groundDeep:"#f7d183", title:"#1c6ea6", monthColor:"#63b9ea", accent:"#8fd0f2", emo:["🌊","⛱️","🍉"] };
+  if(m>=9&&m<=11) return { name:"가을", sky:"#cfe6f7", ground:"#eecf96", groundDeep:"#dcb069", title:"#7a4a1f", monthColor:"#7fb3e8", accent:"#c9a86b", emo:["🍁","🍂","🌰"] };
+  return { name:"겨울", sky:"#dce9f7", ground:"#f5f9fd", groundDeep:"#dbe7f3", title:"#2d5b8e", monthColor:"#9fc3ec", accent:"#a9c6e8", emo:["❄️","⛄","🎿"] };
+}
+function newCanvas(){
+  var c=document.createElement("canvas");
+  c.width=W; c.height=pageH();
+  return c;
+}
+/* 구름(스캘럽) 패널 */
+function cloudPanel(x2,x,y,w,h,color){
+  var r=52;
+  x2.fillStyle=color;
+  x2.beginPath();
+  x2.rect(x, y+r, w, h-2*r);
+  x2.rect(x+r, y, w-2*r, h);
+  var i;
+  for(i=x+r;i<=x+w-r;i+=r*1.35){ x2.moveTo(i+r,y+r); x2.arc(i,y+r,r,0,6.3); }
+  for(i=x+r;i<=x+w-r;i+=r*1.35){ x2.moveTo(i+r,y+h-r); x2.arc(i,y+h-r,r,0,6.3); }
+  for(i=y+r;i<=y+h-r;i+=r*1.35){ x2.moveTo(x+2*r,i); x2.arc(x+r,i,r,0,6.3); }
+  for(i=y+r;i<=y+h-r;i+=r*1.35){ x2.moveTo(x+w,i); x2.arc(x+w-r,i,r,0,6.3); }
+  x2.fill();
+}
+function drawGround(x2,H,t){
+  x2.fillStyle=t.ground;
+  x2.beginPath();
+  x2.moveTo(0,H);
+  x2.lineTo(0,H-150);
+  x2.quadraticCurveTo(W*0.25,H-215,W*0.5,H-165);
+  x2.quadraticCurveTo(W*0.75,H-120,W,H-185);
+  x2.lineTo(W,H);
+  x2.closePath();
+  x2.fill();
+}
+function emoDeco(x2,H,t,seed){
+  var pos=[[70,120,54,-0.3],[W-90,90,64,0.3],[W-70,H-110,50,0.2],[90,H-120,44,-0.2],[W/2+250,150,36,0.5]];
+  x2.save();
+  for(var i=0;i<pos.length;i++){
+    var p=pos[i], e=t.emo[(i+(seed||0))%t.emo.length];
+    x2.save(); x2.translate(p[0],p[1]); x2.rotate(p[3]);
+    x2.font=p[2]+"px 'Noto Sans KR'"; x2.textAlign="center"; x2.textBaseline="middle";
+    x2.fillText(e,0,0);
+    x2.restore();
+  }
+  x2.restore();
+}
+function coverFit(x2,img,x,y,w,h){
+  var s=Math.max(w/img.width,h/img.height);
+  x2.drawImage(img, x+(w-img.width*s)/2, y+(h-img.height*s)/2, img.width*s, img.height*s);
+}
+function pageBase(seed){
+  var c=newCanvas(), x2=c.getContext("2d"), H=c.height, t=theme();
+  if(IMGS.bg){
+    /* 직접 올린 배경 이미지 */
+    coverFit(x2, IMGS.bg, 0, 0, W, H);
+    if(S.bgPanel){
+      x2.save(); x2.globalAlpha=0.88;
+      var rr=46, px=62, py=100, pw=W-124, ph=H-290;
+      x2.fillStyle="#fffdf4";
+      x2.beginPath();
+      x2.moveTo(px+rr,py); x2.arcTo(px+pw,py,px+pw,py+ph,rr); x2.arcTo(px+pw,py+ph,px,py+ph,rr);
+      x2.arcTo(px,py+ph,px,py,rr); x2.arcTo(px,py,px+pw,py,rr); x2.closePath();
+      x2.fill();
+      x2.restore();
+    }
+    return c;
+  }
+  x2.fillStyle=t.sky; x2.fillRect(0,0,W,H);
+  drawGround(x2,H,t);
+  cloudPanel(x2, 62, 100, W-124, H-290, "#fffdf4");
+  emoDeco(x2,H,t,seed||0);
+  return c;
+}
+function badge(x2,x,y,txt,t){
+  x2.fillStyle=t.accent;
+  x2.beginPath(); x2.arc(x,y,44,0,6.3); x2.fill();
+  x2.fillStyle="#fffdf4";
+  x2.font="900 34px 'Jua'"; x2.textAlign="center"; x2.textBaseline="middle";
+  x2.fillText(txt,x,y+2);
+}
+function titleText(x2,txt,cx,cy,size,t,fill){
+  x2.font=size+"px 'Jua'"; x2.textAlign="center"; x2.textBaseline="middle";
+  x2.lineJoin="round";
+  x2.strokeStyle="#fffdf4"; x2.lineWidth=Math.max(10,size*0.16);
+  x2.strokeText(txt,cx,cy);
+  x2.fillStyle=fill||t.title;
+  x2.fillText(txt,cx,cy);
+}
+function footer(x2,H){
+  var ym=String(S.year).slice(2)+("0"+S.month).slice(-2);
+  x2.font="700 28px 'Noto Sans KR'"; x2.textAlign="center"; x2.textBaseline="middle";
+  x2.fillStyle="#555";
+  x2.fillText(ym+" NARACHA나라차태권도", W/2, H-64);
+}
+function wrapLines(x2, text, maxW){
+  var out=[], line="";
+  var words=String(text||"").split(/\s+/);
+  for(var i=0;i<words.length;i++){
+    var t=line?(line+" "+words[i]):words[i];
+    if(x2.measureText(t).width>maxW && line){ out.push(line); line=words[i]; }
+    else line=t;
+  }
+  if(line) out.push(line);
+  return out;
+}
+/* 원형 사진 (없으면 로고) */
+function circleItem(x2, img, cx, cy, r, t){
+  x2.save();
+  x2.beginPath(); x2.arc(cx,cy,r,0,6.3); x2.closePath();
+  x2.fillStyle="#fff"; x2.fill();
+  x2.clip();
+  if(img){
+    var s=Math.max((r*2)/img.width,(r*2)/img.height);
+    x2.drawImage(img, cx-img.width*s/2, cy-img.height*s/2, img.width*s, img.height*s);
+  }else{
+    x2.fillStyle="#fff"; x2.fillRect(cx-r,cy-r,r*2,r*2);
+    if(IMGS.logo){
+      var li=IMGS.logo, ls=Math.min((r*1.5)/li.width,(r*1.5)/li.height);
+      x2.drawImage(li, cx-li.width*ls/2, cy-li.height*ls/2-r*0.08, li.width*ls, li.height*ls);
+    }else{
+      x2.fillStyle="#333"; x2.textAlign="center";
+      x2.font="900 "+Math.round(r*0.42)+"px 'Noto Sans KR'"; x2.fillText("NARACHA",cx,cy-r*0.05);
+      x2.font="500 "+Math.round(r*0.25)+"px 'Noto Sans KR'"; x2.fillText("Taekwondo",cx,cy+r*0.32);
+    }
+  }
+  x2.restore();
+  x2.beginPath(); x2.arc(cx,cy,r,0,6.3);
+  x2.strokeStyle=theme().accent; x2.lineWidth=6; x2.stroke();
+}
+/* 사각(둥근) 사진 */
+function squareItem(x2, img, x, y, w, h){
+  x2.save();
+  var r=14;
+  x2.beginPath();
+  x2.moveTo(x+r,y); x2.arcTo(x+w,y,x+w,y+h,r); x2.arcTo(x+w,y+h,x,y+h,r);
+  x2.arcTo(x,y+h,x,y,r); x2.arcTo(x,y,x+w,y,r); x2.closePath();
+  x2.fillStyle="#fff"; x2.fill(); x2.clip();
+  if(img){
+    var s=Math.max(w/img.width,h/img.height);
+    x2.drawImage(img, x+(w-img.width*s)/2, y+(h-img.height*s)/2, img.width*s, img.height*s);
+  }
+  x2.restore();
+}
+
+/* ── 이미지 미리 불러오기 ── */
+var IMGS={ map:{}, logo:null };
+function loadImg(src){
+  return new Promise(function(res){
+    if(!src){ res(null); return; }
+    var im=new Image();
+    im.onload=function(){ res(im); };
+    im.onerror=function(){ res(null); };
+    im.src=src;
+  });
+}
+function preloadAll(bs, ks){
+  var jobs=[], names={};
+  bs.forEach(function(b){ if(!b.adult&&b.photo) names[b.n]=b.photo; });
+  ks.forEach(function(c){ if(!c.adult&&c.photo) names[c.n]=c.photo; });
+  IMGS.map={};
+  for(var n in names){ (function(n){ jobs.push(loadImg(names[n]).then(function(im){ IMGS.map[n]=im; })); })(n); }
+  jobs.push(loadImg(LOGO).then(function(im){ IMGS.logo=im; }));
+  jobs.push(loadImg(COVERIMG).then(function(im){ IMGS.cover=im; }));
+  jobs.push(loadImg(BGIMG).then(function(im){ IMGS.bg=im; }));
+  IMGS.album=[];
+  ALBUM.forEach(function(d,i){ jobs.push(loadImg(d).then(function(im){ IMGS.album[i]=im; })); });
+  return Promise.all(jobs);
+}
+
+/* ============================================================
+   페이지 그리기
+   ============================================================ */
+function drawCover(){
+  if(IMGS.cover){
+    /* 직접 만든 표지 이미지를 그대로 사용 (비율에 맞춰 채움) */
+    var c0=newCanvas(), x0=c0.getContext("2d");
+    x0.fillStyle="#fff"; x0.fillRect(0,0,W,c0.height);
+    coverFit(x0, IMGS.cover, 0, 0, W, c0.height);
+    return c0;
+  }
+  var c=pageBase(0), x2=c.getContext("2d"), H=c.height, t=theme();
+  /* 로고 */
+  if(IMGS.logo){
+    var li=IMGS.logo, s=Math.min(300/li.width, 170/li.height);
+    x2.drawImage(li, W/2-li.width*s/2, H*0.13, li.width*s, li.height*s);
+  }else{
+    x2.fillStyle="#222"; x2.textAlign="center"; x2.textBaseline="middle";
+    x2.font="900 52px 'Noto Sans KR'"; x2.fillText("NARACHA", W/2, H*0.15);
+    x2.font="500 26px 'Noto Sans KR'"; x2.fillText("TAEKWONDO", W/2, H*0.15+46);
+  }
+  x2.font="54px 'Jua'"; x2.textAlign="center"; x2.textBaseline="middle";
+  x2.fillStyle=t.accent;
+  x2.save(); x2.translate(W/2,H*0.30); x2.rotate(-0.03);
+  x2.fillText("Naracha News Letter",0,0); x2.restore();
+  titleText(x2, S.month+"월", W/2, H*0.44, 250, t, t.monthColor);
+  titleText(x2, "소식지", W/2, H*0.58, 210, t, "#fffdf4");
+  x2.font="46px 'Jua'"; x2.fillStyle=t.title; x2.textAlign="center";
+  x2.fillText(String(S.year).slice(2)+"년 "+S.month+"월호", W/2, H*0.68);
+  footer(x2,H);
+  return c;
+}
+function drawToc(entries){
+  var c=pageBase(1), x2=c.getContext("2d"), H=c.height, t=theme();
+  titleText(x2,"목차",W/2,200,110,t);
+  var y=360, gap=Math.min(150,(H-560)/Math.max(1,entries.length));
+  entries.forEach(function(e,i){
+    badge(x2, 170, y, ("0"+(i+1)).slice(-2), t);
+    x2.textAlign="left"; x2.textBaseline="middle";
+    x2.font="46px 'Jua'"; x2.fillStyle=t.title;
+    x2.fillText(e.title, 250, y-18);
+    x2.font="500 28px 'Noto Sans KR'"; x2.fillStyle="#666";
+    x2.fillText(e.desc, 250, y+30);
+    if(i<entries.length-1){
+      x2.strokeStyle=t.accent; x2.setLineDash([2,8]); x2.lineWidth=3;
+      x2.beginPath(); x2.moveTo(150,y+gap/2); x2.lineTo(W-150,y+gap/2); x2.stroke();
+      x2.setLineDash([]);
+    }
+    y+=gap;
+  });
+  footer(x2,H);
+  return c;
+}
+function drawVirtue(no){
+  var c=pageBase(2), x2=c.getContext("2d"), H=c.height, t=theme();
+  badge(x2,170,190,no,t);
+  titleText(x2,"인성덕목 : "+(S.virtueName||"—"), W/2+40, 190, 76, t);
+  /* 정의 */
+  x2.font="700 34px 'Gowun Dodum'"; x2.fillStyle="#444"; x2.textAlign="center";
+  var defLines=wrapLines(x2, (S.virtueName?S.virtueName+"이란? ":"")+(S.virtueDef||""), W-320);
+  var y=330;
+  defLines.forEach(function(l){ x2.fillText(l, W/2, y); y+=48; });
+  x2.strokeStyle="#555"; x2.lineWidth=3;
+  x2.beginPath(); x2.moveTo(180,y+10); x2.lineTo(W-180,y+10); x2.stroke();
+  /* 실천 항목 */
+  y+=110;
+  var items=(S.virtueItems||"").split("\n").map(function(s){return s.trim();}).filter(Boolean);
+  var gap=Math.min(130,(H-y-260)/Math.max(1,items.length));
+  x2.textAlign="left";
+  items.forEach(function(it,i){
+    x2.font="40px 'Gowun Dodum'"; x2.fillStyle="#3a3a3a";
+    var lines=wrapLines(x2,(i+1)+". "+it, W-300);
+    lines.forEach(function(l,j){ x2.fillText(l, 150, y+j*50); });
+    y+=gap+(lines.length-1)*50;
+  });
+  footer(x2,H);
+  return c;
+}
+function drawSchedule(no){
+  var c=pageBase(3), x2=c.getContext("2d"), H=c.height, t=theme();
+  badge(x2,170,200,no,t);
+  titleText(x2, S.month+"월 SCHEDULE", W/2+40, 200, 90, t);
+  var y=380;
+  x2.textAlign="left"; x2.textBaseline="middle";
+  var main=(S.schedMain||"").split("\n").map(function(s){return s.trim();}).filter(Boolean);
+  var closed=(S.schedClosed||"").split("\n").map(function(s){return s.trim();}).filter(Boolean);
+  var total=main.length+closed.length;
+  var gap=Math.min(105,(H-y-330)/Math.max(1,total+1));
+  x2.font="46px 'Gowun Dodum'"; x2.fillStyle="#333";
+  x2.fillText("[주요 일정]",140,y); y+=gap;
+  main.forEach(function(l){
+    x2.fillStyle="#111"; x2.font="42px 'Gowun Dodum'";
+    var ls=wrapLines(x2,"●  "+l, W-280);
+    ls.forEach(function(s,j){ x2.fillText(s,150,y+j*52); });
+    y+=gap+(ls.length-1)*52;
+  });
+  if(closed.length){
+    y+=14;
+    x2.fillStyle="#c62828"; x2.font="46px 'Gowun Dodum'";
+    x2.fillText("[휴관 안내]",140,y); y+=gap;
+    closed.forEach(function(l){
+      x2.fillStyle="#c62828"; x2.font="42px 'Gowun Dodum'";
+      var ls=wrapLines(x2,"●  "+l, W-280);
+      ls.forEach(function(s,j){ x2.fillText(s,150,y+j*52); });
+      y+=gap+(ls.length-1)*52;
+    });
+  }
+  footer(x2,H);
+  return c;
+}
+function drawCalendar(no){
+  var c=newCanvas(), x2=c.getContext("2d"), H=c.height, t=theme();
+  if(IMGS.bg){ coverFit(x2, IMGS.bg, 0, 0, W, H); }
+  else{ x2.fillStyle=t.sky; x2.fillRect(0,0,W,H); }
+  /* 달력은 면적이 필요해서 구름 대신 큰 흰 판 */
+  x2.globalAlpha=IMGS.bg?0.93:1;
+  x2.fillStyle="#fffdf4";
+  x2.beginPath();
+  var rr=40;
+  x2.moveTo(40+rr,40); x2.arcTo(W-40,40,W-40,H-40,rr); x2.arcTo(W-40,H-40,40,H-40,rr);
+  x2.arcTo(40,H-40,40,40,rr); x2.arcTo(40,40,W-40,40,rr); x2.closePath(); x2.fill();
+  x2.globalAlpha=1;
+  badge(x2,150,140,no,t);
+  titleText(x2, S.month+"월 수련계획표", W/2+30, 140, 84, t);
+  /* 그리드 */
+  var gx=70, gw=W-140, cols=6;
+  var gy=250, noteLines=(S.calNote||"").split("\n").filter(Boolean);
+  var gBottom=H-110-(noteLines.length?noteLines.length*44+40:0);
+  var days=["MON","TUE","WED","THU","FRI","SAT"];
+  x2.textAlign="center"; x2.textBaseline="middle";
+  for(var i=0;i<cols;i++){
+    x2.font="700 26px 'Noto Sans KR'";
+    x2.fillStyle=(i===5)?"#1a63c8":"#666";
+    x2.fillText(days[i], gx+gw/cols*(i+0.5), gy);
+  }
+  gy+=30;
+  /* 주 나누기 */
+  var last=monthDays(), weeks=[], cur=[null,null,null,null,null,null];
+  for(var d=1;d<=last;d++){
+    var dow=new Date(S.year,S.month-1,d).getDay();
+    if(dow===0){ continue; }
+    var col=dow-1;
+    if(col===0 && cur.some(function(v){return v!=null;})){ weeks.push(cur); cur=[null,null,null,null,null,null]; }
+    cur[col]=d;
+    if(d===last) weeks.push(cur);
+  }
+  if(weeks.length===0) weeks.push(cur);
+  var rh=(gBottom-gy)/weeks.length, cw=gw/cols;
+  x2.strokeStyle="#c9bfa8"; x2.lineWidth=2;
+  for(var r=0;r<weeks.length;r++){
+    for(var i2=0;i2<cols;i2++){
+      var cx0=gx+cw*i2, cy0=gy+rh*r;
+      x2.strokeRect(cx0,cy0,cw,rh);
+      var dnum=weeks[r][i2];
+      if(dnum==null) continue;
+      var txt=S.calDays[calKey(dnum)]||"";
+      var isClosed=txt.indexOf("휴관")>-1;
+      x2.textAlign="left"; x2.textBaseline="top";
+      x2.font="700 24px 'Noto Sans KR'";
+      x2.fillStyle=isClosed?"#c62828":"#333";
+      x2.fillText(dnum, cx0+8, cy0+6);
+      /* 내용 */
+      var lines=txt.split("\n").filter(Boolean);
+      x2.textAlign="center";
+      var fs=Math.min(22, Math.floor(rh/(lines.length+2)));
+      x2.font="500 "+fs+"px 'Noto Sans KR'";
+      x2.fillStyle=isClosed?"#c62828":"#444";
+      var ty=cy0+(rh-lines.length*(fs+6))/2+8;
+      lines.forEach(function(l,li){
+        var s=l;
+        while(x2.measureText(s).width>cw-12 && s.length>2) s=s.slice(0,-1);
+        x2.fillText(s, cx0+cw/2, ty+li*(fs+6));
+      });
+      x2.textBaseline="middle";
+    }
+  }
+  /* 아래 문구 */
+  if(noteLines.length){
+    x2.textAlign="center"; x2.textBaseline="middle";
+    var ny=gBottom+40;
+    noteLines.forEach(function(l,i3){
+      x2.font=(i3===0?"700 36px":"500 30px")+" 'Gowun Dodum'";
+      x2.fillStyle="#333";
+      x2.fillText(l, W/2, ny+i3*44);
+    });
+  }
+  footer(x2,H);
+  return c;
+}
+function drawKkwPages(no, list){
+  /* 3열 격자, 페이지 자동 분할 */
+  var t=theme(), pages=[], H=pageH();
+  var cols=3, cellW=280, gapX=(W-140-cols*cellW)/(cols-1);
+  var topY=470, capH=64, cellH=cellW+capH+30;
+  var rowsPer=Math.max(2, Math.floor((H-topY-160)/cellH));
+  var per=cols*rowsPer;
+  var chunks=[];
+  for(var i=0;i<list.length;i+=per) chunks.push(list.slice(i,i+per));
+  if(!chunks.length) chunks.push([]);
+  chunks.forEach(function(chunk,pi){
+    var c=pageBase(4+pi), x2=c.getContext("2d");
+    badge(x2,150,190,chunks.length>1?(no+"-"+(pi+1)):no,t);
+    titleText(x2,"국기원 승품(단) 심사", W/2+30, 190, 76, t);
+    /* 부제 틀 */
+    if(S.kkwSub){
+      x2.font="500 36px 'Gowun Dodum'";
+      var sw=x2.measureText(S.kkwSub).width+80;
+      var sx=W/2-sw/2, sy=300;
+      x2.fillStyle="#f3ecfa"; x2.strokeStyle="#8a7fb5"; x2.lineWidth=4;
+      x2.beginPath();
+      x2.moveTo(sx+16,sy); x2.arcTo(sx+sw,sy,sx+sw,sy+76,16); x2.arcTo(sx+sw,sy+76,sx,sy+76,16);
+      x2.arcTo(sx,sy+76,sx,sy,16); x2.arcTo(sx,sy,sx+sw,sy,16); x2.closePath();
+      x2.fill(); x2.stroke();
+      x2.fillStyle="#4a3f75"; x2.textAlign="center"; x2.textBaseline="middle";
+      x2.fillText(S.kkwSub, W/2, sy+40);
+    }
+    chunk.forEach(function(p,idx){
+      var r=Math.floor(idx/cols), col=idx%cols;
+      var x=70+col*(cellW+gapX), y=topY+r*cellH;
+      var img=(!p.adult&&p.photo)?IMGS.map[p.n]:null;
+      if(img||!p.adult){ squareItem(x2,img,x,y,cellW,cellW);
+        if(!img){ circleItem(x2,null,x+cellW/2,y+cellW/2,cellW/2-10,t); } }
+      else{ circleItem(x2,null,x+cellW/2,y+cellW/2,cellW/2-10,t); }
+      x2.font="700 34px 'Noto Sans KR'"; x2.fillStyle="#222";
+      x2.textAlign="center"; x2.textBaseline="middle";
+      x2.fillText(p.target+" "+p.n+(p.adult?"님":""), x+cellW/2, y+cellW+34);
+    });
+    footer(x2,c.height);
+    pages.push({name:"국기원심사"+(chunks.length>1?("_"+(pi+1)):""), canvas:c});
+  });
+  return pages;
+}
+function drawBdayPages(no, list){
+  var t=theme(), pages=[], H=pageH();
+  var cols=3, r0=140;
+  var topY=520, cellH=r0*2+110;
+  var rowsPer=Math.max(2, Math.floor((H-topY-150)/cellH));
+  var per=cols*rowsPer;
+  var chunks=[];
+  for(var i=0;i<list.length;i+=per) chunks.push(list.slice(i,i+per));
+  if(!chunks.length) chunks.push([]);
+  chunks.forEach(function(chunk,pi){
+    var c=pageBase(6+pi), x2=c.getContext("2d");
+    badge(x2,150,180,chunks.length>1?(no+"-"+(pi+1)):no,t);
+    x2.font="120px 'Jua'"; x2.textAlign="center"; x2.textBaseline="middle";
+    x2.lineJoin="round"; x2.strokeStyle="#fffdf4"; x2.lineWidth=18;
+    x2.strokeText("HAPPY",W/2,210); x2.fillStyle="#222"; x2.fillText("HAPPY",W/2,210);
+    x2.strokeText("BIRTHDAY",W/2,330); x2.fillText("BIRTHDAY",W/2,330);
+    ["🎉","💖","✨","🎂"].forEach(function(e,i4){
+      x2.font="52px 'Noto Sans KR'";
+      var px=[W/2-330,W/2+320,W/2-360,W/2+350][i4], py=[180,170,330,340][i4];
+      x2.fillText(e,px,py);
+    });
+    var gapX=(W-160-cols*r0*2)/(cols-1);
+    chunk.forEach(function(p,idx){
+      var r=Math.floor(idx/cols), col=idx%cols;
+      var cx=80+r0+col*(r0*2+gapX), cy=topY+r0+r*cellH;
+      var img=(!p.adult&&p.photo)?IMGS.map[p.n]:null;
+      circleItem(x2, img, cx, cy, r0, t);
+      x2.font="700 34px 'Noto Sans KR'"; x2.fillStyle="#222";
+      x2.textAlign="center"; x2.textBaseline="middle";
+      x2.fillText(S.month+"월"+p.dd+"일 "+p.n+(p.adult?"님":""), cx, cy+r0+42);
+    });
+    footer(x2,c.height);
+    pages.push({name:"생일자"+(chunks.length>1?("_"+(pi+1)):""), canvas:c});
+  });
+  return pages;
+}
+function drawAlbumPages(no){
+  var t=theme(), pages=[], H=pageH();
+  var imgs=IMGS.album.filter(Boolean);
+  var cols=2, cellW=(W-140-30)/2, cellH=cellW*0.75;
+  var topY=330;
+  var rowsPer=Math.max(2, Math.floor((H-topY-140)/(cellH+26)));
+  var per=cols*rowsPer;
+  var chunks=[];
+  for(var i=0;i<imgs.length;i+=per) chunks.push(imgs.slice(i,i+per));
+  if(!chunks.length) chunks.push([]);
+  var title=S.albumTitle||((S.month===1?12:S.month-1)+"월 사진첩");
+  chunks.forEach(function(chunk,pi){
+    var c=pageBase(8+pi), x2=c.getContext("2d");
+    badge(x2,150,190,no+"-"+(pi+1),t);
+    titleText(x2, title, W/2+30, 190, 84, t);
+    chunk.forEach(function(im,idx){
+      var r=Math.floor(idx/cols), col=idx%cols;
+      var x=70+col*(cellW+30), y=topY+r*(cellH+26);
+      squareItem(x2, im, x, y, cellW, cellH);
+    });
+    footer(x2,c.height);
+    pages.push({name:"사진첩_"+(pi+1), canvas:c});
+  });
+  return pages;
+}
+
+/* ============================================================
+   전체 만들기
+   ============================================================ */
+var MADE=[];   /* {name, canvas} */
+function selectedKkw(){
+  var out=[];
+  kkwCandidates().forEach(function(c){
+    var on=(S.kkwSel[c.n]!=null)?!!S.kkwSel[c.n]:c.auto;
+    if(on) out.push(c);
+  });
+  S.kkwManual.forEach(function(m){
+    out.push({n:m.n, target:m.lv, adult:/님$/.test(m.n), photo:photoOf(m.n.replace(/님$/,""))});
+  });
+  return out;
+}
+function selectedBday(){
+  return bdayCandidates().filter(function(b){ return !S.bdayOff[b.n]; });
+}
+function makeAll(){
+  readInputs();
+  var btn=document.getElementById("btnMake");
+  btn.disabled=true; btn.textContent="만드는 중…";
+  var bs=selectedBday(), ks=selectedKkw();
+  var fontJobs=[
+    document.fonts.load("100px 'Jua'","소식지가"),
+    document.fonts.load("40px 'Gowun Dodum'","소식지가"),
+    document.fonts.load("700 40px 'Noto Sans KR'","소식지가")
+  ];
+  Promise.all(fontJobs).then(function(){ return preloadAll(bs,ks); }).then(function(){
+    MADE=[];
+    /* 본문 페이지 번호 계산 (표지·목차 제외) */
+    var no=0, entries=[];
+    var plan=[];
+    if(S.pages.virtue){ no++; plan.push({no:no,kind:"virtue"}); entries.push({title:String(S.year).slice(2)+"년 "+S.month+"월 인성덕목"+(S.virtueName?" - "+S.virtueName:""), desc:"한달동안 마음에 새기고 실천해야 할 덕목입니다."}); }
+    if(S.pages.schedule){ no++; plan.push({no:no,kind:"schedule"}); entries.push({title:S.month+"월 SCHEDULE", desc:S.month+"월 일정을 안내드려요."}); }
+    if(S.pages.cal){ no++; plan.push({no:no,kind:"cal"}); entries.push({title:S.month+"월 수련계획표", desc:"매일의 수련 프로그램을 캘린더로 확인하실 수 있습니다."}); }
+    if(S.pages.kkw){ no++; plan.push({no:no,kind:"kkw"}); entries.push({title:"국기원승품(단) 응시예정자", desc:"국기원심사 대상자를 안내합니다."}); }
+    if(S.pages.bday){ no++; plan.push({no:no,kind:"bday"}); entries.push({title:S.month+"월 생일자", desc:"생일을 축하합니다~"}); }
+    if(S.pages.album){ no++; plan.push({no:no,kind:"album"}); entries.push({title:(S.albumTitle||((S.month===1?12:S.month-1)+"월 사진첩")), desc:"지난달 나라차에서는 이렇게~"}); }
+
+    if(S.pages.cover) MADE.push({name:"표지", canvas:drawCover()});
+    if(S.pages.toc) MADE.push({name:"목차", canvas:drawToc(entries)});
+    plan.forEach(function(p){
+      var nn=("0"+p.no).slice(-2);
+      if(p.kind==="virtue") MADE.push({name:"인성덕목", canvas:drawVirtue(nn)});
+      if(p.kind==="schedule") MADE.push({name:"일정", canvas:drawSchedule(nn)});
+      if(p.kind==="cal") MADE.push({name:"수련계획표", canvas:drawCalendar(nn)});
+      if(p.kind==="kkw") MADE=MADE.concat(drawKkwPages(nn, ks));
+      if(p.kind==="bday") MADE=MADE.concat(drawBdayPages(nn, bs));
+      if(p.kind==="album") MADE=MADE.concat(drawAlbumPages(nn));
+    });
+    renderPreview();
+    btn.disabled=false; btn.textContent="🖼️ 소식지 만들기 (미리보기)";
+  }).catch(function(e){
+    btn.disabled=false; btn.textContent="🖼️ 소식지 만들기 (미리보기)";
+    alert("만들기 실패: "+e.message);
+  });
+}
+function fileBase(){ return String(S.year).slice(2)+("0"+S.month).slice(-2)+"_소식지"; }
+function renderPreview(){
+  var box=document.getElementById("previewArea");
+  box.innerHTML="";
+  MADE.forEach(function(p,i){
+    var d=document.createElement("div"); d.className="pv";
+    d.appendChild(p.canvas);
+    var bar=document.createElement("div"); bar.className="pvBar";
+    var sp=document.createElement("span"); sp.textContent=(i+1)+". "+p.name;
+    var bt=document.createElement("button"); bt.className="sec min"; bt.textContent="PNG 저장";
+    bt.onclick=function(){ savePng(p,i); };
+    bar.appendChild(sp); bar.appendChild(bt);
+    d.appendChild(bar);
+    box.appendChild(d);
+  });
+  if(MADE.length) box.scrollIntoView({behavior:"smooth"});
+}
+function savePng(p,i){
+  p.canvas.toBlob(function(b){
+    var a=document.createElement("a");
+    a.href=URL.createObjectURL(b);
+    a.download=fileBase()+"_"+("0"+(i+1)).slice(-2)+"_"+p.name+".png";
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); },5000);
+  },"image/png");
+}
+function saveAllPng(){
+  if(!MADE.length){ alert("먼저 [소식지 만들기]를 눌러 주세요."); return; }
+  var i=0;
+  (function next(){
+    if(i>=MADE.length) return;
+    savePng(MADE[i],i); i++;
+    setTimeout(next,600);
+  })();
+}
+
+/* ============================================================
+   입력 연결
+   ============================================================ */
+function readInputs(){
+  S.virtueName=document.getElementById("inVirtueName").value.trim();
+  S.virtueDef=document.getElementById("inVirtueDef").value.trim();
+  S.virtueItems=document.getElementById("inVirtueItems").value;
+  S.schedMain=document.getElementById("inSchedMain").value;
+  S.schedClosed=document.getElementById("inSchedClosed").value;
+  S.calNote=document.getElementById("inCalNote").value;
+  S.kkwSub=document.getElementById("inKkwSub").value.trim();
+  S.albumTitle=document.getElementById("inAlbumTitle").value.trim();
+  S.bgPanel=document.getElementById("inBgPanel").checked;
+  S.pages.cover=document.getElementById("pgCover").checked;
+  S.pages.toc=document.getElementById("pgToc").checked;
+  S.pages.virtue=document.getElementById("pgVirtue").checked;
+  S.pages.schedule=document.getElementById("pgSchedule").checked;
+  S.pages.cal=document.getElementById("pgCal").checked;
+  S.pages.kkw=document.getElementById("pgKkw").checked;
+  S.pages.bday=document.getElementById("pgBday").checked;
+  S.pages.album=document.getElementById("pgAlbum").checked;
+  saveS();
+}
+function initInputs(){
+  var yr=document.getElementById("inYear");
+  var thisY=(new Date()).getFullYear();
+  for(var y=thisY-1;y<=thisY+1;y++){
+    var o=document.createElement("option"); o.value=y; o.textContent=y+"년";
+    if(y===Number(S.year)) o.selected=true;
+    yr.appendChild(o);
+  }
+  var mo=document.getElementById("inMonth");
+  for(var m=1;m<=12;m++){
+    var o2=document.createElement("option"); o2.value=m; o2.textContent=m+"월";
+    if(m===Number(S.month)) o2.selected=true;
+    mo.appendChild(o2);
+  }
+  document.getElementById("inRatio").value=S.ratio;
+  document.getElementById("inKey").value=S.key||"";
+  document.getElementById("inVirtueName").value=S.virtueName||"";
+  document.getElementById("inVirtueDef").value=S.virtueDef||"";
+  document.getElementById("inVirtueItems").value=S.virtueItems||"";
+  document.getElementById("inSchedMain").value=S.schedMain||"";
+  document.getElementById("inSchedClosed").value=S.schedClosed||"";
+  document.getElementById("inCalNote").value=S.calNote||"";
+  document.getElementById("inKkwSub").value=S.kkwSub||"";
+  document.getElementById("inAlbumTitle").value=S.albumTitle||"";
+  document.getElementById("pgCover").checked=!!S.pages.cover;
+  document.getElementById("pgToc").checked=!!S.pages.toc;
+  document.getElementById("pgVirtue").checked=!!S.pages.virtue;
+  document.getElementById("pgSchedule").checked=!!S.pages.schedule;
+  document.getElementById("pgCal").checked=!!S.pages.cal;
+  document.getElementById("pgKkw").checked=!!S.pages.kkw;
+  document.getElementById("pgBday").checked=!!S.pages.bday;
+  document.getElementById("pgAlbum").checked=!!S.pages.album;
+
+  yr.onchange=function(){ S.year=Number(yr.value); saveS(); renderCalEditor(); renderBdayEditor(); };
+  mo.onchange=function(){ S.month=Number(mo.value); saveS(); renderCalEditor(); renderBdayEditor(); };
+  document.getElementById("inRatio").onchange=function(){ S.ratio=this.value; saveS(); };
+  ["inVirtueName","inVirtueDef","inVirtueItems","inSchedMain","inSchedClosed","inCalNote","inKkwSub","inAlbumTitle"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", function(){ readInputs(); });
+  });
+  ["pgCover","pgToc","pgVirtue","pgSchedule","pgCal","pgKkw","pgBday","pgAlbum"].forEach(function(id){
+    document.getElementById(id).addEventListener("change", function(){ readInputs(); });
+  });
+
+  document.getElementById("btnPull").onclick=doPull;
+  document.getElementById("btnDemo").onclick=doDemo;
+  document.getElementById("btnMake").onclick=makeAll;
+  document.getElementById("btnSaveAll").onclick=saveAllPng;
+  document.getElementById("btnKkwAdd").onclick=function(){
+    var n=document.getElementById("inKkwAddName").value.trim();
+    var lv=document.getElementById("inKkwAddLv").value.trim();
+    if(!n||!lv){ alert("이름과 표기를 모두 넣어 주세요."); return; }
+    S.kkwManual.push({n:n,lv:lv}); saveS();
+    document.getElementById("inKkwAddName").value="";
+    document.getElementById("inKkwAddLv").value="";
+    renderKkwEditor();
+  };
+  document.getElementById("inLogo").onchange=function(){
+    var f=this.files&&this.files[0]; if(!f) return;
+    readImageFile(f, 600, 0.9).then(function(d){
+      LOGO=d;
+      try{ localStorage.setItem(LSK+"-logo", d); }catch(e){}
+      document.getElementById("logoHint").textContent="로고가 등록되었습니다. ✓";
+    });
+  };
+  if(LOGO) document.getElementById("logoHint").textContent="로고가 등록되어 있습니다. ✓";
+  document.getElementById("inBgPanel").checked=(S.bgPanel!==false);
+  document.getElementById("inCover").onchange=function(){
+    var f=this.files&&this.files[0]; if(!f) return;
+    readImageFile(f, 2200, 0.9).then(function(d){
+      COVERIMG=d; idbSet("cover", d);
+      document.getElementById("coverHint").textContent="표지 이미지가 등록되었습니다. ✓ (표지는 이 이미지로 만들어집니다)";
+    });
+  };
+  document.getElementById("btnCoverDel").onclick=function(){
+    COVERIMG=null; idbSet("cover", "");
+    document.getElementById("inCover").value="";
+    document.getElementById("coverHint").textContent="표지 이미지를 지웠습니다. 프로그램이 계절 색으로 표지를 그립니다.";
+  };
+  document.getElementById("inBg").onchange=function(){
+    var f=this.files&&this.files[0]; if(!f) return;
+    readImageFile(f, 2200, 0.9).then(function(d){
+      BGIMG=d; idbSet("bgimg", d);
+      document.getElementById("bgHint").textContent="배경 이미지가 등록되었습니다. ✓ (본문 페이지 바탕에 깔립니다)";
+    });
+  };
+  document.getElementById("btnBgDel").onclick=function(){
+    BGIMG=null; idbSet("bgimg", "");
+    document.getElementById("inBg").value="";
+    document.getElementById("bgHint").textContent="배경 이미지를 지웠습니다. 프로그램이 계절 색으로 배경을 그립니다.";
+  };
+  document.getElementById("inAlbum").onchange=function(){
+    var fs=Array.prototype.slice.call(this.files||[]);
+    if(!fs.length) return;
+    var jobs=fs.map(function(f){ return readImageFile(f, 1600, 0.85); });
+    Promise.all(jobs).then(function(ds){
+      ALBUM=ALBUM.concat(ds);
+      idbSet("album", JSON.stringify(ALBUM));
+      renderAlbumThumbs();
+    });
+    this.value="";
+  };
+}
+
+initInputs();
+renderCalEditor();
+idbGet("album").then(function(v){
+  if(v){ try{ ALBUM=JSON.parse(v)||[]; }catch(e){ ALBUM=[]; } renderAlbumThumbs(); }
+});
+idbGet("cover").then(function(v){
+  if(v){ COVERIMG=v; document.getElementById("coverHint").textContent="표지 이미지가 등록되어 있습니다. ✓"; }
+});
+idbGet("bgimg").then(function(v){
+  if(v){ BGIMG=v; document.getElementById("bgHint").textContent="배경 이미지가 등록되어 있습니다. ✓"; }
+});
+</script>
+</body>
+</html>
