@@ -240,7 +240,7 @@ details.help li{ margin:4px 0; }
    나라차 소식지 제작기
    var APP_VER 규칙: 수정할 때마다 +0.1, 내리지 않는다.
    ============================================================ */
-var APP_VER = "v2.1"; /* R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
+var APP_VER = "v2.2"; /* R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
 document.getElementById("verLabel").textContent = APP_VER;
 
 var GAS = "https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
@@ -558,20 +558,51 @@ function buildExamInfo(){
     });
   }
   if(!entries.length) return pm.m+"월 승급심사 기록이 없습니다. 직접 적어 주세요.";
-  var dates={}; entries.forEach(function(e){ dates[e.date]=1; });
-  var dstr=Object.keys(dates).sort().map(function(d){ return Number(d.slice(8,10))+"일"; }).join("·");
+  var dates=Object.keys(entries.reduce(function(a,e){ a[e.date]=1; return a; },{})).sort();
+  var dd=function(d){ return Number(d.slice(8,10))+"일"; };
+  var dstr=(dates.length<=3)
+    ? dates.map(dd).join("·")+" 실시"
+    : dd(dates[0])+"~"+dd(dates[dates.length-1])+" · 총 "+dates.length+"회 실시";
   var pass=entries.filter(function(e){ return e.tot==null || e.tot>=60; }).length;
   var fail=entries.length-pass;
-  var txt="정기승급심사 결과\n"+pm.m+"월 "+dstr+" 실시\n\n";
+  var txt="정기승급심사 결과\n"+pm.m+"월 "+dstr+"\n\n";
   txt+="응시 인원 : "+entries.length+"명\n";
-  txt+="합격 : "+pass+"명"+(fail?(" · 불합격 "+fail+"명"):"  (전원 합격 🎉)");
+  txt+="합격 : "+pass+"명"+(fail?(" · 불합격 "+fail+"명"):"  (전원 합격 🎉)")+"\n";
   var gset={};
   entries.forEach(function(e){ var g=(e.grade||"").split(" ").slice(0,2).join(" ").trim(); if(g) gset[g]=(gset[g]||0)+1; });
-  var gl=Object.keys(gset);
-  if(gl.length) txt+="\n취득 급수 : "+gl.map(function(g){ return g+" "+gset[g]+"명"; }).join(" · ");
-  return txt;
+  var gl=Object.keys(gset).sort(function(a,b){ return gradeRank(a)-gradeRank(b); });
+  if(gl.length){
+    txt+="\n[취득 급수]\n";
+    gl.forEach(function(g){ txt+=g+" "+gset[g]+"명\n"; });
+  }
+  return txt.replace(/\n$/,"");
 }
-/* 대회 보고 자동 생성 — 행사(대회출전) + 참가자 결과(지난달) */
+/* 급수 표기 정렬 순서: 유급자(9급→1급) → 품(품수·급수) → 단 */
+function gradeRank(lbl){
+  var m;
+  if(m=lbl.match(/^(\d+)급/)) return 100-Number(m[1]);
+  if(m=lbl.match(/^(\d+)품\s*(\d+)급/)) return 1000+Number(m[1])*100+(99-Number(m[2]));
+  if(m=lbl.match(/^(\d+)품/)) return 1000+Number(m[1])*100+99;
+  if(m=lbl.match(/^(\d+)단\s*(\d+)급/)) return 3000+Number(m[1])*100+(99-Number(m[2]));
+  if(m=lbl.match(/^(\d+)단/)) return 3000+Number(m[1])*100+99;
+  return 9999;
+}
+/* 대회 보고 자동 생성 — 행사(대회출전) + 참가자 결과 */
+function buildCompInfoFor(ev){
+  var att=(ev.attendees||[]).slice().sort(function(a,b){ return a.localeCompare(b,'ko'); });
+  var lines=[ String(ev.title||"대회"), String(ev.date||"")+" · 참가 "+att.length+"명", "", "[참가자와 결과]" ];
+  att.forEach(function(n){
+    var s=stuByName(n), lab=s?gradeLabelOf(s):"";
+    var R=(ev.results||{})[n]||{}, rs="";
+    if(R.ev){
+      var ks=Object.keys(R.ev);
+      rs=ks.map(function(k2){ var v=String(R.ev[k2]||"").trim(); return v?(k2+" "+v):k2; }).join(" · ");
+    }
+    if(!rs) rs=String(R.r||"").trim();
+    lines.push(maskName(n)+(lab?" ("+lab+")":"")+(rs?" — "+rs:""));
+  });
+  return lines.join("\n");
+}
 function buildCompInfo(){
   if(!DATA.work || !DATA.work.events){ return "행사 데이터가 없습니다. ⚙️ 설정에서 데이터를 먼저 불러와 주세요."; }
   var pm=prevYM(), out=[];
@@ -579,22 +610,55 @@ function buildCompInfo(){
     var ev=DATA.work.events[id]; if(!ev) return;
     if(ev.type!=="대회출전" && ev.type!=="대회") return;
     if(String(ev.date||"").slice(0,7)!==pm.key) return;
-    var att=(ev.attendees||[]).slice().sort(function(a,b){ return a.localeCompare(b,'ko'); });
-    var lines=[ String(ev.title||"대회"), String(ev.date||"")+" · 참가 "+att.length+"명", "" ];
-    att.forEach(function(n){
-      var s=stuByName(n), lab=s?gradeLabelOf(s):"";
-      var R=(ev.results||{})[n]||{}, rs="";
-      if(R.ev){
-        var ks=Object.keys(R.ev);
-        rs=ks.map(function(k2){ var v=String(R.ev[k2]||"").trim(); return v?(k2+" "+v):k2; }).join(" · ");
-      }
-      if(!rs) rs=String(R.r||"").trim();
-      lines.push(maskName(n)+(lab?" ("+lab+")":"")+(rs?"  —  "+rs:""));
-    });
-    out.push(lines.join("\n"));
+    out.push(buildCompInfoFor(ev));
   });
   if(!out.length) return pm.m+"월 대회 기록이 없습니다. 직접 적어 주세요.";
   return out.join("\n\n");
+}
+/* 일반 행사 기사 자동 생성 */
+function buildEventInfo(ev){
+  var att=(ev.attendees||[]);
+  var lines=[ String(ev.title||"행사"),
+    String(ev.date||"")+((ev.end&&ev.end!==ev.date)?("~"+ev.end):"")+(att.length?(" · 함께한 수련생 "+att.length+"명"):"") ];
+  var d=String(ev.desc||"").trim();
+  if(d){ lines.push(""); d.split("\n").forEach(function(l){ lines.push(l); }); }
+  if(att.length && att.length<=30){
+    lines.push(""); lines.push("[함께한 친구들]");
+    att.slice().sort(function(a,b){ return a.localeCompare(b,'ko'); }).forEach(function(n){
+      var s=stuByName(n), lab=s?gradeLabelOf(s):"";
+      lines.push(maskName(n)+(lab?" ("+lab+")":""));
+    });
+  }
+  return lines.join("\n");
+}
+/* [R2.2] 지난달 행사·대회를 찾아 섹션에 자동 추가 (이미 있으면 건너뜀) */
+function autoSyncEvents(){
+  var added=0;
+  if(DATA.work && DATA.work.events){
+    var pm=prevYM();
+    Object.keys(DATA.work.events).forEach(function(id){
+      var ev=DATA.work.events[id]; if(!ev) return;
+      if(String(ev.date||"").slice(0,7)!==pm.key) return;
+      if(ev.status==="취소") return;
+      if(ev.type==="승급심사") return;   /* 정기승급심사 앨범이 담당 */
+      var t=String(ev.title||"").trim();
+      var exists=ALBUMS.some(function(a){ return a.evId===id || (t && String(a.title||"").trim()===t); });
+      if(exists) return;
+      var isComp=(ev.type==="대회출전"||ev.type==="대회");
+      ALBUMS.push({ title:t||(isComp?"대회":"행사"), type:isComp?"comp":"article",
+        info:isComp?buildCompInfoFor(ev):buildEventInfo(ev), photos:[], evId:id });
+      added++;
+    });
+  }
+  /* 정기승급심사 앨범이 비어 있으면 자동 작성 */
+  ALBUMS.forEach(function(a){
+    if(a.type==="exam" && !String(a.info||"").trim() && DATA.exam){
+      var t2=buildExamInfo();
+      if(t2.indexOf("기록이 없습니다")<0 && t2.indexOf("데이터가 없습니다")<0){ a.info=t2; added++; }
+    }
+  });
+  if(added){ albumsSave(); renderAlbumsEditor(); }
+  return added;
 }
 
 /* ============================================================
@@ -605,6 +669,8 @@ function afterLoad(){
   var pc=0; for(var k in DATA.photoMap){ if(DATA.photoMap[k]&&DATA.photoMap[k].d) pc++; }
   setStatus((DATA.demo?"[데모] ":"")+"불러오기 완료 — 재원생 "+act+"명 · 사진 "+pc+"장\n생일자·국기원 후보가 2단계에 채워졌습니다.","ok");
   document.getElementById("hdrStatus").textContent=(DATA.demo?"[데모] ":"✓ ")+"재원생 "+act+"명 · 사진 "+pc+"장";
+  var evAdded=autoSyncEvents();   /* 지난달 행사·대회 자동 추가 */
+  if(evAdded) setStatus(document.getElementById("pullStatus").textContent+"\n지난달 행사·심사 "+evAdded+"건이 '지난달 우리 도장은~'에 자동 반영되었습니다.","ok");
   renderKkwEditor();
   renderBdayEditor();
 }
@@ -1666,65 +1732,120 @@ function magHeader(x2,H,no,title){
   x2.fillStyle=MAG.ink; x2.fillText(title, W/2, 160);
   return 206;
 }
-/* 기사(보고) 카드 */
-function drawInfoCard(no, al){
-  var c=magBase(), x2=c.getContext("2d"), H=c.height;
-  var top=magHeader(x2,H,no,al.title||"소식");
+/* 기사(보고) 카드 — 글자 수에 맞춰 최대 크기(최소 36px 보장), 넘치면 여러 장으로 분할
+   본문 문법: 빈 줄=간격 · [소제목] · 일반 줄(자동 줄바꿈, 이어지는 줄은 들여쓰기) */
+function drawInfoCards(no, al, hasPhotos){
+  var H=pageH();
   var lines=String(al.info||"").split("\n");
   var head=(lines[0]||"").trim(), sub=(lines[1]||"").trim();
   var raw=lines.slice(2);
   while(raw.length && !raw[0].trim()) raw.shift();
   while(raw.length && !raw[raw.length-1].trim()) raw.pop();
-  /* 흰 기사 카드 */
-  var cx0=58, cy0=top+12, cw0=W-116, ch0=H-cy0-92;
-  x2.fillStyle="#FFFDF6"; x2.strokeStyle=MAG.frame; x2.lineWidth=2;
-  rrect(x2,cx0,cy0,cw0,ch0,18); x2.fill(); x2.stroke();
-  var y=cy0+70;
-  x2.textAlign="center"; x2.textBaseline="middle";
-  var hf=58; x2.font=hf+"px 'Jua'";
-  while(hf>32 && x2.measureText(head).width>cw0-80){ hf-=2; x2.font=hf+"px 'Jua'"; }
-  x2.fillStyle=MAG.ink; x2.fillText(head, W/2, y); y+=hf*0.55+32;
-  if(sub){ x2.font="700 34px 'Gowun Dodum'"; x2.fillStyle="#7a6a50"; x2.fillText(sub, W/2, y); y+=52; }
-  x2.strokeStyle=MAG.accent; x2.lineWidth=3;
-  x2.beginPath(); x2.moveTo(cx0+50,y); x2.lineTo(cx0+cw0-50,y); x2.stroke();
-  x2.lineWidth=1; x2.beginPath(); x2.moveTo(cx0+50,y+6); x2.lineTo(cx0+cw0-50,y+6); x2.stroke();
-  y+=40;
-  /* 본문: 글자 수에 맞춰 "들어가는 가장 큰" 크기로 (짧은 글 = 큰 글자), 줄이 많으면 2단 */
-  var availH=cy0+ch0-36-y;
-  var bf=54, cols=1, wrapped=[];
-  for(;bf>=20;bf-=2){
-    x2.font="700 "+bf+"px 'Gowun Dodum'";
-    var step0=bf+16;
-    wrapped=[];
+  var mc=document.createElement("canvas").getContext("2d");
+  var cx0=58, cy0=218, cw0=W-116, ch0=H-cy0-92;
+  /* 제목 크기 → 본문 시작 위치 */
+  var hf=58; mc.font=hf+"px 'Jua'";
+  while(hf>32 && mc.measureText(head).width>cw0-80){ hf-=2; mc.font=hf+"px 'Jua'"; }
+  var bodyTop=70+hf*0.55+32+(sub?52:0)+46;
+  var availH=ch0-36-bodyTop;
+  function prep(bf, cols){
+    var colW=(cw0-100-(cols-1)*40)/cols-10;
+    mc.font="700 "+bf+"px 'Gowun Dodum'";
+    var arr=[];
     raw.forEach(function(l){
-      if(!l.trim()){ wrapped.push(""); return; }
-      wrapLines(x2,l,cw0-120).forEach(function(s2){ wrapped.push(s2); });
+      var s=l.trim();
+      if(!s){ arr.push({sp:1}); return; }
+      if(/^\[.+\]$/.test(s)){ arr.push({hd:s.slice(1,-1)}); return; }
+      wrapLines(mc,l,colW-36).forEach(function(w,wi){ arr.push({t:w, cont:wi>0}); });
     });
-    if(wrapped.length*step0<=availH){ cols=1; break; }
-    var w2=[];
-    raw.forEach(function(l){
-      if(!l.trim()){ w2.push(""); return; }
-      wrapLines(x2,l,(cw0-150)/2).forEach(function(s2){ w2.push(s2); });
-    });
-    if(Math.ceil(w2.length/2)*step0<=availH){ cols=2; wrapped=w2; break; }
+    return arr;
   }
-  var step=bf+16;
-  /* 본문 블록 세로 중앙 배치 (내용이 적을 때 위로 몰리지 않게) */
-  var usedH=(cols===1?wrapped.length:Math.ceil(wrapped.length/2))*step;
-  y+=Math.max(0,(availH-usedH)/2*0.7);
-  x2.font="700 "+bf+"px 'Gowun Dodum'"; x2.fillStyle=MAG.body; x2.textAlign="left";
-  if(cols===1){
-    var yy=y+step/2;
-    wrapped.forEach(function(l){ if(l){ x2.fillText(l, cx0+60, yy); yy+=step; } else yy+=step*0.5; });
-  }else{
-    var per=Math.ceil(wrapped.length/2), colW=(cw0-150)/2;
-    for(var ci=0;ci<2;ci++){
-      var yy2=y+step/2;
-      wrapped.slice(ci*per,(ci+1)*per).forEach(function(l){ if(l){ x2.fillText(l, cx0+50+ci*(colW+50), yy2); yy2+=step; } else yy2+=step*0.5; });
+  function ih(it,step){ return it.sp?step*0.5:(it.hd?step*1.4:step); }
+  function hOf(arr,step){ var h=0; arr.forEach(function(it){ h+=ih(it,step); }); return h; }
+  /* 1) 한 장에 들어가는 최대 글자 크기 (36px까지, 1~3단) */
+  var one=null;
+  for(var bf=54; bf>=36 && !one; bf-=2){
+    var step0=bf+16;
+    for(var cc=1; cc<=3; cc++){
+      var arr=prep(bf,cc);
+      var per=Math.ceil(arr.length/cc), maxH=0;
+      for(var ci=0;ci<cc;ci++) maxH=Math.max(maxH, hOf(arr.slice(ci*per,(ci+1)*per),step0));
+      if(maxH<=availH){
+        var colArrs=[]; for(var c2=0;c2<cc;c2++) colArrs.push(arr.slice(c2*per,(c2+1)*per));
+        one={bf:bf, colArrs:colArrs}; break;
+      }
     }
   }
-  footer(x2,H);
-  return c;
+  var pagePlans;
+  if(one){ pagePlans=[one]; }
+  else{
+    /* 2) 여러 장 분할 — 40px 고정, 줄이 짧으면 2단 */
+    var bfP=40, stepP=bfP+16;
+    mc.font="700 "+bfP+"px 'Gowun Dodum'";
+    var colW2=(cw0-140)/2-46, fit=0, tot=0;
+    raw.forEach(function(l){ var s=l.trim(); if(!s||/^\[.+\]$/.test(s)) return; tot++; if(mc.measureText(l).width<=colW2) fit++; });
+    var colsP=(tot>0 && fit/tot>0.9)?2:1;
+    var arrP=prep(bfP,colsP);
+    var colChunks=[], cur=[], curH=0;
+    arrP.forEach(function(it){
+      var h=ih(it,stepP);
+      if(curH+h>availH && cur.length){ colChunks.push(cur); cur=[]; curH=0; if(it.sp) return; }
+      cur.push(it); curH+=h;
+    });
+    if(cur.length) colChunks.push(cur);
+    pagePlans=[];
+    for(var pi=0; pi<colChunks.length; pi+=colsP){
+      pagePlans.push({bf:bfP, colArrs:colChunks.slice(pi,pi+colsP)});
+    }
+  }
+  /* 렌더 */
+  var out=[], total=pagePlans.length;
+  pagePlans.forEach(function(pg,pi){
+    var c=magBase(), x2=c.getContext("2d");
+    var bno=(total>1||hasPhotos)?(no+"-"+(pi+1)):no;
+    magHeader(x2,H,bno,al.title||"소식");
+    x2.fillStyle="#FFFDF6"; x2.strokeStyle=MAG.frame; x2.lineWidth=2;
+    rrect(x2,cx0,cy0,cw0,ch0,18); x2.fill(); x2.stroke();
+    var y=cy0+70;
+    x2.textAlign="center"; x2.textBaseline="middle";
+    x2.font=hf+"px 'Jua'"; x2.fillStyle=MAG.ink;
+    x2.fillText(head, W/2, y); y+=hf*0.55+32;
+    var subT=(pi===0)?sub:((sub?sub+" ":"")+"(이어서 "+(pi+1)+"/"+total+")");
+    if(subT){ x2.font="700 34px 'Gowun Dodum'"; x2.fillStyle="#7a6a50"; x2.fillText(subT, W/2, y); }
+    if(sub||pi>0) y+=52;
+    x2.strokeStyle=MAG.accent; x2.lineWidth=3;
+    x2.beginPath(); x2.moveTo(cx0+50,y); x2.lineTo(cx0+cw0-50,y); x2.stroke();
+    x2.lineWidth=1; x2.beginPath(); x2.moveTo(cx0+50,y+6); x2.lineTo(cx0+cw0-50,y+6); x2.stroke();
+    y+=40;
+    var bf2=pg.bf, step=bf2+16, cols=pg.colArrs.length;
+    var colW=(cw0-100-(cols-1)*40)/cols;
+    /* 세로 중앙 (가장 높은 칼럼 기준) */
+    var maxH2=0; pg.colArrs.forEach(function(a){ maxH2=Math.max(maxH2,hOf(a,step)); });
+    var y0=y+Math.max(0,(availH-maxH2)/2*0.7);
+    x2.textAlign="left";
+    pg.colArrs.forEach(function(arr,ci){
+      var x0=cx0+50+ci*(colW+40), yy=y0+step/2;
+      arr.forEach(function(it){
+        if(it.sp){ yy+=step*0.5; return; }
+        if(it.hd){
+          yy+=step*0.25;
+          x2.font=Math.round(bf2*0.78)+"px 'Jua'"; x2.fillStyle=MAG.accent;
+          x2.fillText(it.hd, x0, yy);
+          var tw=x2.measureText(it.hd).width;
+          x2.strokeStyle=MAG.accent; x2.lineWidth=2;
+          x2.beginPath(); x2.moveTo(x0,yy+bf2*0.5); x2.lineTo(x0+tw,yy+bf2*0.5); x2.stroke();
+          yy+=step*1.15;
+          return;
+        }
+        x2.font="700 "+bf2+"px 'Gowun Dodum'"; x2.fillStyle=MAG.body;
+        x2.fillText(it.t, x0+(it.cont?36:0), yy);
+        yy+=step;
+      });
+    });
+    footer(x2,H);
+    out.push({name:"보고_"+(al.title||"")+(total>1?("_"+(pi+1)):""), canvas:c});
+  });
+  return out;
 }
 function drawAlbumPages(no, ai, startIdx){
   var pages=[], H=pageH(), al=ALBUMS[ai];
@@ -1824,11 +1945,9 @@ function makeAll(){
       if(p.kind==="kkw") MADE=MADE.concat(drawKkwPages(nn, ks));
       if(p.kind==="bday") MADE=MADE.concat(drawBdayPages(nn, bs));
       if(p.kind==="album"){
-        var al2=ALBUMS[p.ai];
-        if(p.info){
-          MADE.push({name:"보고_"+(al2.title||""), canvas:drawInfoCard((al2.photos.length?nn+"-1":nn), al2)});
-        }
-        MADE=MADE.concat(drawAlbumPages(nn, p.ai, p.info?1:0));
+        var al2=ALBUMS[p.ai], infoPages=[];
+        if(p.info){ infoPages=drawInfoCards(nn, al2, al2.photos.length>0); MADE=MADE.concat(infoPages); }
+        MADE=MADE.concat(drawAlbumPages(nn, p.ai, infoPages.length));
       }
       if(p.kind==="check") MADE.push({name:"실천체크리스트", canvas:drawChecklist(nn)});
     });
