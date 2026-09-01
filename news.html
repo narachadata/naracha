@@ -60,12 +60,14 @@ details.help li{ margin:4px 0; }
 <header>
   <h1>📰 나라차 소식지 제작기</h1>
   <span class="ver" id="verLabel"></span>
+  <span id="hdrStatus" style="margin-left:auto;font-size:13px;color:#666"></span>
+  <button class="sec min" id="btnSettings" title="접속키·데이터 연결 설정">⚙️ 설정</button>
 </header>
 <main>
 
-<!-- 1단계: 데이터 -->
-<section class="card">
-  <h2><span class="step">1단계</span> 나라차 프로그램 데이터 불러오기</h2>
+<!-- 설정: 데이터 연결 (평소 숨김 — 접속키는 처음 1회만 입력하면 자동 불러오기) -->
+<section class="card" id="settingsCard" style="display:none">
+  <h2>⚙️ 설정 — 나라차 데이터 연결</h2>
   <div class="row">
     <div style="flex:2">
       <label class="fl">접속키 (나라차 프로그램에서 쓰는 키와 같은 것)</label>
@@ -81,6 +83,7 @@ details.help li{ margin:4px 0; }
   <div class="status" id="pullStatus">아직 데이터를 불러오지 않았습니다. 접속키를 넣고 [데이터 불러오기]를 누르세요.</div>
   <details class="help"><summary>도움말</summary>
     <ul>
+      <li>접속키는 <b>처음 한 번만</b> 입력하면 저장되어, 다음부터는 열 때마다 자동으로 데이터를 불러옵니다.</li>
       <li>데이터는 나라차 프로그램의 클라우드 창고(구글 시트)에서 <b>읽기만</b> 합니다. 원본 데이터는 절대 바뀌지 않습니다.</li>
       <li>명단(생일)·국기원 심사 정보·수련생 사진을 가져옵니다.</li>
       <li>인터넷이 안 되거나 키가 없으면 [데모 데이터]로 미리 화면을 볼 수 있습니다.</li>
@@ -88,9 +91,9 @@ details.help li{ margin:4px 0; }
   </details>
 </section>
 
-<!-- 2단계: 기본 설정 -->
+<!-- 1단계: 기본 설정 -->
 <section class="card">
-  <h2><span class="step">2단계</span> 소식지 기본 설정</h2>
+  <h2><span class="step">1단계</span> 소식지 기본 설정</h2>
   <div class="row">
     <div><label class="fl">연도</label><select id="inYear"></select></div>
     <div><label class="fl">월 (소식지의 달)</label><select id="inMonth"></select></div>
@@ -131,7 +134,7 @@ details.help li{ margin:4px 0; }
 
 <!-- 3단계: 페이지 내용 -->
 <section class="card">
-  <h2><span class="step">3단계</span> 페이지 내용 채우기</h2>
+  <h2><span class="step">2단계</span> 페이지 내용 채우기</h2>
   <div class="hint">체크를 끄면 그 페이지는 빠집니다. 목차는 자동으로 만들어집니다.</div>
 
   <div class="pgToggle"><input type="checkbox" id="pgCover" checked><span>표지</span></div>
@@ -169,7 +172,7 @@ details.help li{ margin:4px 0; }
     <label class="fl">부제목</label>
     <input type="text" id="inKkwSub" placeholder="예: 26년 9월, 12월 국기원 심사 응시예정자">
     <label class="fl">대상자 선택 (자동 후보 — 체크된 사람만 실립니다)</label>
-    <div class="chipList" id="kkwList"><span class="hint">1단계에서 데이터를 불러오면 후보가 나타납니다.</span></div>
+    <div class="chipList" id="kkwList"><span class="hint">데이터를 불러오면 후보가 자동으로 나타납니다. (안 나오면 ⚙️ 설정에서 접속키 확인)</span></div>
     <div class="row" style="margin-top:8px">
       <div><input type="text" id="inKkwAddName" placeholder="직접 추가: 이름"></div>
       <div><input type="text" id="inKkwAddLv" placeholder="표기 (예: 1품)"></div>
@@ -179,7 +182,7 @@ details.help li{ margin:4px 0; }
 
   <div class="pgToggle"><input type="checkbox" id="pgBday" checked><span>이달의 생일자</span></div>
   <div class="sub" id="subBday">
-    <div class="chipList" id="bdayList"><span class="hint">1단계에서 데이터를 불러오면 이달 생일자가 나타납니다.</span></div>
+    <div class="chipList" id="bdayList"><span class="hint">데이터를 불러오면 이달 생일자가 자동으로 나타납니다.</span></div>
     <div class="hint">성인 수련생은 사진 대신 로고와 「님」 호칭으로 표시됩니다.</div>
   </div>
 
@@ -196,7 +199,7 @@ details.help li{ margin:4px 0; }
 
 <!-- 4단계: 만들기 -->
 <section class="card">
-  <h2><span class="step">4단계</span> 소식지 만들기</h2>
+  <h2><span class="step">3단계</span> 소식지 만들기</h2>
   <div class="row">
     <div style="flex:0 0 auto"><button class="pri" id="btnMake">🖼️ 소식지 만들기 (미리보기)</button></div>
     <div style="flex:0 0 auto"><button class="sec" id="btnSaveAll">💾 전체 PNG 저장</button></div>
@@ -212,7 +215,7 @@ details.help li{ margin:4px 0; }
    나라차 소식지 제작기
    var APP_VER 규칙: 수정할 때마다 +0.1, 내리지 않는다.
    ============================================================ */
-var APP_VER = "v1.2"; /* R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
+var APP_VER = "v1.3"; /* R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
 document.getElementById("verLabel").textContent = APP_VER;
 
 var GAS = "https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
@@ -289,6 +292,15 @@ function pullStore(store){
 function setStatus(msg, cls){
   var el=document.getElementById("pullStatus");
   el.textContent=msg; el.className="status"+(cls?(" "+cls):"");
+  /* 헤더에도 요약 표시 + 실패 시 설정 화면 자동 열기 */
+  var hs=document.getElementById("hdrStatus");
+  if(cls==="err"){ hs.textContent="⚠️ 데이터 연결 안 됨"; hs.style.color="#b23b3b"; showSettings(true); }
+  else if(cls==="ok"){ hs.style.color="#2c6b2f"; }
+  else { hs.textContent="데이터 불러오는 중…"; hs.style.color="#666"; }
+}
+function showSettings(on){
+  document.getElementById("settingsCard").style.display=on?"":"none";
+  if(on) document.getElementById("settingsCard").scrollIntoView({behavior:"smooth"});
 }
 function doPull(){
   S.key = document.getElementById("inKey").value.trim();
@@ -437,7 +449,8 @@ function kkwCandidates(){
 function afterLoad(){
   var act=activeStudents().length;
   var pc=0; for(var k in DATA.photoMap){ if(DATA.photoMap[k]&&DATA.photoMap[k].d) pc++; }
-  setStatus((DATA.demo?"[데모] ":"")+"불러오기 완료 — 재원생 "+act+"명 · 사진 "+pc+"장\n생일자·국기원 후보가 아래 3단계에 채워졌습니다.","ok");
+  setStatus((DATA.demo?"[데모] ":"")+"불러오기 완료 — 재원생 "+act+"명 · 사진 "+pc+"장\n생일자·국기원 후보가 2단계에 채워졌습니다.","ok");
+  document.getElementById("hdrStatus").textContent=(DATA.demo?"[데모] ":"✓ ")+"재원생 "+act+"명 · 사진 "+pc+"장";
   renderKkwEditor();
   renderBdayEditor();
 }
@@ -1420,6 +1433,10 @@ function initInputs(){
 
   document.getElementById("btnPull").onclick=doPull;
   document.getElementById("btnDemo").onclick=doDemo;
+  document.getElementById("btnSettings").onclick=function(){
+    var el=document.getElementById("settingsCard");
+    showSettings(el.style.display==="none");
+  };
   document.getElementById("btnMake").onclick=makeAll;
   document.getElementById("btnSaveAll").onclick=saveAllPng;
   document.getElementById("btnKkwAdd").onclick=function(){
@@ -1489,8 +1506,10 @@ idbGet("cover").then(function(v){
 idbGet("bgimg").then(function(v){
   if(v){ BGIMG=v; document.getElementById("bgHint").textContent="배경 이미지가 등록되어 있습니다. ✓"; }
 });
-/* R1.2: 저장된 접속키가 있으면 열 때 자동으로 데이터 불러오기 */
+/* R1.2: 저장된 접속키가 있으면 열 때 자동으로 데이터 불러오기
+   R1.3: 접속키는 ⚙️ 설정으로 이동 — 키가 없을 때만 설정 화면을 자동으로 연다 */
 if(S.key){ setStatus("저장된 접속키로 자동으로 불러오는 중…"); doPull(); }
+else{ showSettings(true); document.getElementById("hdrStatus").textContent="접속키를 설정에서 입력하세요"; }
 </script>
 </body>
 </html>
