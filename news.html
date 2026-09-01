@@ -252,7 +252,7 @@ details.help li{ margin:4px 0; }
    나라차 소식지 제작기
    var APP_VER 규칙: 수정할 때마다 +0.1, 내리지 않는다.
    ============================================================ */
-var APP_VER = "v2.3"; /* R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
+var APP_VER = "v2.4"; /* R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
 document.getElementById("verLabel").textContent = APP_VER;
 
 var GAS = "https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
@@ -520,32 +520,45 @@ function maskName(n){
   var mid=""; for(var i=1;i<n.length-1;i++) mid+="O";
   return n.charAt(0)+mid+n.charAt(n.length-1);
 }
-/* 학년 표기 (나라차 프로그램 studentGrade와 같은 규칙 — 3월 학년도) */
-function gradeLabelOf(s){
-  function idxToLabel(idx){
-    if(idx==null) return "";
-    if(idx>=1&&idx<=6) return "초"+idx;
-    if(idx>=7&&idx<=9) return "중"+(idx-6);
-    if(idx>=10&&idx<=12) return "고"+(idx-9);
-    if(idx>=13) return "성인";
-    if(idx===0) return "7세";
-    if(idx>=-2) return (idx+7)+"세";
-    return "유아";
-  }
+/* 학년 (나라차 프로그램 studentGrade와 같은 규칙 — 3월 학년도) */
+function gradeIdxOf(s){
   var syNow=(Number(S.month)>=3)?Number(S.year):(Number(S.year)-1);
   if(s && s.schoolGrade && s.schoolGradeY){
-    var m0=String(s.schoolGrade).trim().match(/^(초|중|고)\s*(\d)/), base=null;
-    if(m0) base=(m0[1]==="초"?0:(m0[1]==="중"?6:9))+Number(m0[2]);
-    if(base!=null) return idxToLabel(base+(syNow-Number(s.schoolGradeY)));
+    var m0=String(s.schoolGrade).trim().match(/^(초|중|고)\s*(\d)/);
+    if(m0) return (m0[1]==="초"?0:(m0[1]==="중"?6:9))+Number(m0[2])+(syNow-Number(s.schoolGradeY));
   }
   var by=fixedBy(s||{}), m=String(by||"").match(/^(\d{4})/);
-  if(!m) return "";
-  return idxToLabel(syNow-Number(m[1])-6);
+  if(!m) return null;
+  return syNow-Number(m[1])-6;
+}
+function gradeLabelOf(s){
+  var idx=gradeIdxOf(s);
+  if(idx==null) return "";
+  if(idx>=1&&idx<=6) return "초"+idx;
+  if(idx>=7&&idx<=9) return "중"+(idx-6);
+  if(idx>=10&&idx<=12) return "고"+(idx-9);
+  if(idx>=13) return "성인";
+  if(idx===0) return "7세";
+  if(idx>=-2) return (idx+7)+"세";
+  return "유아";
 }
 function stuByName(n){
   var l=(DATA.att&&DATA.att.roster&&DATA.att.roster.list)||[];
   for(var i=0;i<l.length;i++){ if(l[i]&&l[i].n===n) return l[i]; }
   return null;
+}
+/* 명단 정렬: 학년 낮은 순 → 높은 순 (같은 학년은 생일 늦은 순, 학년 모르면 뒤·이름순) */
+function ageSortNames(names){
+  return names.slice().sort(function(a,b){
+    var sa=stuByName(a), sb=stuByName(b);
+    var ga=sa?gradeIdxOf(sa):null, gb=sb?gradeIdxOf(sb):null;
+    if(ga!=null&&gb!=null&&ga!==gb) return ga-gb;
+    if(ga!=null&&gb==null) return -1;
+    if(ga==null&&gb!=null) return 1;
+    var ba=sa?String(fixedBy(sa)||""):"", bb=sb?String(fixedBy(sb)||""):"";
+    if(ba&&bb&&ba!==bb) return bb.localeCompare(ba);
+    return a.localeCompare(b,'ko');
+  });
 }
 /* 승급심사 보고 자동 생성 — naracha-exam 창고 history 기준(지난달) */
 function buildExamInfo(){
@@ -601,7 +614,7 @@ function gradeRank(lbl){
 }
 /* 대회 보고 자동 생성 — 행사(대회출전) + 참가자 결과 */
 function buildCompInfoFor(ev){
-  var att=(ev.attendees||[]).slice().sort(function(a,b){ return a.localeCompare(b,'ko'); });
+  var att=ageSortNames(ev.attendees||[]);   /* 어린 순 → 나이든 순 */
   var lines=[ String(ev.title||"대회"), String(ev.date||"")+" · 참가 "+att.length+"명", "", "[참가자와 결과]" ];
   att.forEach(function(n){
     var s=stuByName(n), lab=s?gradeLabelOf(s):"";
@@ -636,7 +649,7 @@ function buildEventInfo(ev){
   if(d){ lines.push(""); d.split("\n").forEach(function(l){ lines.push(l); }); }
   if(att.length && att.length<=30){
     lines.push(""); lines.push("[함께한 친구들]");
-    att.slice().sort(function(a,b){ return a.localeCompare(b,'ko'); }).forEach(function(n){
+    ageSortNames(att).forEach(function(n){   /* 어린 순 → 나이든 순 */
       var s=stuByName(n), lab=s?gradeLabelOf(s):"";
       lines.push(maskName(n)+(lab?" ("+lab+")":""));
     });
