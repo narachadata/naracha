@@ -103,8 +103,8 @@ details.help li{ margin:4px 0; }
     <div>
       <label class="fl">이미지 비율</label>
       <select id="inRatio">
-        <option value="11">1:1 정사각형 (1080×1080, 기본)</option>
-        <option value="45">4:5 세로형 (1080×1350)</option>
+        <option value="45">4:5 세로형 (1080×1350, 기본)</option>
+        <option value="11">1:1 정사각형 (1080×1080)</option>
         <option value="916">9:16 세로형 (1080×1920)</option>
       </select>
     </div>
@@ -147,7 +147,9 @@ details.help li{ margin:4px 0; }
   <div class="sub" id="subVirtue">
     <div class="row">
       <div><label class="fl">이달의 덕목</label><input type="text" id="inVirtueName" placeholder="예: 정의"></div>
+      <div style="flex:0 0 auto"><label class="fl">&nbsp;</label><button class="sec min" id="btnVirtueAuto" title="1~12월 기본 덕목(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔)으로 채웁니다">📖 이달 기본 덕목 넣기</button></div>
     </div>
+    <div class="hint">비워 두면 이달의 기본 덕목이 자동으로 들어갑니다. 내용은 자유롭게 고쳐 쓰세요.</div>
     <label class="fl">덕목 정의 (한두 문장)</label>
     <textarea id="inVirtueDef" rows="2" placeholder="예: 옳고 그름을 판단하여 옳은 것은 지키고 잘못된 것은 따르지 않는 것."></textarea>
     <label class="fl">실천 항목 (한 줄에 하나씩, 번호는 자동)</label>
@@ -189,7 +191,7 @@ details.help li{ margin:4px 0; }
     <div class="hint">성인 수련생은 사진 대신 로고와 「님」 호칭으로 표시됩니다.</div>
   </div>
 
-  <div class="pgToggle"><input type="checkbox" id="pgAlbum" checked><span>사진첩 (여러 개 가능)</span></div>
+  <div class="pgToggle"><input type="checkbox" id="pgAlbum" checked><span>지난달 우리 도장은~ (행사 보고·사진첩)</span></div>
   <div class="sub" id="subAlbum">
     <div id="albumsBox"></div>
     <button class="sec min" id="btnAlbumAdd" style="margin-top:8px">➕ 사진첩 추가</button>
@@ -238,7 +240,7 @@ details.help li{ margin:4px 0; }
    나라차 소식지 제작기
    var APP_VER 규칙: 수정할 때마다 +0.1, 내리지 않는다.
    ============================================================ */
-var APP_VER = "v1.9"; /* R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
+var APP_VER = "v2.0"; /* R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
 document.getElementById("verLabel").textContent = APP_VER;
 
 var GAS = "https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
@@ -247,7 +249,7 @@ var LSK = "naracha-newsletter";   /* 편집 내용(글) 저장 — 이 프로그
 
 /* ── 편집 상태 ── */
 var S = {
-  key:"", year:(new Date()).getFullYear(), month:(new Date()).getMonth()+1, ratio:"11",
+  key:"", year:(new Date()).getFullYear(), month:(new Date()).getMonth()+1, ratio:"45",
   virtueName:"", virtueDef:"", virtueItems:"",
   schedMain:"", schedClosed:"",
   calDays:{}, calColors:{}, calNote:"",
@@ -259,13 +261,16 @@ var S = {
 try{ var _s=JSON.parse(localStorage.getItem(LSK)||"null"); if(_s&&_s.year){ for(var k in _s) S[k]=_s[k]; } }catch(e){}
 /* R1.2: 기본 비율 1:1 전환 — 이전에 저장된 9:16 기본값을 한 번만 1:1로 바꿔 준다 */
 if(!S._ratioV2){ S.ratio="11"; S._ratioV2=1; }
+/* R2.0: 기본 비율 4:5 전환 (앞으로 4:5로 발행) — 한 번만 강제 */
+if(!S._ratioV45){ S.ratio="45"; S._ratioV45=1; }
 if(!S.calColors) S.calColors={};   /* R1.7 이전 저장분 보정 */
 function saveS(){ try{ localStorage.setItem(LSK, JSON.stringify(S)); }catch(e){} }
 
 /* ── 불러온 데이터 ── */
-var DATA = { att:null, photoMap:{}, loaded:false, demo:false };
-var ALBUMS = [];        /* 사진첩 목록 [{title, photos:[dataURL...]}] */
-var ALBUM_DEFAULTS = ["체력훈련","태권도수련","정기승급심사"];   /* 기본 사진첩 제목 */
+var DATA = { att:null, photoMap:{}, exam:null, work:null, loaded:false, demo:false };
+var ALBUMS = [];        /* "지난달 우리 도장은~" 목록 [{title, type:'photo'|'exam'|'comp'|'article', info:"", photos:[dataURL...]}] */
+var ALBUM_DEFAULTS = [ {t:"체력훈련",ty:"photo"}, {t:"태권도수련",ty:"photo"}, {t:"정기승급심사",ty:"exam"} ];
+var ALBUM_TYPES = [ ["photo","사진만"], ["exam","승급심사 보고"], ["comp","대회 보고"], ["article","직접 쓰는 기사"] ];
 function albumsSave(){ idbSet("albums", JSON.stringify(ALBUMS)); }
 function albumPhotoCount(){ var n=0; ALBUMS.forEach(function(a){ n+=a.photos.length; }); return n; }
 var LOGO = null;        /* 로고 dataURL */
@@ -334,13 +339,19 @@ function doPull(){
   if(!S.key){ setStatus("접속키를 입력해 주세요.","err"); return; }
   saveS();
   setStatus("클라우드에서 데이터를 불러오는 중…");
-  Promise.all([ pullStore("att"), pullStore("photo") ]).then(function(rs){
-    var att=rs[0], photo=rs[1];
+  Promise.all([
+    pullStore("att"), pullStore("photo"),
+    pullStore("exam").catch(function(){ return null; }),   /* 심사·행사는 실패해도 진행 */
+    pullStore("work").catch(function(){ return null; })
+  ]).then(function(rs){
+    var att=rs[0], photo=rs[1], exam=rs[2], work=rs[3];
     if(!att || !att.attV || !att.roster || !Array.isArray(att.roster.list)){
       setStatus("명단 데이터를 해석하지 못했습니다. 접속키를 확인해 주세요.","err"); return;
     }
     DATA.att=att; DATA.demo=false;
     DATA.photoMap=(photo && photo.photoV && photo.map)?photo.map:{};
+    DATA.exam=(exam && exam.examV && exam.examData)?exam.examData:(att.examData||null);   /* 옛 버전은 att에 내장 */
+    DATA.work=(work && work.workV)?work:null;
     DATA.loaded=true;
     afterLoad();
   }).catch(function(e){
@@ -374,6 +385,19 @@ function doDemo(){
     examConfirm:{map:{ "김태권":{kconf:1}, "박선수":{kconf:1}, "최수련":{mkkw:1} }},
     saengByFix:{map:{}} };
   DATA.photoMap=pm; DATA.loaded=true; DATA.demo=true;
+  /* 데모 심사·대회 기록 (지난달 기준) */
+  var pk=prevYM().key;
+  DATA.exam={ students:{
+    e1:{ id:'e1', name:'김태권', history:[{date:pk+"-21", grade:"1품 16급", s1:18, s2:60}] },
+    e2:{ id:'e2', name:'이도장', history:[{date:pk+"-21", grade:"5급 파란띠", s1:16, s2:58}] },
+    e3:{ id:'e3', name:'박선수', history:[{date:pk+"-22", grade:"4급 보라띠", s1:12, s2:40}] },
+    e4:{ id:'e4', name:'최수련', history:[{date:pk+"-22", grade:"5급 파란띠", s1:17, s2:55}] }
+  }};
+  DATA.work={ workV:1, events:{
+    ev1:{ id:'ev1', type:'대회출전', title:'26경희대라이온스컵태권도대회', date:pk+"-03",
+      attendees:['김태권','이도장','박선수'],
+      results:{ '김태권':{ev:{'품새개인전':'금메달'}}, '이도장':{ev:{'품새복식전':'은메달','격파':'동메달'}}, '박선수':{r:'참가'} } }
+  }};
   afterLoad();
 }
 
@@ -468,6 +492,109 @@ function kkwCandidates(){
   });
   out.sort(function(a,b){ return kkwLvOrder(a.target)-kkwLvOrder(b.target) || (a.n<b.n?-1:1); });
   return out;
+}
+
+/* ── [R2.0] "지난달 우리 도장은~" 보고 자료 (발행 전달 기준) ── */
+function prevYM(){
+  var y=Number(S.year), m=Number(S.month)-1;
+  if(m===0){ m=12; y--; }
+  return { y:y, m:m, key:y+"-"+("0"+m).slice(-2) };
+}
+/* 이름 마스킹: 가운데 글자 O (홍길동→홍O동, 김호→김O) */
+function maskName(n){
+  n=String(n||"").trim();
+  if(n.length<=1) return n;
+  if(n.length===2) return n.charAt(0)+"O";
+  var mid=""; for(var i=1;i<n.length-1;i++) mid+="O";
+  return n.charAt(0)+mid+n.charAt(n.length-1);
+}
+/* 학년 표기 (나라차 프로그램 studentGrade와 같은 규칙 — 3월 학년도) */
+function gradeLabelOf(s){
+  function idxToLabel(idx){
+    if(idx==null) return "";
+    if(idx>=1&&idx<=6) return "초"+idx;
+    if(idx>=7&&idx<=9) return "중"+(idx-6);
+    if(idx>=10&&idx<=12) return "고"+(idx-9);
+    if(idx>=13) return "성인";
+    if(idx===0) return "7세";
+    if(idx>=-2) return (idx+7)+"세";
+    return "유아";
+  }
+  var syNow=(Number(S.month)>=3)?Number(S.year):(Number(S.year)-1);
+  if(s && s.schoolGrade && s.schoolGradeY){
+    var m0=String(s.schoolGrade).trim().match(/^(초|중|고)\s*(\d)/), base=null;
+    if(m0) base=(m0[1]==="초"?0:(m0[1]==="중"?6:9))+Number(m0[2]);
+    if(base!=null) return idxToLabel(base+(syNow-Number(s.schoolGradeY)));
+  }
+  var by=fixedBy(s||{}), m=String(by||"").match(/^(\d{4})/);
+  if(!m) return "";
+  return idxToLabel(syNow-Number(m[1])-6);
+}
+function stuByName(n){
+  var l=(DATA.att&&DATA.att.roster&&DATA.att.roster.list)||[];
+  for(var i=0;i<l.length;i++){ if(l[i]&&l[i].n===n) return l[i]; }
+  return null;
+}
+/* 승급심사 보고 자동 생성 — naracha-exam 창고 history 기준(지난달) */
+function buildExamInfo(){
+  if(!DATA.exam || !DATA.exam.students){ return "심사 데이터가 없습니다. ⚙️ 설정에서 데이터를 먼저 불러와 주세요."; }
+  var pm=prevYM(), stu=DATA.exam.students, entries=[], seen={};
+  Object.keys(stu).forEach(function(id){
+    var r=stu[id]; if(!r || r._deleted || !r.name) return;
+    (r.history||[]).forEach(function(h){
+      if(!h || !h.date || String(h.date).slice(0,7)!==pm.key) return;
+      var k=r.name+"|"+h.date; if(seen[k]) return; seen[k]=1;
+      var tot=(h.s1!=null&&h.s2!=null)?(h.s1+h.s2):null;
+      entries.push({ name:r.name, date:h.date, grade:String(h.grade||""), tot:tot });
+    });
+  });
+  if(!entries.length){
+    /* history가 없으면 현재 회차(examDate) 기준 */
+    Object.keys(stu).forEach(function(id){
+      var r=stu[id]; if(!r || r._deleted || !r.name) return;
+      var d=String(r.examDate||""); if(d.slice(0,7)!==pm.key) return;
+      var k=r.name+"|"+d; if(seen[k]) return; seen[k]=1;
+      entries.push({ name:r.name, date:d, grade:"", tot:(r.examPass===false)?0:((r.examPass===true)?100:null) });
+    });
+  }
+  if(!entries.length) return pm.m+"월 승급심사 기록이 없습니다. 직접 적어 주세요.";
+  var dates={}; entries.forEach(function(e){ dates[e.date]=1; });
+  var dstr=Object.keys(dates).sort().map(function(d){ return Number(d.slice(8,10))+"일"; }).join("·");
+  var pass=entries.filter(function(e){ return e.tot==null || e.tot>=60; }).length;
+  var fail=entries.length-pass;
+  var txt="정기승급심사 결과\n"+pm.m+"월 "+dstr+" 실시\n\n";
+  txt+="응시 인원 : "+entries.length+"명\n";
+  txt+="합격 : "+pass+"명"+(fail?(" · 불합격 "+fail+"명"):"  (전원 합격 🎉)");
+  var gset={};
+  entries.forEach(function(e){ var g=(e.grade||"").split(" ").slice(0,2).join(" ").trim(); if(g) gset[g]=(gset[g]||0)+1; });
+  var gl=Object.keys(gset);
+  if(gl.length) txt+="\n취득 급수 : "+gl.map(function(g){ return g+" "+gset[g]+"명"; }).join(" · ");
+  return txt;
+}
+/* 대회 보고 자동 생성 — 행사(대회출전) + 참가자 결과(지난달) */
+function buildCompInfo(){
+  if(!DATA.work || !DATA.work.events){ return "행사 데이터가 없습니다. ⚙️ 설정에서 데이터를 먼저 불러와 주세요."; }
+  var pm=prevYM(), out=[];
+  Object.keys(DATA.work.events).forEach(function(id){
+    var ev=DATA.work.events[id]; if(!ev) return;
+    if(ev.type!=="대회출전" && ev.type!=="대회") return;
+    if(String(ev.date||"").slice(0,7)!==pm.key) return;
+    var att=(ev.attendees||[]).slice().sort(function(a,b){ return a.localeCompare(b,'ko'); });
+    var lines=[ String(ev.title||"대회"), String(ev.date||"")+" · 참가 "+att.length+"명", "" ];
+    att.forEach(function(n){
+      var s=stuByName(n), lab=s?gradeLabelOf(s):"";
+      var R=(ev.results||{})[n]||{}, rs="";
+      if(R.ev){
+        var ks=Object.keys(R.ev);
+        rs=ks.map(function(k2){ var v=String(R.ev[k2]||"").trim(); return v?(k2+" "+v):k2; }).join(" · ");
+      }
+      if(!rs) rs=String(R.r||"").trim();
+      lines.push(maskName(n)+(lab?" ("+lab+")":"")+(rs?"  —  "+rs:""));
+    });
+    out.push(lines.join("\n"));
+  });
+  if(!out.length) return pm.m+"월 대회 기록이 없습니다. 직접 적어 주세요.";
+  return out.join("\n\n");
 }
 
 /* ============================================================
@@ -602,6 +729,41 @@ function renderAlbumsEditor(){
     dD.appendChild(del);
     row.appendChild(tD); row.appendChild(fD); row.appendChild(dD);
     wrap.appendChild(row);
+    /* 종류 선택 + 보고 글(기사) — 승급심사/대회는 프로그램 데이터로 자동 작성 */
+    var row2=document.createElement("div"); row2.className="row"; row2.style.marginTop="6px"; row2.style.alignItems="center";
+    var tyD=document.createElement("div"); tyD.style.flex="0 0 auto";
+    var tySel=document.createElement("select");
+    ALBUM_TYPES.forEach(function(o){
+      var op=document.createElement("option"); op.value=o[0]; op.textContent=o[1];
+      if((al.type||"photo")===o[0]) op.selected=true;
+      tySel.appendChild(op);
+    });
+    tySel.onchange=function(){ al.type=tySel.value; albumsSave(); renderAlbumsEditor(); };
+    tyD.appendChild(tySel); row2.appendChild(tyD);
+    if((al.type||"photo")!=="photo"){
+      if(al.type==="exam"||al.type==="comp"){
+        var fill=document.createElement("button"); fill.className="sec min";
+        fill.textContent="📊 지난달 데이터로 채우기";
+        fill.onclick=function(){
+          al.info=(al.type==="exam")?buildExamInfo():buildCompInfo();
+          albumsSave(); renderAlbumsEditor();
+        };
+        var fD2=document.createElement("div"); fD2.style.flex="0 0 auto"; fD2.appendChild(fill);
+        row2.appendChild(fD2);
+      }
+      var h2=document.createElement("span"); h2.className="hint";
+      h2.textContent="아래 글이 기사 카드(글 페이지)로 먼저 실리고, 그다음 사진 페이지가 나옵니다. 첫 줄=제목, 둘째 줄=날짜 소개.";
+      row2.appendChild(h2);
+    }
+    wrap.appendChild(row2);
+    if((al.type||"photo")!=="photo"){
+      var ta2=document.createElement("textarea"); ta2.rows=Math.min(12, Math.max(4, String(al.info||"").split("\n").length+1));
+      ta2.style.marginTop="6px";
+      ta2.placeholder="첫 줄: 기사 제목\n둘째 줄: 날짜·소개\n(한 줄 비우고)\n본문 내용…";
+      ta2.value=al.info||"";
+      ta2.oninput=function(){ al.info=this.value; albumsSave(); };
+      wrap.appendChild(ta2);
+    }
     var th=document.createElement("div"); th.className="thumbs";
     al.photos.forEach(function(d,pi){
       var t=document.createElement("div"); t.className="t";
@@ -718,20 +880,43 @@ var W=1080;
 var NAVY="#1D2E5C", BRAND_RED="#B5273A";   /* 로고 브랜드 컬러 */
 /* 1~12월 고정 표지·장식 디자인: 월별 팔레트 + 모티프(snow 눈·blossom 벚꽃·flower 꽃·drop 비·sun 태양·leaf 단풍·acorn 도토리) */
 var MONTH_THEMES={
-  1:{ sky:"#dce9f7", ground:"#f5f9fd", title:"#2d5b8e", monthColor:"#9fc3ec", accent:"#a9c6e8", bush1:"#DCE9F6", bush2:"#EDF4FB", leaf:"#7FA8D9", leaf2:"#A6C4E6", motif:"snow" },
-  2:{ sky:"#e2ecf8", ground:"#f6f9fd", title:"#3d5a96", monthColor:"#a8b8e8", accent:"#b3c2e6", bush1:"#DEE6F5", bush2:"#EEF2FA", leaf:"#8FA6D6", leaf2:"#B0C0E2", motif:"snow" },
-  3:{ sky:"#eaf6ff", ground:"#fbdde9", title:"#a44f72", monthColor:"#f08cb2", accent:"#e9a8c4", bush1:"#F6B8CE", bush2:"#F9D2E0", leaf:"#E86A9E", leaf2:"#F2A0BE", motif:"blossom" },
-  4:{ sky:"#e8f4ff", ground:"#ffe9f0", title:"#b05a7e", monthColor:"#ee9ab8", accent:"#eeb2c8", bush1:"#F4BFD3", bush2:"#F8D8E4", leaf:"#E87EA6", leaf2:"#F2AECB", motif:"flower" },
-  5:{ sky:"#e6f7ea", ground:"#d8f0dc", title:"#2e7d44", monthColor:"#58b368", accent:"#8fce9c", bush1:"#8FCE9C", bush2:"#B4E0BD", leaf:"#4CAF63", leaf2:"#77C388", motif:"flower" },
-  6:{ sky:"#dff2ff", ground:"#cfe8f7", title:"#1e6296", monthColor:"#5aa7d8", accent:"#8cc4e8", bush1:"#9CCBE8", bush2:"#C2DFF2", leaf:"#5AA7D8", leaf2:"#84BEE2", motif:"drop" },
-  7:{ sky:"#ddf1ff", ground:"#ffe9b3", title:"#1c6ea6", monthColor:"#63b9ea", accent:"#8fd0f2", bush1:"#7ECB8F", bush2:"#A5DDB1", leaf:"#3FA45B", leaf2:"#63B978", motif:"sun" },
-  8:{ sky:"#d8f0ff", ground:"#ffe2a8", title:"#b06a1c", monthColor:"#f2a54a", accent:"#f4c07e", bush1:"#F2B96A", bush2:"#F7D194", leaf:"#E8963C", leaf2:"#F0B268", motif:"sun" },
-  9:{ sky:"#cfe6f7", ground:"#F2C97E", title:"#7a4a1f", monthColor:"#7fb3e8", accent:"#c9a86b", bush1:"#F7A83E", bush2:"#FBC15C", leaf:"#E8442E", leaf2:"#E8842E", motif:"leaf" },
-  10:{ sky:"#d7e8f4", ground:"#EFBE72", title:"#7a4a1f", monthColor:"#e8842e", accent:"#c9a86b", bush1:"#EF9A34", bush2:"#F6B858", leaf:"#D9542E", leaf2:"#E8842E", motif:"flower" },
-  11:{ sky:"#dde5ec", ground:"#E4B368", title:"#6b4218", monthColor:"#c97b3d", accent:"#bf9c60", bush1:"#DE9A3E", bush2:"#EBB362", leaf:"#B5542E", leaf2:"#CE7A3A", motif:"acorn" },
-  12:{ sky:"#dce9f7", ground:"#fdfdff", title:"#2d5b8e", monthColor:"#7fa8d9", accent:"#a9c6e8", bush1:"#D8E5F4", bush2:"#EBF1F9", leaf:"#7FA8D9", leaf2:"#A6C4E6", motif:"snow" }
+  1:{ sky:"#E3ECF8", ground:"#f5f9fd", title:"#2d5b8e", monthColor:"#9fc3ec", accent:"#a9c6e8", bush1:"#DCE9F6", bush2:"#EDF4FB", leaf:"#7FA8D9", leaf2:"#A6C4E6", motif:"snow" },
+  2:{ sky:"#EEF0FA", ground:"#F6F3FC", title:"#5a5296", monthColor:"#a8a8e8", accent:"#b8b3e6", bush1:"#D8D6F2", bush2:"#EAE8F8", leaf:"#8F8FD6", leaf2:"#B0B0E2", motif:"snow" },
+  3:{ sky:"#FDF0F5", ground:"#fbdde9", title:"#a44f72", monthColor:"#f08cb2", accent:"#e9a8c4", bush1:"#F6B8CE", bush2:"#F9D2E0", leaf:"#E86A9E", leaf2:"#F2A0BE", motif:"blossom" },
+  4:{ sky:"#F4EFFC", ground:"#ffe9f0", title:"#8a5aae", monthColor:"#c09ae8", accent:"#c8b2e8", bush1:"#D9BFF0", bush2:"#E8D8F6", leaf:"#A87EDA", leaf2:"#C3AEE8", motif:"flower" },
+  5:{ sky:"#EAF7EC", ground:"#d8f0dc", title:"#2e7d44", monthColor:"#58b368", accent:"#8fce9c", bush1:"#8FCE9C", bush2:"#B4E0BD", leaf:"#4CAF63", leaf2:"#77C388", motif:"flower" },
+  6:{ sky:"#E3F4F2", ground:"#CFE8E4", title:"#1e7b6e", monthColor:"#4EB3A4", accent:"#84CCC1", bush1:"#8ECDC2", bush2:"#B8E0D8", leaf:"#3FA491", leaf2:"#6BBCAD", motif:"drop" },
+  7:{ sky:"#DDF1FF", ground:"#ffe9b3", title:"#1c6ea6", monthColor:"#63b9ea", accent:"#8fd0f2", bush1:"#7ECB8F", bush2:"#A5DDB1", leaf:"#3FA45B", leaf2:"#63B978", motif:"sun" },
+  8:{ sky:"#FFF6DE", ground:"#ffe2a8", title:"#b06a1c", monthColor:"#f2a54a", accent:"#f4c07e", bush1:"#F2B96A", bush2:"#F7D194", leaf:"#E8963C", leaf2:"#F0B268", motif:"sun" },
+  9:{ sky:"#CFE6F7", ground:"#F2C97E", title:"#7a4a1f", monthColor:"#7fb3e8", accent:"#c9a86b", bush1:"#F7A83E", bush2:"#FBC15C", leaf:"#E8442E", leaf2:"#E8842E", motif:"leaf" },
+  10:{ sky:"#FBF0E1", ground:"#EFBE72", title:"#7a4a1f", monthColor:"#e8842e", accent:"#c9a86b", bush1:"#EF9A34", bush2:"#F6B858", leaf:"#D9542E", leaf2:"#E8842E", motif:"flower" },
+  11:{ sky:"#F0EAE1", ground:"#E4B368", title:"#6b4218", monthColor:"#c97b3d", accent:"#bf9c60", bush1:"#DE9A3E", bush2:"#EBB362", leaf:"#B5542E", leaf2:"#CE7A3A", motif:"acorn" },
+  12:{ sky:"#E7EEF7", ground:"#fdfdff", title:"#2d5b8e", monthColor:"#7fa8d9", accent:"#a9c6e8", bush1:"#D8E5F4", bush2:"#EBF1F9", leaf:"#7FA8D9", leaf2:"#A6C4E6", motif:"snow" }
 };
 function theme(){ return MONTH_THEMES[Number(S.month)]||MONTH_THEMES[9]; }
+
+/* [R2.0] 1~12월 기본 인성덕목 (비어 있으면 자동 입력, 수정 가능) */
+var VIRTUE12={
+  1:{n:"성실", d:"맡은 일을 정성을 다해 꾸준히 해 나가는 것.", i:["나는 오늘 할 일을 미루지 않고 해낸다.","수련 시간에 늦지 않고 빠지지 않는다.","작은 일도 대충 하지 않고 끝까지 한다.","어제보다 나은 내가 되기 위해 매일 연습한다.","힘들어도 포기하지 않고 꾸준히 노력한다."]},
+  2:{n:"감사", d:"고마움을 알고 말과 행동으로 표현하는 것.", i:["부모님께 하루에 한 번 감사한 마음을 말로 표현한다.","사범님과 친구들에게 '고맙습니다'라고 말한다.","내가 가진 것의 소중함을 알고 아껴 쓴다.","도움을 받으면 잊지 않고 보답하려고 노력한다.","매일 감사한 일 한 가지를 떠올려 본다."]},
+  3:{n:"예의", d:"상대를 존중하는 마음을 바른 말과 행동으로 나타내는 것.", i:["어른을 만나면 먼저 큰 소리로 인사한다.","고운 말을 쓰고 거친 말을 하지 않는다.","도장에 들어오고 나갈 때 바르게 경례한다.","다른 사람이 말할 때 끝까지 듣는다.","물건을 주고받을 때 두 손으로 한다."]},
+  4:{n:"배려", d:"상대의 마음을 헤아려 먼저 생각하고 행동하는 것.", i:["힘들어하는 친구를 보면 먼저 도와준다.","내가 하고 싶은 것보다 함께 좋은 것을 먼저 생각한다.","뒷사람을 위해 문을 잡아 준다.","친구의 실수를 놀리지 않고 감싸 준다.","공공장소에서는 다른 사람을 생각해 조용히 한다."]},
+  5:{n:"효도", d:"부모님을 공경하고 사랑하는 마음을 행동으로 실천하는 것.", i:["부모님 말씀을 잘 듣고 걱정을 끼치지 않는다.","'사랑합니다', '감사합니다'를 자주 말씀드린다.","내 방 정리처럼 내가 할 수 있는 일은 스스로 한다.","부모님 심부름을 기쁜 마음으로 한다.","걱정하시지 않도록 몸과 마음을 건강히 한다."]},
+  6:{n:"협동", d:"여럿이 마음과 힘을 하나로 모아 함께 해내는 것.", i:["친구들과 힘을 모아 함께 과제를 해낸다.","나 혼자 잘하는 것보다 함께 잘하는 것을 기뻐한다.","내 역할을 다해 우리 팀에 보탬이 된다.","친구의 의견을 존중하고 내 의견도 바르게 말한다.","어려워하는 친구가 있으면 함께 이루도록 돕는다."]},
+  7:{n:"인내", d:"힘들고 하기 싫어도 참고 끝까지 해내는 것.", i:["힘든 수련도 중간에 포기하지 않는다.","하고 싶은 것을 잠시 참을 줄 안다.","화가 나도 바로 화내지 않고 마음을 가라앉힌다.","어려운 문제도 짜증 내지 않고 차분히 해결한다.","목표를 세우면 될 때까지 도전한다."]},
+  8:{n:"용기", d:"옳은 일을 두려워하지 않고 당당하게 하는 것.", i:["실수가 두려워도 자신 있게 도전한다.","잘못한 일은 솔직하게 말하고 사과한다.","옳지 않은 일에는 '아니오'라고 말할 수 있다.","괴롭힘을 당하는 친구를 모른 척하지 않는다.","처음 하는 일도 겁내지 않고 씩씩하게 해 본다."]},
+  9:{n:"정의", d:"옳고 그름을 판단하여 옳은 것은 지키고 잘못된 것은 따르지 않는 것, 정직하고 공정한 마음을 갖고 떳떳하게 생활하는 것.", i:["나는 항상 올바른 결정을 하기 위해 노력한다.","올바른 결정을 한 친구들을 격려하고 나도 그 결정에 동참한다.","내가 올바른 결정을 하지 못했을 때, 친구들의 충고를 받아들인다.","비겁한 행동이나 결정을 그냥 지나치지 않고 고치라고 말할 수 있다.","자신의 잘못을 알려주는 친구에게 '고마워'라고 말할 수 있다."]},
+  10:{n:"존중", d:"나와 다른 사람을 소중히 여기는 것.", i:["친구의 다른 점을 놀리지 않고 인정한다.","다른 사람의 물건을 함부로 만지지 않는다.","나 자신을 소중히 여기고 함부로 대하지 않는다.","친구의 이야기를 끝까지 듣고 무시하지 않는다.","어리거나 약한 사람일수록 더 존중한다."]},
+  11:{n:"책임", d:"내가 맡은 일과 내 행동의 결과를 끝까지 감당하는 것.", i:["내가 맡은 일은 끝까지 해낸다.","내 물건과 내 자리는 내가 정리한다.","약속한 일은 꼭 지킨다.","잘못했을 때 핑계 대지 않고 인정한다.","시작한 일은 중간에 그만두지 않는다."]},
+  12:{n:"나눔", d:"내가 가진 것을 기쁜 마음으로 이웃과 함께하는 것.", i:["내 것을 아까워하지 않고 친구와 나눈다.","어려운 이웃을 돕는 일에 기쁜 마음으로 참여한다.","나눌수록 커지는 기쁨을 안다.","물건뿐 아니라 마음과 시간도 나눈다.","감사한 만큼 베풀 줄 아는 사람이 된다."]}
+};
+function autoVirtue(force){
+  var v=VIRTUE12[Number(S.month)]; if(!v) return;
+  if(!force && ((S.virtueName||"").trim()||(S.virtueDef||"").trim()||(S.virtueItems||"").trim())) return;
+  S.virtueName=v.n; S.virtueDef=v.d; S.virtueItems=v.i.join("\n"); saveS();
+  var e1=document.getElementById("inVirtueName"), e2=document.getElementById("inVirtueDef"), e3=document.getElementById("inVirtueItems");
+  if(e1){ e1.value=v.n; e2.value=v.d; e3.value=v.i.join("\n"); }
+}
 function newCanvas(){
   var c=document.createElement("canvas");
   c.width=W; c.height=pageH();
@@ -865,8 +1050,8 @@ function pageBase(seed){
     coverFit(x2, IMGS.bg, 0, 0, W, H);
     if(S.bgPanel){
       x2.save(); x2.globalAlpha=0.88;
-      var sq2=(S.ratio==="11");
-      var rr=46, px=sq2?48:62, py=sq2?44:100, pw=sq2?(W-96):(W-124), ph=sq2?(H-180):(H-290);
+      var sq2=(S.ratio==="11"), v45=(S.ratio==="45");
+      var rr=46, px=(sq2||v45)?48:62, py=sq2?44:(v45?56:100), pw=(sq2||v45)?(W-96):(W-124), ph=sq2?(H-180):(v45?(H-196):(H-290));
       x2.fillStyle="#fffdf4";
       x2.beginPath();
       x2.moveTo(px+rr,py); x2.arcTo(px+pw,py,px+pw,py+ph,rr); x2.arcTo(px+pw,py+ph,px,py+ph,rr);
@@ -880,6 +1065,7 @@ function pageBase(seed){
   drawBushes(x2,H,t);
   drawGround(x2,H,t);
   if(S.ratio==="11") cloudPanel(x2, 48, 44, W-96, H-180, "#fffdf4");   /* 바깥 여백 최소화 — 안쪽 칸 최대 */
+  else if(S.ratio==="45") cloudPanel(x2, 48, 56, W-96, H-196, "#fffdf4");
   else cloudPanel(x2, 62, 100, W-124, H-290, "#fffdf4");
   emoDeco(x2,H,t,seed||0);
   return c;
@@ -1029,23 +1215,25 @@ function drawCover(){
     x2.font="900 52px 'Noto Sans KR'"; x2.fillText("NARACHA", W/2, H*0.15);
     x2.font="500 26px 'Noto Sans KR'"; x2.fillText("TAEKWONDO", W/2, H*0.15+46);
   }
-  var sq=(S.ratio==="11");
+  var sq=(S.ratio==="11"), v45=(S.ratio==="45");
+  /* 비율별 세로 위치 (겹침 방지) */
+  var yNL=sq?0.33:(v45?0.31:0.30), yMon=sq?0.47:(v45?0.43:0.44), ySos=sq?0.645:(v45?0.615:0.58), yPill=sq?0.755:(v45?0.735:0.66);
+  var fMon=sq?230:(v45?230:250), fSos=sq?195:(v45?190:210);
   x2.font=(sq?58:54)+"px 'Jua'"; x2.textAlign="center"; x2.textBaseline="middle";
   x2.fillStyle=t.accent;
-  x2.save(); x2.translate(W/2,H*(sq?0.33:0.30)); x2.rotate(-0.03);
+  x2.save(); x2.translate(W/2,H*yNL); x2.rotate(-0.03);
   x2.fillText("Naracha News Letter",0,0); x2.restore();
-  titleText(x2, S.month+"월", W/2, H*(sq?0.47:0.44), sq?230:250, t, t.monthColor);
+  titleText(x2, S.month+"월", W/2, H*yMon, fMon, t, t.monthColor);
   /* 소식지: 흰 글자 + 진한 테두리 (흰 판 위에서도 보이도록) */
-  var f2=sq?195:210;
-  x2.font=f2+"px 'Jua'"; x2.textAlign="center"; x2.textBaseline="middle"; x2.lineJoin="round";
-  x2.strokeStyle=t.title; x2.lineWidth=Math.max(14,f2*0.11);
-  x2.strokeText("소식지", W/2, H*(sq?0.645:0.58));
+  x2.font=fSos+"px 'Jua'"; x2.textAlign="center"; x2.textBaseline="middle"; x2.lineJoin="round";
+  x2.strokeStyle=t.title; x2.lineWidth=Math.max(14,fSos*0.11);
+  x2.strokeText("소식지", W/2, H*ySos);
   x2.fillStyle="#fffdf4";
-  x2.fillText("소식지", W/2, H*(sq?0.645:0.58));
+  x2.fillText("소식지", W/2, H*ySos);
   /* 호수: 네이비 알약 배지 */
   var pTxt=String(S.year).slice(2)+"년 "+S.month+"월호";
   x2.font="34px 'Jua'";
-  var pw2=x2.measureText(pTxt).width+70, py2=H*(sq?0.755:0.66);
+  var pw2=x2.measureText(pTxt).width+70, py2=H*yPill;
   x2.fillStyle=NAVY; rrect(x2,W/2-pw2/2,py2,pw2,64,32); x2.fill();
   x2.fillStyle="#fff"; x2.textAlign="center"; x2.textBaseline="middle";
   x2.fillText(pTxt, W/2, py2+33);
@@ -1134,7 +1322,7 @@ function chipLabel(x2,x,y,txt,fg){
   x2.fillStyle=fg; x2.textAlign="left"; x2.textBaseline="middle";
   x2.fillText(txt,x+28,y+31);
 }
-function panelBottom(H){ return (S.ratio==="11")?900:((S.ratio==="45")?1160:1640); }
+function panelBottom(H){ return (S.ratio==="11")?900:((S.ratio==="45")?1180:1640); }
 function drawSchedule(no){
   var c=pageBase(3), x2=c.getContext("2d"), H=c.height, t=theme();
   var sq=(S.ratio==="11"), hy=sq?150:200;
@@ -1450,37 +1638,117 @@ function drawChecklist(no){
 function albumRowsDef(n){
   return {1:[1],2:[2],3:[1,2],4:[2,2],5:[2,3],6:[3,3],7:[2,2,3],8:[2,3,3],9:[3,3,3]}[n]||[3,3,3];
 }
-function drawAlbumPages(no, ai){
-  var t=theme(), pages=[], H=pageH(), al=ALBUMS[ai];
+/* [R2.0] "지난달 우리 도장은~" 매거진 섹션 — 크래프트지 톤·이중 액자, 본문과 다른 분위기 */
+var MAG={ bg:"#F4EDDC", frame:"#D8C69E", ink:"#4A3520", accent:"#8A5A2B", body:"#3F3428" };
+function magBase(){
+  var c=newCanvas(), x2=c.getContext("2d"), H=c.height;
+  x2.fillStyle=MAG.bg; x2.fillRect(0,0,W,H);
+  x2.strokeStyle=MAG.frame; x2.lineWidth=3; x2.strokeRect(22,22,W-44,H-44);
+  x2.lineWidth=1.5; x2.strokeRect(34,34,W-68,H-68);
+  return c;
+}
+function magHeader(x2,H,no,title){
+  var t=theme(), pm=prevYM();
+  badge(x2,92,100,no,t);
+  var lbl="지난달 우리 도장은 ~ · "+pm.m+"월";
+  x2.font="30px 'Jua'";
+  var lw=x2.measureText(lbl).width+48;
+  x2.fillStyle="#fff"; x2.strokeStyle=MAG.accent; x2.lineWidth=2.5;
+  rrect(x2,W/2-lw/2,58,lw,48,24); x2.fill(); x2.stroke();
+  x2.fillStyle=MAG.accent; x2.textAlign="center"; x2.textBaseline="middle";
+  x2.fillText(lbl, W/2, 83);
+  var tf=62; x2.font=tf+"px 'Jua'";
+  while(tf>44 && x2.measureText(title).width>W-320){ tf-=2; x2.font=tf+"px 'Jua'"; }
+  x2.lineJoin="round";
+  x2.save(); x2.shadowColor="rgba(0,0,0,0.12)"; x2.shadowOffsetY=3;
+  x2.strokeStyle="#fff"; x2.lineWidth=10; x2.strokeText(title, W/2, 160);
+  x2.restore();
+  x2.fillStyle=MAG.ink; x2.fillText(title, W/2, 160);
+  return 206;
+}
+/* 기사(보고) 카드 */
+function drawInfoCard(no, al){
+  var c=magBase(), x2=c.getContext("2d"), H=c.height;
+  var top=magHeader(x2,H,no,al.title||"소식");
+  var lines=String(al.info||"").split("\n");
+  var head=(lines[0]||"").trim(), sub=(lines[1]||"").trim();
+  var raw=lines.slice(2);
+  while(raw.length && !raw[0].trim()) raw.shift();
+  while(raw.length && !raw[raw.length-1].trim()) raw.pop();
+  /* 흰 기사 카드 */
+  var cx0=58, cy0=top+12, cw0=W-116, ch0=H-cy0-92;
+  x2.fillStyle="#FFFDF6"; x2.strokeStyle=MAG.frame; x2.lineWidth=2;
+  rrect(x2,cx0,cy0,cw0,ch0,18); x2.fill(); x2.stroke();
+  var y=cy0+64;
+  x2.textAlign="center"; x2.textBaseline="middle";
+  var hf=50; x2.font=hf+"px 'Jua'";
+  while(hf>32 && x2.measureText(head).width>cw0-80){ hf-=2; x2.font=hf+"px 'Jua'"; }
+  x2.fillStyle=MAG.ink; x2.fillText(head, W/2, y); y+=hf*0.55+30;
+  if(sub){ x2.font="700 32px 'Gowun Dodum'"; x2.fillStyle="#7a6a50"; x2.fillText(sub, W/2, y); y+=50; }
+  x2.strokeStyle=MAG.accent; x2.lineWidth=3;
+  x2.beginPath(); x2.moveTo(cx0+50,y); x2.lineTo(cx0+cw0-50,y); x2.stroke();
+  x2.lineWidth=1; x2.beginPath(); x2.moveTo(cx0+50,y+6); x2.lineTo(cx0+cw0-50,y+6); x2.stroke();
+  y+=40;
+  /* 본문: 글자 자동 크기, 줄이 많으면 2단 */
+  var availH=cy0+ch0-36-y;
+  var bf=36, cols=1, wrapped=[];
+  for(;bf>=20;bf-=2){
+    x2.font="700 "+bf+"px 'Gowun Dodum'";
+    var step0=bf+16;
+    wrapped=[];
+    raw.forEach(function(l){
+      if(!l.trim()){ wrapped.push(""); return; }
+      wrapLines(x2,l,cw0-120).forEach(function(s2){ wrapped.push(s2); });
+    });
+    if(wrapped.length*step0<=availH){ cols=1; break; }
+    var w2=[];
+    raw.forEach(function(l){
+      if(!l.trim()){ w2.push(""); return; }
+      wrapLines(x2,l,(cw0-150)/2).forEach(function(s2){ w2.push(s2); });
+    });
+    if(Math.ceil(w2.length/2)*step0<=availH){ cols=2; wrapped=w2; break; }
+  }
+  var step=bf+16;
+  /* 본문 블록 세로 중앙 배치 (내용이 적을 때 위로 몰리지 않게) */
+  var usedH=(cols===1?wrapped.length:Math.ceil(wrapped.length/2))*step;
+  y+=Math.max(0,(availH-usedH)/2*0.7);
+  x2.font="700 "+bf+"px 'Gowun Dodum'"; x2.fillStyle=MAG.body; x2.textAlign="left";
+  if(cols===1){
+    var yy=y+step/2;
+    wrapped.forEach(function(l){ if(l){ x2.fillText(l, cx0+60, yy); yy+=step; } else yy+=step*0.5; });
+  }else{
+    var per=Math.ceil(wrapped.length/2), colW=(cw0-150)/2;
+    for(var ci=0;ci<2;ci++){
+      var yy2=y+step/2;
+      wrapped.slice(ci*per,(ci+1)*per).forEach(function(l){ if(l){ x2.fillText(l, cx0+50+ci*(colW+50), yy2); yy2+=step; } else yy2+=step*0.5; });
+    }
+  }
+  footer(x2,H);
+  return c;
+}
+function drawAlbumPages(no, ai, startIdx){
+  var pages=[], H=pageH(), al=ALBUMS[ai];
   var imgs=(IMGS.albums[ai]||[]).filter(Boolean);
   if(!imgs.length) return pages;
   var chunks=balancedChunks(imgs, 9);   /* 한 페이지 최대 9장 */
-  var subT=(S.month===1?12:S.month-1)+"월 사진첩";
+  var multi=(chunks.length>1)||(startIdx>0);
   chunks.forEach(function(chunk,pi){
-    /* 사진첩은 여백 최소화 — 구름판 없이 사진을 최대한 크게 */
-    var c=newCanvas(), x2=c.getContext("2d");
-    x2.fillStyle=t.sky; x2.fillRect(0,0,W,H);
-    badge(x2,86,96,chunks.length>1?(no+"-"+(pi+1)):no,t);
-    titleText(x2, al.title||"사진첩", W/2+20, 96, 66, t);
-    /* 부제: n월 사진첩 */
-    x2.font="32px 'Jua'";
-    var sw=x2.measureText(subT).width+52;
-    x2.fillStyle=NAVY; rrect(x2,W/2-sw/2,152,sw,52,26); x2.fill();
-    x2.fillStyle="#fff"; x2.textAlign="center"; x2.textBaseline="middle";
-    x2.fillText(subT, W/2, 179);
-    /* 사진 영역: 좌우 36px·위 230·아래 푸터 위까지 */
-    var gp=14, left=36, top=230, bottom=H-100;
+    var c=magBase(), x2=c.getContext("2d");
+    var bno=multi?(no+"-"+(startIdx+pi+1)):no;
+    var top=magHeader(x2,H,bno,al.title||"사진첩");
+    /* 사진 영역: 액자 안에서 최대 크기 */
+    var gp=14, left=54, topY=top+10, bottom=H-100;
     var rowsDef=albumRowsDef(chunk.length);
-    var rH=(bottom-top-(rowsDef.length-1)*gp)/rowsDef.length;
+    var rH=(bottom-topY-(rowsDef.length-1)*gp)/rowsDef.length;
     var k=0;
     rowsDef.forEach(function(cnt,ri){
       var cw=(W-left*2-(cnt-1)*gp)/cnt;
       for(var ci=0;ci<cnt && k<chunk.length;ci++){
-        squareItem(x2, chunk[k++], left+ci*(cw+gp), top+ri*(rH+gp), cw, rH);
+        squareItem(x2, chunk[k++], left+ci*(cw+gp), topY+ri*(rH+gp), cw, rH);
       }
     });
     footer(x2,H);
-    pages.push({name:"사진첩_"+(al.title||("사진첩"+(ai+1)))+(chunks.length>1?("_"+(pi+1)):""), canvas:c});
+    pages.push({name:"사진_"+(al.title||("사진첩"+(ai+1)))+(chunks.length>1?("_"+(pi+1)):""), canvas:c});
   });
   return pages;
 }
@@ -1512,8 +1780,8 @@ function makeAll(){
      일부 글자만 다른 폰트로 그려지는(굵기가 섞여 보이는) 문제 방지 */
   var glyphs="목차 인성덕목 SCHEDULE 수련계획표 국기원 승품(단) 심사 응시예정자 생일 사진첩 소식지 HAPPY BIRTHDAY 월일년호 주요 일정 휴관 안내 0123456789 NARACHA나라차태권도 Taekwondo News Letter MONTUEWDHFRISA~-—:.,·"
     +(S.virtueName||"")+"이란?"+(S.virtueDef||"")+(S.virtueItems||"")+(S.schedMain||"")+(S.schedClosed||"")
-    +(S.calNote||"")+(S.kkwSub||"")+"실천 체크리스트 사진첩";
-  ALBUMS.forEach(function(al){ glyphs+=(al.title||""); });
+    +(S.calNote||"")+(S.kkwSub||"")+"실천 체크리스트 사진첩 지난달 우리 도장은 이야기 보고 결과 응시 합격 취득 급수 참가";
+  ALBUMS.forEach(function(al){ glyphs+=(al.title||"")+(al.info||""); });
   for(var ck in S.calDays) glyphs+=S.calDays[ck];
   bs.forEach(function(b){ glyphs+=b.n; });
   ks.forEach(function(k2){ glyphs+=k2.n+k2.target; });
@@ -1538,9 +1806,10 @@ function makeAll(){
     if(S.pages.bday && bs.length){ no++; plan.push({no:no,kind:"bday"}); entries.push({title:S.month+"월 생일자", desc:"생일을 축하합니다~"}); }
     if(S.pages.album){
       ALBUMS.forEach(function(al,ai){
-        if(!al.photos.length) return;
-        no++; plan.push({no:no,kind:"album",ai:ai});
-        entries.push({title:(al.title||"사진첩"), desc:(S.month===1?12:S.month-1)+"월 나라차 모습을 사진으로 전해 드립니다."});
+        var hasInfo=((al.type||"photo")!=="photo") && !!String(al.info||"").trim();
+        if(!al.photos.length && !hasInfo) return;
+        no++; plan.push({no:no,kind:"album",ai:ai,info:hasInfo});
+        entries.push({title:(al.title||"사진첩"), desc:"지난달 우리 도장은 ~ · "+(S.month===1?12:S.month-1)+"월 이야기"});
       });
     }
     if(S.pages.check && (S.virtueItems||"").trim()){ no++; plan.push({no:no,kind:"check"}); entries.push({title:"'"+(S.virtueName||"덕목")+"' 실천 체크리스트", desc:"한 달 동안 가정에서도 함께 실천해 보아요~"}); }
@@ -1554,7 +1823,13 @@ function makeAll(){
       if(p.kind==="cal") MADE.push({name:"수련계획표", canvas:drawCalendar(nn)});
       if(p.kind==="kkw") MADE=MADE.concat(drawKkwPages(nn, ks));
       if(p.kind==="bday") MADE=MADE.concat(drawBdayPages(nn, bs));
-      if(p.kind==="album") MADE=MADE.concat(drawAlbumPages(nn, p.ai));
+      if(p.kind==="album"){
+        var al2=ALBUMS[p.ai];
+        if(p.info){
+          MADE.push({name:"보고_"+(al2.title||""), canvas:drawInfoCard((al2.photos.length?nn+"-1":nn), al2)});
+        }
+        MADE=MADE.concat(drawAlbumPages(nn, p.ai, p.info?1:0));
+      }
       if(p.kind==="check") MADE.push({name:"실천체크리스트", canvas:drawChecklist(nn)});
     });
     renderPreview();
@@ -1678,6 +1953,7 @@ function initInputs(){
     var el=document.getElementById("settingsCard");
     showSettings(el.style.display==="none");
   };
+  document.getElementById("btnVirtueAuto").onclick=function(){ autoVirtue(true); };
   document.getElementById("btnMake").onclick=makeAll;
   document.getElementById("btnSaveAll").onclick=saveAllPng;
   document.getElementById("btnKkwAdd").onclick=function(){
@@ -1724,25 +2000,31 @@ function initInputs(){
     document.getElementById("bgHint").textContent="배경 이미지를 지웠습니다. 프로그램이 계절 색으로 배경을 그립니다.";
   };
   document.getElementById("btnAlbumAdd").onclick=function(){
-    ALBUMS.push({title:"", photos:[]});
+    ALBUMS.push({title:"", type:"photo", info:"", photos:[]});
     albumsSave(); renderAlbumsEditor();
   };
   initCrop();
 }
 
 initInputs();
+autoVirtue(false);   /* 비어 있으면 이달 기본 덕목 자동 입력 */
 renderCalEditor();
 idbGet("albums").then(function(v){
   var ok=false;
   if(v){ try{ ALBUMS=JSON.parse(v)||[]; ok=ALBUMS.length>0; }catch(e){} }
   if(!ok){
-    ALBUMS=ALBUM_DEFAULTS.map(function(tt){ return {title:tt, photos:[]}; });
+    ALBUMS=ALBUM_DEFAULTS.map(function(o){ return {title:o.t, type:o.ty, info:"", photos:[]}; });
     /* v1.3 이전의 단일 사진첩 사진 이어받기 */
     return idbGet("album").then(function(old){
-      if(old){ try{ var arr=JSON.parse(old)||[]; if(arr.length){ ALBUMS.unshift({title:(S.albumTitle||"사진첩"), photos:arr}); } }catch(e){} }
+      if(old){ try{ var arr=JSON.parse(old)||[]; if(arr.length){ ALBUMS.unshift({title:(S.albumTitle||"사진첩"), type:"photo", info:"", photos:arr}); } }catch(e){} }
       albumsSave(); renderAlbumsEditor();
     });
   }
+  /* R2.0 마이그레이션: type·info 필드 보강 (정기승급심사는 exam으로) */
+  ALBUMS.forEach(function(al){
+    if(!al.type) al.type=(String(al.title||"").indexOf("승급심사")>-1)?"exam":"photo";
+    if(al.info==null) al.info="";
+  });
   renderAlbumsEditor();
 });
 idbGet("cover").then(function(v){
