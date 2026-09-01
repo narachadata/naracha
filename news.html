@@ -235,7 +235,7 @@ details.help li{ margin:4px 0; }
    나라차 소식지 제작기
    var APP_VER 규칙: 수정할 때마다 +0.1, 내리지 않는다.
    ============================================================ */
-var APP_VER = "v1.4"; /* R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
+var APP_VER = "v1.5"; /* R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
 document.getElementById("verLabel").textContent = APP_VER;
 
 var GAS = "https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
@@ -1049,21 +1049,28 @@ function drawToc(entries){
   footer(x2,H);
   return c;
 }
+/* '~(이)란?' 조사: 받침 있으면 '이란'(협동이란), 없으면 '란'(정의란) */
+function withIran(w){
+  if(!w) return "";
+  var c=w.charCodeAt(w.length-1);
+  if(c>=0xAC00 && c<=0xD7A3 && (c-0xAC00)%28!==0) return w+"이란? ";
+  return w+"란? ";
+}
 function drawVirtue(no){
   var c=pageBase(2), x2=c.getContext("2d"), H=c.height, t=theme();
   var sq=(S.ratio==="11"), hy=sq?150:190;
   badge(x2,150,hy,no,t);
   titleText(x2,"인성덕목 : "+(S.virtueName||"—"), W/2+30, hy, sq?70:76, t);
   /* 정의 */
-  x2.font="34px 'Gowun Dodum'"; x2.fillStyle="#444"; x2.textAlign="center"; x2.textBaseline="middle";
-  var defLines=wrapLines(x2, (S.virtueName?S.virtueName+"이란? ":"")+(S.virtueDef||""), W-320);
+  x2.font="700 34px 'Gowun Dodum'"; x2.fillStyle="#444"; x2.textAlign="center"; x2.textBaseline="middle";
+  var defLines=wrapLines(x2, withIran(S.virtueName)+(S.virtueDef||""), W-320);
   /* 실천 항목: 크기 자동 조절 + 내어쓰기 + 전체 블록 세로 중앙 */
   var items=(S.virtueItems||"").split("\n").map(function(s){return s.trim();}).filter(Boolean);
   var top=hy+80, bottom=panelBottom(H);
   var defH=defLines.length*48+50;   /* 정의 + 구분선 */
   var itf=40, allLines=null, step=0, indW=0;
   for(;itf>=26;itf-=2){
-    x2.font=itf+"px 'Gowun Dodum'";
+    x2.font="700 "+itf+"px 'Gowun Dodum'";
     indW=x2.measureText("0. ").width;
     allLines=items.map(function(it,i){ return wrapLines(x2,it, W-300-indW); });
     var nl=allLines.reduce(function(a,b){return a+b.length;},0);
@@ -1072,14 +1079,14 @@ function drawVirtue(no){
   }
   var blockH=defH+60+allLines.reduce(function(a,b){return a+b.length;},0)*step+(items.length-1)*24;
   var y=top+Math.max(0,(bottom-top-blockH)/2)+24;
-  x2.font="34px 'Gowun Dodum'"; x2.fillStyle="#444"; x2.textAlign="center";
+  x2.font="700 34px 'Gowun Dodum'"; x2.fillStyle="#444"; x2.textAlign="center";
   defLines.forEach(function(l){ x2.fillText(l, W/2, y); y+=48; });
   x2.strokeStyle="#8a7a5a"; x2.lineWidth=3;
   x2.beginPath(); x2.moveTo(180,y+8); x2.lineTo(W-180,y+8); x2.stroke();
   y+=60+itf/2;
   x2.textAlign="left";
   items.forEach(function(it,i){
-    x2.font=itf+"px 'Gowun Dodum'"; x2.fillStyle="#3a3a3a";
+    x2.font="700 "+itf+"px 'Gowun Dodum'"; x2.fillStyle="#3a3a3a";
     allLines[i].forEach(function(l,j){
       x2.fillText(j===0?((i+1)+". "+l):l, j===0?150:(150+indW), y);
       y+=step;
@@ -1364,7 +1371,7 @@ function drawChecklist(no){
   /* 크기 자동: 전체 줄 수 기준 */
   var itf=38, allLines=null, step=0;
   for(;itf>=26;itf-=2){
-    x2.font=itf+"px 'Gowun Dodum'";
+    x2.font="700 "+itf+"px 'Gowun Dodum'";
     allLines=items.map(function(it){ return wrapLines(x2,it, W-360); });
     var nl=allLines.reduce(function(a,b){return a+b.length;},0);
     step=itf+14;
@@ -1379,7 +1386,7 @@ function drawChecklist(no){
     x2.strokeStyle=t.title; x2.lineWidth=9; x2.lineCap="round"; x2.lineJoin="round";
     x2.beginPath(); x2.moveTo(166,cy); x2.lineTo(176,cy+11); x2.lineTo(196,cy-16); x2.stroke();
     /* 문장 */
-    x2.font=itf+"px 'Gowun Dodum'"; x2.fillStyle="#3a3a3a";
+    x2.font="700 "+itf+"px 'Gowun Dodum'"; x2.fillStyle="#3a3a3a";
     x2.textAlign="left"; x2.textBaseline="middle";
     allLines[i].forEach(function(l,j){ x2.fillText(l, 228, y+j*step); });
     y+=allLines[i].length*step;
