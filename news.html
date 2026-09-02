@@ -212,9 +212,31 @@ details.help li{ margin:4px 0; }
   <div class="row">
     <div style="flex:0 0 auto"><button class="pri" id="btnMake">🖼️ 소식지 만들기 (미리보기)</button></div>
     <div style="flex:0 0 auto"><button class="sec" id="btnSaveAll">💾 전체 PNG 저장</button></div>
+    <div style="flex:0 0 auto"><button class="sec" id="btnSavePdf">📕 PDF 한 개로 저장</button></div>
   </div>
-  <div class="hint">전체 저장 시 브라우저가 「여러 파일 다운로드 허용」을 물으면 허용을 누르세요. 저장된 PNG를 밴드 글에 순서대로 올리면 됩니다.</div>
+  <div class="hint">밴드에 올릴 때는 <b>PNG</b>(한 장씩), 보관·인쇄용으로는 <b>PDF</b>(전체 한 파일)를 쓰세요. 전체 PNG 저장 시 브라우저가 「여러 파일 다운로드 허용」을 물으면 허용을 누르세요.</div>
   <div id="previewArea"></div>
+</section>
+
+<!-- 보관함 -->
+<section class="card">
+  <h2>📦 지난 호 보관함</h2>
+  <div class="hint">완성된 <b>그림 파일을 그대로 쌓아 두면 용량이 큽니다.</b> 그래서 이 보관함은 그림 대신 <b>만든 재료(설정·글·사진)만</b> 저장해 두고, 나중에 열면 그 자리에서 다시 만들어 냅니다. 용량이 약 1/5로 줄어듭니다.</div>
+  <div class="row" style="margin-top:8px">
+    <div style="flex:0 0 auto"><button class="pri" id="btnIssueSave">💾 이번 호 보관</button></div>
+    <div style="flex:0 0 auto"><button class="sec" id="btnIssueImport">📂 파일에서 불러오기</button></div>
+    <input type="file" id="inIssueFile" accept=".json,application/json" style="display:none">
+  </div>
+  <div id="issueList" style="margin-top:10px"></div>
+  <div class="hint" id="issueQuota" style="margin-top:8px"></div>
+  <details class="help"><summary>보관 방법 정리 (용량 걱정 없이)</summary>
+    <ul>
+      <li><b>이 기기에 보관</b> — [이번 호 보관]. 브라우저 저장공간을 쓰며 보통 수 GB까지 가능합니다. 아래에 사용량이 표시됩니다.</li>
+      <li><b>파일로 영구 보관 (권장)</b> — 각 호의 [파일로 내보내기]로 받은 <code>.json</code> 파일을 구글 드라이브·USB 등에 두세요. 기기를 바꿔도 [파일에서 불러오기]로 그대로 되살아납니다.</li>
+      <li><b>완성본 보기용</b> — [📕 PDF 한 개로 저장]으로 받은 PDF를 함께 보관하면 프로그램 없이도 볼 수 있습니다.</li>
+      <li>브라우저 기록을 지우면 이 기기 보관함은 사라질 수 있으니, 중요한 호는 꼭 파일로 내보내 두세요.</li>
+    </ul>
+  </details>
 </section>
 
 </main>
@@ -257,7 +279,7 @@ details.help li{ margin:4px 0; }
    나라차 소식지 제작기
    var APP_VER 규칙: 수정할 때마다 +0.1, 내리지 않는다.
    ============================================================ */
-var APP_VER = "v2.8"; /* R2.8: 1단계 비율 옆에 [🔄 지난달 데이터 반영] 버튼 — 9월에 10월호를 만들 때처럼 달을 바꾸면 그 달의 "지난달" 데이터가 들어가도록. 연·월을 바꾸면 자동으로 재반영(자동으로 넣은 항목은 정리·갱신, 사진을 넣었거나 직접 고친 글은 그대로), 어느 달 데이터가 들어가는지 안내 문구 표시 · R2.7: 기사 카드 제목 중복 제거 — 카드 머리띠 제목과 본문 첫 줄이 같으면 본문에서 빼고, 날짜·인원 줄을 대표 줄로 크게(48px) 올림 · R2.6: 모바일 가독성 기준 재설계 — 소식지 1080px가 폰에서 약 390pt로 보이는 것(글자 ≈ px×0.36) 기준으로 기사 본문 최소 44px(≈16pt) 보장, 그보다 작아지면 줄이지 않고 페이지 분할(장수 최소·같으면 큰 글자). 제목은 42px까지만 줄이고 길면 두 줄, 소제목은 본문급 크기, 다단은 줄이 실제로 들어갈 때만(88% 기준), 칼럼 경계에서 소제목·이어지는 줄 안 끊김, 긴 낱말 글자 단위 줄바꿈. 이름 캡션 최소 30px(국기원·생일) · R2.5: 사진첩(행사·대회 카드) 순서 이동 ↑↓ 버튼 — 목록 순서=소식지 페이지 순서, 중간 배치 가능. 행사·대회 카드에 사진을 넣으면 기사 다음에 사진 페이지가 붙는 안내 보강 · R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
+var APP_VER = "v2.9"; /* R2.9: 완성본 보관 기능 — ①[📕 PDF 한 개로 저장](외부 라이브러리 없이 PDF 직접 생성·JPEG 임베드) ②[📦 지난 호 보관함] 결과 이미지가 아니라 재료(설정·글·사진)만 저장해 용량 절약, 목록에서 열기·파일(.json)로 내보내기·삭제, 파일에서 불러오기, 저장공간 사용량 표시(접속키는 보관 대상에서 제외) · R2.8: 1단계 비율 옆에 [🔄 지난달 데이터 반영] 버튼 — 9월에 10월호를 만들 때처럼 달을 바꾸면 그 달의 "지난달" 데이터가 들어가도록. 연·월을 바꾸면 자동으로 재반영(자동으로 넣은 항목은 정리·갱신, 사진을 넣었거나 직접 고친 글은 그대로), 어느 달 데이터가 들어가는지 안내 문구 표시 · R2.7: 기사 카드 제목 중복 제거 — 카드 머리띠 제목과 본문 첫 줄이 같으면 본문에서 빼고, 날짜·인원 줄을 대표 줄로 크게(48px) 올림 · R2.6: 모바일 가독성 기준 재설계 — 소식지 1080px가 폰에서 약 390pt로 보이는 것(글자 ≈ px×0.36) 기준으로 기사 본문 최소 44px(≈16pt) 보장, 그보다 작아지면 줄이지 않고 페이지 분할(장수 최소·같으면 큰 글자). 제목은 42px까지만 줄이고 길면 두 줄, 소제목은 본문급 크기, 다단은 줄이 실제로 들어갈 때만(88% 기준), 칼럼 경계에서 소제목·이어지는 줄 안 끊김, 긴 낱말 글자 단위 줄바꿈. 이름 캡션 최소 30px(국기원·생일) · R2.5: 사진첩(행사·대회 카드) 순서 이동 ↑↓ 버튼 — 목록 순서=소식지 페이지 순서, 중간 배치 가능. 행사·대회 카드에 사진을 넣으면 기사 다음에 사진 페이지가 붙는 안내 보강 · R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
 document.getElementById("verLabel").textContent = APP_VER;
 
 var GAS = "https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
@@ -2187,6 +2209,174 @@ function savePng(p,i){
     setTimeout(function(){ URL.revokeObjectURL(a.href); },5000);
   },"image/png");
 }
+/* ============================================================
+   [R2.9] 완성본 PDF 한 개로 저장 — 외부 라이브러리 없이 PDF 직접 생성
+   각 페이지를 JPEG로 만들어 PDF에 그대로 담는다(DCTDecode).
+   ============================================================ */
+function pdfFromPages(list, quality){
+  return Promise.all(list.map(function(p){
+    return new Promise(function(res){
+      p.canvas.toBlob(function(bl){
+        bl.arrayBuffer().then(function(ab){ res({u8:new Uint8Array(ab), w:p.canvas.width, h:p.canvas.height}); });
+      }, "image/jpeg", quality||0.9);
+    });
+  })).then(function(imgs){
+    var enc=new TextEncoder(), parts=[], len=0, off={};
+    function push(u8){ parts.push(u8); len+=u8.length; }
+    function S(s){ push(enc.encode(s)); }
+    function obj(n, body){ off[n]=len; S(n+" 0 obj\n"+body+"\nendobj\n"); }
+    S("%PDF-1.4\n");
+    var n=imgs.length, kids=[];
+    for(var i=0;i<n;i++) kids.push((3+i*3)+" 0 R");
+    obj(1,"<< /Type /Catalog /Pages 2 0 R >>");
+    obj(2,"<< /Type /Pages /Kids ["+kids.join(" ")+"] /Count "+n+" >>");
+    imgs.forEach(function(im,i){
+      var pw=Math.round(im.w/2), ph=Math.round(im.h/2);   /* 144dpi 기준 크기 */
+      var pn=3+i*3, cn=4+i*3, xn=5+i*3;
+      obj(pn,"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+pw+" "+ph+"]"
+        +" /Resources << /XObject << /Im0 "+xn+" 0 R >> >> /Contents "+cn+" 0 R >>");
+      var cs="q "+pw+" 0 0 "+ph+" 0 0 cm /Im0 Do Q";
+      obj(cn,"<< /Length "+cs.length+" >>\nstream\n"+cs+"\nendstream");
+      off[xn]=len;
+      S(xn+" 0 obj\n<< /Type /XObject /Subtype /Image /Width "+im.w+" /Height "+im.h
+        +" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+im.u8.length+" >>\nstream\n");
+      push(im.u8);
+      S("\nendstream\nendobj\n");
+    });
+    var cnt=2+n*3, xrefOff=len;
+    var t="xref\n0 "+(cnt+1)+"\n0000000000 65535 f \n";
+    for(var k=1;k<=cnt;k++) t+=("0000000000"+(off[k]||0)).slice(-10)+" 00000 n \n";
+    t+="trailer\n<< /Size "+(cnt+1)+" /Root 1 0 R >>\nstartxref\n"+xrefOff+"\n%%EOF\n";
+    S(t);
+    var out=new Uint8Array(len), pos=0;
+    parts.forEach(function(u){ out.set(u,pos); pos+=u.length; });
+    return new Blob([out], {type:"application/pdf"});
+  });
+}
+function savePdf(){
+  if(!MADE.length){ alert("먼저 [소식지 만들기]를 눌러 주세요."); return; }
+  var btn=document.getElementById("btnSavePdf");
+  btn.disabled=true; btn.textContent="PDF 만드는 중…";
+  pdfFromPages(MADE, 0.9).then(function(bl){
+    dlBlob(bl, fileBase()+".pdf");
+    btn.disabled=false; btn.textContent="📕 PDF 한 개로 저장";
+  }).catch(function(e){
+    btn.disabled=false; btn.textContent="📕 PDF 한 개로 저장";
+    alert("PDF 저장 실패: "+e.message);
+  });
+}
+function dlBlob(bl, name){
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(bl); a.download=name; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 8000);
+}
+/* ============================================================
+   [R2.9] 호 보관함 — 결과 이미지가 아니라 "재료"만 저장(용량 절약)
+   ============================================================ */
+function issueKey(y,m){ return "issue:"+y+"-"+("0"+m).slice(-2); }
+function curIssueYm(){ return S.year+"-"+("0"+S.month).slice(-2); }
+function issuePack(){
+  var s2={}; for(var k in S) s2[k]=S[k];
+  delete s2.key;   /* 접속키는 보관하지 않는다 */
+  return { nlIssue:1, ver:APP_VER, ym:curIssueYm(), savedAt:Date.now(),
+    s:s2, albums:ALBUMS, cover:COVERIMG||"", bg:BGIMG||"", logo:LOGO||"" };
+}
+function fmtMB(b){ return (b/1048576).toFixed(b>1048576?1:2)+"MB"; }
+function issueIndexLoad(){
+  return idbGet("issueIndex").then(function(v){
+    if(!v) return [];
+    try{ return JSON.parse(v)||[]; }catch(e){ return []; }
+  });
+}
+function issueIndexSave(list){ return idbSet("issueIndex", JSON.stringify(list)); }
+function saveIssue(){
+  var pack=issuePack(), str=JSON.stringify(pack);
+  var bytes=new Blob([str]).size, ph=0;
+  ALBUMS.forEach(function(a){ ph+=(a.photos||[]).length; });
+  return issueIndexLoad().then(function(list){
+    var ex=list.filter(function(o){ return o.ym===pack.ym; })[0];
+    if(ex && !confirm(pack.s.year+"년 "+pack.s.month+"월호가 이미 보관되어 있습니다. 지금 내용으로 덮어쓸까요?")) return;
+    return idbSet(issueKey(S.year,S.month), str).then(function(){
+      list=list.filter(function(o){ return o.ym!==pack.ym; });
+      list.push({ ym:pack.ym, y:S.year, m:S.month, savedAt:pack.savedAt, photos:ph, bytes:bytes, pages:MADE.length||0 });
+      list.sort(function(a,b){ return b.ym.localeCompare(a.ym); });
+      return issueIndexSave(list).then(function(){
+        renderIssueList();
+        alert(S.year+"년 "+S.month+"월호를 보관했습니다. ("+fmtMB(bytes)+" · 사진 "+ph+"장)\n\n기기를 바꿔도 쓰려면 목록의 [파일로 내보내기]로 파일도 함께 받아 두세요.");
+      });
+    });
+  });
+}
+function applyIssue(pack){
+  if(!pack || !pack.s){ alert("이 파일은 소식지 보관 파일이 아닙니다."); return; }
+  var keepKey=S.key;
+  for(var k in pack.s) S[k]=pack.s[k];
+  S.key=keepKey;
+  if(!S.calColors) S.calColors={};
+  ALBUMS=pack.albums||[];
+  COVERIMG=pack.cover||null; BGIMG=pack.bg||null; LOGO=pack.logo||null;
+  saveS(); albumsSave();
+  idbSet("cover", COVERIMG||""); idbSet("bgimg", BGIMG||"");
+  try{ if(LOGO) localStorage.setItem(LSK+"-logo", LOGO); else localStorage.removeItem(LSK+"-logo"); }catch(e){}
+  MADE=[]; document.getElementById("previewArea").innerHTML="";
+  initInputs(); renderCalEditor(); renderAlbumsEditor();
+  renderKkwEditor(); renderBdayEditor(); updateSizeGuide(); updatePrevHint();
+  alert((pack.s.year||"")+"년 "+(pack.s.month||"")+"월호를 불러왔습니다. [소식지 만들기]를 누르면 그때 그대로 다시 만들어집니다.");
+}
+function openIssue(ym){
+  idbGet("issue:"+ym).then(function(v){
+    if(!v){ alert("보관 내용을 찾을 수 없습니다."); return; }
+    var pack=null; try{ pack=JSON.parse(v); }catch(e){}
+    if(!confirm("지금 편집 중인 내용을 덮고 "+ym.replace("-","년 ")+"월호를 불러옵니다. 계속할까요?")) return;
+    applyIssue(pack);
+  });
+}
+function exportIssue(ym){
+  idbGet("issue:"+ym).then(function(v){
+    if(!v){ alert("보관 내용을 찾을 수 없습니다."); return; }
+    dlBlob(new Blob([v],{type:"application/json"}), "나라차소식지_"+ym+".json");
+  });
+}
+function deleteIssue(ym){
+  if(!confirm(ym.replace("-","년 ")+"월호 보관을 이 기기에서 지울까요?\n(파일로 내보낸 것은 남아 있습니다)")) return;
+  idbSet("issue:"+ym, "").then(function(){
+    return issueIndexLoad().then(function(list){
+      return issueIndexSave(list.filter(function(o){ return o.ym!==ym; }));
+    });
+  }).then(renderIssueList);
+}
+function renderIssueList(){
+  var box=document.getElementById("issueList"); if(!box) return;
+  issueIndexLoad().then(function(list){
+    box.innerHTML="";
+    if(!list.length){ box.innerHTML='<div class="hint">아직 보관된 호가 없습니다. 소식지를 완성한 뒤 [💾 이번 호 보관]을 눌러 보세요.</div>'; }
+    var totB=0;
+    list.forEach(function(o){
+      totB+=o.bytes||0;
+      var d=new Date(o.savedAt||0);
+      var row=document.createElement("div");
+      row.style.cssText="display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-top:6px;background:#fffdf8";
+      var t=document.createElement("div"); t.style.flex="1"; t.style.minWidth="200px";
+      t.innerHTML="<b>"+o.y+"년 "+o.m+"월호</b> <span style='color:#999;font-size:12px'>사진 "+(o.photos||0)+"장 · "+fmtMB(o.bytes||0)
+        +" · "+(d.getFullYear()||"")+"."+(d.getMonth()+1)+"."+d.getDate()+" 보관</span>";
+      row.appendChild(t);
+      [["열기",function(){ openIssue(o.ym); }],["파일로 내보내기",function(){ exportIssue(o.ym); }],["삭제",function(){ deleteIssue(o.ym); }]]
+        .forEach(function(bd){
+          var b2=document.createElement("button"); b2.className="sec min"; b2.textContent=bd[0]; b2.onclick=bd[1];
+          row.appendChild(b2);
+        });
+      box.appendChild(row);
+    });
+    var q=document.getElementById("issueQuota");
+    var base="보관된 호 "+list.length+"개 · 합계 약 "+fmtMB(totB);
+    if(navigator.storage && navigator.storage.estimate){
+      navigator.storage.estimate().then(function(es){
+        var used=es.usage||0, quota=es.quota||0;
+        q.textContent=base+"   |   이 기기 브라우저 저장공간: "+fmtMB(used)+" 사용 / 약 "+(quota/1073741824).toFixed(1)+"GB 사용 가능";
+      }).catch(function(){ q.textContent=base; });
+    }else q.textContent=base;
+  });
+}
 function saveAllPng(){
   if(!MADE.length){ alert("먼저 [소식지 만들기]를 눌러 주세요."); return; }
   var i=0;
@@ -2339,6 +2529,21 @@ function initInputs(){
     ALBUMS.push({title:"", type:"photo", info:"", photos:[]});
     albumsSave(); renderAlbumsEditor();
   };
+  document.getElementById("btnSavePdf").onclick=savePdf;
+  document.getElementById("btnIssueSave").onclick=function(){ saveIssue(); };
+  document.getElementById("btnIssueImport").onclick=function(){ document.getElementById("inIssueFile").click(); };
+  document.getElementById("inIssueFile").onchange=function(){
+    var f=this.files&&this.files[0]; if(!f) return;
+    var fr=new FileReader();
+    fr.onload=function(){
+      var pack=null; try{ pack=JSON.parse(fr.result); }catch(e){}
+      if(!pack || !pack.nlIssue){ alert("소식지 보관 파일(.json)이 아닙니다."); return; }
+      if(!confirm("지금 편집 중인 내용을 덮고 파일의 내용을 불러옵니다. 계속할까요?")) return;
+      applyIssue(pack);
+    };
+    fr.readAsText(f);
+    this.value="";
+  };
   initCrop();
   initViewer();
 }
@@ -2370,6 +2575,7 @@ idbGet("cover").then(function(v){
 idbGet("bgimg").then(function(v){
   if(v){ BGIMG=v; document.getElementById("bgHint").textContent="배경 이미지가 등록되어 있습니다. ✓"; }
 });
+renderIssueList();
 /* R1.2: 저장된 접속키가 있으면 열 때 자동으로 데이터 불러오기
    R1.3: 접속키는 ⚙️ 설정으로 이동 — 키가 없을 때만 설정 화면을 자동으로 연다 */
 if(S.key){ setStatus("저장된 접속키로 자동으로 불러오는 중…"); doPull(); }
