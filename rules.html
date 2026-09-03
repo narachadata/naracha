@@ -22,6 +22,12 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20260829.0010 (R4.1) 구글 시트 「금액 창고」 연동 추가 —
+     · 문서를 열면 시트에서 최신 금액을 받아 적용(FEES_URL 에 주소를 심으면 모든 기기 반영)
+     · 설정 화면에서 [시트에서 불러오기] [시트에 저장] · 비밀키는 이 기기에만 저장
+     · fail-closed : HTTP 오류·형식 오류·0 이하 값·항목 5개 미만이면 통째로 거절하고
+       문서에 담긴 값을 그대로 씀(검증 완료)
+     · Apps Script 코드와 설치 안내는 기록/요금연동/ 에 둠
    v20260829.0009 (R4.0) 금액·횟수 설정 기능 추가 —
      · 문서의 금액/횟수 42곳을 CFG 설정값에서 읽어 표시(data-cfg)
      · 상단 ⚙ 버튼 → 비밀번호(처음 1234) 확인 후 설정 화면에서 편집·저장
@@ -104,7 +110,7 @@
    v20260827.0003 (R1.2) 나라차 공식 로고 적용(LOGO_B64 한 곳 저장 → img[data-logo] 주입)
    v20260827.0002 (R1.1) 정관(조문) 형식으로 전면 개편
    v20260827.0001 (R1.0) 최초 제작 */
-var RULES_VER = "v20260829.0009";
+var RULES_VER = "v20260829.0010";
 /* 문서 날짜는 RULES_VER 의 날짜 부분에서 자동으로 뽑는다.
    → 규정을 고치고 RULES_VER 만 올리면 표지의 개정일과 부칙의 시행일이 함께 바뀐다.
      (날짜를 따로 적어 두면 고칠 때 빠뜨리기 쉬우므로 한 곳에서만 관리한다) */
@@ -157,6 +163,11 @@ var REG_KEY = 'naracha_regguide';           /* 메인 프로그램이 쓰는 수
 var REG_FIELDS = ['w1','w2','w3','fp','fam2','fam3'];
 var PW_KEY = 'naracha_rules_pw';
 var PW_DEFAULT = '1234';                     /* 첫 비밀번호 — 설정에서 바꿀 수 있다 */
+
+/* 구글 시트 「금액 창고」 주소.
+   여기에 주소를 넣으면 문서를 여는 모든 기기가 시트의 금액을 받아 쓴다.
+   비워 두면 이 파일에 담긴 값(CFG_DEFAULT)과 기기 저장값만 쓴다. */
+var FEES_URL = '';
 
 function cfgHash(s){                         /* 비밀번호를 그대로 저장하지 않기 위한 간단 해시 */
   var h = 5381, i;
@@ -389,6 +400,11 @@ figure.sample figcaption{font-size:.8em;color:var(--ink2);text-align:center;marg
 .cfgfld label{display:block;font-size:.78em;color:var(--ink2);font-weight:700;margin-bottom:3px}
 .cfgfld input{width:100%;padding:8px 10px;border:1.5px solid var(--line);border-radius:9px;font-size:.98em;font-family:inherit;text-align:right}
 .cfgfld input:focus{outline:none;border-color:var(--navy)}
+.cfgsheet{padding:14px 18px;border-top:1px solid var(--line);background:#f7f9fd}
+.cfgsheet h5{font-size:.88em;color:var(--navy-dark);margin-bottom:6px;padding-left:9px;border-left:4px solid var(--navy);display:flex;align-items:center;gap:8px}
+.feesst{font-size:.82em;font-weight:600;color:#78746a}
+.cfgsheet-n{font-size:.8em;color:var(--ink2);line-height:1.6;margin-bottom:9px}
+.cfgsheet-b{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
 .cfgfoot{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--line);background:#fafaf7;flex-wrap:wrap}
 .cfgbtn{border-radius:10px;padding:10px 16px;font-size:.9em;font-weight:800;cursor:pointer;font-family:inherit;border:1.5px solid var(--line);background:#fff;color:var(--ink2)}
 .cfgbtn.go{margin-left:auto;background:var(--red);border-color:var(--red);color:#fff}
@@ -1614,6 +1630,18 @@ mark{background:#ffe082;border-radius:2px}
     </div>
     <div class="cfgnote" id="cfgNote"></div>
     <div class="cfgbody" id="cfgBody"></div>
+    <div class="cfgsheet">
+      <h5>구글 시트 연결 <span id="feesState" class="feesst"></span></h5>
+      <p class="cfgsheet-n">시트를 연결하면 <b>모든 기기(학부모님 폰 포함)</b>에 금액이 함께 반영됩니다. 주소는 문서에 심어 두어야 모두에게 적용되며, 비밀키는 이 기기에만 저장됩니다.</p>
+      <div class="cfgrow">
+        <div class="cfgfld" style="grid-column:1/-1"><label>시트 주소 (Apps Script 웹앱 URL)</label><input id="cf_url" type="text" placeholder="https://script.google.com/macros/s/.../exec"></div>
+        <div class="cfgfld"><label>저장용 비밀키</label><input id="cf_key" type="password" placeholder="시트에 정해 둔 키"></div>
+      </div>
+      <div class="cfgsheet-b">
+        <button class="cfgbtn ghost" id="cfgPull">시트에서 불러오기</button>
+        <button class="cfgbtn ghost" id="cfgPush">시트에 저장</button>
+      </div>
+    </div>
     <div class="cfgfoot">
       <button class="cfgbtn ghost" id="cfgReset">처음 값으로</button>
       <button class="cfgbtn ghost" id="cfgCopy">배포용 값 복사</button>
@@ -1787,6 +1815,86 @@ mark{background:#ffe082;border-radius:2px}
   document.addEventListener('keydown', function(e){ if(e.key==='Escape') lbClose(); });
 
 
+
+  /* ══════ 구글 시트 「금액 창고」 연동 ══════
+     · 문서를 열 때 시트에서 최신 금액을 받아온다 → 모든 기기에 자동 반영
+     · 저장은 관리자 키가 있는 기기에서만 (설정 화면)
+     · fail-closed : 응답이 조금이라도 이상하면 받아오지도, 저장하지도 않는다 */
+  var FEES_URL_KEY = 'naracha_fees_url';   /* 시험용 주소(관장님 기기) */
+  var FEES_ADMIN_KEY = 'naracha_fees_key'; /* 저장용 비밀키(관장님 기기에만) */
+
+  function feesUrl(){
+    if(FEES_URL) return FEES_URL;                      /* 파일에 심어 둔 주소 = 모두에게 적용 */
+    try{ return localStorage.getItem(FEES_URL_KEY) || ''; }catch(e){ return ''; }
+  }
+  function feesKey(){ try{ return localStorage.getItem(FEES_ADMIN_KEY) || ''; }catch(e){ return ''; } }
+
+  function feesBadge(txt, ok){
+    var el = document.getElementById('feesState');
+    if(!el) return;
+    el.textContent = txt;
+    el.style.color = ok === false ? '#a51228' : (ok ? '#1d6b35' : '#78746a');
+  }
+
+  /* 받아온 값이 쓸 만한지 검사 — 하나라도 이상하면 통째로 버린다 */
+  function feesValid(cfg){
+    if(!cfg || typeof cfg !== 'object') return null;
+    var got = {}, n = 0, k;
+    for(k in CFG_DEFAULT){
+      if(cfg[k] === undefined) continue;
+      var v = Number(cfg[k]);
+      if(!isFinite(v) || v <= 0) return null;          /* 값 하나라도 이상하면 거절 */
+      got[k] = v; n++;
+    }
+    return n >= 5 ? got : null;                         /* 너무 적게 오면 거절 */
+  }
+
+  window.feesPull = feesPull; window.feesPush = feesPush;   /* 점검용으로도 부를 수 있게 */
+  function feesPull(cb){
+    var url = feesUrl();
+    if(!url){ if(cb) cb(false, '주소 없음'); return; }
+    feesBadge('금액 확인 중…');
+    fetch(url, { cache: 'no-store' })
+      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(j){
+        if(!j || j.ok !== true) throw new Error('응답 형식 오류');
+        var got = feesValid(j.cfg);
+        if(!got) throw new Error('값 형식 오류');
+        var k; for(k in got) CFG[k] = got[k];
+        cfgApply();
+        feesBadge('구글 시트 값 적용됨' + (j.savedAt ? ' (' + String(j.savedAt).slice(0,10) + ')' : ''), true);
+        if(cb) cb(true);
+      })
+      .catch(function(err){
+        feesBadge('시트를 읽지 못해 문서에 담긴 값을 씁니다', false);
+        if(cb) cb(false, String(err && err.message || err));
+      });
+  }
+
+  function feesPush(cfg, cb){
+    var url = feesUrl(), key = feesKey();
+    if(!url){ cb(false, '시트 주소가 없습니다.'); return; }
+    if(!key){ cb(false, '저장용 비밀키가 없습니다.'); return; }
+    var clean = feesValid(cfg);
+    if(!clean){ cb(false, '보낼 값이 올바르지 않습니다.'); return; }
+    feesBadge('시트에 저장 중…');
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },  /* 미리 확인 요청을 피한다 */
+      body: JSON.stringify({ key: key, cfg: clean })
+    })
+      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(j){
+        if(!j || j.ok !== true) throw new Error(j && j.error === 'AUTH' ? '비밀키가 맞지 않습니다' : (j && j.error) || '저장 실패');
+        feesBadge('구글 시트에 저장됨', true);
+        cb(true, j.saved);
+      })
+      .catch(function(err){
+        feesBadge('시트 저장 실패', false);
+        cb(false, String(err && err.message || err));
+      });
+  }
+
   /* ══════ 금액·횟수 설정 화면 ══════ */
   var CFG_GROUPS = [
     ['월 수련비', [['w1','약식수련(월4회)'],['w2','기본수련(월8회)'],['w3','심화수련(월12회)'],
@@ -1817,6 +1925,7 @@ mark{background:#ffe082;border-radius:2px}
     return true;
   }
 
+  function cfgBuild0(){ cfgBuild(); }
   function cfgBuild(){
     var box = document.getElementById('cfgBody');
     box.innerHTML = CFG_GROUPS.map(function(g){
@@ -1826,6 +1935,10 @@ mark{background:#ffe082;border-radius:2px}
                  '<input id="cf_' + it[0] + '" type="number" inputmode="numeric" value="' + CFG[it[0]] + '"></div>';
         }).join('') + '</div></div>';
     }).join('');
+    try{
+      document.getElementById('cf_url').value = FEES_URL || localStorage.getItem(FEES_URL_KEY) || '';
+      document.getElementById('cf_key').value = localStorage.getItem(FEES_ADMIN_KEY) || '';
+    }catch(e){}
     document.getElementById('cfgNote').innerHTML =
       '이 화면에서 바꾼 값은 <b>이 기기에서만</b> 저장됩니다. 수련비 6개 금액은 <b>메인 프로그램과 서로 연동</b>되어 함께 바뀝니다.<br>' +
       '학부모님 모두에게 보이게 하려면 <b>[배포용 값 복사]</b>로 값을 복사해 전달해 주세요. (문서 파일에 반영해야 모든 분께 보입니다)';
@@ -1853,6 +1966,26 @@ mark{background:#ffe082;border-radius:2px}
       cfgSave(cfgCollect());
       alert('저장했습니다.\n이 기기의 문서와 메인 프로그램(수련비)에 반영됩니다.');
       close();
+    };
+    document.getElementById('cfgPull').onclick = function(){
+      var u = String(document.getElementById('cf_url').value || '').trim();
+      if(u){ try{ localStorage.setItem(FEES_URL_KEY, u); }catch(e){} }
+      feesPull(function(ok, why){
+        if(ok){ cfgBuild0(); alert('시트에서 금액을 받아왔습니다.'); }
+        else alert('불러오지 못했습니다.\n' + (why || ''));
+      });
+    };
+    document.getElementById('cfgPush').onclick = function(){
+      var u = String(document.getElementById('cf_url').value || '').trim();
+      var k = String(document.getElementById('cf_key').value || '').trim();
+      if(u){ try{ localStorage.setItem(FEES_URL_KEY, u); }catch(e){} }
+      if(k){ try{ localStorage.setItem(FEES_ADMIN_KEY, k); }catch(e){} }
+      var cur = cfgCollect(), all = {}, kk;
+      for(kk in CFG_DEFAULT) all[kk] = (cur[kk] !== undefined ? cur[kk] : CFG[kk]);
+      feesPush(all, function(ok, info){
+        if(ok){ cfgSave(cur); alert('구글 시트에 저장했습니다. (' + info + '개 항목)\n이제 모든 기기에서 이 금액이 보입니다.'); }
+        else alert('시트에 저장하지 못했습니다.\n' + (info || ''));
+      });
     };
     document.getElementById('cfgReset').onclick = function(){
       if(!confirm('모든 값을 처음 상태로 되돌릴까요?')) return;
@@ -1883,6 +2016,7 @@ mark{background:#ffe082;border-radius:2px}
   })();
 
   cfgApply();
+  feesPull();          /* 시트가 연결돼 있으면 최신 금액으로 갱신 */
 
   /* ── 보강·초과 계산기 (제14조·제15조) ── */
   window.calcMakeup = function(){
