@@ -22,6 +22,9 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20260829.0011 (R4.2) 구글 시트 주소를 FEES_URL 에 심음 — 이제 문서를 여는 모든 기기가
+     시트의 금액을 받아 쓴다. 시트가 아직 비어 있는 경우는 '읽기 실패'가 아니라
+     '시트가 비어 있습니다'로 구분해 안내(문서 값은 그대로 유지)
    v20260829.0010 (R4.1) 구글 시트 「금액 창고」 연동 추가 —
      · 문서를 열면 시트에서 최신 금액을 받아 적용(FEES_URL 에 주소를 심으면 모든 기기 반영)
      · 설정 화면에서 [시트에서 불러오기] [시트에 저장] · 비밀키는 이 기기에만 저장
@@ -110,7 +113,7 @@
    v20260827.0003 (R1.2) 나라차 공식 로고 적용(LOGO_B64 한 곳 저장 → img[data-logo] 주입)
    v20260827.0002 (R1.1) 정관(조문) 형식으로 전면 개편
    v20260827.0001 (R1.0) 최초 제작 */
-var RULES_VER = "v20260829.0010";
+var RULES_VER = "v20260829.0011";
 /* 문서 날짜는 RULES_VER 의 날짜 부분에서 자동으로 뽑는다.
    → 규정을 고치고 RULES_VER 만 올리면 표지의 개정일과 부칙의 시행일이 함께 바뀐다.
      (날짜를 따로 적어 두면 고칠 때 빠뜨리기 쉬우므로 한 곳에서만 관리한다) */
@@ -167,7 +170,7 @@ var PW_DEFAULT = '1234';                     /* 첫 비밀번호 — 설정에�
 /* 구글 시트 「금액 창고」 주소.
    여기에 주소를 넣으면 문서를 여는 모든 기기가 시트의 금액을 받아 쓴다.
    비워 두면 이 파일에 담긴 값(CFG_DEFAULT)과 기기 저장값만 쓴다. */
-var FEES_URL = '';
+var FEES_URL = 'https://script.google.com/macros/s/AKfycbzzXQoHiV75CgxPW7ksnVf1js4lXbmlpEaxLEf_2uTFin72lb4mc7zPlkEx6oZkkao1/exec';
 
 function cfgHash(s){                         /* 비밀번호를 그대로 저장하지 않기 위한 간단 해시 */
   var h = 5381, i;
@@ -1858,6 +1861,11 @@ mark{background:#ffe082;border-radius:2px}
       .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function(j){
         if(!j || j.ok !== true) throw new Error('응답 형식 오류');
+        if(j.cfg && Object.keys(j.cfg).length === 0){   /* 아직 한 번도 저장하지 않은 시트 */
+          feesBadge('시트가 비어 있습니다 — [시트에 저장]을 한 번 눌러 주세요');
+          if(cb) cb(false, '시트가 아직 비어 있습니다.');
+          return;
+        }
         var got = feesValid(j.cfg);
         if(!got) throw new Error('값 형식 오류');
         var k; for(k in got) CFG[k] = got[k];
