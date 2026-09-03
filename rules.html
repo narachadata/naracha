@@ -22,6 +22,8 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20260903.0001 (R4.3) 설정 화면의 '구글 시트 연결' 부분을 접어 둠 — 평소에는 한 줄만 보이고
+     필요할 때 눌러서 펼친다. 설정을 다시 열면 항상 접힌 상태로 시작
    v20260829.0011 (R4.2) 구글 시트 주소를 FEES_URL 에 심음 — 이제 문서를 여는 모든 기기가
      시트의 금액을 받아 쓴다. 시트가 아직 비어 있는 경우는 '읽기 실패'가 아니라
      '시트가 비어 있습니다'로 구분해 안내(문서 값은 그대로 유지)
@@ -113,7 +115,7 @@
    v20260827.0003 (R1.2) 나라차 공식 로고 적용(LOGO_B64 한 곳 저장 → img[data-logo] 주입)
    v20260827.0002 (R1.1) 정관(조문) 형식으로 전면 개편
    v20260827.0001 (R1.0) 최초 제작 */
-var RULES_VER = "v20260829.0011";
+var RULES_VER = "v20260903.0001";
 /* 문서 날짜는 RULES_VER 의 날짜 부분에서 자동으로 뽑는다.
    → 규정을 고치고 RULES_VER 만 올리면 표지의 개정일과 부칙의 시행일이 함께 바뀐다.
      (날짜를 따로 적어 두면 고칠 때 빠뜨리기 쉬우므로 한 곳에서만 관리한다) */
@@ -404,7 +406,12 @@ figure.sample figcaption{font-size:.8em;color:var(--ink2);text-align:center;marg
 .cfgfld input{width:100%;padding:8px 10px;border:1.5px solid var(--line);border-radius:9px;font-size:.98em;font-family:inherit;text-align:right}
 .cfgfld input:focus{outline:none;border-color:var(--navy)}
 .cfgsheet{padding:14px 18px;border-top:1px solid var(--line);background:#f7f9fd}
-.cfgsheet h5{font-size:.88em;color:var(--navy-dark);margin-bottom:6px;padding-left:9px;border-left:4px solid var(--navy);display:flex;align-items:center;gap:8px}
+.cfgsheet-t{width:100%;text-align:left;background:none;border:none;padding:2px 0;cursor:pointer;font-family:inherit;
+  font-size:.86em;font-weight:800;color:var(--navy-dark);display:flex;align-items:center;gap:8px}
+.cfgsheet-t:hover{color:var(--navy)}
+.cfgcaret{display:inline-block;transition:transform .15s;font-size:.9em;color:#8d93a6}
+.cfgsheet-t[aria-expanded="true"] .cfgcaret{transform:rotate(90deg)}
+.cfgsheet-c{margin-top:10px}
 .feesst{font-size:.82em;font-weight:600;color:#78746a}
 .cfgsheet-n{font-size:.8em;color:var(--ink2);line-height:1.6;margin-bottom:9px}
 .cfgsheet-b{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
@@ -1634,15 +1641,19 @@ mark{background:#ffe082;border-radius:2px}
     <div class="cfgnote" id="cfgNote"></div>
     <div class="cfgbody" id="cfgBody"></div>
     <div class="cfgsheet">
-      <h5>구글 시트 연결 <span id="feesState" class="feesst"></span></h5>
-      <p class="cfgsheet-n">시트를 연결하면 <b>모든 기기(학부모님 폰 포함)</b>에 금액이 함께 반영됩니다. 주소는 문서에 심어 두어야 모두에게 적용되며, 비밀키는 이 기기에만 저장됩니다.</p>
-      <div class="cfgrow">
-        <div class="cfgfld" style="grid-column:1/-1"><label>시트 주소 (Apps Script 웹앱 URL)</label><input id="cf_url" type="text" placeholder="https://script.google.com/macros/s/.../exec"></div>
-        <div class="cfgfld"><label>저장용 비밀키</label><input id="cf_key" type="password" placeholder="시트에 정해 둔 키"></div>
-      </div>
-      <div class="cfgsheet-b">
-        <button class="cfgbtn ghost" id="cfgPull">시트에서 불러오기</button>
-        <button class="cfgbtn ghost" id="cfgPush">시트에 저장</button>
+      <button class="cfgsheet-t" id="cfgSheetToggle" aria-expanded="false">
+        <span class="cfgcaret">▸</span> 구글 시트 연결 <span id="feesState" class="feesst"></span>
+      </button>
+      <div class="cfgsheet-c" id="cfgSheetBody" hidden>
+        <p class="cfgsheet-n">시트를 연결하면 <b>모든 기기(학부모님 폰 포함)</b>에 금액이 함께 반영됩니다. 주소는 문서에 이미 심어져 있으며, 비밀키는 이 기기에만 저장됩니다.</p>
+        <div class="cfgrow">
+          <div class="cfgfld" style="grid-column:1/-1"><label>시트 주소 (Apps Script 웹앱 URL)</label><input id="cf_url" type="text" placeholder="https://script.google.com/macros/s/.../exec"></div>
+          <div class="cfgfld"><label>저장용 비밀키</label><input id="cf_key" type="password" placeholder="시트에 정해 둔 키"></div>
+        </div>
+        <div class="cfgsheet-b">
+          <button class="cfgbtn ghost" id="cfgPull">시트에서 불러오기</button>
+          <button class="cfgbtn ghost" id="cfgPush">시트에 저장</button>
+        </div>
       </div>
     </div>
     <div class="cfgfoot">
@@ -1964,7 +1975,12 @@ mark{background:#ffe082;border-radius:2px}
 
   (function(){
     var wrap = document.getElementById('cfgWrap');
-    function open(){ cfgBuild(); wrap.classList.add('on'); document.body.style.overflow = 'hidden'; }
+    function open(){
+      cfgBuild();
+      var b = document.getElementById('cfgSheetBody');            /* 시트 연결은 늘 접힌 채로 연다 */
+      if(b){ b.hidden = true; document.getElementById('cfgSheetToggle').setAttribute('aria-expanded','false'); }
+      wrap.classList.add('on'); document.body.style.overflow = 'hidden';
+    }
     function close(){ wrap.classList.remove('on'); document.body.style.overflow = ''; }
     document.getElementById('cfgOpen').onclick = function(){ if(cfgPwOk()) open(); };
     document.getElementById('cfgClose').onclick = close;
@@ -1974,6 +1990,12 @@ mark{background:#ffe082;border-radius:2px}
       cfgSave(cfgCollect());
       alert('저장했습니다.\n이 기기의 문서와 메인 프로그램(수련비)에 반영됩니다.');
       close();
+    };
+    document.getElementById('cfgSheetToggle').onclick = function(){
+      var body = document.getElementById('cfgSheetBody');
+      var open = body.hidden;
+      body.hidden = !open;
+      this.setAttribute('aria-expanded', open ? 'true' : 'false');
     };
     document.getElementById('cfgPull').onclick = function(){
       var u = String(document.getElementById('cf_url').value || '').trim();
