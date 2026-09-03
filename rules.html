@@ -22,6 +22,9 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20260903.0002 (R4.4) [저장] 한 번으로 ①이 문서 ②메인 프로그램 ③구글 시트까지 자동 반영.
+     비밀키가 없으면 처음 한 번만 물어보고 기기에 저장. 시트 저장이 실패하면 그 사실을 분명히 알림.
+     '월 수련비'는 메인 프로그램과 함께 바뀌는 값이라 파란 상자로 따로 묶어 표시
    v20260903.0001 (R4.3) 설정 화면의 '구글 시트 연결' 부분을 접어 둠 — 평소에는 한 줄만 보이고
      필요할 때 눌러서 펼친다. 설정을 다시 열면 항상 접힌 상태로 시작
    v20260829.0011 (R4.2) 구글 시트 주소를 FEES_URL 에 심음 — 이제 문서를 여는 모든 기기가
@@ -115,7 +118,7 @@
    v20260827.0003 (R1.2) 나라차 공식 로고 적용(LOGO_B64 한 곳 저장 → img[data-logo] 주입)
    v20260827.0002 (R1.1) 정관(조문) 형식으로 전면 개편
    v20260827.0001 (R1.0) 최초 제작 */
-var RULES_VER = "v20260903.0001";
+var RULES_VER = "v20260903.0002";
 /* 문서 날짜는 RULES_VER 의 날짜 부분에서 자동으로 뽑는다.
    → 규정을 고치고 RULES_VER 만 올리면 표지의 개정일과 부칙의 시행일이 함께 바뀐다.
      (날짜를 따로 적어 두면 고칠 때 빠뜨리기 쉬우므로 한 곳에서만 관리한다) */
@@ -400,6 +403,8 @@ figure.sample figcaption{font-size:.8em;color:var(--ink2);text-align:center;marg
 .cfgnote{padding:12px 18px;background:#fdf7e6;border-bottom:1px solid var(--line);font-size:.84em;color:#6b5b1e;line-height:1.65}
 .cfgbody{padding:14px 18px;max-height:60vh;overflow:auto}
 .cfggrp{margin-bottom:16px}
+.cfggrp.sync{background:#f2f6fd;border:1.5px solid #ccd8f0;border-radius:12px;padding:12px 12px 4px}
+.cfggrp.sync h5{color:var(--navy);border-left-color:var(--navy)}
 .cfggrp h5{font-size:.88em;color:var(--navy-dark);margin-bottom:8px;padding-left:9px;border-left:4px solid var(--red)}
 .cfgrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px}
 .cfgfld label{display:block;font-size:.78em;color:var(--ink2);font-weight:700;margin-bottom:3px}
@@ -1916,8 +1921,8 @@ mark{background:#ffe082;border-radius:2px}
 
   /* ══════ 금액·횟수 설정 화면 ══════ */
   var CFG_GROUPS = [
-    ['월 수련비', [['w1','약식수련(월4회)'],['w2','기본수련(월8회)'],['w3','심화수련(월12회)'],
-                  ['fp','프리패스'],['fam2','직계 2인'],['fam3','직계 3인 이상']]],
+    ['월 수련비  ⟷ 메인 프로그램과 함께 바뀝니다', [['w1','약식수련(월4회)'],['w2','기본수련(월8회)'],['w3','심화수련(월12회)'],
+                  ['fp','프리패스'],['fam2','직계 2인'],['fam3','직계 3인 이상']], 'sync'],
     ['일 수련비', [['d1','약식수련'],['d2','기본수련'],['d3','심화수련'],['dfam2','직계 2인'],['dfam3','직계 3인 이상']]],
     ['연회원 할인율(%)', [['disc12','12개월'],['disc6','6개월']]],
     ['등록 시 필수비용', [['entry','입회비'],['dobok','도복비']]],
@@ -1948,7 +1953,7 @@ mark{background:#ffe082;border-radius:2px}
   function cfgBuild(){
     var box = document.getElementById('cfgBody');
     box.innerHTML = CFG_GROUPS.map(function(g){
-      return '<div class="cfggrp"><h5>' + g[0] + '</h5><div class="cfgrow">' +
+      return '<div class="cfggrp' + (g[2] === 'sync' ? ' sync' : '') + '"><h5>' + g[0] + '</h5><div class="cfgrow">' +
         g[1].map(function(it){
           return '<div class="cfgfld"><label>' + it[1] + '</label>' +
                  '<input id="cf_' + it[0] + '" type="number" inputmode="numeric" value="' + CFG[it[0]] + '"></div>';
@@ -1959,8 +1964,8 @@ mark{background:#ffe082;border-radius:2px}
       document.getElementById('cf_key').value = localStorage.getItem(FEES_ADMIN_KEY) || '';
     }catch(e){}
     document.getElementById('cfgNote').innerHTML =
-      '이 화면에서 바꾼 값은 <b>이 기기에서만</b> 저장됩니다. 수련비 6개 금액은 <b>메인 프로그램과 서로 연동</b>되어 함께 바뀝니다.<br>' +
-      '학부모님 모두에게 보이게 하려면 <b>[배포용 값 복사]</b>로 값을 복사해 전달해 주세요. (문서 파일에 반영해야 모든 분께 보입니다)';
+      '<b>[저장]</b>을 누르면 ①이 문서 ②메인 프로그램(수련비) ③구글 시트에 <b>한 번에</b> 반영됩니다.<br>' +
+      '구글 시트에 올라가면 <b>학부모님 폰에서도</b> 바뀐 금액이 보입니다. 파란 칸은 메인 프로그램과 함께 바뀌는 값입니다.';
   }
 
   function cfgCollect(){
@@ -1987,9 +1992,27 @@ mark{background:#ffe082;border-radius:2px}
     wrap.onclick = function(e){ if(e.target === wrap) close(); };
 
     document.getElementById('cfgSave').onclick = function(){
-      cfgSave(cfgCollect());
-      alert('저장했습니다.\n이 기기의 문서와 메인 프로그램(수련비)에 반영됩니다.');
-      close();
+      var cur = cfgCollect();
+      cfgSave(cur);                                   /* ① 이 문서 + 메인 프로그램(수련비) */
+      var all = {}, k;
+      for(k in CFG_DEFAULT) all[k] = CFG[k];
+      if(!feesUrl()){
+        alert('저장했습니다.\n· 이 문서와 메인 프로그램에 반영되었습니다.');
+        close(); return;
+      }
+      if(!feesKey()){                                  /* 비밀키가 아직 없으면 한 번만 물어본다 */
+        var kk = prompt('학부모님 폰까지 반영하려면 구글 시트 저장용 비밀키가 필요합니다.\n한 번만 입력해 두시면 다음부터는 묻지 않습니다.');
+        if(kk && kk.trim()){ try{ localStorage.setItem(FEES_ADMIN_KEY, kk.trim()); }catch(e){} }
+      }
+      if(!feesKey()){
+        alert('이 문서와 메인 프로그램에는 저장했습니다.\n\n다만 비밀키가 없어 구글 시트에는 올리지 못했습니다.\n학부모님께는 이전 금액이 보입니다.');
+        close(); return;
+      }
+      feesPush(all, function(ok, info){                /* ② 구글 시트 → 모든 기기 */
+        if(ok) alert('저장했습니다.\n· 이 문서와 메인 프로그램\n· 구글 시트 (' + info + '개 항목) → 학부모님 폰까지 반영됩니다.');
+        else   alert('이 문서와 메인 프로그램에는 저장했습니다.\n\n다만 구글 시트 저장에 실패했습니다.\n' + (info || '') + '\n학부모님께는 이전 금액이 보입니다.');
+        close();
+      });
     };
     document.getElementById('cfgSheetToggle').onclick = function(){
       var body = document.getElementById('cfgSheetBody');
