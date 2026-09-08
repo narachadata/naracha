@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="doc-ver" content="v20260903.0006">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차태권도 운영규정</title>
 <meta name="description" content="나라차태권도 분당도장 운영규정 — 제1장 총칙부터 부칙·부록까지 전문 수록 (반응형 웹 문서)">
@@ -22,6 +23,10 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20260903.0006 (R4.8) 예전에 열어 둔 화면이 옛 내용을 보여 주던 문제 —
+     파일 맨 위 <meta name="doc-ver"> 를 문서 버전의 단일 출처로 삼고,
+     앞부분 600바이트만 받아 비교해 새 버전이면 아래에 새로고침 막대를 띄운다.
+     [새로고침]은 ?v=시각 을 붙여 저장된 옛 문서를 확실히 지나친다
    v20260903.0005 (R4.7) [중요] 시트에 옛 금액이 남아 새 금액이 안 보이던 문제 해결 —
      문서 개정 번호(CFG_REV)를 두고, 시트가 그보다 오래되면 이번 개정에서 바뀐 항목
      (국기원 심사비 8 · 용품 11)만 파일 값을 우선 적용한다. 설정에서 한 번 저장하면
@@ -130,7 +135,12 @@
    v20260827.0003 (R1.2) 나라차 공식 로고 적용(LOGO_B64 한 곳 저장 → img[data-logo] 주입)
    v20260827.0002 (R1.1) 정관(조문) 형식으로 전면 개편
    v20260827.0001 (R1.0) 최초 제작 */
-var RULES_VER = "v20260903.0005";
+/* 문서 버전 — 파일 맨 위 <meta name="doc-ver"> 하나만 고치면 된다.
+   맨 위에 둔 이유: 새 버전이 나왔는지 확인할 때 파일 앞부분만 조금 받아 보기 위함. */
+var RULES_VER = (function(){
+  try{ return document.querySelector('meta[name="doc-ver"]').content; }
+  catch(e){ return "v20260903.0006"; }
+})();
 /* 문서 날짜는 RULES_VER 의 날짜 부분에서 자동으로 뽑는다.
    → 규정을 고치고 RULES_VER 만 올리면 표지의 개정일과 부칙의 시행일이 함께 바뀐다.
      (날짜를 따로 적어 두면 고칠 때 빠뜨리기 쉬우므로 한 곳에서만 관리한다) */
@@ -457,6 +467,16 @@ figure.sample figcaption{font-size:.8em;color:var(--ink2);text-align:center;marg
 .cfgbtn.go{margin-left:auto;background:var(--red);border-color:var(--red);color:#fff}
 @media (max-width:640px){ .cfgbtn.go{margin-left:0;width:100%} .cfgfoot{gap:6px} }
 
+/* 새 버전 안내 막대 */
+.upd{position:fixed;left:0;right:0;bottom:0;z-index:250;background:var(--navy);color:#fff;
+  display:none;align-items:center;gap:12px;padding:12px 16px;box-shadow:0 -3px 14px rgba(0,0,0,.22);font-size:.9em}
+.upd.on{display:flex}
+.upd b{font-weight:800}
+.upd .sp{flex:1}
+.upd button{border:none;border-radius:9px;padding:9px 16px;font-size:.95em;font-weight:800;cursor:pointer;font-family:inherit}
+.upd .go{background:#fff;color:var(--navy-dark)}
+.upd .no{background:rgba(255,255,255,.16);color:#fff}
+@media (max-width:520px){ .upd{font-size:.84em;padding:10px 12px;gap:8px} .upd button{padding:8px 12px} }
 /* 확대 보기: 그림을 화면 높이에 맞춰 키우고, 가로가 길면 옆으로 밀어 볼 수 있게 한다
    (폰에서 안내문 글씨가 작아 읽기 어려운 것을 막기 위함) */
 .lb{position:fixed;inset:0;background:rgba(12,12,16,.92);z-index:200;display:none;overflow:auto;padding:52px 14px 46px;-webkit-overflow-scrolling:touch}
@@ -1696,6 +1716,11 @@ mark{background:#ffe082;border-radius:2px}
   </div><!-- /doc -->
 </div><!-- /layout -->
 
+<div class="upd" id="updBar">
+  <b>새 내용이 있습니다</b><span class="sp">금액이나 규정이 바뀌었습니다.</span>
+  <button class="no" id="updNo">나중에</button>
+  <button class="go" id="updGo">새로고침</button>
+</div>
 <div class="cfgwrap" id="cfgWrap">
   <div class="cfgbox">
     <div class="cfghead">
@@ -2139,7 +2164,37 @@ mark{background:#ffe082;border-radius:2px}
   })();
 
   cfgApply();
-  feesPull();          /* 시트가 연결돼 있으면 최신 금액으로 갱신 */
+  feesPull();
+
+  /* ══════ 새 버전 확인 ══════
+     예전에 열어 둔 화면은 브라우저가 저장해 둔 옛 문서를 그대로 보여 줄 수 있다.
+     파일 앞부분(600바이트)만 받아 <meta name="doc-ver"> 를 비교하고,
+     새 버전이면 아래에 새로고침 안내 막대를 띄운다. */
+  window.updCheck = updCheck;   /* 점검용으로도 부를 수 있게 */
+  function updCheck(){
+    fetch(location.pathname + '?v=' + Date.now(),
+          { cache:'no-store', headers:{ 'Range':'bytes=0-600' } })
+      .then(function(r){ return r.text(); })
+      .then(function(t){
+        var m = /doc-ver"\s+content="([^"]+)"/.exec(t);
+        if(m && m[1] && m[1] !== RULES_VER){
+          var bar = document.getElementById('updBar');
+          if(bar) bar.classList.add('on');
+        }
+      })
+      .catch(function(){});
+  }
+  (function(){
+    var bar = document.getElementById('updBar');
+    document.getElementById('updGo').onclick = function(){
+      location.replace(location.pathname + '?v=' + Date.now());   /* 저장된 옛 문서를 확실히 지나친다 */
+    };
+    document.getElementById('updNo').onclick = function(){ bar.classList.remove('on'); };
+    setTimeout(updCheck, 2500);
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) updCheck(); });
+    setInterval(updCheck, 30 * 60 * 1000);
+  })();
+          /* 시트가 연결돼 있으면 최신 금액으로 갱신 */
 
   /* ── 보강·초과 계산기 (제14조·제15조) ── */
   window.calcMakeup = function(){
