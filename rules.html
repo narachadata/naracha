@@ -22,6 +22,9 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20260903.0004 (R4.6) 부록4를 「겨루기 용품 안내」 → 「용품 안내」로 확장 —
+     도복(품·단 한벌/상의/하의)·띠(유급자/유품자 4·5cm)·티셔츠(반팔·긴팔 치수별) 가격표 추가.
+     설정에 11개 항목 신설(도복 4 · 띠 3 · 티셔츠 4). 제7조·제20조에서 부록4로 연결
    v20260903.0003 (R4.5) 국기원 승품·단 심사비 개정 —
      품 140/160/180/250 → 170/190/210/260천원, 단 150/170/200/300 → 190/210/230/280천원
      (4단만 인하). 파일 기본값과 표시값을 함께 갱신.
@@ -123,7 +126,7 @@
    v20260827.0003 (R1.2) 나라차 공식 로고 적용(LOGO_B64 한 곳 저장 → img[data-logo] 주입)
    v20260827.0002 (R1.1) 정관(조문) 형식으로 전면 개편
    v20260827.0001 (R1.0) 최초 제작 */
-var RULES_VER = "v20260903.0003";
+var RULES_VER = "v20260903.0004";
 /* 문서 날짜는 RULES_VER 의 날짜 부분에서 자동으로 뽑는다.
    → 규정을 고치고 RULES_VER 만 올리면 표지의 개정일과 부칙의 시행일이 함께 바뀐다.
      (날짜를 따로 적어 두면 고칠 때 빠뜨리기 쉬우므로 한 곳에서만 관리한다) */
@@ -166,6 +169,12 @@ var CFG_DEFAULT = {
   dan1:190000, dan2:210000, dan3:230000, dan4:280000,
   /* 겨루기 용품 */
   gearArm:30000, gearHand:40000, gearGroin:20000, gearBody:30000, gearHead:30000, gearBag:30000,
+  /* 도복 (상하의 한 벌 / 낱개) */
+  dobokPum:50000, dobokDan:50000, dobokTop:30000, dobokPants:20000,
+  /* 띠 */
+  beltGrade:8000, beltPoom4:15000, beltPoom5:18000,
+  /* 티셔츠 (치수별) */
+  teeShortS:12000, teeShortL:13000, teeLongS:16800, teeLongL:17800,
   /* 나라차시범단 */
   demoYear:432000, demoSplit:160000, demoDobok:50000, demoUniform:90000,
   /* 월 기준 수련 횟수 */
@@ -631,7 +640,7 @@ mark{background:#ffe082;border-radius:2px}
           <div class="tblwrap"><table class="t">
             <tr><th>항목</th><th>금액</th><th>비고</th></tr>
             <tr><td class="hd">입회비</td><td class="em"><span data-cfg="c.entry" data-suffix="원">50,000원</span></td><td class="lft">전산 등록과 보험가입을 위한 비용이며 최초 1회 납부하십니다.<br>체험수련비를 내신 경우에는 차감하여 납부하시게 됩니다.</td></tr>
-            <tr><td class="hd">도복비</td><td class="em"><span data-cfg="c.dobok" data-suffix="원">50,000원</span></td><td></td></tr>
+            <tr><td class="hd">도복비</td><td class="em"><span data-cfg="c.dobok" data-suffix="원">50,000원</span></td><td class="lft">품목별 가격은 [부록 4 용품 안내]를 참고해 주세요.</td></tr>
           </table></div>
         </div>
       </article>
@@ -925,7 +934,7 @@ mark{background:#ffe082;border-radius:2px}
             <li><span class="hno">①</span><b>'나라차태권도' 도복과 자기 급·품에 맞는 띠를 착용</b>하시는 것을 원칙으로 합니다. 태권도 수련은 바른 마음가짐과 태도를 함께 배우는 과정이기 때문입니다.</li>
             <li><span class="hno">②</span>복장은 <b>심사·예식 복장(제21조)</b>과 <b>평소 수련 복장(제22조)</b>으로 구분합니다.</li>
             <li><span class="hno">③</span>다른 기관이나 타 단체의 도복, 그리고 급에 맞지 않는 띠는 착용하지 않습니다. 다만 부득이하게 착용해야 하는 경우에는 미리 도장의 허락을 받으신 후 착용하실 수 있습니다.</li>
-            <li><span class="hno">④</span>반팔·긴팔 티셔츠는 도장에서 정하여 판매하는 것을 입어 주셔야 하며, 매년 같은 디자인으로 제작됩니다.</li>
+            <li><span class="hno">④</span>반팔·긴팔 티셔츠는 도장에서 정하여 판매하는 것을 입어 주셔야 하며, 매년 같은 디자인으로 제작됩니다. 가격은 <b>[부록 4 용품 안내]</b>에 있습니다.</li>
             <li><span class="hno">⑤</span>복장 착용 예시는 <b>[부록 3 복장 안내]</b>로 붙입니다. 예시는 규정의 이해를 돕기 위한 참고 자료이며, 규정과 다를 경우 본문 조항이 우선합니다.</li>
           </ol>
         </div>
@@ -1482,10 +1491,37 @@ mark{background:#ffe082;border-radius:2px}
       </article>
     </section>
 
-    <section class="jang appendix" id="gb4" data-title="겨루기 용품">
-      <h3>부록 4 — 겨루기 용품 안내</h3>
+    <section class="jang appendix" id="gb4" data-title="용품 안내">
+      <h3>부록 4 — 용품 안내</h3>
       <article class="jo" id="joB4">
         <div class="jo-body">
+          <p><b>도복</b></p>
+          <div class="tblwrap"><table class="t">
+            <tr><th>품목</th><th>금액</th></tr>
+            <tr><td class="lft">품도복 (일반·시범단) 상·하의 한 벌</td><td class="em"><span data-cfg="c.dobokPum" data-suffix="원">50,000원</span></td></tr>
+            <tr><td class="lft">단도복 (일반·시범단) 상·하의 한 벌</td><td class="em"><span data-cfg="c.dobokDan" data-suffix="원">50,000원</span></td></tr>
+            <tr><td class="lft">상의만</td><td><span data-cfg="c.dobokTop" data-suffix="원">30,000원</span></td></tr>
+            <tr><td class="lft">하의 바지만</td><td><span data-cfg="c.dobokPants" data-suffix="원">20,000원</span></td></tr>
+          </table></div>
+
+          <p><b>띠</b></p>
+          <div class="tblwrap"><table class="t">
+            <tr><th>품목</th><th>금액</th></tr>
+            <tr><td class="lft">유급자띠 (흰띠~빨간띠)</td><td class="em"><span data-cfg="c.beltGrade" data-suffix="원">8,000원</span></td></tr>
+            <tr><td class="lft">유품자 띠 (4cm)</td><td><span data-cfg="c.beltPoom4" data-suffix="원">15,000원</span></td></tr>
+            <tr><td class="lft">유품자 띠 (5cm)</td><td><span data-cfg="c.beltPoom5" data-suffix="원">18,000원</span></td></tr>
+          </table></div>
+
+          <p><b>티셔츠</b> <span class="note" style="display:inline">— 도장에서 정하여 판매하는 것을 입어 주십니다(제20조 ④)</span></p>
+          <div class="tblwrap"><table class="t">
+            <tr><th>구분</th><th>치수</th><th>금액</th></tr>
+            <tr><td class="hd">반팔</td><td>110~130</td><td class="em"><span data-cfg="c.teeShortS" data-suffix="원">12,000원</span></td></tr>
+            <tr><td class="hd">반팔</td><td>140 이상</td><td class="em"><span data-cfg="c.teeShortL" data-suffix="원">13,000원</span></td></tr>
+            <tr><td class="hd">긴팔</td><td>110~130</td><td class="em"><span data-cfg="c.teeLongS" data-suffix="원">16,800원</span></td></tr>
+            <tr><td class="hd">긴팔</td><td>140 이상</td><td class="em"><span data-cfg="c.teeLongL" data-suffix="원">17,800원</span></td></tr>
+          </table></div>
+
+          <p><b>겨루기 보호장비</b></p>
           <div class="tblwrap"><table class="t">
             <tr><th>구분</th><th>품목</th><th>금액</th></tr>
             <tr><td class="hd">필수</td><td class="lft">팔 보호대, 다리 보호대</td><td class="em"><span data-cfg="c.gearArm" data-suffix="원">30,000원</span></td></tr>
@@ -1939,6 +1975,9 @@ mark{background:#ffe082;border-radius:2px}
     ['심사비', [['examReg','정기승급심사'],['examSolo','개별심사'],['examMakeup','Make up Test']]],
     ['국기원 품 심사비', [['poom1','1품'],['poom2','2품'],['poom3','3품'],['poom4','4품']]],
     ['국기원 단 심사비', [['dan1','1단'],['dan2','2단'],['dan3','3단'],['dan4','4단']]],
+    ['도복', [['dobokPum','품도복 상하의 한벌'],['dobokDan','단도복 상하의 한벌'],['dobokTop','상의만'],['dobokPants','하의 바지만']]],
+    ['띠', [['beltGrade','유급자띠(흰~빨강)'],['beltPoom4','유품자 띠 4cm'],['beltPoom5','유품자 띠 5cm']]],
+    ['티셔츠', [['teeShortS','반팔 110~130'],['teeShortL','반팔 140 이상'],['teeLongS','긴팔 110~130'],['teeLongL','긴팔 140 이상']]],
     ['겨루기 용품', [['gearArm','팔·다리 보호대'],['gearHand','손등·발등 보호대'],['gearGroin','낭심 보호대'],
                    ['gearBody','몸통 보호대'],['gearHead','헤드기어'],['gearBag','장비 가방']]],
     ['나라차시범단', [['demoYear','연회비 일시납'],['demoSplit','분할납 1회분'],['demoDobok','시범단 도복'],['demoUniform','단체복']]]
