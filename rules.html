@@ -22,6 +22,11 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20260903.0003 (R4.5) 국기원 승품·단 심사비 개정 —
+     품 140/160/180/250 → 170/190/210/260천원, 단 150/170/200/300 → 190/210/230/280천원
+     (4단만 인하). 파일 기본값과 표시값을 함께 갱신.
+     심사비 포함 내역에서 도복 삭제 — 종전 '4단은 도복 포함'을 없애고
+     1~4품·단 모두 '띠와 품단증 케이스 포함'으로 통일
    v20260903.0002 (R4.4) [저장] 한 번으로 ①이 문서 ②메인 프로그램 ③구글 시트까지 자동 반영.
      비밀키가 없으면 처음 한 번만 물어보고 기기에 저장. 시트 저장이 실패하면 그 사실을 분명히 알림.
      '월 수련비'는 메인 프로그램과 함께 바뀌는 값이라 파란 상자로 따로 묶어 표시
@@ -118,7 +123,7 @@
    v20260827.0003 (R1.2) 나라차 공식 로고 적용(LOGO_B64 한 곳 저장 → img[data-logo] 주입)
    v20260827.0002 (R1.1) 정관(조문) 형식으로 전면 개편
    v20260827.0001 (R1.0) 최초 제작 */
-var RULES_VER = "v20260903.0002";
+var RULES_VER = "v20260903.0003";
 /* 문서 날짜는 RULES_VER 의 날짜 부분에서 자동으로 뽑는다.
    → 규정을 고치고 RULES_VER 만 올리면 표지의 개정일과 부칙의 시행일이 함께 바뀐다.
      (날짜를 따로 적어 두면 고칠 때 빠뜨리기 쉬우므로 한 곳에서만 관리한다) */
@@ -157,8 +162,8 @@ var CFG_DEFAULT = {
   busBoth:20000, busOne:10000, busCap:9,
   /* 심사비 */
   examReg:20000, examSolo:30000, examMakeup:40000,
-  poom1:140000, poom2:160000, poom3:180000, poom4:250000,
-  dan1:150000, dan2:170000, dan3:200000, dan4:300000,
+  poom1:170000, poom2:190000, poom3:210000, poom4:260000,
+  dan1:190000, dan2:210000, dan3:230000, dan4:280000,
   /* 겨루기 용품 */
   gearArm:30000, gearHand:40000, gearGroin:20000, gearBody:30000, gearHead:30000, gearBag:30000,
   /* 나라차시범단 */
@@ -1203,12 +1208,12 @@ mark{background:#ffe082;border-radius:2px}
           </ol>
           <div class="tblwrap"><table class="t">
             <tr><th colspan="2">품 심사</th><th colspan="2">단 심사</th></tr>
-            <tr><td class="hd">1품</td><td class="em"><span data-cfg="c.poom1" data-suffix="원">140,000원</span></td><td class="hd">1단</td><td class="em"><span data-cfg="c.dan1" data-suffix="원">150,000원</span></td></tr>
-            <tr><td class="hd">2품</td><td><span data-cfg="c.poom2" data-suffix="원">160,000원</span></td><td class="hd">2단</td><td><span data-cfg="c.dan2" data-suffix="원">170,000원</span></td></tr>
-            <tr><td class="hd">3품</td><td><span data-cfg="c.poom3" data-suffix="원">180,000원</span></td><td class="hd">3단</td><td><span data-cfg="c.dan3" data-suffix="원">200,000원</span></td></tr>
-            <tr><td class="hd">4품</td><td><span data-cfg="c.poom4" data-suffix="원">250,000원</span></td><td class="hd">4단</td><td><span data-cfg="c.dan4" data-suffix="원">300,000원</span></td></tr>
+            <tr><td class="hd">1품</td><td class="em"><span data-cfg="c.poom1" data-suffix="원">170,000원</span></td><td class="hd">1단</td><td class="em"><span data-cfg="c.dan1" data-suffix="원">190,000원</span></td></tr>
+            <tr><td class="hd">2품</td><td><span data-cfg="c.poom2" data-suffix="원">190,000원</span></td><td class="hd">2단</td><td><span data-cfg="c.dan2" data-suffix="원">210,000원</span></td></tr>
+            <tr><td class="hd">3품</td><td><span data-cfg="c.poom3" data-suffix="원">210,000원</span></td><td class="hd">3단</td><td><span data-cfg="c.dan3" data-suffix="원">230,000원</span></td></tr>
+            <tr><td class="hd">4품</td><td><span data-cfg="c.poom4" data-suffix="원">260,000원</span></td><td class="hd">4단</td><td><span data-cfg="c.dan4" data-suffix="원">280,000원</span></td></tr>
           </table></div>
-          <p class="note">1~3품(단)은 띠와 품단증 케이스가 포함되며, 4단은 도복·품단증 케이스·띠가 포함됩니다.</p>
+          <p class="note">심사비에는 <b>띠와 품단증 케이스</b>가 포함됩니다. (1~4품·1~4단 모두 같으며, 도복은 포함되지 않습니다.)</p>
         </div>
       </article>
 
