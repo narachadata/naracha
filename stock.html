@@ -68,7 +68,14 @@ main{padding:12px 12px calc(var(--nav-h) + 24px + env(safe-area-inset-bottom));m
   .tabs button.on{border-bottom-color:var(--red)}
   .tabs button .ic{font-size:16px}
   .tabs button .badge{position:static;margin:0}
-  main{padding:18px 20px 60px}
+  main{padding:18px 20px 60px;max-width:1700px}
+  /* R1.6: PC에서는 품목군 카드를 격자로 2~3개씩 나란히(화면 폭에 맞춰 자동) */
+  .grid{columns:520px;column-gap:12px}
+  .grid .card{break-inside:avoid;-webkit-column-break-inside:avoid;margin-bottom:12px;display:inline-block;width:100%}
+  .grid table.st{font-size:13px}
+  .grid table.st th{padding:5px 4px;font-size:10.5px}
+  .grid table.st td{height:36px}
+  .grid table.st td .cell{height:36px;line-height:36px;padding:0 4px}
 }
 
 /* ── 공통 부품 ── */
@@ -214,7 +221,7 @@ pre.txt{white-space:pre-wrap;background:#f7f6f2;border:1px solid var(--line);bor
      서버·기기 모두 같은 규칙으로 병합. 삭제는 del 표시(묘비)로 남기고 버리지 않는다.
    - 서버 응답이 조금이라도 이상하면(형식·인증·오류) 절대 저장하지 않는다(fail-closed).
    ═══════════════════════════════════════════════════════════════ */
-var APP_VER = "v1.5";   /* R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
+var APP_VER = "v1.6";   /* R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
 
 var LS_DB='naracha_stock_db', LS_CFG='naracha_stock_cfg', LS_DIRTY='naracha_stock_dirty', LS_UI='naracha_stock_ui';
 var CATS=[{id:'dobok',name:'도복',unit:'벌',ic:'🥋'},{id:'belt',name:'띠',unit:'개',ic:'🎗️'},{id:'tee',name:'티셔츠',unit:'장',ic:'👕'}];
@@ -378,6 +385,7 @@ function rStock(){
   var lc=fv('meta','lastCount',0); h+='<div class="note" style="margin:-4px 0 10px">마지막 재고조사: '+(lc?fmtD(lc):'기록 없음')+' · 보관 위치: '+L.map(function(l){return locName(l.id);}).join(' · ')+' <a href="#" onclick="go(\'set\');return false">(설정)</a></div>';
   if(!gs.length)h+='<div class="empty">품목군이 없습니다. 오른쪽 위 [＋ 품목군]으로 추가하세요.</div>';
   var q=UI.q.trim();
+  h+='<div class="grid">';
   gs.forEach(function(g){
     var its=items(g.id,UI.showHidden); if(q){its=its.filter(function(it){return (grpName(g.id)+' '+fv(it.id,'size')+' '+fv(g.id,'sub','')).indexOf(q)>=0;}); if(!its.length)return;}
     var open=q?true:(UI.open[g.id]!==false);
@@ -399,6 +407,7 @@ function rStock(){
     }
     h+='</div>';
   });
+  h+='</div>';
   return h;
 }
 /* PC: 칸을 눌러 바로 숫자 입력 */
