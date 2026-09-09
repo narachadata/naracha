@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차 물품관리</title>
-<meta name="description" content="나라차태권도 분당도장(총판) 도복·띠·티셔츠 재고 파악과 주문, 중계도장 출고 관리">
+<meta name="description" content="나라차태권도 분당도장(총판) 도복·띠·티셔츠 재고 파악과 주문·출고 관리">
 <meta name="theme-color" content="#1D2E5C">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="나라차태권도 분당도장">
 <meta property="og:title" content="나라차 물품관리">
-<meta property="og:description" content="도복 · 띠 · 티셔츠 재고 파악과 주문, 중계도장 출고까지 한 곳에서">
+<meta property="og:description" content="도복 · 띠 · 티셔츠 재고 파악과 주문, 출고 기록까지 한 곳에서">
 <meta property="og:url" content="https://narachadata.github.io/naracha/stock.html">
 <meta property="og:image" content="https://narachadata.github.io/naracha/stock-og.png">
 <meta property="og:image:width" content="1200">
@@ -208,17 +208,17 @@ pre.txt{white-space:pre-wrap;background:#f7f6f2;border:1px solid var(--line);bor
 <script>
 /* ═══════════════════════════════════════════════════════════════
    나라차 물품관리 (stock.html)
-   - 도복·띠·티셔츠 재고 파악 · 주문 · 중계도장 출고 · 이력
+   - 도복·띠·티셔츠 재고 파악 · 주문 · 출고 기록 · 이력
    - 단일 HTML 파일. 데이터는 이 기기(localStorage) + 구글 시트(Apps Script 「물품창고」)
    - 여러 기기 동시 수정: 값 하나하나에 수정시각(t)을 붙여 "더 최근 것"이 이기는 방식으로
      서버·기기 모두 같은 규칙으로 병합. 삭제는 del 표시(묘비)로 남기고 버리지 않는다.
    - 서버 응답이 조금이라도 이상하면(형식·인증·오류) 절대 저장하지 않는다(fail-closed).
    ═══════════════════════════════════════════════════════════════ */
-var APP_VER = "v1.3";   /* R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
+var APP_VER = "v1.4";   /* R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
 
 var LS_DB='naracha_stock_db', LS_CFG='naracha_stock_cfg', LS_DIRTY='naracha_stock_dirty', LS_UI='naracha_stock_ui';
 var CATS=[{id:'dobok',name:'도복',unit:'벌',ic:'🥋'},{id:'belt',name:'띠',unit:'개',ic:'🎗️'},{id:'tee',name:'티셔츠',unit:'장',ic:'👕'}];
-var LOGTYPES={sale:'판매',in:'입고',adj:'조정',move:'이동',count:'실사',jg:'중계출고',undo:'되돌림',seed:'초기값',order:'주문'};
+var LOGTYPES={sale:'판매',in:'입고',adj:'조정',move:'이동',count:'실사',out:'출고',undo:'되돌림',seed:'초기값',order:'주문'};
 var SEED_T = 1788800000000;  /* 초기값 전용 고정 시각(2026-09-07) — 사람이 고친 값(더 최근)이 항상 이기도록 */
 
 var DB={rev:0,recs:{}};  var DIRTY={};  var CFG={url:'',key:'',who:''};
@@ -348,14 +348,13 @@ function isTyping(){var a=document.activeElement;return a&&(a.tagName==='INPUT'|
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove('show');},2200);}
 function go(tab){UI.tab=tab;saveUI();render();window.scrollTo(0,0);}
 function render(){
-  var tabs=[['stock','재고','📦'],['order','주문','📝'],['jg','중계','🚚'],['log','이력','🕘'],['set','설정','⚙️']];
+  var tabs=[['stock','재고','📦'],['order','주문','📝'],['out','출고','🚚'],['log','이력','🕘'],['set','설정','⚙️']];
   var lackN=0;groups().forEach(function(g){items(g.id).forEach(function(it){if(lack(it.id)>0)lackN++;});});
-  var jgN=recsOf('jg').filter(function(r){return fv(r.id,'status')==='req';}).length;
-  document.getElementById('tabs').innerHTML=tabs.map(function(t){var b='';if(t[0]==='order'&&lackN)b='<span class="badge">'+lackN+'</span>';if(t[0]==='jg'&&jgN)b='<span class="badge">'+jgN+'</span>';
+  document.getElementById('tabs').innerHTML=tabs.map(function(t){var b='';if(t[0]==='order'&&lackN)b='<span class="badge">'+lackN+'</span>';
     return '<button class="'+(UI.tab===t[0]?'on':'')+'" onclick="go(\''+t[0]+'\')"><span class="ic">'+t[2]+'</span><span>'+t[1]+'</span>'+b+'</button>';}).join('');
   document.getElementById('whoPill').textContent=CFG.who||'이름?';
   var v=document.getElementById('view');
-  v.innerHTML=({stock:rStock,order:rOrder,jg:rJg,log:rLog,set:rSet}[UI.tab]||rStock)();
+  v.innerHTML=({stock:rStock,order:rOrder,out:rOut,log:rLog,set:rSet}[UI.tab]||rStock)();
   setState(SY.state,SY.msg);
 }
 function banner(){
@@ -442,7 +441,7 @@ function openGroupMenu(g){
   var h='<div class="mh"><div><div class="t">'+esc(grpName(g))+'</div><div class="s">'+esc(fv(g,'sub',''))+'</div></div><button class="x" onclick="closeModal()">✕</button></div>';
   h+='<div class="field"><label>이름</label><input class="inp" id="gname" value="'+esc(grpName(g))+'"></div>';
   h+='<div class="field"><label>설명(원단·규격 등)</label><input class="inp" id="gsub" value="'+esc(fv(g,'sub',''))+'"></div>';
-  h+='<div class="row"><div class="field" style="flex:1"><label>단위</label><input class="inp" id="gunit" value="'+esc(grpUnit(g))+'"></div><div class="field" style="flex:1"><label>판매 단가(원, 중계 출고 금액용)</label><input class="inp" type="number" inputmode="numeric" id="gprice" value="'+(fv(g,'price',0)||'')+'"></div></div>';
+  h+='<div class="row"><div class="field" style="flex:1"><label>단위</label><input class="inp" id="gunit" value="'+esc(grpUnit(g))+'"></div><div class="field" style="flex:1"><label>판매 단가(원, 출고 금액 집계용)</label><input class="inp" type="number" inputmode="numeric" id="gprice" value="'+(fv(g,'price',0)||'')+'"></div></div>';
   h+='<div class="field"><label>사이즈 추가 (쉼표로 여러 개: 150,160)</label><div class="row"><input class="inp" id="gsizes" style="flex:1" placeholder="예: 210"><button class="btn sec" onclick="addSizes(\''+g+'\')">추가</button></div></div>';
   h+='<div class="field"><label>사이즈 숨기기/보이기 (누르면 전환)</label><div class="chips">'+items(g,true).map(function(it){return '<button class="chip '+(alive(it.id)?'on':'')+'" onclick="toggleItem(\''+it.id+'\',this)">'+esc(fv(it.id,'size'))+'</button>';}).join('')+'</div><div class="note">숨겨도 기록은 남고 다시 보이게 할 수 있습니다.</div></div>';
   h+='<div class="mf"><button class="btn sec" onclick="hideGroup(\''+g+'\')">품목군 숨기기</button><button class="btn" onclick="saveGroup(\''+g+'\')">저장</button></div>';
@@ -528,71 +527,72 @@ function saveReceive(id){var ls=fv(id,'lines',[]).map(function(l){return {it:l.i
 
 /* 항목 고르기(주문 직접 추가 · 중계 주문 공용) */
 var PICK={mode:'',cat:'dobok',g:'',lines:[]};
-function openPick(mode,keep){PICK.mode=mode;if(!keep){PICK.lines=[];PICK.g='';}renderPick();}
+function openPick(mode,keep){PICK.mode=mode;if(!keep){PICK.lines=[];PICK.g='';PICK.to='';PICK.memo='';PICK.loc='';}renderPick();}
 function renderPick(){
   var gs=groups(PICK.cat);if(!PICK.g||fv(PICK.g,'cat')!==PICK.cat)PICK.g=gs.length?gs[0].id:'';
-  var h='<div class="mh"><div><div class="t">'+(PICK.mode==='jg'?'중계도장 주문 접수':'항목 추가')+'</div><div class="s">분류 → 품목군 → 사이즈를 누르면 담깁니다</div></div><button class="x" onclick="closeModal()">✕</button></div>';
+  var h='<div class="mh"><div><div class="t">'+(PICK.mode==='out'?'출고 기록':'항목 추가')+'</div><div class="s">분류 → 품목군 → 사이즈를 누르면 담깁니다</div></div><button class="x" onclick="closeModal()">✕</button></div>';
   h+='<div class="chips" style="margin-bottom:8px">'+CATS.map(function(c){return '<button class="chip '+(PICK.cat===c.id?'on':'')+'" onclick="PICK.cat=\''+c.id+'\';PICK.g=\'\';renderPick()">'+c.ic+' '+c.name+'</button>';}).join('')+'</div>';
   h+='<select class="inp" onchange="PICK.g=this.value;renderPick()">'+gs.map(function(g){return '<option value="'+g.id+'" '+(PICK.g===g.id?'selected':'')+'>'+esc(grpName(g.id))+(fv(g.id,'sub')?' — '+esc(fv(g.id,'sub')):'')+'</option>';}).join('')+'</select>';
   h+='<div class="chips" style="margin:10px 0">'+(PICK.g?items(PICK.g).map(function(it){return '<button class="chip" onclick="pickAdd(\''+it.id+'\')">'+esc(fv(it.id,'size'))+' <small style="opacity:.6">('+total(it.id)+')</small></button>';}).join(''):'')+'</div>';
   h+='<div class="lines">'+(PICK.lines.length?PICK.lines.map(function(l,i){return '<div class="line"><div class="n">'+esc(itemName(l.it))+' <small style="color:var(--mute)">보유 '+total(l.it)+'</small></div><div class="step" style="transform:scale(.85);transform-origin:right"><button onclick="PICK.lines['+i+'].q=Math.max(1,PICK.lines['+i+'].q-1);renderPick()">−</button><input type="number" inputmode="numeric" value="'+l.q+'" onchange="PICK.lines['+i+'].q=Math.max(1,Math.round(num(this.value)))"><button onclick="PICK.lines['+i+'].q++;renderPick()">＋</button></div><button class="btn xs ghost" onclick="PICK.lines.splice('+i+',1);renderPick()">✕</button></div>';}).join(''):'<div class="note">아직 담긴 항목이 없습니다.</div>')+'</div>';
-  if(PICK.mode==='jg')h+='<div class="field"><label>요청자 / 메모</label><input class="inp" id="jgmemo" placeholder="예: 중계 김사범 요청, 9/12 필요"></div>';
-  h+='<div class="mf"><button class="btn sec" onclick="closeModal()">취소</button><button class="btn" onclick="pickDone()" '+(PICK.lines.length?'':'disabled')+'>'+(PICK.mode==='jg'?'접수':'담기')+'</button></div>';
+  if(PICK.mode==='out'){var L=locs();h+='<div class="field"><label>받는 곳 / 주문한 사람</label><input class="inp" id="oto" value="'+esc(PICK.to||'')+'" placeholder="예: 중계도장, 김OO 학부모" onchange="PICK.to=this.value"></div>'
+    +'<div class="field"><label>어느 위치 재고에서 뺄까요</label><select class="inp" id="oloc" onchange="PICK.loc=this.value">'+L.map(function(l){return '<option value="'+l.id+'" '+((PICK.loc||(L[0]&&L[0].id))===l.id?'selected':'')+'>'+esc(locName(l.id))+' (보유: '+PICK.lines.map(function(x){return qty(x.it,l.id);}).join('/')+')</option>';}).join('')+'</select></div>'
+    +'<div class="field"><label>메모(선택)</label><input class="inp" id="omemo2" value="'+esc(PICK.memo||'')+'" placeholder="예: 9/12 직접 전달" onchange="PICK.memo=this.value"></div>';}
+  h+='<div class="mf"><button class="btn sec" onclick="closeModal()">취소</button><button class="btn" onclick="pickDone()" '+(PICK.lines.length?'':'disabled')+'>'+(PICK.mode==='out'?'출고 저장':'담기')+'</button></div>';
   openModal(h);
 }
 function pickAdd(it){var f=PICK.lines.filter(function(l){return l.it===it;})[0];if(f)f.q++;else PICK.lines.push({it:it,q:1});renderPick();}
 function pickDone(){
-  if(PICK.mode==='jg'){var memo=(document.getElementById('jgmemo')||{}).value||'';var id=uid('jg');setF(id,'jg',{t:now(),who:CFG.who||'',status:'req',lines:PICK.lines.map(function(l){return {it:l.it,q:l.q};}),memo:memo.trim(),del:false});closeModal();render();toast('중계 주문 접수됨');}
+  if(PICK.mode==='out'){saveOut();}
   else{PICK.lines.forEach(function(l){var f=UI.orderExtra.filter(function(x){return x.it===l.it;})[0];if(f)f.q+=l.q;else UI.orderExtra.push({it:l.it,q:l.q});});closeModal();render();}
 }
 
-/* ═══════════ 중계 탭 ═══════════ */
-function rJg(){
+/* ═══════════ 출고 탭 ═══════════ */
+function rOut(){
   var h=banner();
-  h+='<div class="banner" style="background:#eef1f8;border-color:#d5dcec;color:var(--navy)">🚚 <span class="sp"><b>중계도장</b>은 판매처입니다. 주문이 들어오면 접수하고, 보낼 때 [출고]를 누르면 분당 재고에서 빠지고 판매 기록이 남습니다.</span></div>';
-  h+='<div class="toolbar"><button class="btn" onclick="openPick(\'jg\')">＋ 중계 주문 접수</button></div>';
-  var js=recsOf('jg').sort(function(a,b){return fv(b.id,'t',0)-fv(a.id,'t',0);});
+  h+='<div class="banner" style="background:#eef1f8;border-color:#d5dcec;color:var(--navy)">🚚 <span class="sp">주문이 들어오면 <b>어디로 · 무엇을 · 몇 개</b> 보냈는지 기록합니다. 저장하는 순간 고른 위치의 재고에서 빠지고, 이력에도 남습니다.</span></div>';
+  h+='<div class="toolbar"><button class="btn" onclick="openPick(\'out\')">＋ 출고 기록</button></div>';
+  var os=recsOf('out').sort(function(a,b){return fv(b.id,'t',0)-fv(a.id,'t',0);});
   var m0=new Date();m0=new Date(m0.getFullYear(),m0.getMonth(),1).getTime();var mn=0,mw=0,tn=0,tw=0;
-  js.forEach(function(j){if(fv(j.id,'status')!=='done')return;fv(j.id,'lines',[]).forEach(function(l){var q=num(l.q),p=num(fv(fv(l.it,'grp'),'price',0));tn+=q;tw+=q*p;if(fv(j.id,'doneAt',0)>=m0){mn+=q;mw+=q*p;}});});
-  h+='<div class="kpis"><div class="kpi"><div class="v">'+js.filter(function(j){return fv(j.id,'status')==='req';}).length+'</div><div class="l">출고 대기 주문</div></div><div class="kpi"><div class="v">'+mn+'</div><div class="l">이번 달 출고 수량'+(mw?' · '+won(mw):'')+'</div></div><div class="kpi"><div class="v">'+tn+'</div><div class="l">누적 출고 수량'+(tw?' · '+won(tw):'')+'</div></div></div>';
+  os.forEach(function(o){if(fv(o.id,'undone',false))return;fv(o.id,'lines',[]).forEach(function(l){var q=num(l.q),p=num(fv(fv(l.it,'grp'),'price',0));tn+=q;tw+=q*p;if(fv(o.id,'t',0)>=m0){mn+=q;mw+=q*p;}});});
+  h+='<div class="kpis"><div class="kpi"><div class="v">'+os.filter(function(o){return !fv(o.id,'undone',false);}).length+'</div><div class="l">출고 기록 수</div></div><div class="kpi"><div class="v">'+mn+'</div><div class="l">이번 달 출고 수량'+(mw?' · '+won(mw):'')+'</div></div><div class="kpi"><div class="v">'+tn+'</div><div class="l">누적 출고 수량'+(tw?' · '+won(tw):'')+'</div></div></div>';
   h+='<div class="olist">';
-  if(!js.length)h+='<div class="empty">중계 주문이 없습니다.</div>';
-  js.forEach(function(j){var st=fv(j.id,'status');var ls=fv(j.id,'lines',[]);var n=0,w=0;ls.forEach(function(l){n+=num(l.q);w+=num(l.q)*num(fv(fv(l.it,'grp'),'price',0));});
-    h+='<div class="card"><div class="bd"><div class="oc"><span class="dt">'+fmtD(fv(j.id,'t'))+'</span>'+(st==='done'?'<span class="tag ok">출고 완료 '+fmtD(fv(j.id,'doneAt'))+'</span>':'<span class="tag warn">출고 대기</span>')+'<span class="wh">'+esc(fv(j.id,'who',''))+' · 총 '+n+(w?' · '+won(w):'')+'</span></div>';
+  if(!os.length)h+='<div class="empty">출고 기록이 없습니다. [＋ 출고 기록]으로 시작하세요.</div>';
+  os.forEach(function(o){var ls=fv(o.id,'lines',[]);var n=0,w=0;ls.forEach(function(l){n+=num(l.q);w+=num(l.q)*num(fv(fv(l.it,'grp'),'price',0));});
+    h+='<div class="card"><div class="bd"><div class="oc"><span class="dt">'+fmtD(fv(o.id,'t'))+'</span><span class="tag">→ '+esc(fv(o.id,'to','')||'미기재')+'</span><span class="wh">'+esc(fv(o.id,'who',''))+' · '+esc(locName(fv(o.id,'loc','')))+'에서 · 총 '+n+(w?' · '+won(w):'')+'</span></div>';
     h+=orderLinesHtml(ls);
-    if(fv(j.id,'memo'))h+='<div class="note">'+esc(fv(j.id,'memo'))+'</div>';
-    h+='<div class="acts"><button class="btn xs sec" onclick="copyText(jgText(\''+j.id+'\'))">📋 문구 복사</button>';
-    if(st==='req')h+='<button class="btn xs" onclick="openShip(\''+j.id+'\')">🚚 출고 처리</button><button class="btn xs ghost" onclick="if(confirm(\'이 접수를 삭제할까요?\')){setF(\''+j.id+'\',\'jg\',{del:true});render();}">삭제</button>';
+    if(fv(o.id,'memo'))h+='<div class="note">'+esc(fv(o.id,'memo'))+'</div>';
+    h+='<div class="acts"><button class="btn xs sec" onclick="copyText(outText(\''+o.id+'\'))">📋 문구 복사</button>';
+    if(!fv(o.id,'undone',false))h+='<button class="btn xs ghost" onclick="undoOut(\''+o.id+'\')">취소(재고 복원)</button>';else h+='<span class="tag gray">취소됨</span>';
     h+='</div></div></div>';});
   return h+'</div>';
 }
-function jgText(id){var ls=fv(id,'lines',[]);var s='[나라차 분당 → 중계도장 '+(fv(id,'status')==='done'?'출고':'주문')+'] '+fmtD(fv(id,'t'))+'\n';var n=0,w=0;
+function outText(id){var ls=fv(id,'lines',[]);var s='[나라차 분당도장 출고] '+fmtD(fv(id,'t'))+' → '+(fv(id,'to','')||'')+'\n';var n=0,w=0;
   ls.forEach(function(l){var g=fv(l.it,'grp'),p=num(fv(g,'price',0));s+=' - '+itemName(l.it)+' : '+num(l.q)+grpUnit(g)+(p?' ('+won(p*num(l.q))+')':'')+'\n';n+=num(l.q);w+=p*num(l.q);});
   s+='합계 '+n+(w?' · '+won(w):'')+(fv(id,'memo')?'\n'+fv(id,'memo'):'');return s;}
-function openShip(id){var ls=fv(id,'lines',[]);var L=locs();
-  var h='<div class="mh"><div><div class="t">중계 출고</div><div class="s">어느 위치 재고에서 뺄지 고르세요</div></div><button class="x" onclick="closeModal()">✕</button></div>';
-  h+='<div class="field"><label>출고 위치(재고에서 빠지는 곳)</label><select class="inp" id="sloc" onchange="shipCheck(\''+id+'\')">'+L.map(function(l,i){return '<option value="'+l.id+'" '+(i===0?'selected':'')+'>'+esc(locName(l.id))+'</option>';}).join('')+'</select></div>';
-  h+='<div id="shipLines"></div><div class="field" style="margin-top:10px"><label>메모</label><input class="inp" id="smemo" placeholder="예: 9/12 직접 전달"></div>';
-  h+='<div class="mf"><button class="btn sec" onclick="closeModal()">취소</button><button class="btn" onclick="saveShip(\''+id+'\')">출고 확정</button></div>';openModal(h);shipCheck(id);}
-function shipCheck(id){var loc=document.getElementById('sloc').value;var ls=fv(id,'lines',[]);
-  document.getElementById('shipLines').innerHTML=ls.map(function(l,i){var have=qty(l.it,loc),q=num(l.q);return '<div class="qrow"><div class="ln">'+esc(itemName(l.it))+'<small>'+esc(locName(loc))+' 보유 '+have+(have<q?' <span style="color:var(--red)">부족 '+(q-have)+'</span>':'')+'</small></div><div class="step"><button onclick="stepO(this,-1)">−</button><input type="number" inputmode="numeric" class="sq" data-i="'+i+'" value="'+q+'"><button onclick="stepO(this,1)">＋</button></div></div>';}).join('');}
-function saveShip(id){var loc=document.getElementById('sloc').value;var memo=document.getElementById('smemo').value.trim();var ls=fv(id,'lines',[]).map(function(l){return {it:l.it,q:l.q};});
-  [].forEach.call(document.querySelectorAll('.sq'),function(i){ls[num(i.dataset.i)].q=Math.max(0,Math.round(num(i.value)));});
+function saveOut(){
+  var to=(document.getElementById('oto')||{}).value||'';var loc=document.getElementById('oloc').value;var memo=(document.getElementById('omemo2')||{}).value||'';
+  var ls=PICK.lines.map(function(l){return {it:l.it,q:l.q};});
   var short=ls.filter(function(l){return qty(l.it,loc)<l.q;});
-  if(short.length&&!confirm(short.map(function(l){return itemName(l.it)+' '+qty(l.it,loc)+'→'+l.q;}).join('\n')+'\n\n'+locName(loc)+' 재고보다 많습니다. 재고는 0까지만 줄어듭니다. 그래도 출고할까요?'))return;
-  var ch=ls.filter(function(l){return l.q>0;}).map(function(l){return {it:l.it,loc:loc,to:qty(l.it,loc)-l.q};});
-  applyQty(ch,'jg',memo||'중계도장 출고',{ref:id});setF(id,'jg',{status:'done',doneAt:now(),lines:ls,loc:loc});closeModal();render();toast('출고 완료 — 재고에서 차감됨');}
+  if(short.length&&!confirm(short.map(function(l){return itemName(l.it)+' '+qty(l.it,loc)+'→'+l.q;}).join('\n')+'\n\n'+locName(loc)+' 재고보다 많습니다. 재고는 0까지만 줄어듭니다. 그래도 기록할까요?'))return;
+  var id=uid('out');
+  var ch=ls.map(function(l){return {it:l.it,loc:loc,to:qty(l.it,loc)-l.q};});
+  applyQty(ch,'out',(to.trim()?to.trim()+' 출고':'출고')+(memo.trim()?' · '+memo.trim():''),{ref:id});
+  setF(id,'out',{t:now(),who:CFG.who||'',to:to.trim(),loc:loc,lines:ls,memo:memo.trim(),del:false});
+  closeModal();render();toast('출고 기록됨 — 재고에서 차감');}
+function undoOut(id){var ls=fv(id,'lines',[]);var loc=fv(id,'loc','');if(!confirm('이 출고를 취소하고 '+locName(loc)+' 재고를 되돌릴까요?'))return;
+  var ch=ls.map(function(l){return {it:l.it,loc:loc,to:qty(l.it,loc)+num(l.q)};});applyQty(ch,'undo','출고 취소: → '+fv(id,'to',''),{ref:id});setF(id,'out',{undone:true});render();toast('출고를 취소했습니다');}
 
 /* ═══════════ 이력 탭 ═══════════ */
 function rLog(){
   var h=banner();
-  var ts=[['','전체'],['sale','판매'],['in','입고'],['jg','중계출고'],['adj','조정'],['move','이동'],['count','실사'],['undo','되돌림'],['seed','초기값']];
+  var ts=[['','전체'],['sale','판매'],['in','입고'],['out','출고'],['adj','조정'],['move','이동'],['count','실사'],['undo','되돌림'],['seed','초기값']];
   h+='<div class="toolbar"><div class="chips">'+ts.map(function(t){return '<button class="chip '+(UI.logF===t[0]?'on':'')+'" onclick="UI.logF=\''+t[0]+'\';UI.logN=80;render()">'+t[1]+'</button>';}).join('')+'</div><span class="sp"></span><button class="btn sm sec" onclick="dlCsv(\'log\')">⬇ 이력 CSV</button></div>';
   var ls=recsOf('log').filter(function(r){return !UI.logF||fv(r.id,'type')===UI.logF;}).sort(function(a,b){return fv(b.id,'t',0)-fv(a.id,'t',0);});
   h+='<div class="card"><div class="bd" style="padding-top:2px">';
   if(!ls.length)h+='<div class="empty">기록이 없습니다.</div>';
   ls.slice(0,UI.logN).forEach(function(r){var id=r.id,ty=fv(id,'type'),rv=fv(id,'reverted',false);
-    h+='<div class="log '+(rv?'rv':'')+'"><div class="h"><span class="tag '+({sale:'red',in:'ok',jg:'red',count:'warn',undo:'gray',seed:'gray'}[ty]||'')+'">'+(LOGTYPES[ty]||ty)+'</span><b>'+fmtT(fv(id,'t'))+'</b><span>'+esc(fv(id,'who',''))+'</span>'
+    h+='<div class="log '+(rv?'rv':'')+'"><div class="h"><span class="tag '+({sale:'red',in:'ok',out:'red',count:'warn',undo:'gray',seed:'gray'}[ty]||'')+'">'+(LOGTYPES[ty]||ty)+'</span><b>'+fmtT(fv(id,'t'))+'</b><span>'+esc(fv(id,'who',''))+'</span>'
       +(ty!=='undo'&&ty!=='seed'&&!rv?'<button class="btn xs ghost" style="margin-left:auto" onclick="undoLog(\''+id+'\')">되돌리기</button>':'')+'</div><div class="b">';
     var lines=fv(id,'lines',[]);var sh=lines.slice(0,12);
     h+=sh.map(function(l){return '<div>'+esc(itemName(l.it))+' · '+esc(locName(l.loc))+' <b style="color:'+(l.d>0?'var(--ok)':'var(--red)')+'">'+(l.d>0?'+':'')+l.d+'</b> <span style="color:var(--mute)">('+l.from+'→'+l.to+')</span></div>';}).join('');
