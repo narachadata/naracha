@@ -214,7 +214,7 @@ pre.txt{white-space:pre-wrap;background:#f7f6f2;border:1px solid var(--line);bor
      서버·기기 모두 같은 규칙으로 병합. 삭제는 del 표시(묘비)로 남기고 버리지 않는다.
    - 서버 응답이 조금이라도 이상하면(형식·인증·오류) 절대 저장하지 않는다(fail-closed).
    ═══════════════════════════════════════════════════════════════ */
-var APP_VER = "v1.4";   /* R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
+var APP_VER = "v1.5";   /* R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
 
 var LS_DB='naracha_stock_db', LS_CFG='naracha_stock_cfg', LS_DIRTY='naracha_stock_dirty', LS_UI='naracha_stock_ui';
 var CATS=[{id:'dobok',name:'도복',unit:'벌',ic:'🥋'},{id:'belt',name:'띠',unit:'개',ic:'🎗️'},{id:'tee',name:'티셔츠',unit:'장',ic:'👕'}];
@@ -222,7 +222,7 @@ var LOGTYPES={sale:'판매',in:'입고',adj:'조정',move:'이동',count:'실사
 var SEED_T = 1788800000000;  /* 초기값 전용 고정 시각(2026-09-07) — 사람이 고친 값(더 최근)이 항상 이기도록 */
 
 var DB={rev:0,recs:{}};  var DIRTY={};  var CFG={url:'',key:'',who:''};
-var UI={tab:'stock',cat:'dobok',q:'',open:{},logF:'',count:false,orderExtra:[],logN:80,showHidden:false};
+var UI={tab:'stock',cat:'dobok',q:'',open:{},logF:'',count:false,orderExtra:[],logN:80,showHidden:false,setOpen:{}};
 
 /* ─────────── 저장/불러오기 ─────────── */
 function loadLocal(){
@@ -606,12 +606,19 @@ function undoLog(id){var lines=fv(id,'lines',[]);if(!confirm('이 기록의 수�
 
 /* ═══════════ 설정 탭 ═══════════ */
 function rSet(){
-  var h='<h2 class="sec">기록자</h2><div class="card"><div class="bd"><div class="field"><label>이 기기에서 기록하는 사람 이름 (이력에 남습니다)</label><input class="inp" id="swho" value="'+esc(CFG.who)+'" placeholder="예: 임관장" onchange="CFG.who=this.value.trim();saveCfg();render()"></div></div></div>';
-  h+='<h2 class="sec">구글 시트 연결 (여러 기기 동시 사용)</h2><div class="card"><div class="bd">'
+  /* R1.5: 기록자·시트 연결은 설정이 끝나면 접어 둔다(누르면 펼침). 설정이 안 됐으면 펼쳐진다. */
+  var whoDone=!!CFG.who, whoOpen=UI.setOpen.who===true||!whoDone;
+  var h='<h2 class="sec">기록자</h2><div class="card '+(whoOpen?'open':'')+'"><div class="hd" onclick="UI.setOpen.who='+(whoOpen?'false':'true')+';render()"><span class="arrow">▶</span><span class="nm">'+(whoDone?esc(CFG.who):'이름 미입력')+'</span><span class="sp"></span><span class="sum">'+(whoOpen?'접기':'펼치기')+'</span></div>';
+  if(whoOpen)h+='<div class="bd"><div class="field"><label>이 기기에서 기록하는 사람 이름 (이력에 남습니다)</label><input class="inp" id="swho" value="'+esc(CFG.who)+'" placeholder="예: 임관장" onchange="CFG.who=this.value.trim();saveCfg();render()"></div></div>';
+  h+='</div>';
+  var conDone=!!(CFG.url&&CFG.key), conOpen=UI.setOpen.con===true||!conDone||SY.state==='err';
+  h+='<h2 class="sec">구글 시트 연결 (여러 기기 동시 사용)</h2><div class="card '+(conOpen?'open':'')+'"><div class="hd" onclick="UI.setOpen.con='+(conOpen?'false':'true')+';render()"><span class="arrow">▶</span><span class="nm">'+(conDone?'연결됨':'연결 안 됨')+'</span><span class="sb">'+esc(document.getElementById('syncTxt').textContent)+'</span><span class="sp"></span><span class="sum">'+(conOpen?'접기':'펼치기')+'</span></div>';
+  if(conOpen)h+='<div class="bd">'
     +'<div class="field"><label>물품창고 주소 (Apps Script 웹앱 URL)</label><input class="inp" id="surl" value="'+esc(CFG.url)+'" placeholder="https://script.google.com/macros/s/…/exec" onchange="CFG.url=this.value.trim();saveCfg()"></div>'
     +'<div class="field"><label>접속키</label><input class="inp" id="skey" type="password" value="'+esc(CFG.key)+'" placeholder="Apps Script에 정한 ADMIN_KEY" onchange="CFG.key=this.value.trim();saveCfg()"></div>'
     +'<div class="row"><button class="btn sec" onclick="testConn()">연결 확인</button><button class="btn" onclick="sync(true)">지금 동기화</button><span class="note">상태: '+esc(document.getElementById('syncTxt').textContent)+' · 서버 rev '+DB.rev+' · 대기 '+Object.keys(DIRTY).length+'건</span></div>'
-    +'<div class="note" style="margin-top:8px">설치 방법은 「물품창고 설치방법」 문서를 보세요. 값 하나마다 수정시각을 붙여 병합하므로 여러 사람이 동시에 고쳐도 서로 덮어쓰지 않습니다(같은 칸을 같은 순간에 고치면 더 늦게 저장한 값이 남습니다).</div></div></div>';
+    +'<div class="note" style="margin-top:8px">설치 방법은 「물품창고 설치방법」 문서를 보세요. 값 하나마다 수정시각을 붙여 병합하므로 여러 사람이 동시에 고쳐도 서로 덮어쓰지 않습니다(같은 칸을 같은 순간에 고치면 더 늦게 저장한 값이 남습니다).</div></div>';
+  h+='</div>';
   h+='<h2 class="sec">보관 위치</h2><div class="card"><div class="bd">'+locs(true).map(function(l,i,arr){return '<div class="setrow '+(alive(l.id)?'':'off')+'"><div class="n">'+esc(locName(l.id))+'</div>'
     +'<button class="btn xs sec" onclick="mv(\''+l.id+'\',-1,\'loc\')" '+(i?'':'disabled')+'>▲</button><button class="btn xs sec" onclick="mv(\''+l.id+'\',1,\'loc\')" '+(i<arr.length-1?'':'disabled')+'>▼</button>'
     +'<button class="btn xs sec" onclick="renameRec(\''+l.id+'\',\'loc\')">이름</button><button class="btn xs ghost" onclick="toggleDel(\''+l.id+'\',\'loc\')">'+(alive(l.id)?'숨김':'복원')+'</button></div>';}).join('')
