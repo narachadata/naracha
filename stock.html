@@ -222,7 +222,7 @@ pre.txt{white-space:pre-wrap;background:#f7f6f2;border:1px solid var(--line);bor
      서버·기기 모두 같은 규칙으로 병합. 삭제는 del 표시(묘비)로 남기고 버리지 않는다.
    - 서버 응답이 조금이라도 이상하면(형식·인증·오류) 절대 저장하지 않는다(fail-closed).
    ═══════════════════════════════════════════════════════════════ */
-var APP_VER = "v1.12";   /* R1.12: 폰 미리보기 표 — 영문 칸 숨겨 사이즈·수량·비고가 한 화면에 · R1.11: 주문 탭 버튼 정리(미리보기·엑셀 다운, 주문 문구 제거), 같은 항목 중복 줄 합산(부족 목록+직접 추가), 작성 중 주문서 재사용 · R1.10: 새 기기가 시트를 받아온 직후에도 정리(migrate) 적용 · R1.9: 체험도복(품) 품목군 제거(숨김) · R1.8: 주문 화면 한글 품목명 옆 영문(품번) 병기 · R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
+var APP_VER = "v1.13";   /* R1.13: 미리보기·목록 같은 품목군끼리 묶어 정렬, 엑셀 A4 1장(주문 사이즈만·자동 축소), 영문 제목 괄호 작은 글씨·열 폭 조정 · R1.12: 폰 미리보기 표 — 영문 칸 숨겨 사이즈·수량·비고가 한 화면에 · R1.11: 주문 탭 버튼 정리(미리보기·엑셀 다운, 주문 문구 제거), 같은 항목 중복 줄 합산(부족 목록+직접 추가), 작성 중 주문서 재사용 · R1.10: 새 기기가 시트를 받아온 직후에도 정리(migrate) 적용 · R1.9: 체험도복(품) 품목군 제거(숨김) · R1.8: 주문 화면 한글 품목명 옆 영문(품번) 병기 · R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
 
 var LS_DB='naracha_stock_db', LS_CFG='naracha_stock_cfg', LS_DIRTY='naracha_stock_dirty', LS_UI='naracha_stock_ui';
 var CATS=[{id:'dobok',name:'도복',unit:'벌',ic:'🥋'},{id:'belt',name:'띠',unit:'개',ic:'🎗️'},{id:'tee',name:'티셔츠',unit:'장',ic:'👕'}];
@@ -526,7 +526,7 @@ function rOrder(){
     h+='</div></div></div>';});
   h+='</div>';return h;
 }
-function orderLinesHtml(ls,done,en){var byG={};ls=mergeLines(ls);ls.forEach(function(l){var g=fv(l.it,'grp');(byG[g]=byG[g]||[]).push(l);});
+function orderLinesHtml(ls,done,en){var byG={};ls=sortLines(mergeLines(ls));ls.forEach(function(l){var g=fv(l.it,'grp');(byG[g]=byG[g]||[]).push(l);});
   return Object.keys(byG).map(function(g){return '<div class="ol"><b>'+esc(grpName(g))+'</b>'+(en?enTag(g):'')+' '+byG[g].map(function(l){return esc(fv(l.it,'size'))+'×'+num(l.q)+(done&&l.rq!==undefined&&num(l.rq)!==num(l.q)?'<span style="color:var(--red)">(입고 '+num(l.rq)+')</span>':'');}).join(', ')+'</div>';}).join('');}
 function addBeltQuick(){var it=UI.bq.sz;if(!it)return;var f=UI.orderExtra.filter(function(x){return x.it===it;})[0];if(f)f.q+=UI.bq.q;else UI.orderExtra.push({it:it,q:UI.bq.q});render();toast(itemName(it)+'cm '+UI.bq.q+'개 담음');}
 function stepO(btn,d){var i=btn.parentNode.querySelector('input');i.value=Math.max(0,Math.round(num(i.value))+d);}
@@ -540,6 +540,10 @@ function draftOrder(){var lines=collectSel();if(!lines.length){toast('선택된 
     lines=lines.map(function(l){return rem[l.it]!==undefined?{it:l.it,q:l.q,rem:rem[l.it]}:l;});setF(id,'order',{lines:lines});}
   else{id=uid('od');setF(id,'order',{t:now(),who:CFG.who||'',status:'ready',lines:lines,memo:'',del:false});UI.draft=id;toast('주문서가 만들어졌습니다');}
   render();return id;}
+/* 분류 → 품목군 순서 → 사이즈 순으로 정렬(같은 품목군은 한데 묶임) */
+function formGroups(){var out=[];CATS.forEach(function(c){var gs=groups(c.id).slice().sort(function(a,b){var ca=grpCode(a.id),cb=grpCode(b.id);if(ca&&cb&&ca!==cb)return ca<cb?-1:1;if(ca&&!cb)return -1;if(!ca&&cb)return 1;return bySeq(a,b);});out=out.concat(gs);});return out;}
+function sortLines(ls){var rank={};var n=0;formGroups().forEach(function(g){items(g.id).forEach(function(it){rank[it.id]=n++;});});
+  return ls.slice().sort(function(a,b){var ra=rank[a.it],rb=rank[b.it];if(ra===undefined)ra=1e9;if(rb===undefined)rb=1e9;return ra-rb||(a.it<b.it?-1:1);});}
 function mergeLines(ls){var map={},order=[];(ls||[]).forEach(function(l){var it=l.it,q=num(l.q);if(!map[it]){map[it]={it:it,q:0};order.push(it);}map[it].q+=q;if(l.rem!==undefined)map[it].rem=l.rem;if(l.rq!==undefined)map[it].rq=(map[it].rq||0)+num(l.rq);});return order.map(function(it){return map[it];});}
 function copyText(t){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast('복사됨 — 카톡·문자에 붙여넣기');},function(){fallbackCopy(t);});}else fallbackCopy(t);}
 function fallbackCopy(t){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('복사됨');}catch(e){toast('복사 실패 — 길게 눌러 복사하세요');}document.body.removeChild(ta);}
@@ -620,7 +624,9 @@ var OH_DEF={oh_title:'NARACHA TAEKWONDO ORDER SHEET',oh_addr:"B101, Bldg. 109, D
 function oh(k){return fv('meta',k,OH_DEF[k]||'');}
 function enDate(t){var d=new Date(t);return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+String(d.getDate()).padStart(2,'0')+', '+d.getFullYear();}
 function grpEn(g){return fv(g,'en','')||grpName(g);}
-function enTag(g){var e=fv(g,'en','');return e?' <span style="font-weight:500;color:var(--mute);font-size:12px">'+esc(fv(g,'code','')?fv(g,'code','')+' ':'')+esc(e)+'</span>':'';}
+function enSplit(e){var i=String(e).indexOf('(');return i>0?[e.slice(0,i).trim(),e.slice(i).trim()]:[String(e),''];}
+function enHtml(e){var x=enSplit(e);return esc(x[0])+(x[1]?' <small style="font-size:.82em;opacity:.8">'+esc(x[1])+'</small>':'');}
+function enTag(g){var e=fv(g,'en','');return e?' <span style="font-weight:500;color:var(--mute);font-size:12px">'+esc(fv(g,'code','')?fv(g,'code','')+' ':'')+enHtml(e)+'</span>':'';}
 function grpCode(g){return fv(g,'code','');}
 function grpDesc(g){return String(fv(g,'desc','')||'').split('\n').map(function(x){return x.trim();}).filter(Boolean);}
 function itemRem(it,line){if(line&&line.rem!==undefined&&line.rem!==null)return String(line.rem);return String(fv(it,'belt','')||'');}
@@ -629,11 +635,11 @@ function itemRem(it,line){if(line&&line.rem!==undefined&&line.rem!==null)return 
 function orderFormRows(id){
   var ls=mergeLines(fv(id,'lines',[]));var byG={};var lineMap={};
   ls.forEach(function(l){if(!num(l.q))return;var g=fv(l.it,'grp');if(!byG[g])byG[g]=[];byG[g].push(l);lineMap[l.it]=l;});
-  var gs=[];CATS.forEach(function(c){groups(c.id).forEach(function(g){if(byG[g.id])gs.push(g.id);});});
+  var gs=[];formGroups().forEach(function(g){if(byG[g.id])gs.push(g.id);});
   Object.keys(byG).forEach(function(g){if(gs.indexOf(g)<0)gs.push(g);});
   return gs.map(function(g,gi){
     var its=items(g);var extra=(byG[g]||[]).filter(function(l){return !its.some(function(it){return it.id===l.it;});});
-    var rows=its.map(function(it){var l=lineMap[it.id];return {it:it.id,size:fv(it.id,'size',''),q:l?num(l.q):0,rem:itemRem(it.id,l)};});
+    var rows=its.filter(function(it){return lineMap[it.id]&&num(lineMap[it.id].q)>0;}).map(function(it){var l=lineMap[it.id];return {it:it.id,size:fv(it.id,'size',''),q:num(l.q),rem:itemRem(it.id,l)};});
     extra.forEach(function(l){rows.push({it:l.it,size:fv(l.it,'size',''),q:num(l.q),rem:itemRem(l.it,l)});});
     return {g:g,code:grpCode(g)||(String.fromCharCode(65+gi)+'.'),en:grpEn(g),desc:grpDesc(g),rows:rows,unit:grpUnit(g)};
   });
@@ -641,21 +647,21 @@ function orderFormRows(id){
 
 /* ── 미리보기/편집 창: 한글·영문 대조, 수량·비고 수정, 엑셀 내려받기 ── */
 function openOrderForm(id){
-  var ls=mergeLines(fv(id,'lines',[])).filter(function(l){return num(l.q)>0;});
+  var ls=sortLines(mergeLines(fv(id,'lines',[])));var vis=ls.filter(function(l){return num(l.q)>0;});
   var h='<div class="mh"><div><div class="t">영문 주문서 (해외 발주)</div><div class="s">한글과 영문을 대조해 보고 수량·비고를 고친 뒤 엑셀로 내려받으세요</div></div><button class="x" onclick="closeModal()">✕</button></div>';
   h+='<div class="row"><div class="field" style="flex:1;min-width:140px"><label>TO (받는 분)</label><input class="inp" id="ofTo" value="'+esc(fv(id,'ofTo',oh('oh_to')))+'"></div><div class="field" style="flex:1;min-width:120px"><label>DATE</label><input class="inp" id="ofDate" value="'+esc(fv(id,'ofDate',enDate(fv(id,'t',now()))))+'"></div></div>';
   h+='<div style="overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px"><table class="st" id="ofTable"><thead><tr><th style="text-align:left">한글</th><th class="pc" style="text-align:left">영문 (품번)</th><th>SIZE</th><th>QTY</th><th style="text-align:left">REMARKS(띠 등)</th></tr></thead><tbody>';
   var lastG='';
-  ls.forEach(function(l,i){var g=fv(l.it,'grp');
-    if(g!==lastG){lastG=g;h+='<tr><td colspan="5" style="text-align:left;padding:8px 6px 2px;color:var(--mute);font-size:12px;font-weight:700">'+esc(grpCode(g)||'')+' '+esc(grpEn(g))+(fv(g,'en','')?'':' <span class="tag warn">영문 이름 없음 — ⋯ 메뉴에서 입력</span>')+'</td></tr>';}
-    h+='<tr><td style="font-weight:600;white-space:nowrap">'+esc(itemName(l.it))+'</td><td class="pc" style="text-align:left;color:var(--mute);font-size:12px">'+esc(grpEn(g))+'</td><td>'+esc(fv(l.it,'size',''))+'</td>'
+  vis.forEach(function(l,i){var g=fv(l.it,'grp');
+    if(g!==lastG){lastG=g;h+='<tr><td colspan="5" style="text-align:left;padding:8px 6px 2px;color:var(--mute);font-size:12px;font-weight:700">'+esc(grpCode(g)||'')+' '+enHtml(grpEn(g))+(fv(g,'en','')?'':' <span class="tag warn">영문 이름 없음 — ⋯ 메뉴에서 입력</span>')+'</td></tr>';}
+    h+='<tr><td style="font-weight:600;white-space:nowrap">'+esc(itemName(l.it))+'</td><td class="pc" style="text-align:left;color:var(--mute);font-size:12px">'+enHtml(grpEn(g))+'</td><td>'+esc(fv(l.it,'size',''))+'</td>'
       +'<td><input class="cell" type="number" inputmode="numeric" style="width:58px;border:1px solid var(--line2);border-radius:6px;height:34px;line-height:normal;text-align:center" value="'+num(l.q)+'" data-i="'+i+'" onchange="ofSet('+i+',\'q\',this.value)"></td>'
       +'<td style="text-align:left"><input class="cell" style="width:104px;border:1px solid var(--line2);border-radius:6px;height:34px;line-height:normal;text-align:left;color:var(--red);font-size:12px" value="'+esc(itemRem(l.it,l))+'" onchange="ofSet('+i+',\'rem\',this.value)"></td></tr>';});
   h+='</tbody></table></div>';
   h+='<div class="field" style="margin-top:10px"><label>REMARKS (주문서 아래 영문 메모, 선택)</label><textarea class="inp" id="ofMemo" placeholder="e.g. Please ship by Oct 15. / Same specification as last order.">'+esc(fv(id,'ofMemo',''))+'</textarea></div>';
-  h+='<div class="note">엑셀에는 주문한 품목군의 <b>모든 사이즈</b>가 원본 양식처럼 나열되고, 주문하지 않은 사이즈는 빈칸으로 나갑니다. 비고(REMARKS)는 도복에 딸려 가는 띠 길이입니다 — 사이즈별 기본값은 품목군 ⋯ 메뉴에서 바꿀 수 있습니다.</div>';
+  h+='<div class="note">엑셀은 A4 세로 한 장에 맞춰 <b>주문한 사이즈만</b> 나열합니다(품목군별 소계·총합계 포함). 비고(REMARKS)는 도복에 딸려 가는 띠 길이입니다 — 사이즈별 기본값은 품목군 ⋯ 메뉴에서 바꿀 수 있습니다.</div>';
   h+='<div class="mf"><button class="btn sec" onclick="ofSave(\''+id+'\');closeModal();render()">저장·닫기</button><button class="btn" onclick="ofSave(\''+id+'\');dlOrderXlsx(\''+id+'\')">⬇ 엑셀 주문서 내려받기</button></div>';
-  openModal(h); document.querySelector('.md').style.maxWidth='820px'; UI._of={id:id,lines:mergeLines(fv(id,'lines',[])).map(function(l){return {it:l.it,q:l.q,rem:l.rem,rq:l.rq};})};
+  openModal(h); document.querySelector('.md').style.maxWidth='820px'; UI._of={id:id,lines:ls.map(function(l){return {it:l.it,q:l.q,rem:l.rem,rq:l.rq};})};
 }
 function ofSet(i,k,v){var vis=UI._of.lines.filter(function(l){return num(l.q)>0;});var l=vis[i];if(!l)return;if(k==='q')l.q=Math.max(0,Math.round(num(v)));else l.rem=String(v);}
 function ofSave(id){if(!UI._of||UI._of.id!==id)return;var f={lines:UI._of.lines.map(function(l){var o={it:l.it,q:l.q};if(l.rem!==undefined)o.rem=l.rem;if(l.rq!==undefined)o.rq=l.rq;return o;})};
@@ -670,7 +676,7 @@ function dlOrderXlsx(id){
   /* 스타일 번호(cellXfs 순서) */
   var X={def:0,title:1,addr:2,tel:3,lab:4,labR:5,head:6,code:7,name:8,desc:9,size:10,qty:11,rem:12,sub:13,subL:14,plain:15,grand:16,val:17,valR:18};
   var rows=[],merges=[],heights={};
-  function cell(r,c,v,st,isNum,formula){rows[r]=rows[r]||{};rows[r][c]={v:v,st:st,n:isNum,f:formula};}
+  function cell(r,c,v,st,isNum,formula,rich){rows[r]=rows[r]||{};rows[r][c]={v:v,st:st,n:isNum,f:formula,rich:rich};}
   var COLS=11; /* A~K */
   cell(1,1,oh('oh_title'),X.title);for(var c=2;c<=COLS;c++)cell(1,c,'',X.title);merges.push('A1:K1');heights[1]=39.75;
   cell(2,1,oh('oh_addr'),X.addr);for(c=2;c<=7;c++)cell(2,c,'',X.addr);merges.push('A2:G4');
@@ -686,7 +692,7 @@ function dlOrderXlsx(id){
     var n=Math.max(s.rows.length,s.desc.length+1);var start=r0;
     for(var i=0;i<n;i++){var rr=r0+i;var row=s.rows[i];
       cell(rr,1,i===0?s.code:'',X.code);
-      cell(rr,2,i===0?s.en:(s.desc[i-1]||''),i===0?X.name:X.desc);for(c=3;c<=7;c++)cell(rr,c,'',X.desc);merges.push('B'+rr+':G'+rr);
+      cell(rr,2,i===0?s.en:(s.desc[i-1]||''),i===0?X.name:X.desc,false,null,i===0);for(c=3;c<=7;c++)cell(rr,c,'',X.desc);merges.push('B'+rr+':G'+rr);
       cell(rr,8,row?row.size:'',X.size,row&&/^\d+$/.test(String(row.size)));
       cell(rr,9,row&&row.q?row.q:'',X.qty,!!(row&&row.q));
       cell(rr,10,row?row.rem:'',X.rem);cell(rr,11,'',X.rem);merges.push('J'+rr+':K'+rr);
@@ -699,21 +705,22 @@ function dlOrderXlsx(id){
   /* sheet xml */
   var sx='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
     +'<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:K'+last+'"/><sheetViews><sheetView showGridLines="0" workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="15"/>'
-    +'<cols>'+[[1,4.6],[2,10.5],[3,7.4],[4,8.4],[5,8.4],[6,9.1],[7,2.6],[8,10.4],[9,14.6],[10,9.8],[11,9.6]].map(function(w){return '<col min="'+w[0]+'" max="'+w[0]+'" width="'+w[1]+'" customWidth="1"/>';}).join('')+'</cols><sheetData>';
+    +'<cols>'+[[1,5.2],[2,12],[3,8.6],[4,8.6],[5,8.6],[6,9.2],[7,3],[8,8.6],[9,8.6],[10,11.5],[11,6]].map(function(w){return '<col min="'+w[0]+'" max="'+w[0]+'" width="'+w[1]+'" customWidth="1"/>';}).join('')+'</cols><sheetData>';
   for(r=1;r<=last;r++){if(!rows[r]&&!heights[r])continue;sx+='<row r="'+r+'"'+(heights[r]?' ht="'+heights[r]+'" customHeight="1"':'')+'>';
     if(rows[r])for(c=1;c<=COLS;c++){var cl=rows[r][c];if(!cl)continue;var ref=colL(c)+r;
       if(cl.f)sx+='<c r="'+ref+'" s="'+cl.st+'"><f>'+xmlEsc(cl.f)+'</f></c>';
       else if(cl.n&&cl.v!=='')sx+='<c r="'+ref+'" s="'+cl.st+'"><v>'+Number(cl.v)+'</v></c>';
+      else if(cl.v!==''&&cl.rich){var sp=enSplit(cl.v);sx+='<c r="'+ref+'" s="'+cl.st+'" t="inlineStr"><is><r><rPr><b/><sz val="11"/><rFont val="Tahoma"/></rPr><t xml:space="preserve">'+xmlEsc(sp[0]+(sp[1]?' ':''))+'</t></r>'+(sp[1]?'<r><rPr><sz val="8"/><rFont val="Tahoma"/></rPr><t xml:space="preserve">'+xmlEsc(sp[1])+'</t></r>':'')+'</is></c>';}
       else if(cl.v!=='')sx+='<c r="'+ref+'" s="'+cl.st+'" t="inlineStr"><is><t xml:space="preserve">'+xmlEsc(cl.v)+'</t></is></c>';
       else sx+='<c r="'+ref+'" s="'+cl.st+'"/>';}
     sx+='</row>';}
   sx+='</sheetData><mergeCells count="'+merges.length+'">'+merges.map(function(m){return '<mergeCell ref="'+m+'"/>';}).join('')+'</mergeCells>'
-    +'<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="portrait" fitToWidth="1" fitToHeight="0"/></worksheet>';
+    +'<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="portrait" fitToWidth="1" fitToHeight="1"/></worksheet>';
   var fontsX=[['Tahoma',10,0,0],['Malgun Gothic',18,1,0],['Tahoma',10,1,0],['Tahoma',11,1,0],['Tahoma',9,0,'FFFF0000'],['Tahoma',11,1,0],['Malgun Gothic',9,0,0],['Malgun Gothic',11,0,0],['Malgun Gothic',12,1,0],['Tahoma',10,1,0]];
   var fx=fontsX.map(function(f){return '<font>'+(f[2]?'<b/>':'')+'<sz val="'+f[1]+'"/>'+(f[3]?'<color rgb="'+f[3]+'"/>':'')+'<name val="'+f[0]+'"/></font>';}).join('');
   /* cellXfs: [fontId,borderId,h,v,numFmt,wrap] */
   var xfs=[[0,0,'','',0,0],[1,1,'center','center',0,0],[6,1,'left','center',0,1],[7,1,'right','center',0,1],[2,0,'left','center',0,0],[2,0,'right','center',0,0],[2,1,'center','center',0,0],[0,1,'right','center',0,0],[3,1,'left','center',0,0],[0,1,'left','center',0,0],[0,1,'center','center',0,0],[0,1,'center','center',164,0],[4,1,'center','center',0,0],[5,1,'center','center',164,0],[0,1,'center','center',0,0],[0,0,'left','top',0,1],[8,1,'center','center',164,0],[9,0,'left','center',0,0],[9,0,'right','center',0,0]];
-  var xx=xfs.map(function(x){return '<xf numFmtId="'+x[4]+'" fontId="'+x[0]+'" fillId="0" borderId="'+x[1]+'" xfId="0"'+(x[4]?' applyNumberFormat="1"':'')+' applyFont="1" applyBorder="1" applyAlignment="1"><alignment'+(x[2]?' horizontal="'+x[2]+'"':'')+(x[3]?' vertical="'+x[3]+'"':'')+(x[5]?' wrapText="1"':'')+'/></xf>';}).join('');
+  var xx=xfs.map(function(x,xi){return '<xf numFmtId="'+x[4]+'" fontId="'+x[0]+'" fillId="0" borderId="'+x[1]+'" xfId="0"'+(x[4]?' applyNumberFormat="1"':'')+' applyFont="1" applyBorder="1" applyAlignment="1"><alignment'+(x[2]?' horizontal="'+x[2]+'"':'')+(x[3]?' vertical="'+x[3]+'"':'')+(x[5]?' wrapText="1"':'')+(xi===8?' shrinkToFit="1"':'')+'/></xf>';}).join('');
   var styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0_ "/></numFmts><fonts count="'+fontsX.length+'">'+fx+'</fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'
     +'<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color auto="1"/></left><right style="thin"><color auto="1"/></right><top style="thin"><color auto="1"/></top><bottom style="thin"><color auto="1"/></bottom><diagonal/></border></borders>'
     +'<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="'+xfs.length+'">'+xx+'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
