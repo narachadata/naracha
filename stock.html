@@ -221,7 +221,7 @@ pre.txt{white-space:pre-wrap;background:#f7f6f2;border:1px solid var(--line);bor
      서버·기기 모두 같은 규칙으로 병합. 삭제는 del 표시(묘비)로 남기고 버리지 않는다.
    - 서버 응답이 조금이라도 이상하면(형식·인증·오류) 절대 저장하지 않는다(fail-closed).
    ═══════════════════════════════════════════════════════════════ */
-var APP_VER = "v1.6";   /* R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
+var APP_VER = "v1.7";   /* R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
 
 var LS_DB='naracha_stock_db', LS_CFG='naracha_stock_cfg', LS_DIRTY='naracha_stock_dirty', LS_UI='naracha_stock_ui';
 var CATS=[{id:'dobok',name:'도복',unit:'벌',ic:'🥋'},{id:'belt',name:'띠',unit:'개',ic:'🎗️'},{id:'tee',name:'티셔츠',unit:'장',ic:'👕'}];
@@ -451,13 +451,20 @@ function openGroupMenu(g){
   h+='<div class="field"><label>이름</label><input class="inp" id="gname" value="'+esc(grpName(g))+'"></div>';
   h+='<div class="field"><label>설명(원단·규격 등)</label><input class="inp" id="gsub" value="'+esc(fv(g,'sub',''))+'"></div>';
   h+='<div class="row"><div class="field" style="flex:1"><label>단위</label><input class="inp" id="gunit" value="'+esc(grpUnit(g))+'"></div><div class="field" style="flex:1"><label>판매 단가(원, 출고 금액 집계용)</label><input class="inp" type="number" inputmode="numeric" id="gprice" value="'+(fv(g,'price',0)||'')+'"></div></div>';
+  h+='<div class="card" style="margin:4px 0 10px;box-shadow:none"><div class="hd" onclick="this.parentNode.classList.toggle(\'open\');this.nextElementSibling.classList.toggle(\'hide\')"><span class="arrow">▶</span><span class="nm">영문 주문서 정보</span><span class="sb">품번 · 영문 품명 · 설명 · 띠 비고</span></div><div class="bd hide">'
+    +'<div class="row"><div class="field" style="flex:0 0 90px"><label>품번</label><input class="inp" id="gcode" value="'+esc(fv(g,'code',''))+'" placeholder="A."></div><div class="field" style="flex:1"><label>영문 품명(ITEM)</label><input class="inp" id="gen" value="'+esc(fv(g,'en',''))+'" placeholder="NARACHA DELUXE POOM"></div></div>'
+    +'<div class="field"><label>영문 설명 (한 줄에 하나)</label><textarea class="inp" id="gdesc" placeholder="7oz. TWILL WHITE\n65% POLYESTER 35% COTTON">'+esc(fv(g,'desc',''))+'</textarea></div>'
+    +'<div class="field"><label>사이즈별 비고(REMARKS · 딸려 가는 띠 길이 등)</label><div class="row">'+items(g).map(function(it){return '<label style="display:flex;align-items:center;gap:4px;font-size:12px"><b>'+esc(fv(it.id,'size'))+'</b><input class="inp gbelt" data-it="'+it.id+'" value="'+esc(fv(it.id,'belt',''))+'" placeholder="Belt 150cm" style="width:110px;min-height:34px;padding:4px 8px;font-size:12px"></label>';}).join('')+'</div></div>'
+    +'</div></div>';
   h+='<div class="field"><label>사이즈 추가 (쉼표로 여러 개: 150,160)</label><div class="row"><input class="inp" id="gsizes" style="flex:1" placeholder="예: 210"><button class="btn sec" onclick="addSizes(\''+g+'\')">추가</button></div></div>';
   h+='<div class="field"><label>사이즈 숨기기/보이기 (누르면 전환)</label><div class="chips">'+items(g,true).map(function(it){return '<button class="chip '+(alive(it.id)?'on':'')+'" onclick="toggleItem(\''+it.id+'\',this)">'+esc(fv(it.id,'size'))+'</button>';}).join('')+'</div><div class="note">숨겨도 기록은 남고 다시 보이게 할 수 있습니다.</div></div>';
   h+='<div class="mf"><button class="btn sec" onclick="hideGroup(\''+g+'\')">품목군 숨기기</button><button class="btn" onclick="saveGroup(\''+g+'\')">저장</button></div>';
   openModal(h);
 }
 function saveGroup(g){var nm=document.getElementById('gname').value.trim();if(!nm){toast('이름을 입력하세요');return;}
-  setF(g,'grp',{name:nm,sub:document.getElementById('gsub').value.trim(),unit:document.getElementById('gunit').value.trim(),price:Math.max(0,Math.round(num(document.getElementById('gprice').value)))});closeModal();render();toast('저장됨');}
+  setF(g,'grp',{name:nm,sub:document.getElementById('gsub').value.trim(),unit:document.getElementById('gunit').value.trim(),price:Math.max(0,Math.round(num(document.getElementById('gprice').value))),code:document.getElementById('gcode').value.trim(),en:document.getElementById('gen').value.trim(),desc:document.getElementById('gdesc').value.replace(/\r/g,'').trim()});
+  [].forEach.call(document.querySelectorAll('.gbelt'),function(i){setF(i.dataset.it,'item',{belt:i.value.trim()});});
+  closeModal();render();toast('저장됨');}
 function hideGroup(g){if(!confirm('「'+grpName(g)+'」을 목록에서 숨길까요? (기록은 남고 설정에서 되살릴 수 있습니다)'))return;setF(g,'grp',{del:true});closeModal();render();}
 function addSizes(g){var s=document.getElementById('gsizes').value.split(/[,\s]+/).filter(Boolean);if(!s.length)return;var n=0;
   s.forEach(function(sz){var id='it_'+g.replace(/^g_/,'')+'_'+sz.replace(/[^A-Za-z0-9가-힣]/g,'');if(DB.recs[id]){if(!alive(id)){setF(id,'item',{del:false});n++;}return;}setF(id,'item',{grp:g,size:sz,seq:sizeNum(sz),base:0,del:false});n++;});
@@ -481,6 +488,17 @@ function saveNewGroup(){var cat=(document.querySelector('#ncat .chip.on')||{}).d
 function shortageList(){var o=[];groups().forEach(function(g){items(g.id).forEach(function(it){var l=lack(it.id);if(l>0)o.push({it:it.id,g:g.id,q:l});});});return o;}
 function rOrder(){
   var h=banner(); var sl=shortageList();
+  /* 띠 빠른 추가: 색 8종 → 길이 → 수량 */
+  var BC={b_white:'#f4f4f4',b_yellow:'#f2d21c',b_orange:'#f28c1c',b_green:'#2e9e4f',b_blue:'#2b5fd9',b_purple:'#7b3fbf',b_brown:'#7a4a1e',b_red:'#d3202a'};
+  var bg=groups('belt').filter(function(g){return BC[g.id.replace(/^g_/,'')];});
+  if(bg.length){UI.bq=UI.bq||{g:bg[0].id,q:10};if(!bg.some(function(g){return g.id===UI.bq.g;}))UI.bq.g=bg[0].id;
+    var bits=items(UI.bq.g);if(!UI.bq.sz||!bits.some(function(it){return it.id===UI.bq.sz;}))UI.bq.sz=bits.length?bits[0].id:'';
+    h+='<h2 class="sec">🎗️ 띠 빠른 추가 (색 → 길이 → 수량)</h2><div class="card"><div class="bd">'
+      +'<div class="chips">'+bg.map(function(g){var k=g.id.replace(/^g_/,'');return '<button class="chip '+(UI.bq.g===g.id?'on':'')+'" onclick="UI.bq.g=\''+g.id+'\';UI.bq.sz=\'\';render()"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:'+BC[k]+';border:1px solid #bbb;vertical-align:-1px;margin-right:4px"></span>'+esc(grpName(g.id))+'</button>';}).join('')+'</div>'
+      +'<div class="row" style="margin-top:10px"><div class="chips">'+bits.map(function(it){return '<button class="chip '+(UI.bq.sz===it.id?'on':'')+'" onclick="UI.bq.sz=\''+it.id+'\';render()">'+esc(fv(it.id,'size'))+'cm <small style="opacity:.6">보유 '+total(it.id)+'</small></button>';}).join('')+'<button class="chip" onclick="openGroupMenu(\''+UI.bq.g+'\')">＋ 길이</button></div>'
+      +'<div class="step" style="margin-left:auto"><button onclick="UI.bq.q=Math.max(1,UI.bq.q-1);render()">−</button><input type="number" inputmode="numeric" value="'+UI.bq.q+'" onchange="UI.bq.q=Math.max(1,Math.round(num(this.value)))"><button onclick="UI.bq.q++;render()">＋</button></div>'
+      +'<button class="btn sm" onclick="addBeltQuick()" '+(UI.bq.sz?'':'disabled')+'>담기</button></div>'
+      +'<div class="note" style="margin-top:8px">길이 참고 — 품도복 150cm · 단도복 150~160은 160cm, 170 이상은 180cm · 시범단(품) 120~140은 160cm, 150 이상은 180cm. 담은 뒤 위 목록에서 수량을 고칠 수 있습니다.</div></div></div>';}
   h+='<h2 class="sec">주문이 필요한 항목 (기준수량 − 보유)</h2>';
   h+='<div class="card"><div class="bd">';
   if(!sl.length&&!UI.orderExtra.length)h+='<div class="empty">부족한 항목이 없습니다. 기준수량이 비어 있으면 부족 계산을 하지 않으니, 재고 탭에서 기준수량을 넣어 주세요.</div>';
@@ -498,7 +516,7 @@ function rOrder(){
     h+='<div class="card"><div class="bd"><div class="oc"><span class="dt">'+fmtD(fv(o.id,'t'))+'</span>'+tag+'<span class="wh">'+esc(fv(o.id,'who',''))+' · 총 '+n+'</span></div>';
     h+=orderLinesHtml(ls,st==='done');
     if(fv(o.id,'memo'))h+='<div class="note">메모: '+esc(fv(o.id,'memo'))+'</div>';
-    h+='<div class="acts"><button class="btn xs sec" onclick="showOrderText(\''+o.id+'\')">📋 주문 문구</button>';
+    h+='<div class="acts"><button class="btn xs sec" onclick="showOrderText(\''+o.id+'\')">📋 주문 문구</button><button class="btn xs sec" onclick="openOrderForm(\''+o.id+'\')">📄 영문 주문서(엑셀)</button>';
     if(st==='ready')h+='<button class="btn xs" onclick="setF(\''+o.id+'\',\'order\',{status:\'sent\',sentAt:now()});render()">발주 완료로 표시</button>';
     if(st!=='done')h+='<button class="btn xs" style="background:var(--ok);border-color:var(--ok)" onclick="openReceive(\''+o.id+'\')">📥 입고 처리</button>';
     if(st!=='done')h+='<button class="btn xs ghost" onclick="if(confirm(\'이 주문서를 삭제할까요?\')){setF(\''+o.id+'\',\'order\',{del:true});render();}">삭제</button>';
@@ -507,6 +525,7 @@ function rOrder(){
 }
 function orderLinesHtml(ls,done){var byG={};ls.forEach(function(l){var g=fv(l.it,'grp');(byG[g]=byG[g]||[]).push(l);});
   return Object.keys(byG).map(function(g){return '<div class="ol"><b>'+esc(grpName(g))+'</b> '+byG[g].map(function(l){return esc(fv(l.it,'size'))+'×'+num(l.q)+(done&&l.rq!==undefined&&num(l.rq)!==num(l.q)?'<span style="color:var(--red)">(입고 '+num(l.rq)+')</span>':'');}).join(', ')+'</div>';}).join('');}
+function addBeltQuick(){var it=UI.bq.sz;if(!it)return;var f=UI.orderExtra.filter(function(x){return x.it===it;})[0];if(f)f.q+=UI.bq.q;else UI.orderExtra.push({it:it,q:UI.bq.q});render();toast(itemName(it)+'cm '+UI.bq.q+'개 담음');}
 function stepO(btn,d){var i=btn.parentNode.querySelector('input');i.value=Math.max(0,Math.round(num(i.value))+d);}
 function makeOrder(){var lines=[];var chk={};[].forEach.call(document.querySelectorAll('.ochk'),function(c){if(c.checked)chk[c.dataset.it]=true;});
   [].forEach.call(document.querySelectorAll('.oq'),function(i){var q=Math.round(num(i.value));if(chk[i.dataset.it]&&q>0)lines.push({it:i.dataset.it,q:q});});
@@ -592,6 +611,135 @@ function saveOut(){
 function undoOut(id){var ls=fv(id,'lines',[]);var loc=fv(id,'loc','');if(!confirm('이 출고를 취소하고 '+locName(loc)+' 재고를 되돌릴까요?'))return;
   var ch=ls.map(function(l){return {it:l.it,loc:loc,to:qty(l.it,loc)+num(l.q)};});applyQty(ch,'undo','출고 취소: → '+fv(id,'to',''),{ref:id});setF(id,'out',{undone:true});render();toast('출고를 취소했습니다');}
 
+/* ═══════════ 영문 주문서(엑셀) ═══════════
+   원본 「도복주문서_2025.09.04(NARACHA).xlsx」 양식을 그대로 재현한다.
+   외부 라이브러리 없이 .xlsx(=zip 안의 XML)를 직접 만든다(압축 없음·CRC32만). */
+var OH_DEF={oh_title:'NARACHA TAEKWONDO ORDER SHEET',oh_addr:"B101, Bldg. 109, Doosan We've Trezium, 55 Jeongja-il-ro, Bundang-gu, Seongnam-si, Gyeonggi-do, Korea",oh_tel:'TEL: +82-31-711-4474',oh_mail:'E-mail: bluelim007@naver.com',oh_to:'손유진 대표님',oh_from:'NARACHA TAEKWONDO (Lim)'};
+function oh(k){return fv('meta',k,OH_DEF[k]||'');}
+function enDate(t){var d=new Date(t);return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+String(d.getDate()).padStart(2,'0')+', '+d.getFullYear();}
+function grpEn(g){return fv(g,'en','')||grpName(g);}
+function grpCode(g){return fv(g,'code','');}
+function grpDesc(g){return String(fv(g,'desc','')||'').split('\n').map(function(x){return x.trim();}).filter(Boolean);}
+function itemRem(it,line){if(line&&line.rem!==undefined&&line.rem!==null)return String(line.rem);return String(fv(it,'belt','')||'');}
+
+/* 주문서에 들어갈 행 구성: 주문된 품목군마다 그 품목군의 모든 사이즈를 나열(원본 방식), 수량 없는 칸은 빈칸 */
+function orderFormRows(id){
+  var ls=fv(id,'lines',[]);var byG={};var lineMap={};
+  ls.forEach(function(l){if(!num(l.q))return;var g=fv(l.it,'grp');if(!byG[g])byG[g]=[];byG[g].push(l);lineMap[l.it]=l;});
+  var gs=[];CATS.forEach(function(c){groups(c.id).forEach(function(g){if(byG[g.id])gs.push(g.id);});});
+  Object.keys(byG).forEach(function(g){if(gs.indexOf(g)<0)gs.push(g);});
+  return gs.map(function(g,gi){
+    var its=items(g);var extra=(byG[g]||[]).filter(function(l){return !its.some(function(it){return it.id===l.it;});});
+    var rows=its.map(function(it){var l=lineMap[it.id];return {it:it.id,size:fv(it.id,'size',''),q:l?num(l.q):0,rem:itemRem(it.id,l)};});
+    extra.forEach(function(l){rows.push({it:l.it,size:fv(l.it,'size',''),q:num(l.q),rem:itemRem(l.it,l)});});
+    return {g:g,code:grpCode(g)||(String.fromCharCode(65+gi)+'.'),en:grpEn(g),desc:grpDesc(g),rows:rows,unit:grpUnit(g)};
+  });
+}
+
+/* ── 미리보기/편집 창: 한글·영문 대조, 수량·비고 수정, 엑셀 내려받기 ── */
+function openOrderForm(id){
+  var ls=fv(id,'lines',[]).filter(function(l){return num(l.q)>0;});
+  var h='<div class="mh"><div><div class="t">영문 주문서 (해외 발주)</div><div class="s">한글과 영문을 대조해 보고 수량·비고를 고친 뒤 엑셀로 내려받으세요</div></div><button class="x" onclick="closeModal()">✕</button></div>';
+  h+='<div class="row"><div class="field" style="flex:1;min-width:140px"><label>TO (받는 분)</label><input class="inp" id="ofTo" value="'+esc(fv(id,'ofTo',oh('oh_to')))+'"></div><div class="field" style="flex:1;min-width:120px"><label>DATE</label><input class="inp" id="ofDate" value="'+esc(fv(id,'ofDate',enDate(fv(id,'t',now()))))+'"></div></div>';
+  h+='<div style="overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px"><table class="st" style="min-width:600px"><thead><tr><th style="text-align:left">한글</th><th style="text-align:left">영문 (품번)</th><th>SIZE</th><th>QTY</th><th style="text-align:left">REMARKS(띠 등)</th></tr></thead><tbody>';
+  var lastG='';
+  ls.forEach(function(l,i){var g=fv(l.it,'grp');
+    if(g!==lastG){lastG=g;h+='<tr><td colspan="5" style="text-align:left;padding:8px 6px 2px;color:var(--mute);font-size:12px;font-weight:700">'+esc(grpCode(g)||'')+' '+esc(grpEn(g))+(fv(g,'en','')?'':' <span class="tag warn">영문 이름 없음 — ⋯ 메뉴에서 입력</span>')+'</td></tr>';}
+    h+='<tr><td style="font-weight:600">'+esc(itemName(l.it))+'</td><td style="text-align:left;color:var(--mute);font-size:12px">'+esc(grpEn(g))+'</td><td>'+esc(fv(l.it,'size',''))+'</td>'
+      +'<td><input class="cell" type="number" inputmode="numeric" style="width:64px;border:1px solid var(--line2);border-radius:6px;height:34px;line-height:normal;text-align:center" value="'+num(l.q)+'" data-i="'+i+'" onchange="ofSet('+i+',\'q\',this.value)"></td>'
+      +'<td style="text-align:left"><input class="cell" style="width:120px;border:1px solid var(--line2);border-radius:6px;height:34px;line-height:normal;text-align:left;color:var(--red);font-size:12px" value="'+esc(itemRem(l.it,l))+'" onchange="ofSet('+i+',\'rem\',this.value)"></td></tr>';});
+  h+='</tbody></table></div>';
+  h+='<div class="field" style="margin-top:10px"><label>REMARKS (주문서 아래 영문 메모, 선택)</label><textarea class="inp" id="ofMemo" placeholder="e.g. Please ship by Oct 15. / Same specification as last order.">'+esc(fv(id,'ofMemo',''))+'</textarea></div>';
+  h+='<div class="note">엑셀에는 주문한 품목군의 <b>모든 사이즈</b>가 원본 양식처럼 나열되고, 주문하지 않은 사이즈는 빈칸으로 나갑니다. 비고(REMARKS)는 도복에 딸려 가는 띠 길이입니다 — 사이즈별 기본값은 품목군 ⋯ 메뉴에서 바꿀 수 있습니다.</div>';
+  h+='<div class="mf"><button class="btn sec" onclick="ofSave(\''+id+'\');closeModal();render()">저장·닫기</button><button class="btn" onclick="ofSave(\''+id+'\');dlOrderXlsx(\''+id+'\')">⬇ 엑셀 주문서 내려받기</button></div>';
+  openModal(h); document.querySelector('.md').style.maxWidth='820px'; UI._of={id:id,lines:fv(id,'lines',[]).map(function(l){return {it:l.it,q:l.q,rem:l.rem,rq:l.rq};})};
+}
+function ofSet(i,k,v){var vis=UI._of.lines.filter(function(l){return num(l.q)>0;});var l=vis[i];if(!l)return;if(k==='q')l.q=Math.max(0,Math.round(num(v)));else l.rem=String(v);}
+function ofSave(id){if(!UI._of||UI._of.id!==id)return;var f={lines:UI._of.lines.map(function(l){var o={it:l.it,q:l.q};if(l.rem!==undefined)o.rem=l.rem;if(l.rq!==undefined)o.rq=l.rq;return o;})};
+  var to=document.getElementById('ofTo'),dt=document.getElementById('ofDate'),mm=document.getElementById('ofMemo');
+  if(to)f.ofTo=to.value.trim();if(dt)f.ofDate=dt.value.trim();if(mm)f.ofMemo=mm.value.trim();setF(id,'order',f);}
+
+/* ── xlsx 생성 ── */
+function xmlEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function colL(n){var s='';while(n>0){var m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26);}return s;}
+function dlOrderXlsx(id){
+  var secs=orderFormRows(id);if(!secs.length){toast('주문 수량이 있는 항목이 없습니다');return;}
+  /* 스타일 번호(cellXfs 순서) */
+  var X={def:0,title:1,addr:2,tel:3,lab:4,labR:5,head:6,code:7,name:8,desc:9,size:10,qty:11,rem:12,sub:13,subL:14,plain:15,grand:16,val:17,valR:18};
+  var rows=[],merges=[],heights={};
+  function cell(r,c,v,st,isNum,formula){rows[r]=rows[r]||{};rows[r][c]={v:v,st:st,n:isNum,f:formula};}
+  var COLS=11; /* A~K */
+  cell(1,1,oh('oh_title'),X.title);for(var c=2;c<=COLS;c++)cell(1,c,'',X.title);merges.push('A1:K1');heights[1]=39.75;
+  cell(2,1,oh('oh_addr'),X.addr);for(c=2;c<=7;c++)cell(2,c,'',X.addr);merges.push('A2:G4');
+  cell(2,8,oh('oh_tel')+'\n'+oh('oh_mail'),X.tel);for(c=9;c<=COLS;c++)cell(2,c,'',X.tel);merges.push('H2:K4');
+  for(var r=3;r<=4;r++)for(c=1;c<=COLS;c++)cell(r,c,'',c<=7?X.addr:X.tel);
+  heights[2]=13.5;heights[3]=13.5;heights[4]=13.5;heights[5]=3;
+  cell(6,1,'TO',X.lab);cell(6,3,fv(id,'ofTo',oh('oh_to')),X.val);merges.push('C6:G6');cell(6,8,'DATE',X.labR);cell(6,10,fv(id,'ofDate',enDate(fv(id,'t',now()))),X.valR);merges.push('J6:K6');heights[6]=18.75;
+  cell(7,1,'FROM',X.lab);cell(7,3,oh('oh_from'),X.val);merges.push('C7:G7');cell(7,8,'ORDER NO.',X.labR);cell(7,10,'NC-'+fmtD(fv(id,'t',now())).replace(/-/g,'')+'-'+String(id).slice(-4).toUpperCase(),X.valR);merges.push('J7:K7');heights[7]=17.25;
+  heights[8]=9;
+  var hr=9;cell(hr,1,'ITEM NO.',X.head);cell(hr,2,'DESCRIPTION',X.head);for(c=3;c<=7;c++)cell(hr,c,'',X.head);merges.push('B9:G9');cell(hr,8,'SIZE',X.head);cell(hr,9,'QTY',X.head);cell(hr,10,'REMARKS',X.head);cell(hr,11,'',X.head);merges.push('J9:K9');heights[hr]=16.5;
+  var r0=hr+1;var subCells=[];
+  secs.forEach(function(s,si){
+    var n=Math.max(s.rows.length,s.desc.length+1);var start=r0;
+    for(var i=0;i<n;i++){var rr=r0+i;var row=s.rows[i];
+      cell(rr,1,i===0?s.code:'',X.code);
+      cell(rr,2,i===0?s.en:(s.desc[i-1]||''),i===0?X.name:X.desc);for(c=3;c<=7;c++)cell(rr,c,'',X.desc);merges.push('B'+rr+':G'+rr);
+      cell(rr,8,row?row.size:'',X.size,row&&/^\d+$/.test(String(row.size)));
+      cell(rr,9,row&&row.q?row.q:'',X.qty,!!(row&&row.q));
+      cell(rr,10,row?row.rem:'',X.rem);cell(rr,11,'',X.rem);merges.push('J'+rr+':K'+rr);
+      heights[rr]=15.75;}
+    var sr=r0+n;cell(sr,8,'subtotal',X.subL);cell(sr,9,'',X.sub,true,'SUM(I'+start+':I'+(sr-1)+')');subCells.push('I'+sr);for(c=1;c<=7;c++)cell(sr,c,'',X.plain);cell(sr,10,'',X.plain);cell(sr,11,'',X.plain);heights[sr]=18;
+    r0=sr+2;});
+  var gr=r0;cell(gr,8,'TOTAL',X.head);cell(gr,9,'',X.grand,true,subCells.join('+'));cell(gr,10,'',X.head);cell(gr,11,'',X.head);merges.push('J'+gr+':K'+gr);heights[gr]=20.25;
+  var memo=fv(id,'ofMemo','');if(memo){cell(gr+2,1,'REMARKS',X.lab);cell(gr+3,1,memo,X.plain);merges.push('A'+(gr+3)+':K'+(gr+5));}
+  var last=gr+(memo?5:0);
+  /* sheet xml */
+  var sx='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+    +'<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:K'+last+'"/><sheetViews><sheetView showGridLines="0" workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="15"/>'
+    +'<cols>'+[[1,4.6],[2,10.5],[3,7.4],[4,8.4],[5,8.4],[6,9.1],[7,2.6],[8,10.4],[9,14.6],[10,9.8],[11,9.6]].map(function(w){return '<col min="'+w[0]+'" max="'+w[0]+'" width="'+w[1]+'" customWidth="1"/>';}).join('')+'</cols><sheetData>';
+  for(r=1;r<=last;r++){if(!rows[r]&&!heights[r])continue;sx+='<row r="'+r+'"'+(heights[r]?' ht="'+heights[r]+'" customHeight="1"':'')+'>';
+    if(rows[r])for(c=1;c<=COLS;c++){var cl=rows[r][c];if(!cl)continue;var ref=colL(c)+r;
+      if(cl.f)sx+='<c r="'+ref+'" s="'+cl.st+'"><f>'+xmlEsc(cl.f)+'</f></c>';
+      else if(cl.n&&cl.v!=='')sx+='<c r="'+ref+'" s="'+cl.st+'"><v>'+Number(cl.v)+'</v></c>';
+      else if(cl.v!=='')sx+='<c r="'+ref+'" s="'+cl.st+'" t="inlineStr"><is><t xml:space="preserve">'+xmlEsc(cl.v)+'</t></is></c>';
+      else sx+='<c r="'+ref+'" s="'+cl.st+'"/>';}
+    sx+='</row>';}
+  sx+='</sheetData><mergeCells count="'+merges.length+'">'+merges.map(function(m){return '<mergeCell ref="'+m+'"/>';}).join('')+'</mergeCells>'
+    +'<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="portrait" fitToWidth="1" fitToHeight="0"/></worksheet>';
+  var fontsX=[['Tahoma',10,0,0],['Malgun Gothic',18,1,0],['Tahoma',10,1,0],['Tahoma',11,1,0],['Tahoma',9,0,'FFFF0000'],['Tahoma',11,1,0],['Malgun Gothic',9,0,0],['Malgun Gothic',11,0,0],['Malgun Gothic',12,1,0],['Tahoma',10,1,0]];
+  var fx=fontsX.map(function(f){return '<font>'+(f[2]?'<b/>':'')+'<sz val="'+f[1]+'"/>'+(f[3]?'<color rgb="'+f[3]+'"/>':'')+'<name val="'+f[0]+'"/></font>';}).join('');
+  /* cellXfs: [fontId,borderId,h,v,numFmt,wrap] */
+  var xfs=[[0,0,'','',0,0],[1,1,'center','center',0,0],[6,1,'left','center',0,1],[7,1,'right','center',0,1],[2,0,'left','center',0,0],[2,0,'right','center',0,0],[2,1,'center','center',0,0],[0,1,'right','center',0,0],[3,1,'left','center',0,0],[0,1,'left','center',0,0],[0,1,'center','center',0,0],[0,1,'center','center',164,0],[4,1,'center','center',0,0],[5,1,'center','center',164,0],[0,1,'center','center',0,0],[0,0,'left','top',0,1],[8,1,'center','center',164,0],[9,0,'left','center',0,0],[9,0,'right','center',0,0]];
+  var xx=xfs.map(function(x){return '<xf numFmtId="'+x[4]+'" fontId="'+x[0]+'" fillId="0" borderId="'+x[1]+'" xfId="0"'+(x[4]?' applyNumberFormat="1"':'')+' applyFont="1" applyBorder="1" applyAlignment="1"><alignment'+(x[2]?' horizontal="'+x[2]+'"':'')+(x[3]?' vertical="'+x[3]+'"':'')+(x[5]?' wrapText="1"':'')+'/></xf>';}).join('');
+  var styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0_ "/></numFmts><fonts count="'+fontsX.length+'">'+fx+'</fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'
+    +'<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color auto="1"/></left><right style="thin"><color auto="1"/></right><top style="thin"><color auto="1"/></top><bottom style="thin"><color auto="1"/></bottom><diagonal/></border></borders>'
+    +'<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="'+xfs.length+'">'+xx+'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+  var files=[
+    ['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>'],
+    ['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>'],
+    ['docProps/app.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>Naracha Stock</Application></Properties>'],
+    ['docProps/core.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>NARACHA ORDER SHEET</dc:title><dc:creator>'+xmlEsc(CFG.who||'NARACHA')+'</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">'+new Date().toISOString().slice(0,19)+'Z</dcterms:created></cp:coreProperties>'],
+    ['xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="도복주문서" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm.Print_Area" localSheetId="0">도복주문서!$A$1:$K$'+last+'</definedName></definedNames></workbook>'],
+    ['xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ['xl/styles.xml',styles],['xl/worksheets/sheet1.xml',sx]];
+  var d=new Date(fv(id,'t',now()));var name='도복주문서_'+d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0')+'(NARACHA).xlsx';
+  dlBlob(name,zipStore(files),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');toast('엑셀 주문서 내려받음');
+}
+/* zip(저장 방식, 압축 없음) */
+var _crcT=null;function crc32(u8){if(!_crcT){_crcT=new Int32Array(256);for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);_crcT[n]=c;}}var crc=-1;for(var i=0;i<u8.length;i++)crc=_crcT[(crc^u8[i])&255]^(crc>>>8);return (crc^-1)>>>0;}
+function zipStore(files){
+  var enc=new TextEncoder();var parts=[],cd=[],off=0;var d=new Date();var dt=((d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1))&0xFFFF,dd=(((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate())&0xFFFF;
+  function u16(v){return [v&255,(v>>8)&255];}function u32(v){return [v&255,(v>>8)&255,(v>>16)&255,(v>>>24)&255];}
+  files.forEach(function(f){var nm=enc.encode(f[0]),data=enc.encode(f[1]),crc=crc32(data);
+    var lh=[].concat(u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(dt),u16(dd),u32(crc),u32(data.length),u32(data.length),u16(nm.length),u16(0));
+    parts.push(new Uint8Array(lh),nm,data);
+    cd.push([].concat(u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(dt),u16(dd),u32(crc),u32(data.length),u32(data.length),u16(nm.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off)),nm);
+    off+=lh.length+nm.length+data.length;});
+  var cdStart=off,cdLen=0;cd.forEach(function(x){var a=x instanceof Uint8Array?x:new Uint8Array(x);parts.push(a);cdLen+=a.length;});
+  parts.push(new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(cdLen),u32(cdStart),u16(0))));
+  var total=0;parts.forEach(function(p){total+=p.length;});var out=new Uint8Array(total);var p=0;parts.forEach(function(x){out.set(x,p);p+=x.length;});return out;
+}
+
 /* ═══════════ 이력 탭 ═══════════ */
 function rLog(){
   var h=banner();
@@ -636,6 +784,10 @@ function rSet(){
     +'<button class="btn xs sec" onclick="mv(\''+g.id+'\',-1,\'grp\')" '+(i?'':'disabled')+'>▲</button><button class="btn xs sec" onclick="mv(\''+g.id+'\',1,\'grp\')" '+(i<arr.length-1?'':'disabled')+'>▼</button>'
     +'<button class="btn xs sec" onclick="closeModal();openGroupMenu(\''+g.id+'\')">편집</button><button class="btn xs ghost" onclick="toggleDel(\''+g.id+'\',\'grp\')">'+(alive(g.id)?'숨김':'복원')+'</button></div>';}).join('');}).join('')
     +'<div class="row" style="margin-top:10px"><button class="btn sec" onclick="openAddGroup()">＋ 품목군 추가</button></div></div></div>';
+  var ohOpen=UI.setOpen.oh===true;
+  h+='<h2 class="sec">영문 주문서 정보 (엑셀 머리글)</h2><div class="card '+(ohOpen?'open':'')+'"><div class="hd" onclick="UI.setOpen.oh='+(ohOpen?'false':'true')+';render()"><span class="arrow">▶</span><span class="nm">'+esc(oh('oh_title'))+'</span><span class="sb">TO '+esc(oh('oh_to'))+'</span><span class="sp"></span><span class="sum">'+(ohOpen?'접기':'펼치기')+'</span></div>';
+  if(ohOpen)h+='<div class="bd">'+[['oh_title','제목'],['oh_addr','주소(영문)'],['oh_tel','전화'],['oh_mail','이메일'],['oh_to','받는 분(TO) 기본값'],['oh_from','보내는 곳(FROM)']].map(function(k){return '<div class="field"><label>'+k[1]+'</label><input class="inp" value="'+esc(oh(k[0]))+'" onchange="var f={};f[\''+k[0]+'\']=this.value.trim();setF(\'meta\',\'meta\',f)"></div>';}).join('')+'<div class="note">여기 값은 모든 기기에 함께 저장됩니다.</div></div>';
+  h+='</div>';
   h+='<h2 class="sec">재고조사 · 내보내기 · 백업</h2><div class="card"><div class="bd"><div class="row">'
     +'<button class="btn sec" onclick="if(confirm(\'오늘을 재고조사 완료일로 기록할까요?\')){setF(\'meta\',\'meta\',{lastCount:now()});render();}">📋 오늘 재고조사 완료 기록</button>'
     +'<button class="btn sec" onclick="dlCsv(\'stock\')">⬇ 재고표 CSV(엑셀)</button><button class="btn sec" onclick="dlCsv(\'log\')">⬇ 이력 CSV</button>'
@@ -724,6 +876,26 @@ var SEED={
   ['tee','t_long_b','긴팔 티셔츠 검정','긴팔T-B',[[110,0,{}],[120,0,{}],[130,0,{}],[140,0,{}],[150,0,{}],[160,0,{}],[170,0,{}],[180,0,{}],[190,0,{}]]],
   ['tee','t_long_n','긴팔 티셔츠 남색','긴팔T-N',[[110,0,{}],[120,0,{}],[130,0,{}],[140,0,{}],[150,0,{}],[160,0,{}],[170,0,{}],[180,0,{}],[190,0,{}]]]
  ],
+ /* 영문 주문서용: 품번·영문 품명·설명(줄 단위)·사이즈별 띠 비고 규칙([상한 사이즈, 비고] 순서대로 첫 일치) */
+ en:{
+  pum:['A.','NARACHA DELUXE POOM',['7oz. TWILL WHITE','65% POLYESTER 35% COTTON','SET: JACKET, PANTS, 1 BELT(white)','including 2 BLACK LOGO EMBROIDERY, 3 PRINT'],[[999,'Belt 150cm']]],
+  dan:['B.','NARACHA DELUXE DAN',['7oz. TWILL WHITE / BLACK PANTS','65% POLYESTER 35% COTTON','SET: JACKET, PANTS, 1 BELT(white)','including 2 BLACK LOGO EMBROIDERY, 3 PRINT'],[[160,'Belt 160cm'],[999,'Belt 180cm']]],
+  demo_pum:['C.','NARACHA DEMO TEAM POOM',['7oz. TWILL WHITE / BLACK PANTS','65% POLYESTER 35% COTTON','SET: JACKET, PANTS, 1 BELT(white)','including 2 BLACK LOGO EMBROIDERY, 3 PRINT'],[[140,'Belt 160cm'],[999,'Belt 180cm']]],
+  demo_dan:['D.','NARACHA DEMO TEAM DAN',['7oz. TWILL WHITE / BLACK PANTS','65% POLYESTER 35% COTTON','SET: JACKET, PANTS, 1 BELT(white)','including 2 BLACK LOGO EMBROIDERY, 3 PRINT'],[[160,'Belt 160cm'],[999,'Belt 180cm']]],
+  mo_black:['E.','MASTER OPEN BLACK (WHITE COLLAR + BLACK PANTS)',['9 oz. TWILL BLACK'],[[999,'NO BELT']]],
+  mo_navy:['E-2.','MASTER OPEN DARK BLUE (WHITE COLLAR + DARK BLUE PANTS)',['9 oz. TWILL DARK BLUE'],[[999,'NO BELT']]],
+  mo_white:['E-3.','MASTER OPEN WHITE (WHITE COLLAR + WHITE PANTS)',['9 oz. TWILL WHITE'],[[999,'NO BELT']]],
+  mo_allblack:['E-4.','MASTER OPEN BLACK (BLACK JACKET + BLACK PANTS)',['9 oz. TWILL BLACK'],[[999,'NO BELT']]],
+  pants_black:['K-1.','PANTS (BLACK)',['7oz. TWILL BLACK PANTS'],[]],
+  pants_white:['K-2.','PANTS (WHITE)',['7oz. TWILL WHITE PANTS'],[]],
+  trial_white:['T-1.','TRIAL UNIFORM (WHITE)',['7oz. TWILL WHITE'],[[999,'Belt 150cm']]],
+  trial_pum:['T-2.','TRIAL UNIFORM (POOM)',['7oz. TWILL WHITE'],[[999,'Belt 150cm']]],
+  b_white:['F-1.','WHITE BELT (4cm)',['COLOR BELT'],[]],b_yellow:['F-2.','YELLOW BELT (4cm)',['COLOR BELT'],[]],b_orange:['F-3.','ORANGE BELT (4cm)',['COLOR BELT'],[]],b_green:['F-4.','GREEN BELT (4cm)',['COLOR BELT'],[]],
+  b_blue:['F-5.','BLUE BELT (4cm)',['COLOR BELT'],[]],b_purple:['F-6.','PURPLE BELT (4cm)',['COLOR BELT'],[]],b_brown:['F-7.','BROWN BELT (4cm)',['COLOR BELT'],[]],b_red:['F-8.','RED BELT (4cm)',['COLOR BELT'],[]],b_red2:['F-9.','2nd RED BELT (4cm)',['COLOR BELT'],[]],
+  b_poom:['G-1.','NARACHA POOM BELT (4cm)',['NARACHA LOGO EMBROIDERY'],[]],b_poom2:['G-2.','NARACHA 2 POOM BELT (4cm)',['NARACHA LOGO EMBROIDERY'],[]],b_black:['G-3.','NARACHA BLACK BELT (4cm)',['NARACHA LOGO EMBROIDERY'],[]],b_master:['G-4.',"NARACHA MASTER'S BLACK BELT (5cm)",['NARACHA LOGO EMBROIDERY'],[]],
+  t_short_n:['H-1.','SHORT SLEEVE T-SHIRT (NAVY)',['COOL ROUND EDGE','PRINT: WHITE'],[]],t_short_w:['H-2.','SHORT SLEEVE T-SHIRT (WHITE)',['COOL ROUND EDGE','PRINT: NAVY'],[]],
+  t_long_b:['H-3.','LONG SLEEVE T-SHIRT (BLACK)',['COOL ROUND EDGE'],[]],t_long_n:['H-4.','LONG SLEEVE T-SHIRT (NAVY)',['COOL ROUND EDGE'],[]]
+ },
  prices:{pum:50000,dan:50000,pants_black:20000,pants_white:20000,b_white:8000,b_yellow:8000,b_orange:8000,b_green:8000,b_blue:8000,b_purple:8000,b_brown:8000,b_red:8000,b_red2:8000,b_poom:15000,b_poom2:15000,b_black:15000,b_master:18000,t_short_n:12000,t_short_w:12000,t_long_b:16800,t_long_n:16800}
 };
 function seedData(onlyMissing){
@@ -731,9 +903,11 @@ function seedData(onlyMissing){
   SEED.locs.forEach(function(l,i){if(setF('loc_'+l[0],'loc',{name:l[1],seq:(i+1)*10,del:false},T))added++;});
   var seqByCat={};
   SEED.groups.forEach(function(g){var cat=g[0],key=g[1],gid='g_'+key;seqByCat[cat]=(seqByCat[cat]||0)+10;
-    if(setF(gid,'grp',{cat:cat,name:g[2],sub:g[3],seq:seqByCat[cat],unit:'',price:SEED.prices[key]||0,del:false},T))added++;
+    var en=SEED.en[key]||['','',[],[]];
+    if(setF(gid,'grp',{cat:cat,name:g[2],sub:g[3],seq:seqByCat[cat],unit:'',price:SEED.prices[key]||0,del:false,code:en[0],en:en[1],desc:en[2].join('\n')},T))added++;
     g[4].forEach(function(s){var sz=String(s[0]),it='it_'+key+'_'+sz;
-      if(setF(it,'item',{grp:gid,size:sz,seq:sizeNum(sz),base:s[1]||0,del:false},T))added++;
+      var belt='';for(var bi=0;bi<en[3].length;bi++){if(sizeNum(sz)<=en[3][bi][0]){belt=en[3][bi][1];break;}}
+      if(setF(it,'item',{grp:gid,size:sz,seq:sizeNum(sz),base:s[1]||0,del:false,belt:belt},T))added++;
       var q={};var has=false;for(var l in s[2]){q['loc_'+l]=s[2][l];has=true;}
       if(has){var before=DB.recs['q_'+it];if(setF('q_'+it,'qty',q,T)){added++;if(!before)for(var l2 in s[2])lines.push({it:it,loc:'loc_'+l2,d:s[2][l2],from:0,to:s[2][l2]});}}
     });});
