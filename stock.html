@@ -221,7 +221,7 @@ pre.txt{white-space:pre-wrap;background:#f7f6f2;border:1px solid var(--line);bor
      서버·기기 모두 같은 규칙으로 병합. 삭제는 del 표시(묘비)로 남기고 버리지 않는다.
    - 서버 응답이 조금이라도 이상하면(형식·인증·오류) 절대 저장하지 않는다(fail-closed).
    ═══════════════════════════════════════════════════════════════ */
-var APP_VER = "v1.10";   /* R1.10: 새 기기가 시트를 받아온 직후에도 정리(migrate) 적용 · R1.9: 체험도복(품) 품목군 제거(숨김) · R1.8: 주문 화면 한글 품목명 옆 영문(품번) 병기 · R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
+var APP_VER = "v1.11";   /* R1.11: 주문 탭 버튼 정리(미리보기·엑셀 다운, 주문 문구 제거), 같은 항목 중복 줄 합산(부족 목록+직접 추가), 작성 중 주문서 재사용 · R1.10: 새 기기가 시트를 받아온 직후에도 정리(migrate) 적용 · R1.9: 체험도복(품) 품목군 제거(숨김) · R1.8: 주문 화면 한글 품목명 옆 영문(품번) 병기 · R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
 
 var LS_DB='naracha_stock_db', LS_CFG='naracha_stock_cfg', LS_DIRTY='naracha_stock_dirty', LS_UI='naracha_stock_ui';
 var CATS=[{id:'dobok',name:'도복',unit:'벌',ic:'🥋'},{id:'belt',name:'띠',unit:'개',ic:'🎗️'},{id:'tee',name:'티셔츠',unit:'장',ic:'👕'}];
@@ -505,8 +505,10 @@ function rOrder(){
   var lastG='';
   sl.forEach(function(s){if(s.g!==lastG){lastG=s.g;h+='<div style="font-weight:800;color:var(--navy);margin:8px 0 2px">'+esc(grpName(s.g))+enTag(s.g)+'</div>';}
     h+='<div class="line"><input type="checkbox" class="ochk" data-it="'+s.it+'" checked style="width:20px;height:20px"><div class="n">'+esc(fv(s.it,'size'))+' <small style="color:var(--mute)">보유 '+total(s.it)+' / 기준 '+base(s.it)+'</small></div><div class="step" style="transform:scale(.85);transform-origin:right"><button onclick="stepO(this,-1)">−</button><input type="number" inputmode="numeric" class="oq" data-it="'+s.it+'" value="'+s.q+'"><button onclick="stepO(this,1)">＋</button></div></div>';});
-  if(UI.orderExtra.length){h+='<div style="font-weight:800;color:var(--navy);margin:8px 0 2px">직접 추가</div>';UI.orderExtra.forEach(function(x,i){h+='<div class="line"><input type="checkbox" class="ochk" data-it="'+x.it+'" checked style="width:20px;height:20px"><div class="n">'+esc(itemName(x.it))+enTag(fv(x.it,'grp'))+' <small style="color:var(--mute)">보유 '+total(x.it)+'</small></div><div class="step" style="transform:scale(.85);transform-origin:right"><button onclick="stepO(this,-1)">−</button><input type="number" inputmode="numeric" class="oq" data-it="'+x.it+'" value="'+x.q+'"><button onclick="stepO(this,1)">＋</button></div><button class="btn xs ghost" onclick="UI.orderExtra.splice('+i+',1);render()">✕</button></div>';});}
-  h+='<div class="acts"><button class="btn sec sm" onclick="openPick(\'order\')">＋ 항목 직접 추가</button><span class="sp" style="flex:1"></span><button class="btn sm" onclick="makeOrder()" '+(sl.length||UI.orderExtra.length?'':'disabled')+'>선택 항목으로 주문서 만들기</button></div>';
+  if(UI.orderExtra.length){h+='<div style="font-weight:800;color:var(--navy);margin:8px 0 2px">직접 추가</div>';UI.orderExtra.forEach(function(x,i){h+='<div class="line"><input type="checkbox" class="ochk" data-it="'+x.it+'" checked style="width:20px;height:20px"><div class="n">'+esc(itemName(x.it))+enTag(fv(x.it,'grp'))+' <small style="color:var(--mute)">보유 '+total(x.it)+(lack(x.it)>0?' · 위 부족 수량과 합산':'')+'</small></div><div class="step" style="transform:scale(.85);transform-origin:right"><button onclick="stepO(this,-1)">−</button><input type="number" inputmode="numeric" class="oq" data-it="'+x.it+'" value="'+x.q+'"><button onclick="stepO(this,1)">＋</button></div><button class="btn xs ghost" onclick="UI.orderExtra.splice('+i+',1);render()">✕</button></div>';});}
+  var can=sl.length||UI.orderExtra.length;
+  h+='<div class="acts"><button class="btn sec sm" onclick="openPick(\'order\')">＋ 항목 직접 추가</button><span class="sp" style="flex:1"></span><button class="btn sec sm" onclick="var id=draftOrder();if(id)openOrderForm(id)" '+(can?'':'disabled')+'>👁 미리보기</button><button class="btn sm" onclick="var id=draftOrder();if(id)dlOrderXlsx(id)" '+(can?'':'disabled')+'>⬇ 엑셀 다운</button></div>'
+    +'<div class="note" style="margin-top:6px">선택한 항목으로 주문서가 만들어져 아래 목록에 「작성됨」으로 남습니다. 같은 항목을 여러 번 담으면 수량이 합쳐집니다.</div>';
   h+='</div></div>';
   h+='<h2 class="sec">주문서 목록</h2><div class="olist">';
   var os=recsOf('order').sort(function(a,b){return fv(b.id,'t',0)-fv(a.id,'t',0);});
@@ -516,38 +518,37 @@ function rOrder(){
     h+='<div class="card"><div class="bd"><div class="oc"><span class="dt">'+fmtD(fv(o.id,'t'))+'</span>'+tag+'<span class="wh">'+esc(fv(o.id,'who',''))+' · 총 '+n+'</span></div>';
     h+=orderLinesHtml(ls,st==='done',true);
     if(fv(o.id,'memo'))h+='<div class="note">메모: '+esc(fv(o.id,'memo'))+'</div>';
-    h+='<div class="acts"><button class="btn xs sec" onclick="showOrderText(\''+o.id+'\')">📋 주문 문구</button><button class="btn xs sec" onclick="openOrderForm(\''+o.id+'\')">📄 영문 주문서(엑셀)</button>';
-    if(st==='ready')h+='<button class="btn xs" onclick="setF(\''+o.id+'\',\'order\',{status:\'sent\',sentAt:now()});render()">발주 완료로 표시</button>';
+    h+='<div class="acts"><button class="btn xs sec" onclick="openOrderForm(\''+o.id+'\')">👁 미리보기</button><button class="btn xs sec" onclick="dlOrderXlsx(\''+o.id+'\')">⬇ 엑셀</button>';
+    if(st==='ready')h+='<button class="btn xs" onclick="setF(\''+o.id+'\',\'order\',{status:\'sent\',sentAt:now()});if(UI.draft===\''+o.id+'\'){UI.draft=null;UI.orderExtra=[];}render()">발주 완료로 표시</button>';
     if(st!=='done')h+='<button class="btn xs" style="background:var(--ok);border-color:var(--ok)" onclick="openReceive(\''+o.id+'\')">📥 입고 처리</button>';
-    if(st!=='done')h+='<button class="btn xs ghost" onclick="if(confirm(\'이 주문서를 삭제할까요?\')){setF(\''+o.id+'\',\'order\',{del:true});render();}">삭제</button>';
+    if(st!=='done')h+='<button class="btn xs ghost" onclick="if(confirm(\'이 주문서를 삭제할까요?\')){setF(\''+o.id+'\',\'order\',{del:true});if(UI.draft===\''+o.id+'\')UI.draft=null;render();}">삭제</button>';
     h+='</div></div></div>';});
   h+='</div>';return h;
 }
-function orderLinesHtml(ls,done,en){var byG={};ls.forEach(function(l){var g=fv(l.it,'grp');(byG[g]=byG[g]||[]).push(l);});
+function orderLinesHtml(ls,done,en){var byG={};ls=mergeLines(ls);ls.forEach(function(l){var g=fv(l.it,'grp');(byG[g]=byG[g]||[]).push(l);});
   return Object.keys(byG).map(function(g){return '<div class="ol"><b>'+esc(grpName(g))+'</b>'+(en?enTag(g):'')+' '+byG[g].map(function(l){return esc(fv(l.it,'size'))+'×'+num(l.q)+(done&&l.rq!==undefined&&num(l.rq)!==num(l.q)?'<span style="color:var(--red)">(입고 '+num(l.rq)+')</span>':'');}).join(', ')+'</div>';}).join('');}
 function addBeltQuick(){var it=UI.bq.sz;if(!it)return;var f=UI.orderExtra.filter(function(x){return x.it===it;})[0];if(f)f.q+=UI.bq.q;else UI.orderExtra.push({it:it,q:UI.bq.q});render();toast(itemName(it)+'cm '+UI.bq.q+'개 담음');}
 function stepO(btn,d){var i=btn.parentNode.querySelector('input');i.value=Math.max(0,Math.round(num(i.value))+d);}
-function makeOrder(){var lines=[];var chk={};[].forEach.call(document.querySelectorAll('.ochk'),function(c){if(c.checked)chk[c.dataset.it]=true;});
-  [].forEach.call(document.querySelectorAll('.oq'),function(i){var q=Math.round(num(i.value));if(chk[i.dataset.it]&&q>0)lines.push({it:i.dataset.it,q:q});});
-  if(!lines.length){toast('선택된 항목이 없습니다');return;}
-  var id=uid('od');setF(id,'order',{t:now(),who:CFG.who||'',status:'ready',lines:lines,memo:'',del:false});UI.orderExtra=[];render();showOrderText(id);}
-function orderText(id){var ls=fv(id,'lines',[]);var byG={};ls.forEach(function(l){var g=fv(l.it,'grp');(byG[g]=byG[g]||[]).push(l);});var n=0;
-  var s='[나라차태권도 분당도장 주문서] '+fmtD(fv(id,'t'))+'\n';
-  Object.keys(byG).forEach(function(g){s+='\n■ '+grpName(g)+(fv(g,'sub')?' ('+fv(g,'sub')+')':'')+'\n';byG[g].forEach(function(l){s+=' - '+fv(l.it,'size')+' : '+num(l.q)+grpUnit(g)+'\n';n+=num(l.q);});});
-  s+='\n합계 '+n+' · 담당 '+(fv(id,'who')||CFG.who||'')+(fv(id,'memo')?'\n메모: '+fv(id,'memo'):'');return s;}
-function showOrderText(id){var t=orderText(id);
-  openModal('<div class="mh"><div class="t">주문 문구</div><button class="x" onclick="closeModal()">✕</button></div><pre class="txt" id="otxt">'+esc(t)+'</pre>'
-   +'<div class="field" style="margin-top:10px"><label>메모(공급처 전달용)</label><input class="inp" id="omemo" value="'+esc(fv(id,'memo',''))+'" onchange="setF(\''+id+'\',\'order\',{memo:this.value.trim()});document.getElementById(\'otxt\').textContent=orderText(\''+id+'\')"></div>'
-   +'<div class="mf"><button class="btn sec" onclick="closeModal()">닫기</button><button class="btn" onclick="copyText(document.getElementById(\'otxt\').textContent)">📋 복사</button></div>');}
+function collectSel(){var chk={};[].forEach.call(document.querySelectorAll('.ochk'),function(c){if(c.checked)chk[c.dataset.it]=true;});
+  var map={},order=[];[].forEach.call(document.querySelectorAll('.oq'),function(i){var q=Math.round(num(i.value)),it=i.dataset.it;if(!chk[it]||q<=0)return;if(map[it]===undefined)order.push(it);map[it]=(map[it]||0)+q;});
+  return order.map(function(it){return {it:it,q:map[it]};});}
+/* 선택 항목으로 주문서를 만들거나(처음), 이미 작성 중인 주문서가 있으면 그 내용을 갱신한다 */
+function draftOrder(){var lines=collectSel();if(!lines.length){toast('선택된 항목이 없습니다');return null;}
+  var id=UI.draft;
+  if(id&&alive(id)&&fv(id,'status')==='ready'){var rem={};fv(id,'lines',[]).forEach(function(l){if(l.rem!==undefined)rem[l.it]=l.rem;});
+    lines=lines.map(function(l){return rem[l.it]!==undefined?{it:l.it,q:l.q,rem:rem[l.it]}:l;});setF(id,'order',{lines:lines});}
+  else{id=uid('od');setF(id,'order',{t:now(),who:CFG.who||'',status:'ready',lines:lines,memo:'',del:false});UI.draft=id;toast('주문서가 만들어졌습니다');}
+  render();return id;}
+function mergeLines(ls){var map={},order=[];(ls||[]).forEach(function(l){var it=l.it,q=num(l.q);if(!map[it]){map[it]={it:it,q:0};order.push(it);}map[it].q+=q;if(l.rem!==undefined)map[it].rem=l.rem;if(l.rq!==undefined)map[it].rq=(map[it].rq||0)+num(l.rq);});return order.map(function(it){return map[it];});}
 function copyText(t){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast('복사됨 — 카톡·문자에 붙여넣기');},function(){fallbackCopy(t);});}else fallbackCopy(t);}
 function fallbackCopy(t){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('복사됨');}catch(e){toast('복사 실패 — 길게 눌러 복사하세요');}document.body.removeChild(ta);}
-function openReceive(id){var ls=fv(id,'lines',[]);var L=locs();
+function openReceive(id){var ls=mergeLines(fv(id,'lines',[]));var L=locs();
   var h='<div class="mh"><div><div class="t">입고 처리</div><div class="s">실제 들어온 수량을 확인하고 저장하면 재고에 더해집니다</div></div><button class="x" onclick="closeModal()">✕</button></div>';
   h+='<div class="field"><label>넣을 위치</label><select class="inp" id="rloc">'+L.map(function(l){return '<option value="'+l.id+'">'+esc(locName(l.id))+'</option>';}).join('')+'</select></div>';
   h+=ls.map(function(l,i){return '<div class="qrow"><div class="ln">'+esc(itemName(l.it))+'<small>주문 '+num(l.q)+'</small></div><div class="step"><button onclick="stepO(this,-1)">−</button><input type="number" inputmode="numeric" class="rq" data-i="'+i+'" value="'+(l.rq!==undefined?num(l.rq):num(l.q))+'"><button onclick="stepO(this,1)">＋</button></div></div>';}).join('');
   h+='<div class="field" style="margin-top:10px"><label>메모</label><input class="inp" id="rmemo" placeholder="예: 9/20 택배 도착"></div>';
   h+='<div class="mf"><button class="btn sec" onclick="closeModal()">취소</button><button class="btn" style="background:var(--ok);border-color:var(--ok)" onclick="saveReceive(\''+id+'\')">입고 확정</button></div>';openModal(h);}
-function saveReceive(id){var ls=fv(id,'lines',[]).map(function(l){return {it:l.it,q:l.q,rq:l.rq};});var loc=document.getElementById('rloc').value;var memo=document.getElementById('rmemo').value.trim();
+function saveReceive(id){var ls=mergeLines(fv(id,'lines',[])).map(function(l){return {it:l.it,q:l.q,rq:l.rq};});var loc=document.getElementById('rloc').value;var memo=document.getElementById('rmemo').value.trim();
   [].forEach.call(document.querySelectorAll('.rq'),function(i){ls[num(i.dataset.i)].rq=Math.max(0,Math.round(num(i.value)));});
   var ch=ls.filter(function(l){return l.rq>0;}).map(function(l){return {it:l.it,loc:loc,to:qty(l.it,loc)+l.rq};});
   applyQty(ch,'in',memo||('주문서 '+fmtD(fv(id,'t'))+' 입고'),{ref:id});
@@ -625,7 +626,7 @@ function itemRem(it,line){if(line&&line.rem!==undefined&&line.rem!==null)return 
 
 /* 주문서에 들어갈 행 구성: 주문된 품목군마다 그 품목군의 모든 사이즈를 나열(원본 방식), 수량 없는 칸은 빈칸 */
 function orderFormRows(id){
-  var ls=fv(id,'lines',[]);var byG={};var lineMap={};
+  var ls=mergeLines(fv(id,'lines',[]));var byG={};var lineMap={};
   ls.forEach(function(l){if(!num(l.q))return;var g=fv(l.it,'grp');if(!byG[g])byG[g]=[];byG[g].push(l);lineMap[l.it]=l;});
   var gs=[];CATS.forEach(function(c){groups(c.id).forEach(function(g){if(byG[g.id])gs.push(g.id);});});
   Object.keys(byG).forEach(function(g){if(gs.indexOf(g)<0)gs.push(g);});
@@ -639,7 +640,7 @@ function orderFormRows(id){
 
 /* ── 미리보기/편집 창: 한글·영문 대조, 수량·비고 수정, 엑셀 내려받기 ── */
 function openOrderForm(id){
-  var ls=fv(id,'lines',[]).filter(function(l){return num(l.q)>0;});
+  var ls=mergeLines(fv(id,'lines',[])).filter(function(l){return num(l.q)>0;});
   var h='<div class="mh"><div><div class="t">영문 주문서 (해외 발주)</div><div class="s">한글과 영문을 대조해 보고 수량·비고를 고친 뒤 엑셀로 내려받으세요</div></div><button class="x" onclick="closeModal()">✕</button></div>';
   h+='<div class="row"><div class="field" style="flex:1;min-width:140px"><label>TO (받는 분)</label><input class="inp" id="ofTo" value="'+esc(fv(id,'ofTo',oh('oh_to')))+'"></div><div class="field" style="flex:1;min-width:120px"><label>DATE</label><input class="inp" id="ofDate" value="'+esc(fv(id,'ofDate',enDate(fv(id,'t',now()))))+'"></div></div>';
   h+='<div style="overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px"><table class="st" style="min-width:600px"><thead><tr><th style="text-align:left">한글</th><th style="text-align:left">영문 (품번)</th><th>SIZE</th><th>QTY</th><th style="text-align:left">REMARKS(띠 등)</th></tr></thead><tbody>';
@@ -653,7 +654,7 @@ function openOrderForm(id){
   h+='<div class="field" style="margin-top:10px"><label>REMARKS (주문서 아래 영문 메모, 선택)</label><textarea class="inp" id="ofMemo" placeholder="e.g. Please ship by Oct 15. / Same specification as last order.">'+esc(fv(id,'ofMemo',''))+'</textarea></div>';
   h+='<div class="note">엑셀에는 주문한 품목군의 <b>모든 사이즈</b>가 원본 양식처럼 나열되고, 주문하지 않은 사이즈는 빈칸으로 나갑니다. 비고(REMARKS)는 도복에 딸려 가는 띠 길이입니다 — 사이즈별 기본값은 품목군 ⋯ 메뉴에서 바꿀 수 있습니다.</div>';
   h+='<div class="mf"><button class="btn sec" onclick="ofSave(\''+id+'\');closeModal();render()">저장·닫기</button><button class="btn" onclick="ofSave(\''+id+'\');dlOrderXlsx(\''+id+'\')">⬇ 엑셀 주문서 내려받기</button></div>';
-  openModal(h); document.querySelector('.md').style.maxWidth='820px'; UI._of={id:id,lines:fv(id,'lines',[]).map(function(l){return {it:l.it,q:l.q,rem:l.rem,rq:l.rq};})};
+  openModal(h); document.querySelector('.md').style.maxWidth='820px'; UI._of={id:id,lines:mergeLines(fv(id,'lines',[])).map(function(l){return {it:l.it,q:l.q,rem:l.rem,rq:l.rq};})};
 }
 function ofSet(i,k,v){var vis=UI._of.lines.filter(function(l){return num(l.q)>0;});var l=vis[i];if(!l)return;if(k==='q')l.q=Math.max(0,Math.round(num(v)));else l.rem=String(v);}
 function ofSave(id){if(!UI._of||UI._of.id!==id)return;var f={lines:UI._of.lines.map(function(l){var o={it:l.it,q:l.q};if(l.rem!==undefined)o.rem=l.rem;if(l.rq!==undefined)o.rq=l.rq;return o;})};
