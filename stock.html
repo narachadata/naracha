@@ -222,7 +222,7 @@ pre.txt{white-space:pre-wrap;background:#f7f6f2;border:1px solid var(--line);bor
      서버·기기 모두 같은 규칙으로 병합. 삭제는 del 표시(묘비)로 남기고 버리지 않는다.
    - 서버 응답이 조금이라도 이상하면(형식·인증·오류) 절대 저장하지 않는다(fail-closed).
    ═══════════════════════════════════════════════════════════════ */
-var APP_VER = "v1.16";   /* R1.16: 엑셀 디자인 재설계(원본처럼 안쪽 선 없음·구간선만, 열 폭 확대, 머리글·소계·합계 정돈, 비고의 띠 길이 제거), 미리보기에 띠 배정 구간 표시 · R1.15: 띠 배정에 150·160·180cm 항상 표시(전체 합계=도복 합계, 기본 길이 흰띠가 나머지), 수량 − 버튼 0까지 · R1.14: 도복에 딸린 띠 배정 — 도복 수량을 길이별로 자동 합산, 8색 배정(흰띠=나머지), 엑셀 도복 구간 뒤 BELTS FOR UNIFORMS 표기 · 부족 목록 입력값 상태 보존 · R1.13: 미리보기·목록 같은 품목군끼리 묶어 정렬, 엑셀 A4 1장(주문 사이즈만·자동 축소), 영문 제목 괄호 작은 글씨·열 폭 조정 · R1.12: 폰 미리보기 표 — 영문 칸 숨겨 사이즈·수량·비고가 한 화면에 · R1.11: 주문 탭 버튼 정리(미리보기·엑셀 다운, 주문 문구 제거), 같은 항목 중복 줄 합산(부족 목록+직접 추가), 작성 중 주문서 재사용 · R1.10: 새 기기가 시트를 받아온 직후에도 정리(migrate) 적용 · R1.9: 체험도복(품) 품목군 제거(숨김) · R1.8: 주문 화면 한글 품목명 옆 영문(품번) 병기 · R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
+var APP_VER = "v1.17";   /* R1.17: 엑셀 소계를 값으로 기록(수식만 있어 일부 뷰어에서 빈칸)·굵고 크게, 전체 TOTAL 행 제거 · R1.16: 엑셀 디자인 재설계(원본처럼 안쪽 선 없음·구간선만, 열 폭 확대, 머리글·소계·합계 정돈, 비고의 띠 길이 제거), 미리보기에 띠 배정 구간 표시 · R1.15: 띠 배정에 150·160·180cm 항상 표시(전체 합계=도복 합계, 기본 길이 흰띠가 나머지), 수량 − 버튼 0까지 · R1.14: 도복에 딸린 띠 배정 — 도복 수량을 길이별로 자동 합산, 8색 배정(흰띠=나머지), 엑셀 도복 구간 뒤 BELTS FOR UNIFORMS 표기 · 부족 목록 입력값 상태 보존 · R1.13: 미리보기·목록 같은 품목군끼리 묶어 정렬, 엑셀 A4 1장(주문 사이즈만·자동 축소), 영문 제목 괄호 작은 글씨·열 폭 조정 · R1.12: 폰 미리보기 표 — 영문 칸 숨겨 사이즈·수량·비고가 한 화면에 · R1.11: 주문 탭 버튼 정리(미리보기·엑셀 다운, 주문 문구 제거), 같은 항목 중복 줄 합산(부족 목록+직접 추가), 작성 중 주문서 재사용 · R1.10: 새 기기가 시트를 받아온 직후에도 정리(migrate) 적용 · R1.9: 체험도복(품) 품목군 제거(숨김) · R1.8: 주문 화면 한글 품목명 옆 영문(품번) 병기 · R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
 
 var LS_DB='naracha_stock_db', LS_CFG='naracha_stock_cfg', LS_DIRTY='naracha_stock_dirty', LS_UI='naracha_stock_ui';
 var CATS=[{id:'dobok',name:'도복',unit:'벌',ic:'🥋'},{id:'belt',name:'띠',unit:'개',ic:'🎗️'},{id:'tee',name:'티셔츠',unit:'장',ic:'👕'}];
@@ -755,19 +755,14 @@ function dlOrderXlsx(id){
       heights[rr]=16;}
     hline(r0,'t','medium');
     var sr=r0+n;hline(sr,'t','hair');
-    put(sr,8,s.noTotal?'belts':'subtotal',{font:{name:'Tahoma',sz:9,color:GRAY},h:'right',va:'center'});
-    put(sr,9,'',{font:{name:'Tahoma',sz:11,b:1},h:'center',va:'center',num:1,fmt:164,formula:'SUM(I'+start+':I'+(sr-1)+')'});
+    put(sr,8,s.noTotal?'belts':'subtotal',{font:{name:'Tahoma',sz:10,b:1,color:GRAY},h:'right',va:'center'});
+    var ssum=0;s.rows.forEach(function(x){ssum+=num(x.q);});
+    put(sr,9,ssum,{font:{name:'Tahoma',sz:12,b:1},h:'center',va:'center',num:1,fmt:164,formula:'SUM(I'+start+':I'+(sr-1)+')'});
     if(!s.noTotal)subCells.push('I'+sr);heights[sr]=18;hline(sr,'b','medium');
     heights[sr+1]=6;r0=sr+2;});
-  /* 총합계 */
-  var gr=r0;for(c=1;c<=COLS;c++)C(gr,c).fill=LGRAY;
-  put(gr,8,'TOTAL',{font:{name:'Tahoma',sz:10,b:1},h:'right',va:'center',fill:LGRAY});
-  put(gr,9,'',{font:{name:'Tahoma',sz:12,b:1},h:'center',va:'center',num:1,fmt:164,fill:LGRAY,formula:subCells.join('+')||'0'});
-  var hasBelts=secs.some(function(x){return x.noTotal;});
-  put(gr,10,hasBelts?'belts not included':'',{font:{name:'Tahoma',sz:8,color:GRAY},h:'center',va:'center',fill:LGRAY});mergeRow(gr,10,11);
-  hline(gr,'t','medium');heights[gr]=22;
+  var gr=r0-2;   /* 마지막 블록의 소계 행(전체 TOTAL 행은 두지 않는다 — 관장님 요청) */
   var last=gr;var memo=fv(id,'ofMemo','');
-  if(memo){heights[gr+1]=6;put(gr+2,1,'REMARKS',{font:{name:'Malgun Gothic',sz:9,b:1,color:GRAY},va:'top'});put(gr+2,2,memo,{font:{name:'Malgun Gothic',sz:9},va:'top',wrap:1});merges.push('B'+(gr+2)+':K'+(gr+4));for(c=2;c<=COLS;c++){C(gr+2,c);C(gr+3,c);C(gr+4,c);}heights[gr+2]=15;heights[gr+3]=15;heights[gr+4]=15;last=gr+4;}
+  if(memo){heights[gr+1]=8;put(gr+2,1,'REMARKS',{font:{name:'Malgun Gothic',sz:9,b:1,color:GRAY},va:'top'});put(gr+2,2,memo,{font:{name:'Malgun Gothic',sz:9},va:'top',wrap:1});merges.push('B'+(gr+2)+':K'+(gr+4));for(c=2;c<=COLS;c++){C(gr+2,c);C(gr+3,c);C(gr+4,c);}heights[gr+2]=15;heights[gr+3]=15;heights[gr+4]=15;last=gr+4;}
   /* 바깥 테두리(굵게) */
   for(var r=1;r<=last;r++){C(r,1);C(r,COLS);for(c=1;c<=COLS;c++){var x=cells[r+'_'+c];if(!x)continue;x.b=x.b||{};if(c===1)x.b.l='medium';if(c===COLS)x.b.r='medium';if(r===1)x.b.t='medium';if(r===last)x.b.b='medium';}}
   /* ── 스타일 사전(필요한 조합만 생성) ── */
@@ -783,7 +778,7 @@ function dlOrderXlsx(id){
     +'<cols>'+[[1,5.5],[2,14],[3,10],[4,10],[5,10],[6,12],[7,4],[8,8],[9,8],[10,10],[11,6]].map(function(w){return '<col min="'+w[0]+'" max="'+w[0]+'" width="'+w[1]+'" customWidth="1"/>';}).join('')+'</cols><sheetData>';
   for(r=1;r<=last;r++){sx+='<row r="'+r+'"'+(heights[r]?' ht="'+heights[r]+'" customHeight="1"':'')+'>';
     for(c=1;c<=COLS;c++){var cl=cells[r+'_'+c];if(!cl)continue;var ref=colL(c)+r;var st=xfId(cl);
-      if(cl.formula)sx+='<c r="'+ref+'" s="'+st+'"><f>'+xmlEsc(cl.formula)+'</f></c>';
+      if(cl.formula)sx+='<c r="'+ref+'" s="'+st+'"><f>'+xmlEsc(cl.formula)+'</f>'+(cl.v!==''&&isFinite(Number(cl.v))?'<v>'+Number(cl.v)+'</v>':'')+'</c>';
       else if(cl.num&&cl.v!=='')sx+='<c r="'+ref+'" s="'+st+'"><v>'+Number(cl.v)+'</v></c>';
       else if(cl.v!==''&&cl.rich){var sp=enSplit(cl.v);sx+='<c r="'+ref+'" s="'+st+'" t="inlineStr"><is><r><rPr><b/><sz val="11"/><rFont val="Tahoma"/></rPr><t xml:space="preserve">'+xmlEsc(sp[0]+(sp[1]?' ':''))+'</t></r>'+(sp[1]?'<r><rPr><sz val="8"/><color rgb="'+GRAY+'"/><rFont val="Tahoma"/></rPr><t xml:space="preserve">'+xmlEsc(sp[1])+'</t></r>':'')+'</is></c>';}
       else if(cl.v!=='')sx+='<c r="'+ref+'" s="'+st+'" t="inlineStr"><is><t xml:space="preserve">'+xmlEsc(cl.v)+'</t></is></c>';
