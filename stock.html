@@ -221,7 +221,7 @@ pre.txt{white-space:pre-wrap;background:#f7f6f2;border:1px solid var(--line);bor
      서버·기기 모두 같은 규칙으로 병합. 삭제는 del 표시(묘비)로 남기고 버리지 않는다.
    - 서버 응답이 조금이라도 이상하면(형식·인증·오류) 절대 저장하지 않는다(fail-closed).
    ═══════════════════════════════════════════════════════════════ */
-var APP_VER = "v1.7";   /* R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
+var APP_VER = "v1.8";   /* R1.8: 주문 화면 한글 품목명 옆 영문(품번) 병기 · R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
 
 var LS_DB='naracha_stock_db', LS_CFG='naracha_stock_cfg', LS_DIRTY='naracha_stock_dirty', LS_UI='naracha_stock_ui';
 var CATS=[{id:'dobok',name:'도복',unit:'벌',ic:'🥋'},{id:'belt',name:'띠',unit:'개',ic:'🎗️'},{id:'tee',name:'티셔츠',unit:'장',ic:'👕'}];
@@ -503,9 +503,9 @@ function rOrder(){
   h+='<div class="card"><div class="bd">';
   if(!sl.length&&!UI.orderExtra.length)h+='<div class="empty">부족한 항목이 없습니다. 기준수량이 비어 있으면 부족 계산을 하지 않으니, 재고 탭에서 기준수량을 넣어 주세요.</div>';
   var lastG='';
-  sl.forEach(function(s){if(s.g!==lastG){lastG=s.g;h+='<div style="font-weight:800;color:var(--navy);margin:8px 0 2px">'+esc(grpName(s.g))+'</div>';}
+  sl.forEach(function(s){if(s.g!==lastG){lastG=s.g;h+='<div style="font-weight:800;color:var(--navy);margin:8px 0 2px">'+esc(grpName(s.g))+enTag(s.g)+'</div>';}
     h+='<div class="line"><input type="checkbox" class="ochk" data-it="'+s.it+'" checked style="width:20px;height:20px"><div class="n">'+esc(fv(s.it,'size'))+' <small style="color:var(--mute)">보유 '+total(s.it)+' / 기준 '+base(s.it)+'</small></div><div class="step" style="transform:scale(.85);transform-origin:right"><button onclick="stepO(this,-1)">−</button><input type="number" inputmode="numeric" class="oq" data-it="'+s.it+'" value="'+s.q+'"><button onclick="stepO(this,1)">＋</button></div></div>';});
-  if(UI.orderExtra.length){h+='<div style="font-weight:800;color:var(--navy);margin:8px 0 2px">직접 추가</div>';UI.orderExtra.forEach(function(x,i){h+='<div class="line"><input type="checkbox" class="ochk" data-it="'+x.it+'" checked style="width:20px;height:20px"><div class="n">'+esc(itemName(x.it))+' <small style="color:var(--mute)">보유 '+total(x.it)+'</small></div><div class="step" style="transform:scale(.85);transform-origin:right"><button onclick="stepO(this,-1)">−</button><input type="number" inputmode="numeric" class="oq" data-it="'+x.it+'" value="'+x.q+'"><button onclick="stepO(this,1)">＋</button></div><button class="btn xs ghost" onclick="UI.orderExtra.splice('+i+',1);render()">✕</button></div>';});}
+  if(UI.orderExtra.length){h+='<div style="font-weight:800;color:var(--navy);margin:8px 0 2px">직접 추가</div>';UI.orderExtra.forEach(function(x,i){h+='<div class="line"><input type="checkbox" class="ochk" data-it="'+x.it+'" checked style="width:20px;height:20px"><div class="n">'+esc(itemName(x.it))+enTag(fv(x.it,'grp'))+' <small style="color:var(--mute)">보유 '+total(x.it)+'</small></div><div class="step" style="transform:scale(.85);transform-origin:right"><button onclick="stepO(this,-1)">−</button><input type="number" inputmode="numeric" class="oq" data-it="'+x.it+'" value="'+x.q+'"><button onclick="stepO(this,1)">＋</button></div><button class="btn xs ghost" onclick="UI.orderExtra.splice('+i+',1);render()">✕</button></div>';});}
   h+='<div class="acts"><button class="btn sec sm" onclick="openPick(\'order\')">＋ 항목 직접 추가</button><span class="sp" style="flex:1"></span><button class="btn sm" onclick="makeOrder()" '+(sl.length||UI.orderExtra.length?'':'disabled')+'>선택 항목으로 주문서 만들기</button></div>';
   h+='</div></div>';
   h+='<h2 class="sec">주문서 목록</h2><div class="olist">';
@@ -514,7 +514,7 @@ function rOrder(){
   os.forEach(function(o){var st=fv(o.id,'status','ready');var tag={ready:'<span class="tag warn">작성됨</span>',sent:'<span class="tag">발주함</span>',done:'<span class="tag ok">입고 완료</span>'}[st];
     var ls=fv(o.id,'lines',[]);var n=0;ls.forEach(function(l){n+=num(l.q);});
     h+='<div class="card"><div class="bd"><div class="oc"><span class="dt">'+fmtD(fv(o.id,'t'))+'</span>'+tag+'<span class="wh">'+esc(fv(o.id,'who',''))+' · 총 '+n+'</span></div>';
-    h+=orderLinesHtml(ls,st==='done');
+    h+=orderLinesHtml(ls,st==='done',true);
     if(fv(o.id,'memo'))h+='<div class="note">메모: '+esc(fv(o.id,'memo'))+'</div>';
     h+='<div class="acts"><button class="btn xs sec" onclick="showOrderText(\''+o.id+'\')">📋 주문 문구</button><button class="btn xs sec" onclick="openOrderForm(\''+o.id+'\')">📄 영문 주문서(엑셀)</button>';
     if(st==='ready')h+='<button class="btn xs" onclick="setF(\''+o.id+'\',\'order\',{status:\'sent\',sentAt:now()});render()">발주 완료로 표시</button>';
@@ -523,8 +523,8 @@ function rOrder(){
     h+='</div></div></div>';});
   h+='</div>';return h;
 }
-function orderLinesHtml(ls,done){var byG={};ls.forEach(function(l){var g=fv(l.it,'grp');(byG[g]=byG[g]||[]).push(l);});
-  return Object.keys(byG).map(function(g){return '<div class="ol"><b>'+esc(grpName(g))+'</b> '+byG[g].map(function(l){return esc(fv(l.it,'size'))+'×'+num(l.q)+(done&&l.rq!==undefined&&num(l.rq)!==num(l.q)?'<span style="color:var(--red)">(입고 '+num(l.rq)+')</span>':'');}).join(', ')+'</div>';}).join('');}
+function orderLinesHtml(ls,done,en){var byG={};ls.forEach(function(l){var g=fv(l.it,'grp');(byG[g]=byG[g]||[]).push(l);});
+  return Object.keys(byG).map(function(g){return '<div class="ol"><b>'+esc(grpName(g))+'</b>'+(en?enTag(g):'')+' '+byG[g].map(function(l){return esc(fv(l.it,'size'))+'×'+num(l.q)+(done&&l.rq!==undefined&&num(l.rq)!==num(l.q)?'<span style="color:var(--red)">(입고 '+num(l.rq)+')</span>':'');}).join(', ')+'</div>';}).join('');}
 function addBeltQuick(){var it=UI.bq.sz;if(!it)return;var f=UI.orderExtra.filter(function(x){return x.it===it;})[0];if(f)f.q+=UI.bq.q;else UI.orderExtra.push({it:it,q:UI.bq.q});render();toast(itemName(it)+'cm '+UI.bq.q+'개 담음');}
 function stepO(btn,d){var i=btn.parentNode.querySelector('input');i.value=Math.max(0,Math.round(num(i.value))+d);}
 function makeOrder(){var lines=[];var chk={};[].forEach.call(document.querySelectorAll('.ochk'),function(c){if(c.checked)chk[c.dataset.it]=true;});
@@ -618,6 +618,7 @@ var OH_DEF={oh_title:'NARACHA TAEKWONDO ORDER SHEET',oh_addr:"B101, Bldg. 109, D
 function oh(k){return fv('meta',k,OH_DEF[k]||'');}
 function enDate(t){var d=new Date(t);return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+String(d.getDate()).padStart(2,'0')+', '+d.getFullYear();}
 function grpEn(g){return fv(g,'en','')||grpName(g);}
+function enTag(g){var e=fv(g,'en','');return e?' <span style="font-weight:500;color:var(--mute);font-size:12px">'+esc(fv(g,'code','')?fv(g,'code','')+' ':'')+esc(e)+'</span>':'';}
 function grpCode(g){return fv(g,'code','');}
 function grpDesc(g){return String(fv(g,'desc','')||'').split('\n').map(function(x){return x.trim();}).filter(Boolean);}
 function itemRem(it,line){if(line&&line.rem!==undefined&&line.rem!==null)return String(line.rem);return String(fv(it,'belt','')||'');}
