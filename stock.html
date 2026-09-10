@@ -221,7 +221,7 @@ pre.txt{white-space:pre-wrap;background:#f7f6f2;border:1px solid var(--line);bor
      서버·기기 모두 같은 규칙으로 병합. 삭제는 del 표시(묘비)로 남기고 버리지 않는다.
    - 서버 응답이 조금이라도 이상하면(형식·인증·오류) 절대 저장하지 않는다(fail-closed).
    ═══════════════════════════════════════════════════════════════ */
-var APP_VER = "v1.8";   /* R1.8: 주문 화면 한글 품목명 옆 영문(품번) 병기 · R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
+var APP_VER = "v1.9";   /* R1.9: 체험도복(품) 품목군 제거(숨김) · R1.8: 주문 화면 한글 품목명 옆 영문(품번) 병기 · R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
 
 var LS_DB='naracha_stock_db', LS_CFG='naracha_stock_cfg', LS_DIRTY='naracha_stock_dirty', LS_UI='naracha_stock_ui';
 var CATS=[{id:'dobok',name:'도복',unit:'벌',ic:'🥋'},{id:'belt',name:'띠',unit:'개',ic:'🎗️'},{id:'tee',name:'티셔츠',unit:'장',ic:'👕'}];
@@ -858,7 +858,6 @@ var SEED={
   ['dobok','demo_pum','시범단 도복(품)','NARACHA DEMO TEAM POOM',[[120,0,{f2b:14}],[130,0,{f2b:13}],[140,0,{f2b:14}],[150,0,{f2b:17}],[160,0,{}],[170,0,{box:5}],[180,0,{}]]],
   ['dobok','demo_dan','시범단 도복(단)','NARACHA DEMO TEAM DAN',[[150,0,{box:25,f2b:14}],[160,0,{f2b:34}],[170,0,{box:7,f2b:11}],[180,0,{box:34,f2b:8}],[190,0,{f2b:22}],[200,0,{box:25,f2b:1}]]],
   ['dobok','trial_white','체험도복(흰색)','',[[150,0,{f2:1}],[160,0,{}],[170,0,{f2:2}],[180,0,{}],[190,0,{}]]],
-  ['dobok','trial_pum','체험도복(품)','',[[100,0,{}],[110,0,{}],[120,0,{}],[130,0,{}],[140,0,{}],[150,0,{}],[160,0,{}]]],
   ['belt','b_white','흰띠','WHITE',[[150,0,{}],[160,0,{f1:32,f2:35}],[180,0,{f1:8,f2:3,pro:19}]]],
   ['belt','b_yellow','노란띠','YELLOW',[[150,0,{f1:50,f2:36}],[160,0,{f1:10,f2:45,pro:6}],[180,0,{f1:3,f2:21,pro:5}]]],
   ['belt','b_orange','주황띠','ORANGE',[[150,0,{f2:24}],[160,0,{f1:14,f2:49,pro:7}],[180,0,{f1:8,f2:21,pro:7}]]],
@@ -890,7 +889,6 @@ var SEED={
   pants_black:['K-1.','PANTS (BLACK)',['7oz. TWILL BLACK PANTS'],[]],
   pants_white:['K-2.','PANTS (WHITE)',['7oz. TWILL WHITE PANTS'],[]],
   trial_white:['T-1.','TRIAL UNIFORM (WHITE)',['7oz. TWILL WHITE'],[[999,'Belt 150cm']]],
-  trial_pum:['T-2.','TRIAL UNIFORM (POOM)',['7oz. TWILL WHITE'],[[999,'Belt 150cm']]],
   b_white:['F-1.','WHITE BELT (4cm)',['COLOR BELT'],[]],b_yellow:['F-2.','YELLOW BELT (4cm)',['COLOR BELT'],[]],b_orange:['F-3.','ORANGE BELT (4cm)',['COLOR BELT'],[]],b_green:['F-4.','GREEN BELT (4cm)',['COLOR BELT'],[]],
   b_blue:['F-5.','BLUE BELT (4cm)',['COLOR BELT'],[]],b_purple:['F-6.','PURPLE BELT (4cm)',['COLOR BELT'],[]],b_brown:['F-7.','BROWN BELT (4cm)',['COLOR BELT'],[]],b_red:['F-8.','RED BELT (4cm)',['COLOR BELT'],[]],b_red2:['F-9.','2nd RED BELT (4cm)',['COLOR BELT'],[]],
   b_poom:['G-1.','NARACHA POOM BELT (4cm)',['NARACHA LOGO EMBROIDERY'],[]],b_poom2:['G-2.','NARACHA 2 POOM BELT (4cm)',['NARACHA LOGO EMBROIDERY'],[]],b_black:['G-3.','NARACHA BLACK BELT (4cm)',['NARACHA LOGO EMBROIDERY'],[]],b_master:['G-4.',"NARACHA MASTER'S BLACK BELT (5cm)",['NARACHA LOGO EMBROIDERY'],[]],
@@ -924,6 +922,7 @@ function migrate(){
   if(!Object.keys(DB.recs).length)return;
   if(alive('g_t_long_w')&&fv('g_t_long_w','sub','')==='긴팔T-W'&&!fv('meta','mig12',false)){setF('g_t_long_w','grp',{del:true});setF('meta','meta',{mig12:true});}
   if(!fv('meta','mig13',false)){ groups('tee',true).forEach(function(g){items(g.id,true).forEach(function(it){var q=DB.recs['q_'+it.id];if(!q)return;var z={};for(var k in q.f){if(q.f[k].t===SEED_T&&q.f[k].v)z[k]=0;}if(Object.keys(z).length)setF('q_'+it.id,'qty',z);});}); setF('meta','meta',{mig13:true}); }
+  if(alive('g_trial_pum')&&!fv('meta','mig19',false)){setF('g_trial_pum','grp',{del:true});setF('meta','meta',{mig19:true});} /* R1.9: 체험도복(품) 사용 안 함 */
   seedData('silent');
 }
 async function boot(){
