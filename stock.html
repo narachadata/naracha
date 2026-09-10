@@ -145,6 +145,7 @@ table.st td .base{color:var(--mute);font-weight:600}
 table.st tr.tap td{cursor:pointer}
 .pc{display:none}
 @media(min-width:900px){.pc{display:table-cell}.mob{display:none}}
+@media(min-width:900px){#ofTable{min-width:600px}}
 tr.hidden-item td{opacity:.45}
 
 /* ── 모달 ── */
@@ -221,7 +222,7 @@ pre.txt{white-space:pre-wrap;background:#f7f6f2;border:1px solid var(--line);bor
      서버·기기 모두 같은 규칙으로 병합. 삭제는 del 표시(묘비)로 남기고 버리지 않는다.
    - 서버 응답이 조금이라도 이상하면(형식·인증·오류) 절대 저장하지 않는다(fail-closed).
    ═══════════════════════════════════════════════════════════════ */
-var APP_VER = "v1.11";   /* R1.11: 주문 탭 버튼 정리(미리보기·엑셀 다운, 주문 문구 제거), 같은 항목 중복 줄 합산(부족 목록+직접 추가), 작성 중 주문서 재사용 · R1.10: 새 기기가 시트를 받아온 직후에도 정리(migrate) 적용 · R1.9: 체험도복(품) 품목군 제거(숨김) · R1.8: 주문 화면 한글 품목명 옆 영문(품번) 병기 · R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
+var APP_VER = "v1.12";   /* R1.12: 폰 미리보기 표 — 영문 칸 숨겨 사이즈·수량·비고가 한 화면에 · R1.11: 주문 탭 버튼 정리(미리보기·엑셀 다운, 주문 문구 제거), 같은 항목 중복 줄 합산(부족 목록+직접 추가), 작성 중 주문서 재사용 · R1.10: 새 기기가 시트를 받아온 직후에도 정리(migrate) 적용 · R1.9: 체험도복(품) 품목군 제거(숨김) · R1.8: 주문 화면 한글 품목명 옆 영문(품번) 병기 · R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
 
 var LS_DB='naracha_stock_db', LS_CFG='naracha_stock_cfg', LS_DIRTY='naracha_stock_dirty', LS_UI='naracha_stock_ui';
 var CATS=[{id:'dobok',name:'도복',unit:'벌',ic:'🥋'},{id:'belt',name:'띠',unit:'개',ic:'🎗️'},{id:'tee',name:'티셔츠',unit:'장',ic:'👕'}];
@@ -643,13 +644,13 @@ function openOrderForm(id){
   var ls=mergeLines(fv(id,'lines',[])).filter(function(l){return num(l.q)>0;});
   var h='<div class="mh"><div><div class="t">영문 주문서 (해외 발주)</div><div class="s">한글과 영문을 대조해 보고 수량·비고를 고친 뒤 엑셀로 내려받으세요</div></div><button class="x" onclick="closeModal()">✕</button></div>';
   h+='<div class="row"><div class="field" style="flex:1;min-width:140px"><label>TO (받는 분)</label><input class="inp" id="ofTo" value="'+esc(fv(id,'ofTo',oh('oh_to')))+'"></div><div class="field" style="flex:1;min-width:120px"><label>DATE</label><input class="inp" id="ofDate" value="'+esc(fv(id,'ofDate',enDate(fv(id,'t',now()))))+'"></div></div>';
-  h+='<div style="overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px"><table class="st" style="min-width:600px"><thead><tr><th style="text-align:left">한글</th><th style="text-align:left">영문 (품번)</th><th>SIZE</th><th>QTY</th><th style="text-align:left">REMARKS(띠 등)</th></tr></thead><tbody>';
+  h+='<div style="overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px"><table class="st" id="ofTable"><thead><tr><th style="text-align:left">한글</th><th class="pc" style="text-align:left">영문 (품번)</th><th>SIZE</th><th>QTY</th><th style="text-align:left">REMARKS(띠 등)</th></tr></thead><tbody>';
   var lastG='';
   ls.forEach(function(l,i){var g=fv(l.it,'grp');
     if(g!==lastG){lastG=g;h+='<tr><td colspan="5" style="text-align:left;padding:8px 6px 2px;color:var(--mute);font-size:12px;font-weight:700">'+esc(grpCode(g)||'')+' '+esc(grpEn(g))+(fv(g,'en','')?'':' <span class="tag warn">영문 이름 없음 — ⋯ 메뉴에서 입력</span>')+'</td></tr>';}
-    h+='<tr><td style="font-weight:600">'+esc(itemName(l.it))+'</td><td style="text-align:left;color:var(--mute);font-size:12px">'+esc(grpEn(g))+'</td><td>'+esc(fv(l.it,'size',''))+'</td>'
-      +'<td><input class="cell" type="number" inputmode="numeric" style="width:64px;border:1px solid var(--line2);border-radius:6px;height:34px;line-height:normal;text-align:center" value="'+num(l.q)+'" data-i="'+i+'" onchange="ofSet('+i+',\'q\',this.value)"></td>'
-      +'<td style="text-align:left"><input class="cell" style="width:120px;border:1px solid var(--line2);border-radius:6px;height:34px;line-height:normal;text-align:left;color:var(--red);font-size:12px" value="'+esc(itemRem(l.it,l))+'" onchange="ofSet('+i+',\'rem\',this.value)"></td></tr>';});
+    h+='<tr><td style="font-weight:600;white-space:nowrap">'+esc(itemName(l.it))+'</td><td class="pc" style="text-align:left;color:var(--mute);font-size:12px">'+esc(grpEn(g))+'</td><td>'+esc(fv(l.it,'size',''))+'</td>'
+      +'<td><input class="cell" type="number" inputmode="numeric" style="width:58px;border:1px solid var(--line2);border-radius:6px;height:34px;line-height:normal;text-align:center" value="'+num(l.q)+'" data-i="'+i+'" onchange="ofSet('+i+',\'q\',this.value)"></td>'
+      +'<td style="text-align:left"><input class="cell" style="width:104px;border:1px solid var(--line2);border-radius:6px;height:34px;line-height:normal;text-align:left;color:var(--red);font-size:12px" value="'+esc(itemRem(l.it,l))+'" onchange="ofSet('+i+',\'rem\',this.value)"></td></tr>';});
   h+='</tbody></table></div>';
   h+='<div class="field" style="margin-top:10px"><label>REMARKS (주문서 아래 영문 메모, 선택)</label><textarea class="inp" id="ofMemo" placeholder="e.g. Please ship by Oct 15. / Same specification as last order.">'+esc(fv(id,'ofMemo',''))+'</textarea></div>';
   h+='<div class="note">엑셀에는 주문한 품목군의 <b>모든 사이즈</b>가 원본 양식처럼 나열되고, 주문하지 않은 사이즈는 빈칸으로 나갑니다. 비고(REMARKS)는 도복에 딸려 가는 띠 길이입니다 — 사이즈별 기본값은 품목군 ⋯ 메뉴에서 바꿀 수 있습니다.</div>';
