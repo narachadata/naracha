@@ -222,7 +222,7 @@ pre.txt{white-space:pre-wrap;background:#f7f6f2;border:1px solid var(--line);bor
      서버·기기 모두 같은 규칙으로 병합. 삭제는 del 표시(묘비)로 남기고 버리지 않는다.
    - 서버 응답이 조금이라도 이상하면(형식·인증·오류) 절대 저장하지 않는다(fail-closed).
    ═══════════════════════════════════════════════════════════════ */
-var APP_VER = "v1.14";   /* R1.14: 도복에 딸린 띠 배정 — 도복 수량을 길이별로 자동 합산, 8색 배정(흰띠=나머지), 엑셀 도복 구간 뒤 BELTS FOR UNIFORMS 표기 · 부족 목록 입력값 상태 보존 · R1.13: 미리보기·목록 같은 품목군끼리 묶어 정렬, 엑셀 A4 1장(주문 사이즈만·자동 축소), 영문 제목 괄호 작은 글씨·열 폭 조정 · R1.12: 폰 미리보기 표 — 영문 칸 숨겨 사이즈·수량·비고가 한 화면에 · R1.11: 주문 탭 버튼 정리(미리보기·엑셀 다운, 주문 문구 제거), 같은 항목 중복 줄 합산(부족 목록+직접 추가), 작성 중 주문서 재사용 · R1.10: 새 기기가 시트를 받아온 직후에도 정리(migrate) 적용 · R1.9: 체험도복(품) 품목군 제거(숨김) · R1.8: 주문 화면 한글 품목명 옆 영문(품번) 병기 · R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
+var APP_VER = "v1.15";   /* R1.15: 띠 배정에 150·160·180cm 항상 표시(전체 합계=도복 합계, 기본 길이 흰띠가 나머지), 수량 − 버튼 0까지 · R1.14: 도복에 딸린 띠 배정 — 도복 수량을 길이별로 자동 합산, 8색 배정(흰띠=나머지), 엑셀 도복 구간 뒤 BELTS FOR UNIFORMS 표기 · 부족 목록 입력값 상태 보존 · R1.13: 미리보기·목록 같은 품목군끼리 묶어 정렬, 엑셀 A4 1장(주문 사이즈만·자동 축소), 영문 제목 괄호 작은 글씨·열 폭 조정 · R1.12: 폰 미리보기 표 — 영문 칸 숨겨 사이즈·수량·비고가 한 화면에 · R1.11: 주문 탭 버튼 정리(미리보기·엑셀 다운, 주문 문구 제거), 같은 항목 중복 줄 합산(부족 목록+직접 추가), 작성 중 주문서 재사용 · R1.10: 새 기기가 시트를 받아온 직후에도 정리(migrate) 적용 · R1.9: 체험도복(품) 품목군 제거(숨김) · R1.8: 주문 화면 한글 품목명 옆 영문(품번) 병기 · R1.7: 영문 주문서 엑셀(.xlsx) 내려받기 — 원본 양식 재현, 한글·영문 대조 편집, 품목군별 품번·영문명·설명·띠 비고, 띠 빠른 추가(8색→길이→수량), 주문서 머리글 설정 · R1.6: PC 재고 화면 품목군 카드 격자 배치(2~3열) · R1.5: 설정 탭 기록자·시트 연결은 설정 완료 후 접힘(펼치기 가능) · R1.4: 중계 탭 제거 → 출고 탭(받는 곳·위치·수량 기록, 즉시 차감, 취소=복원) · R1.3: 티셔츠 초기 수량 비움(관장님 직접 입력), 도복 수량 엑셀 대조 확인 · R1.2: 긴팔은 네이비·블랙만 — 긴팔 흰색 제거, 긴팔 남색 추가 · R1.1: 긴팔T-B=검정 확정, 초기값 이름 수정 · R1.0: 최초 제작 2026-09-09 */
 
 var LS_DB='naracha_stock_db', LS_CFG='naracha_stock_cfg', LS_DIRTY='naracha_stock_dirty', LS_UI='naracha_stock_ui';
 var CATS=[{id:'dobok',name:'도복',unit:'벌',ic:'🥋'},{id:'belt',name:'띠',unit:'개',ic:'🎗️'},{id:'tee',name:'티셔츠',unit:'장',ic:'👕'}];
@@ -498,7 +498,7 @@ function rOrder(){
     h+='<h2 class="sec">🎗️ 띠 빠른 추가 (색 → 길이 → 수량)</h2><div class="card"><div class="bd">'
       +'<div class="chips">'+bg.map(function(g){var k=g.id.replace(/^g_/,'');return '<button class="chip '+(UI.bq.g===g.id?'on':'')+'" onclick="UI.bq.g=\''+g.id+'\';UI.bq.sz=\'\';render()"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:'+BC[k]+';border:1px solid #bbb;vertical-align:-1px;margin-right:4px"></span>'+esc(grpName(g.id))+'</button>';}).join('')+'</div>'
       +'<div class="row" style="margin-top:10px"><div class="chips">'+bits.map(function(it){return '<button class="chip '+(UI.bq.sz===it.id?'on':'')+'" onclick="UI.bq.sz=\''+it.id+'\';render()">'+esc(fv(it.id,'size'))+'cm <small style="opacity:.6">보유 '+total(it.id)+'</small></button>';}).join('')+'<button class="chip" onclick="openGroupMenu(\''+UI.bq.g+'\')">＋ 길이</button></div>'
-      +'<div class="step" style="margin-left:auto"><button onclick="UI.bq.q=Math.max(1,UI.bq.q-1);render()">−</button><input type="number" inputmode="numeric" value="'+UI.bq.q+'" onchange="UI.bq.q=Math.max(1,Math.round(num(this.value)))"><button onclick="UI.bq.q++;render()">＋</button></div>'
+      +'<div class="step" style="margin-left:auto"><button onclick="UI.bq.q=Math.max(0,UI.bq.q-1);render()">−</button><input type="number" inputmode="numeric" min="0" value="'+UI.bq.q+'" onchange="UI.bq.q=Math.max(0,Math.round(num(this.value)))"><button onclick="UI.bq.q++;render()">＋</button></div>'
       +'<button class="btn sm" onclick="addBeltQuick()" '+(UI.bq.sz?'':'disabled')+'>담기</button></div>'
       +'<div class="note" style="margin-top:8px">길이 참고 — 품도복 150cm · 단도복 150~160은 160cm, 170 이상은 180cm · 시범단(품) 120~140은 160cm, 150 이상은 180cm. 담은 뒤 위 목록에서 수량을 고칠 수 있습니다.</div></div></div>';}
   h+='<h2 class="sec">주문이 필요한 항목 (기준수량 − 보유)</h2>';
@@ -514,14 +514,18 @@ function rOrder(){
     +'<div class="note" style="margin-top:6px">선택한 항목으로 주문서가 만들어져 아래 목록에 「작성됨」으로 남습니다. 같은 항목을 여러 번 담으면 수량이 합쳐집니다.</div>';
   h+='</div></div>';
   /* 도복에 딸린 띠 배정 */
-  var cur=selLines();var need=beltNeeds(cur);var Ls=Object.keys(need).sort();
-  UI.beltAlloc=normAlloc(UI.beltAlloc,need);
+  var cur=selLines();var need=beltNeeds(cur);var totalNeed=beltTotal(need);
+  UI.beltAlloc=normAlloc(UI.beltAlloc,need);var main=UI.beltAlloc._main;
+  var Ls=Object.keys(UI.beltAlloc).filter(function(L){return L.charAt(0)!=='_';}).sort();
   h+='<h2 class="sec">🥋 도복에 딸린 띠 배정 (도복 1벌 = 띠 1개)</h2><div class="card"><div class="bd">';
-  if(!Ls.length)h+='<div class="note">위에서 도복을 담으면 사이즈별 띠 길이(비고)에 따라 길이별 띠 개수가 여기에 계산됩니다. 그 개수 안에서 색을 나눠 주세요.</div>';
-  Ls.forEach(function(L){var o=UI.beltAlloc[L];var sum=allocSum(o);var others=sum-num(o.g_b_white);var over=others>need[L];
-    h+='<div style="display:flex;align-items:center;gap:8px;margin:6px 0 4px;flex-wrap:wrap"><b style="color:var(--navy)">'+L+'cm</b><span class="note">도복 '+need[L]+'벌 → 띠 '+need[L]+'개</span><span class="sp" style="flex:1"></span>'+(over?'<span class="tag red">색 합계가 '+others+'개로 '+(others-need[L])+'개 초과</span>':'<span class="tag ok">배정 '+sum+'/'+need[L]+'</span>')+'</div>';
-    h+='<div class="row" style="gap:6px">'+BELT_COLORS.map(function(c){var col=c[1];var stIt='it_'+c[0].replace(/^g_/,'')+'_'+L;var have=DB.recs[stIt]?total(stIt):null;return '<label style="display:flex;align-items:center;gap:4px;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:3px 6px;background:#fff" title="현재 보유 '+(have===null?'-':have)+'개"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:'+col+';border:1px solid #bbb"></span><span>'+esc(grpName(c[0]).replace('띠',''))+'<small style="display:block;color:var(--mute);font-size:10px;line-height:1">보유 '+(have===null?'-':have)+'</small></span><input type="number" inputmode="numeric" value="'+num(o[c[0]])+'" style="width:52px;border:0;border-bottom:1px solid var(--line2);text-align:center;font-weight:800;font-size:14px;'+(c[0]==='g_b_white'?'color:var(--mute)':'')+'" '+(c[0]==='g_b_white'?'readonly title="흰띠는 나머지 개수로 자동 계산"':'onchange="UI.beltAlloc[\''+L+'\'][\''+c[0]+'\']=Math.max(0,Math.round(num(this.value)));render()"')+'></label>';}).join('')+'</div>';});
-  if(Ls.length)h+='<div class="note" style="margin-top:8px">흰띠는 다른 색을 배정하고 남은 개수로 자동 계산됩니다. 각 색 아래 「보유」는 그 길이의 현재 재고입니다 — 보유 상황을 보고 색을 정하세요. 배정은 엑셀 주문서의 도복 구간 아래에 「BELTS FOR UNIFORMS」로 색·길이·수량이 표기됩니다. (별도로 더 살 띠는 위 「띠 빠른 추가」로 담으세요)</div>';
+  if(!totalNeed)h+='<div class="note">위에서 도복을 담으면 띠 개수가 여기에 계산됩니다(도복 합계 = 띠 합계). 150·160·180cm 중 길이와 색을 나눠 주세요.</div>';
+  else{var got=allocAll(UI.beltAlloc);var over=got>totalNeed;
+    h+='<div style="display:flex;align-items:center;gap:8px;margin:0 0 6px;flex-wrap:wrap"><b style="color:var(--navy)">도복 '+totalNeed+'벌 → 띠 '+totalNeed+'개</b><span class="note">비고 기준 '+Object.keys(need).sort().map(function(L){return L+'cm '+need[L];}).join(' · ')+'</span><span class="sp" style="flex:1"></span>'+(over?'<span class="tag red">배정 '+got+'개 — '+(got-totalNeed)+'개 초과</span>':'<span class="tag ok">배정 '+got+'/'+totalNeed+'</span>')+'</div>';
+    Ls.forEach(function(L){var o=UI.beltAlloc[L];var sum=allocSum(o);
+      h+='<div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px"><b style="color:var(--navy)">'+L+'cm</b><span class="note">'+sum+'개'+(L===main?' · 흰띠는 나머지 자동':'')+'</span></div>';
+      h+='<div class="row" style="gap:6px">'+BELT_COLORS.map(function(c){var col=c[1];var stIt='it_'+c[0].replace(/^g_/,'')+'_'+L;var have=DB.recs[stIt]?total(stIt):null;var ro=(L===main&&c[0]==='g_b_white');
+        return '<label style="display:flex;align-items:center;gap:4px;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:3px 6px;background:#fff" title="현재 보유 '+(have===null?'-':have)+'개"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:'+col+';border:1px solid #bbb"></span><span>'+esc(grpName(c[0]).replace('띠',''))+'<small style="display:block;color:var(--mute);font-size:10px;line-height:1">보유 '+(have===null?'-':have)+'</small></span><input type="number" inputmode="numeric" min="0" value="'+num(o[c[0]])+'" style="width:52px;border:0;border-bottom:1px solid var(--line2);text-align:center;font-weight:800;font-size:14px;'+(ro?'color:var(--mute)':'')+'" '+(ro?'readonly title="흰띠('+L+'cm)는 나머지 개수로 자동 계산"':'onchange="UI.beltAlloc[\''+L+'\'][\''+c[0]+'\']=Math.max(0,Math.round(num(this.value)));render()"')+'></label>';}).join('')+'</div>';});
+    h+='<div class="note" style="margin-top:8px">각 색 아래 「보유」는 그 길이의 현재 재고입니다 — 보유 상황을 보고 길이·색을 정하세요. '+main+'cm 흰띠는 다른 칸을 채우고 남은 개수로 자동 계산됩니다. 배정은 엑셀 주문서의 도복 구간 아래에 「BELTS FOR UNIFORMS」로 색·길이·수량이 표기됩니다. (별도로 더 살 띠는 위 「띠 빠른 추가」로 담으세요)</div>';}
   h+='</div></div>';
   h+='<h2 class="sec">주문서 목록</h2><div class="olist">';
   var os=recsOf('order').sort(function(a,b){return fv(b.id,'t',0)-fv(a.id,'t',0);});
@@ -541,7 +545,7 @@ function rOrder(){
 }
 function orderLinesHtml(ls,done,en){var byG={};ls=sortLines(mergeLines(ls));ls.forEach(function(l){var g=fv(l.it,'grp');(byG[g]=byG[g]||[]).push(l);});
   return Object.keys(byG).map(function(g){return '<div class="ol"><b>'+esc(grpName(g))+'</b>'+(en?enTag(g):'')+' '+byG[g].map(function(l){return esc(fv(l.it,'size'))+'×'+num(l.q)+(done&&l.rq!==undefined&&num(l.rq)!==num(l.q)?'<span style="color:var(--red)">(입고 '+num(l.rq)+')</span>':'');}).join(', ')+'</div>';}).join('');}
-function addBeltQuick(){var it=UI.bq.sz;if(!it)return;var f=UI.orderExtra.filter(function(x){return x.it===it;})[0];if(f)f.q+=UI.bq.q;else UI.orderExtra.push({it:it,q:UI.bq.q});render();toast(itemName(it)+'cm '+UI.bq.q+'개 담음');}
+function addBeltQuick(){var it=UI.bq.sz;if(!it||!UI.bq.q){toast('수량을 1 이상으로 해 주세요');return;}var f=UI.orderExtra.filter(function(x){return x.it===it;})[0];if(f)f.q+=UI.bq.q;else UI.orderExtra.push({it:it,q:UI.bq.q});render();toast(itemName(it)+'cm '+UI.bq.q+'개 담음');}
 function stepO(btn,d){var i=btn.parentNode.querySelector('input');i.value=Math.max(0,Math.round(num(i.value))+d);}
 function oqChg(el){var i=el.tagName==='INPUT'?el:el.parentNode.querySelector('input');UI.oq[i.dataset.it]=Math.max(0,Math.round(num(i.value)));render();}
 /* 현재 선택(부족 목록 + 직접 추가)을 항목별로 합산 */
@@ -554,9 +558,16 @@ function collectSel(){return selLines();}
 function beltLen(it,line){var m=String(itemRem(it,line)).match(/(\d{3})\s*cm/i);return m?m[1]:'';}
 function beltNeeds(lines){var need={};mergeLines(lines).forEach(function(l){if(fv(fv(l.it,'grp'),'cat')!=='dobok')return;var L=beltLen(l.it,l);if(!L||num(l.q)<=0)return;need[L]=(need[L]||0)+num(l.q);});return need;}
 /* 배정표를 필요 개수에 맞춘다: 흰띠가 나머지를 흡수(음수면 0) */
-function normAlloc(alloc,need){var out={};Object.keys(need).sort().forEach(function(L){var a=(alloc&&alloc[L])||{};var o={},others=0;BELT_COLORS.forEach(function(c){if(c[0]==='g_b_white')return;var q=Math.max(0,Math.round(num(a[c[0]])));if(q){o[c[0]]=q;others+=q;}});o.g_b_white=Math.max(0,need[L]-others);out[L]=o;});return out;}
+var BELT_LENS=['150','160','180'];
+function beltTotal(need){var n=0;for(var L in need)n+=need[L];return n;}
+function beltMainLen(need){var best='150',bv=-1;Object.keys(need).forEach(function(L){if(need[L]>bv){bv=need[L];best=L;}});return best;}
+/* 전체(모든 길이·색) 합계 = 도복 합계. 기본 길이(필요가 가장 많은 길이)의 흰띠가 나머지를 흡수(음수면 0) */
+function normAlloc(alloc,need){var total=beltTotal(need);if(!total)return {};var main=beltMainLen(need);var lens=BELT_LENS.slice();Object.keys(need).forEach(function(L){if(lens.indexOf(L)<0)lens.push(L);});Object.keys(alloc||{}).forEach(function(L){if(lens.indexOf(L)<0)lens.push(L);});lens.sort();
+  var out={},others=0;lens.forEach(function(L){var a=(alloc&&alloc[L])||{};var o={};BELT_COLORS.forEach(function(c){if(L===main&&c[0]==='g_b_white')return;var q=Math.max(0,Math.round(num(a[c[0]])));if(q){o[c[0]]=q;others+=q;}});out[L]=o;});
+  out[main].g_b_white=Math.max(0,total-others);out._main=main;return out;}
+function allocAll(belts){var n=0;for(var L in belts){if(L.charAt(0)==='_')continue;n+=allocSum(belts[L]);}return n;}
 function allocSum(o){var n=0;for(var k in o)n+=num(o[k]);return n;}
-function beltSummary(belts){return Object.keys(belts||{}).sort().map(function(L){var o=belts[L];return L+'cm '+allocSum(o)+'개('+BELT_COLORS.filter(function(c){return num(o[c[0]])>0;}).map(function(c){return grpName(c[0]).replace('띠','')+' '+num(o[c[0]]);}).join('·')+')';}).join(' / ');}
+function beltSummary(belts){return Object.keys(belts||{}).filter(function(L){return L.charAt(0)!=='_'&&allocSum(belts[L])>0;}).sort().map(function(L){var o=belts[L];return L+'cm '+allocSum(o)+'개('+BELT_COLORS.filter(function(c){return num(o[c[0]])>0;}).map(function(c){return grpName(c[0]).replace('띠','')+' '+num(o[c[0]]);}).join('·')+')';}).join(' / ');}
 /* 선택 항목으로 주문서를 만들거나(처음), 이미 작성 중인 주문서가 있으면 그 내용을 갱신한다 */
 function draftOrder(){var lines=collectSel();if(!lines.length){toast('선택된 항목이 없습니다');return null;}
   var id=UI.draft;
@@ -592,7 +603,7 @@ function renderPick(){
   h+='<div class="chips" style="margin-bottom:8px">'+CATS.map(function(c){return '<button class="chip '+(PICK.cat===c.id?'on':'')+'" onclick="PICK.cat=\''+c.id+'\';PICK.g=\'\';renderPick()">'+c.ic+' '+c.name+'</button>';}).join('')+'</div>';
   h+='<select class="inp" onchange="PICK.g=this.value;renderPick()">'+gs.map(function(g){return '<option value="'+g.id+'" '+(PICK.g===g.id?'selected':'')+'>'+esc(grpName(g.id))+(fv(g.id,'sub')?' — '+esc(fv(g.id,'sub')):'')+'</option>';}).join('')+'</select>';
   h+='<div class="chips" style="margin:10px 0">'+(PICK.g?items(PICK.g).map(function(it){return '<button class="chip" onclick="pickAdd(\''+it.id+'\')">'+esc(fv(it.id,'size'))+' <small style="opacity:.6">('+total(it.id)+')</small></button>';}).join(''):'')+'</div>';
-  h+='<div class="lines">'+(PICK.lines.length?PICK.lines.map(function(l,i){return '<div class="line"><div class="n">'+esc(itemName(l.it))+' <small style="color:var(--mute)">보유 '+total(l.it)+'</small></div><div class="step" style="transform:scale(.85);transform-origin:right"><button onclick="PICK.lines['+i+'].q=Math.max(1,PICK.lines['+i+'].q-1);renderPick()">−</button><input type="number" inputmode="numeric" value="'+l.q+'" onchange="PICK.lines['+i+'].q=Math.max(1,Math.round(num(this.value)))"><button onclick="PICK.lines['+i+'].q++;renderPick()">＋</button></div><button class="btn xs ghost" onclick="PICK.lines.splice('+i+',1);renderPick()">✕</button></div>';}).join(''):'<div class="note">아직 담긴 항목이 없습니다.</div>')+'</div>';
+  h+='<div class="lines">'+(PICK.lines.length?PICK.lines.map(function(l,i){return '<div class="line"><div class="n">'+esc(itemName(l.it))+' <small style="color:var(--mute)">보유 '+total(l.it)+'</small></div><div class="step" style="transform:scale(.85);transform-origin:right"><button onclick="PICK.lines['+i+'].q=Math.max(0,PICK.lines['+i+'].q-1);renderPick()">−</button><input type="number" inputmode="numeric" min="0" value="'+l.q+'" onchange="PICK.lines['+i+'].q=Math.max(0,Math.round(num(this.value)))"><button onclick="PICK.lines['+i+'].q++;renderPick()">＋</button></div><button class="btn xs ghost" onclick="PICK.lines.splice('+i+',1);renderPick()">✕</button></div>';}).join(''):'<div class="note">아직 담긴 항목이 없습니다.</div>')+'</div>';
   if(PICK.mode==='out'){var L=locs();h+='<div class="field"><label>받는 곳 / 주문한 사람</label><input class="inp" id="oto" value="'+esc(PICK.to||'')+'" placeholder="예: 중계도장, 김OO 학부모" onchange="PICK.to=this.value"></div>'
     +'<div class="field"><label>어느 위치 재고에서 뺄까요</label><select class="inp" id="oloc" onchange="PICK.loc=this.value">'+L.map(function(l){return '<option value="'+l.id+'" '+((PICK.loc||(L[0]&&L[0].id))===l.id?'selected':'')+'>'+esc(locName(l.id))+' (보유: '+PICK.lines.map(function(x){return qty(x.it,l.id);}).join('/')+')</option>';}).join('')+'</select></div>'
     +'<div class="field"><label>메모(선택)</label><input class="inp" id="omemo2" value="'+esc(PICK.memo||'')+'" placeholder="예: 9/12 직접 전달" onchange="PICK.memo=this.value"></div>';}
@@ -601,6 +612,7 @@ function renderPick(){
 }
 function pickAdd(it){var f=PICK.lines.filter(function(l){return l.it===it;})[0];if(f)f.q++;else PICK.lines.push({it:it,q:1});renderPick();}
 function pickDone(){
+  PICK.lines=PICK.lines.filter(function(l){return num(l.q)>0;});if(!PICK.lines.length){toast('수량이 0인 항목만 있습니다');return;}
   if(PICK.mode==='out'){saveOut();}
   else{PICK.lines.forEach(function(l){var f=UI.orderExtra.filter(function(x){return x.it===l.it;})[0];if(f)f.q+=l.q;else UI.orderExtra.push({it:l.it,q:l.q});});closeModal();render();}
 }
@@ -669,7 +681,7 @@ function orderFormRows(id){
   });
   /* 도복에 딸린 띠 구간: 마지막 도복 품목군 바로 뒤 */
   var belts=normAlloc(fv(id,'belts',{}),beltNeeds(ls));var brows=[];
-  Object.keys(belts).sort().forEach(function(L){BELT_COLORS.forEach(function(c){var q=num(belts[L][c[0]]);if(q>0)brows.push({it:c[0],label:enSplit(grpEn(c[0]))[0],size:L,q:q,rem:'for uniforms'});});});
+  Object.keys(belts).filter(function(L){return L.charAt(0)!=='_';}).sort().forEach(function(L){BELT_COLORS.forEach(function(c){var q=num(belts[L][c[0]]);if(q>0)brows.push({it:c[0],label:enSplit(grpEn(c[0]))[0],size:L,q:q,rem:'for uniforms'});});});
   if(brows.length){var li=-1;secs.forEach(function(x,i){if(x.cat==='dobok')li=i;});
     secs.splice(li+1,0,{g:'',cat:'dobok',code:'',en:'BELTS FOR UNIFORMS (1 belt included per set)',desc:[],rows:brows,off:1,noTotal:true,unit:'개'});}
   return secs;
