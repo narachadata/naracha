@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="doc-ver" content="v20260903.0006">
+<meta name="doc-ver" content="v20260915.0001">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차태권도 운영규정</title>
 <meta name="description" content="나라차태권도 분당도장 운영규정 — 제1장 총칙부터 부칙·부록까지 전문 수록 (반응형 웹 문서)">
@@ -122,6 +122,13 @@
      · 제20조 '흰색' 삭제(검정 바지 허용과 충돌) + 현행 제22조 흡수, 제21조·제22조 전면 개정
      · 부록2 환불 계산기 재구성(경과일 일할 + 위약금 10%), 부록3~5 신설
      · 부록1 시간표 청소년시범단 기술연습 → 수요일 21:00~21:30, 부칙 5·6항 신설
+   v20260915.0001 — 수정안(2026.09.14) 반영
+     · 제9조 전문 교체 — 연체이자·자동퇴원 폐기, 단계 통지 후 등록 종료 + 실수련분 정산
+     · 제12조 ③④항 신설 — 연간회원 환불은 실제 납부액 기준(위약금 10%, 월평균액 일할)
+     · 제17조 ③항 보완 — 연간회원 경과분 산정 근거 명시
+     · 제18조 ①②항 교체 — 휴관일 근거 명시, 불가항력 휴원은 보강→이월→환불 순서
+     · 제37조 5호 — 제9조 ④항(등록 종료)에 맞춤, "3개월·연체" 표현 삭제
+     · 부록2 안내문 한 줄 추가, 부칙 7항 신설
    v20260828.0007 (R1.6) 제15조에 도장 배포용 '보강 제도 안내문' 이미지 수록(1200px PNG)
      — 안내문 속 표와 문서의 표가 같은 내용이라, 표에 "안내문의 예시를 글자로 옮긴 것" 설명 추가
    v20260828.0006 (R1.5) 카카오톡 링크 미리보기(Open Graph) 태그 추가 + rules-og.png(1200x630)
@@ -139,7 +146,7 @@
    맨 위에 둔 이유: 새 버전이 나왔는지 확인할 때 파일 앞부분만 조금 받아 보기 위함. */
 var RULES_VER = (function(){
   try{ return document.querySelector('meta[name="doc-ver"]').content; }
-  catch(e){ return "v20260903.0006"; }
+  catch(e){ return "v20260915.0001"; }
 })();
 /* 문서 날짜는 RULES_VER 의 날짜 부분에서 자동으로 뽑는다.
    → 규정을 고치고 RULES_VER 만 올리면 표지의 개정일과 부칙의 시행일이 함께 바뀐다.
@@ -149,7 +156,7 @@ function docDate(){
   return m ? (m[1] + '.' + m[2] + '.' + m[3]) : '';
 }
 var REVISED_DATE = docDate();     // 최종 수정일 = 시행일
-var PREV_REVISED = "2026.08.07";  // 종전 규정 개정일(이력 보존용)
+var PREV_REVISED = "2026.09.03";  // 종전 규정 개정일(이력 보존용)
 
 /* ══════════════════════════════════════════════════════════════
    금액·횟수 설정 (설정 화면에서 바꿀 수 있는 값)
@@ -701,20 +708,24 @@ mark{background:#ffe082;border-radius:2px}
         <h4><span class="no">제9조</span>(수련비 미납)</h4>
         <div class="jo-body">
           <ol class="hang">
-            <li><span class="hno">①</span>등록 기간 내에 수련 등록을 완료하지 않으신 상태에서 <b>1회 이상 수련하신 경우</b>를 미납 상태로 봅니다.</li>
-            <li><span class="hno">②</span>미납 상태에서 등록 횟수의 50%를 수련하신 경우, 등록금액을 일할계산하여 <span class="pill">10% 연체이자</span>가 발생합니다.</li>
-            <li><span class="hno">③</span>한 달 이상 연체되는 경우 <b>자동 퇴원 처리</b>되며, 다음 대기자가 등록됩니다.</li>
+            <li><span class="hno">①</span>수련비는 각 등록 기간의 <b>첫 수련일 전까지</b> 납부하시는 것을 원칙으로 합니다.</li>
+            <li><span class="hno">②</span>등록 기간이 시작되었는데 납부가 되지 않은 경우, 도장은 학부모님께 안내드린 후 <b>최대 2주(4회)</b>까지 수련을 계속하실 수 있도록 합니다. 이 기간이 지나면 등록이 완료될 때까지 수련이 제한될 수 있습니다.</li>
+            <li><span class="hno">③</span>미납 <b>2주</b> 경과 시 전화 또는 문자로 1차 안내를 드리고, <b>4주</b> 경과 시 문자로 최종 안내를 드립니다.</li>
+            <li><span class="hno">④</span>최종 안내 후 <b>7일</b> 안에 납부 또는 연락이 없으면 등록이 종료된 것으로 보며, 대기 중인 수련생에게 자리를 배정합니다. 등록 종료 전에는 반드시 학부모님께 알려 드립니다.</li>
+            <li><span class="hno">⑤</span><b>연체이자는 부과하지 않습니다.</b> 다만 ②항에 따라 납부 전에 수련하신 횟수는 <b>기본 수련 1회 단가</b>(제11조 일 수련비)를 기준으로 정산하여 청구할 수 있습니다.</li>
           </ol>
           <div class="dg">
             <div class="dg-t">미납이 진행되는 단계</div>
             <div class="flow">
-              <div class="step"><span class="k">시작</span><div class="h">미등록 상태로 1회 이상 수련</div><div class="d">이 시점부터 미납으로 봅니다.</div></div>
+              <div class="step"><span class="k">시작</span><div class="h">납부 전 수련</div><div class="d">안내드린 후 <b>최대 2주(4회)</b>까지 계속 수련하실 수 있습니다.</div></div>
               <div class="ar">›</div>
-              <div class="step warn"><span class="k">50%</span><div class="h">등록 횟수의 절반까지 수련</div><div class="d">등록금액을 일할계산해 <b>10% 연체이자</b>가 발생합니다.</div></div>
+              <div class="step warn"><span class="k">2주</span><div class="h">1차 안내</div><div class="d">전화 또는 문자로 알려 드립니다.</div></div>
               <div class="ar">›</div>
-              <div class="step warn"><span class="k">1개월</span><div class="h">한 달 이상 연체</div><div class="d"><b>자동 퇴원 처리</b>되고 다음 대기자가 등록됩니다.</div></div>
+              <div class="step warn"><span class="k">4주</span><div class="h">최종 안내</div><div class="d">문자로 최종 안내를 드립니다.</div></div>
+              <div class="ar">›</div>
+              <div class="step warn"><span class="k">+7일</span><div class="h">등록 종료</div><div class="d">납부나 연락이 없으면 등록이 종료되고 <b>대기 중인 수련생</b>에게 자리를 배정합니다.</div></div>
             </div>
-            <p class="dg-n">3개월 이상 연체·미납이 이어지면 퇴원 사유가 됩니다(제37조 5호).</p>
+            <p class="dg-n"><b>연체이자는 없습니다.</b> 다만 납부 전에 수련하신 횟수는 기본 수련 1회 단가로 정산하여 청구할 수 있습니다(⑤항). 등록 종료 전에는 반드시 학부모님께 미리 알려 드립니다.</p>
           </div>
         </div>
       </article>
@@ -801,6 +812,11 @@ mark{background:#ffe082;border-radius:2px}
             <tr><td class="hd">할인(<span data-cfg="c.disc6" data-suffix="%">5%</span>)</td><td data-cfg="-(c.w1*6*c.disc6/100)">-</td><td data-cfg="-(c.w2*6*c.disc6/100)">-</td><td data-cfg="-(c.w3*6*c.disc6/100)">-</td><td data-cfg="-(c.fp*6*c.disc6/100)">-</td><td data-cfg="-(c.fam2*6*c.disc6/100)">-</td><td data-cfg="-(c.fam3*6*c.disc6/100)">-</td></tr>
             <tr><td class="hd">납부금액</td><td class="em" data-cfg="c.w1*6*(100-c.disc6)/100">-</td><td class="em" data-cfg="c.w2*6*(100-c.disc6)/100">-</td><td class="em" data-cfg="c.w3*6*(100-c.disc6)/100">-</td><td class="em" data-cfg="c.fp*6*(100-c.disc6)/100">-</td><td class="em" data-cfg="c.fam2*6*(100-c.disc6)/100">-</td><td class="em" data-cfg="c.fam3*6*(100-c.disc6)/100">-</td></tr>
           </table></div>
+          <ol class="hang">
+            <li><span class="hno">③</span>연간회원의 중도 해지와 환불은 <b>제17조</b>에 따르며, 위약금은 <b>실제 납부하신 금액의 10%</b>입니다.</li>
+            <li><span class="hno">④</span>경과 기간에 해당하는 금액은 실제 납부하신 금액을 <b>계약 개월 수로 나눈 월평균액</b>을 기준으로 일할 계산합니다.</li>
+          </ol>
+          <div class="callout blue"><b>계산 예시</b> — 6개월 기본 수련으로 <span data-cfg="c.w2*6*(100-c.disc6)/100" data-suffix="원">1,026,000원</span>을 납부하신 경우, 경과분은 월 <span data-cfg="c.w2*(100-c.disc6)/100" data-suffix="원">171,000원</span>을 기준으로 일할 계산합니다. 정가(<span data-cfg="c.w2" data-suffix="원">180,000원</span>)가 아니라 <b>실제로 내신 금액</b>이 기준입니다.</div>
         </div>
       </article>
 
@@ -906,7 +922,7 @@ mark{background:#ffe082;border-radius:2px}
                 <li><span class="hono">1.</span><b>수련 개시 전</b> — 납부액에서 총액의 10%를 공제한 금액을 환불해 드립니다.</li>
                 <li><span class="hono">2.</span><b>수련 개시 후</b> — 납부액에서 ⓐ경과 기간에 해당하는 금액과 ⓑ총액의 10%를 공제한 금액을 환불해 드립니다.</li>
               </ol></li>
-            <li><span class="hno">③</span>경과 기간에 해당하는 금액은 <b>실제 납부하신 월 수련비를 기준으로 일할 계산</b>합니다.</li>
+            <li><span class="hno">③</span>경과 기간에 해당하는 금액은 <b>실제 납부하신 월 수련비를 기준으로 일할 계산</b>합니다. <b>연간회원(제12조)</b>은 실제 납부하신 금액을 계약 개월 수로 나눈 <b>월평균액</b>을 기준으로 합니다.</li>
             <li><span class="hno">④</span>도장의 귀책 사유로 해지되는 경우에는 <b>위약금을 공제하지 않으며</b>, 경과 기간분만 공제하고 환불해 드립니다.</li>
             <li><span class="hno">⑤</span>환불금은 결제하신 수단과 동일한 방법으로 지급하며, <b>카드 수수료나 세금을 공제하지 않습니다.</b></li>
             <li><span class="hno">⑥</span>심화수련과 프리패스에도 본 조의 기준을 동일하게 적용합니다.</li>
@@ -942,8 +958,13 @@ mark{background:#ffe082;border-radius:2px}
         <h4><span class="no">제18조</span>(환불·이월이 제공되지 않는 경우)</h4>
         <div class="jo-body">
           <ol class="hang">
-            <li><span class="hno">①</span>국가공휴일과 나라차태권도에서 정한 <b>'지도자교육연구의 날'</b> 및 <b>'방학'</b> 기간은 환불·이월이 제공되지 않습니다.</li>
-            <li><span class="hno">②</span>천재지변이나 국가재난상황(화재, 폭설, 폭우, 지진, 전염병, 전쟁위협을 포함한 상황) 등 불가항력적인 사유로 도장이 임시 휴원을 하거나 수련이 중단되는 경우에도 같습니다.</li>
+            <li><span class="hno">①</span>연간 휴관일(국가공휴일, 나라차태권도에서 정한 <b>'지도자교육연구의 날'</b>, <b>'방학'</b>)은 <b>매년 1월</b> 도장 안내로 미리 공지합니다. 월 수련비는 이 휴관일을 제외한 수련일을 기준으로 정해진 금액이므로, 휴관일에 대한 별도의 환불이나 이월은 없습니다.</li>
+            <li><span class="hno">②</span>천재지변이나 국가재난상황(화재, 폭설, 폭우, 지진, 전염병, 전쟁위협을 포함한 상황) 등 <b>도장의 책임이 아닌 사유</b>로 임시 휴원하거나 수련이 중단되는 경우에는 다음 순서로 처리합니다.
+              <ol class="ho">
+                <li><span class="hono">1.</span><b>대체 수련일 또는 보강</b>(제15조)을 우선 제공합니다.</li>
+                <li><span class="hono">2.</span>대체가 어려운 경우 휴원한 횟수를 <b>다음 등록 기간으로 이월</b>합니다.</li>
+                <li><span class="hono">3.</span>이월도 어려운 경우(퇴원 등)에는 휴원한 횟수에 해당하는 금액을 <b>일할 계산하여 환불</b>해 드립니다.</li>
+              </ol></li>
             <li><span class="hno">③</span>불가피한 사정으로 수련 시간 변경이 필요하신 경우에는 도장으로 문의하신 후 변경하실 수 있습니다. 도장의 사정으로 수련 시간이 변경될 경우에는 미리 알려 드리며, 변경을 원하지 않으시는 경우에는 제17조의 환불 규정에 따라 환불해 드립니다.</li>
             <li><span class="hno">④</span>도장에 대한 행정처분 등 <b>도장의 귀책 사유</b>로 운영을 계속할 수 없게 된 경우, 또는 의사의 진단 결과 감염병에 감염되었거나 감염이 의심되어 수련자가 도장으로부터 격리된 경우에는 잔여 수련비를 <b>일할 계산하여 환불 또는 이월</b>해 드립니다.</li>
           </ol>
@@ -1379,7 +1400,7 @@ mark{background:#ffe082;border-radius:2px}
             <li><span class="hono">2.</span>도장의 정상적인 수련지도 활동에 현저히 지장을 초래하는 경우</li>
             <li><span class="hono">3.</span>도장 내 질서 유지를 위한 지도자의 지시 등을 따르지 않아 수련 중 위험한 상황을 초래하는 경우</li>
             <li><span class="hono">4.</span>유언비어 등 확인되지 않은 내용을 임의로 유포하여 태권도 수련에 중대한 장애를 초래하는 경우</li>
-            <li><span class="hono">5.</span>상습적으로 또는 <b>3개월 이상</b> 장기간 수련비를 연체하거나 미납하시는 경우</li>
+            <li><span class="hono">5.</span><b>제9조 ④항</b>에 따라 수련비 미납으로 등록이 종료된 경우</li>
           </ol>
         </div>
       </article>
@@ -1423,6 +1444,7 @@ mark{background:#ffe082;border-radius:2px}
             <li><span class="hono">4.</span>수련비 표의 기준 시점은 표마다 명시된 연월(성인용 2024년 8월, 일반·연간회원 2025년 9월)에 따르며, 변경되는 경우에는 도장 안내로 갈음합니다.</li>
             <li><span class="hono">5.</span>복장 규정(제20조~제22조), 겨루기 특별반(제14조 ③~⑥), 나라차시범단(제11조 ⑤, 부록 5)은 <b class="amendTxt"></b>부터 시행합니다.</li>
             <li><span class="hono">6.</span>환불 규정(제17조, 제11조 ②③) 및 부록 2 환불 계산기는 <b class="amendTxt"></b>부터 시행하며, 시행일 이전에 납부하신 수련비에 대해서도 <b>수련생에게 유리한 기준</b>을 적용합니다.</li>
+            <li><span class="hono">7.</span>제9조(수련비 미납), 제12조 ③④항, 제17조 ③항, 제18조 ①②항, 제37조 5호의 개정 사항은 <b class="amendTxt"></b>부터 시행하며, 시행일 이전에 납부하신 수련비에 대해서도 <b>수련생에게 유리한 기준</b>을 적용합니다.</li>
           </ol>
           <div class="callout blue">이 규정의 <b>시행일은 문서를 마지막으로 고친 날</b>과 같습니다. 내용이 바뀌면 표지의 개정일과 위 시행일이 함께 갱신되므로, 지금 보고 계신 문서가 항상 최신본입니다. <small>(종전 규정 개정일 <span class="prevTxt"></span>)</small></div>
         </div>
@@ -1502,7 +1524,7 @@ mark{background:#ffe082;border-radius:2px}
             </div>
             <button class="go" onclick="calcRefund()">계산하기</button>
             <div class="result" id="rResult"></div>
-            <p class="note">※ 경과분은 등록 기간을 한 달 30일로 보아 일할 계산하며, 위약금은 납부액의 10%입니다. 도장 귀책 사유일 때는 위약금을 공제하지 않습니다. 참고용 계산이며 실제 금액은 도장 확인 후 확정됩니다.</p>
+            <p class="note">※ 경과분은 등록 기간을 한 달 30일로 보아 일할 계산하며, 위약금은 납부액의 10%입니다. 도장 귀책 사유일 때는 위약금을 공제하지 않습니다. 참고용 계산이며 실제 금액은 도장 확인 후 확정됩니다.<br>※ <b>연간회원(6·12개월)</b>은 '납부하신 수련비'에 <b>실제 납부하신 금액</b>을, '등록 기간'에 <b>계약 개월 수</b>를 넣어 계산하시면 됩니다(제12조 ④항).</p>
           </div>
         </div>
       </article>
