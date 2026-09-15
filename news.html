@@ -352,7 +352,7 @@ details.help li{ margin:5px 0; line-height:1.65; }
    나라차 소식지 제작기
    var APP_VER 규칙: 수정할 때마다 +0.1, 내리지 않는다.
    ============================================================ */
-var APP_VER = "v3.0"; /* R3.0: ①라차 캐릭터(펭귄) 썸네일 아이콘 — 파비콘·홈화면 아이콘·머리말에 사용 ②화면 디자인 전면 개편 — 종이 질감 배경, 표지 느낌의 머리말(이번 호·계절), 부드러운 그림자 카드, 알약 버튼, 어두운 라이트테이블 미리보기, 선택한 달의 계절색이 화면 전체에 입혀짐 · R2.9: 완성본 보관 기능 — ①[📕 PDF 한 개로 저장](외부 라이브러리 없이 PDF 직접 생성·JPEG 임베드) ②[📦 지난 호 보관함] 결과 이미지가 아니라 재료(설정·글·사진)만 저장해 용량 절약, 목록에서 열기·파일(.json)로 내보내기·삭제, 파일에서 불러오기, 저장공간 사용량 표시(접속키는 보관 대상에서 제외) · R2.8: 1단계 비율 옆에 [🔄 지난달 데이터 반영] 버튼 — 9월에 10월호를 만들 때처럼 달을 바꾸면 그 달의 "지난달" 데이터가 들어가도록. 연·월을 바꾸면 자동으로 재반영(자동으로 넣은 항목은 정리·갱신, 사진을 넣었거나 직접 고친 글은 그대로), 어느 달 데이터가 들어가는지 안내 문구 표시 · R2.7: 기사 카드 제목 중복 제거 — 카드 머리띠 제목과 본문 첫 줄이 같으면 본문에서 빼고, 날짜·인원 줄을 대표 줄로 크게(48px) 올림 · R2.6: 모바일 가독성 기준 재설계 — 소식지 1080px가 폰에서 약 390pt로 보이는 것(글자 ≈ px×0.36) 기준으로 기사 본문 최소 44px(≈16pt) 보장, 그보다 작아지면 줄이지 않고 페이지 분할(장수 최소·같으면 큰 글자). 제목은 42px까지만 줄이고 길면 두 줄, 소제목은 본문급 크기, 다단은 줄이 실제로 들어갈 때만(88% 기준), 칼럼 경계에서 소제목·이어지는 줄 안 끊김, 긴 낱말 글자 단위 줄바꿈. 이름 캡션 최소 30px(국기원·생일) · R2.5: 사진첩(행사·대회 카드) 순서 이동 ↑↓ 버튼 — 목록 순서=소식지 페이지 순서, 중간 배치 가능. 행사·대회 카드에 사진을 넣으면 기사 다음에 사진 페이지가 붙는 안내 보강 · R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
+var APP_VER = "v3.1"; /* R3.1: 목차 재구현 — 항목이 많으면(16개 등) 겹쳐 뭉개지던 문제 해결. 항목 수에 맞춰 줄 높이·글자·배지를 자동 계산하고, 한 장에 무리면 여러 장으로 나눔(1/2 표시). 긴 제목은 줄였다가 말줄임. 목차 설명은 행사마다 날짜·인원이 나오도록 개선 · R3.0: ①라차 캐릭터(펭귄) 썸네일 아이콘 — 파비콘·홈화면 아이콘·머리말에 사용 ②화면 디자인 전면 개편 — 종이 질감 배경, 표지 느낌의 머리말(이번 호·계절), 부드러운 그림자 카드, 알약 버튼, 어두운 라이트테이블 미리보기, 선택한 달의 계절색이 화면 전체에 입혀짐 · R2.9: 완성본 보관 기능 — ①[📕 PDF 한 개로 저장](외부 라이브러리 없이 PDF 직접 생성·JPEG 임베드) ②[📦 지난 호 보관함] 결과 이미지가 아니라 재료(설정·글·사진)만 저장해 용량 절약, 목록에서 열기·파일(.json)로 내보내기·삭제, 파일에서 불러오기, 저장공간 사용량 표시(접속키는 보관 대상에서 제외) · R2.8: 1단계 비율 옆에 [🔄 지난달 데이터 반영] 버튼 — 9월에 10월호를 만들 때처럼 달을 바꾸면 그 달의 "지난달" 데이터가 들어가도록. 연·월을 바꾸면 자동으로 재반영(자동으로 넣은 항목은 정리·갱신, 사진을 넣었거나 직접 고친 글은 그대로), 어느 달 데이터가 들어가는지 안내 문구 표시 · R2.7: 기사 카드 제목 중복 제거 — 카드 머리띠 제목과 본문 첫 줄이 같으면 본문에서 빼고, 날짜·인원 줄을 대표 줄로 크게(48px) 올림 · R2.6: 모바일 가독성 기준 재설계 — 소식지 1080px가 폰에서 약 390pt로 보이는 것(글자 ≈ px×0.36) 기준으로 기사 본문 최소 44px(≈16pt) 보장, 그보다 작아지면 줄이지 않고 페이지 분할(장수 최소·같으면 큰 글자). 제목은 42px까지만 줄이고 길면 두 줄, 소제목은 본문급 크기, 다단은 줄이 실제로 들어갈 때만(88% 기준), 칼럼 경계에서 소제목·이어지는 줄 안 끊김, 긴 낱말 글자 단위 줄바꿈. 이름 캡션 최소 30px(국기원·생일) · R2.5: 사진첩(행사·대회 카드) 순서 이동 ↑↓ 버튼 — 목록 순서=소식지 페이지 순서, 중간 배치 가능. 행사·대회 카드에 사진을 넣으면 기사 다음에 사진 페이지가 붙는 안내 보강 · R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
 document.getElementById("verLabel").textContent = APP_VER;
 
 var GAS = "https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
@@ -1483,27 +1483,71 @@ function drawCover(){
   footer(x2,H);
   return c;
 }
-function drawToc(entries){
-  var c=pageBase(1), x2=c.getContext("2d"), H=c.height, t=theme();
-  titleText(x2,"목차",W/2,200,110,t);
-  var y=360, gap=Math.min(150,(H-560)/Math.max(1,entries.length));
-  var tf=gap<110?38:46, df=gap<110?26:28, o1=gap<110?-16:-18, o2=gap<110?25:30;
-  entries.forEach(function(e,i){
-    badge(x2, 170, y, ("0"+(i+1)).slice(-2), t);
-    x2.textAlign="left"; x2.textBaseline="middle";
-    x2.font=tf+"px 'Jua'"; x2.fillStyle=t.title;
-    x2.fillText(e.title, 250, y+o1);
-    x2.font="500 "+df+"px 'Noto Sans KR'"; x2.fillStyle="#666";
-    x2.fillText(e.desc, 250, y+o2);
-    if(i<entries.length-1){
-      x2.strokeStyle=t.accent; x2.setLineDash([2,8]); x2.lineWidth=3;
-      x2.beginPath(); x2.moveTo(150,y+gap/2); x2.lineTo(W-150,y+gap/2); x2.stroke();
-      x2.setLineDash([]);
+/* [R3.1] 목차 — 항목 수에 맞춰 자동 배치. 한 장에 무리면 여러 장으로 나눈다.
+   원본 수제 소식지 형식: 번호 배지 + 제목 + 설명 + 점선 구분 */
+function drawTocPages(entries){
+  var H=pageH(), t=theme(), out=[];
+  var sq=(S.ratio==="11");
+  var titleY=sq?170:200, titleF=sq?92:110;
+  var top=titleY+titleF*0.55+(sq?42:54);
+  var bottom=panelBottom(H)-16;
+  var availH=Math.max(220, bottom-top);
+  var n=Math.max(1, entries.length);
+  /* 한 줄 최소 높이(제목만) / 설명까지 넣을 수 있는 높이 */
+  var ROW_MIN=74, DESC_AT=96;
+  var pages=1, rh=availH/n;
+  while(rh<ROW_MIN && pages<6){ pages++; rh=availH/Math.ceil(n/pages); }
+  var per=Math.ceil(n/pages);
+  pages=Math.ceil(n/per);
+  rh=Math.min(152, availH/per);
+  var showDesc=(rh>=DESC_AT);
+  var badgeR=Math.max(22, Math.min(32, Math.round(rh*0.28)));
+  var tf=showDesc ? Math.max(34, Math.min(46, Math.round(rh*0.34)))
+                  : Math.max(34, Math.min(46, Math.round(rh*0.52)));
+  var df=Math.max(22, Math.min(28, Math.round(tf*0.6)));
+  var xBadge=96+badgeR, xText=xBadge+badgeR+26, maxW=W-86-xText;
+  function fitCut(x2, str, w){
+    if(x2.measureText(str).width<=w) return str;
+    while(str.length>4 && x2.measureText(str+"…").width>w) str=str.slice(0,-1);
+    return str+"…";
+  }
+  for(var p=0;p<pages;p++){
+    var c=pageBase(1), x2=c.getContext("2d");
+    titleText(x2,"목차",W/2,titleY,titleF,t);
+    if(pages>1){
+      x2.font="700 26px 'Gowun Dodum'"; x2.fillStyle=t.accent;
+      x2.textAlign="center"; x2.textBaseline="middle";
+      x2.fillText((p+1)+" / "+pages, W/2, titleY+titleF*0.55+18);
     }
-    y+=gap;
-  });
-  footer(x2,H);
-  return c;
+    var slice=entries.slice(p*per,(p+1)*per);
+    var y=top+Math.max(0,(availH-slice.length*rh)/2)+rh/2;
+    slice.forEach(function(e,i){
+      var no=p*per+i+1;
+      x2.fillStyle=NAVY;
+      x2.beginPath(); x2.arc(xBadge,y,badgeR,0,6.3); x2.fill();
+      x2.fillStyle="#fff"; x2.font=Math.round(badgeR*0.88)+"px 'Jua'";
+      x2.textAlign="center"; x2.textBaseline="middle";
+      x2.fillText(("0"+no).slice(-2), xBadge, y+1);
+      x2.textAlign="left";
+      var f2=tf; x2.font=f2+"px 'Jua'";
+      while(f2>30 && x2.measureText(e.title).width>maxW){ f2-=2; x2.font=f2+"px 'Jua'"; }
+      x2.fillStyle=t.title;
+      x2.fillText(fitCut(x2, String(e.title||""), maxW), xText, showDesc?(y-f2*0.44):y);
+      if(showDesc && e.desc){
+        x2.font="500 "+df+"px 'Noto Sans KR'"; x2.fillStyle="#7A6F60";
+        x2.fillText(fitCut(x2, String(e.desc), maxW), xText, y+df*0.98);
+      }
+      if(i<slice.length-1){
+        x2.strokeStyle=t.accent; x2.setLineDash([2,9]); x2.lineWidth=3;
+        x2.beginPath(); x2.moveTo(xBadge-badgeR, y+rh/2); x2.lineTo(W-86, y+rh/2); x2.stroke();
+        x2.setLineDash([]);
+      }
+      y+=rh;
+    });
+    footer(x2,H);
+    out.push({name:"목차"+(pages>1?("_"+(p+1)):""), canvas:c});
+  }
+  return out;
 }
 /* '~(이)란?' 조사: 받침 있으면 '이란'(협동이란), 없으면 '란'(정의란) */
 function withIran(w){
@@ -2201,13 +2245,25 @@ function makeAll(){
         var hasInfo=((al.type||"photo")!=="photo") && !!String(al.info||"").trim();
         if(!al.photos.length && !hasInfo) return;
         no++; plan.push({no:no,kind:"album",ai:ai,info:hasInfo});
-        entries.push({title:(al.title||"사진첩"), desc:"지난달 우리 도장은 ~ · "+(S.month===1?12:S.month-1)+"월 이야기"});
+        /* [R3.1] 목차 설명은 행사마다 다르게 — 글의 둘째 줄(날짜·인원)을 쓰고, 없으면 날짜·사진 수 */
+        var lead="";
+        if(hasInfo){ var ls=String(al.info).split("\n"); lead=(ls[1]||"").trim(); }
+        var dsc=lead.replace(/^(\d{4})-(\d{2})-(\d{2})/, function(_m,_y,mm,dd){ return Number(mm)+"월 "+Number(dd)+"일"; });
+        if(!dsc){
+          var bits=[];
+          var ev0=(al.evId && DATA.work && DATA.work.events) ? DATA.work.events[al.evId] : null;
+          var d0=String((ev0||{}).date||"");
+          if(/^\d{4}-\d{2}-\d{2}$/.test(d0)) bits.push(Number(d0.slice(5,7))+"월 "+Number(d0.slice(8,10))+"일");
+          if(al.photos.length) bits.push("사진 "+al.photos.length+"장");
+          dsc=bits.length?bits.join(" · "):("지난달("+(S.month===1?12:S.month-1)+"월) 이야기");
+        }
+        entries.push({title:(al.title||"사진첩"), desc:dsc});
       });
     }
     if(S.pages.check && (S.virtueItems||"").trim()){ no++; plan.push({no:no,kind:"check"}); entries.push({title:"'"+(S.virtueName||"덕목")+"' 실천 체크리스트", desc:"한 달 동안 가정에서도 함께 실천해 보아요~"}); }
 
     if(S.pages.cover) MADE.push({name:"표지", canvas:drawCover()});
-    if(S.pages.toc) MADE.push({name:"목차", canvas:drawToc(entries)});
+    if(S.pages.toc) MADE=MADE.concat(drawTocPages(entries));
     plan.forEach(function(p){
       var nn=("0"+p.no).slice(-2);
       if(p.kind==="virtue") MADE.push({name:"인성덕목", canvas:drawVirtue(nn)});
