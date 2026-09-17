@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="doc-ver" content="v20260915.0001">
+<meta name="doc-ver" content="v20260917.0001">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차태권도 운영규정</title>
 <meta name="description" content="나라차태권도 분당도장 운영규정 — 제1장 총칙부터 부칙·부록까지 전문 수록 (반응형 웹 문서)">
@@ -129,6 +129,11 @@
      · 제18조 ①②항 교체 — 휴관일 근거 명시, 불가항력 휴원은 보강→이월→환불 순서
      · 제37조 5호 — 제9조 ④항(등록 종료)에 맞춤, "3개월·연체" 표현 삭제
      · 부록2 안내문 한 줄 추가, 부칙 7항 신설
+   v20260917.0001 — 가족 할인 구분
+     · 제11조 표를 '개인 등록' / '가족 할인' 두 묶음으로 나누고 초록 계열로 구분
+     · 제11조 ⑤항 신설 — 가족 할인은 기본 수련(월 8회) 이상만 적용
+       (종전 ⑤ 나라차시범단 → ⑥, 부칙 5항·부록5 상호참조 함께 수정)
+     · 제10조 ⑤항에 같은 조건 한 줄 보완, 가족 할인 적용 도표 추가
    v20260828.0007 (R1.6) 제15조에 도장 배포용 '보강 제도 안내문' 이미지 수록(1200px PNG)
      — 안내문 속 표와 문서의 표가 같은 내용이라, 표에 "안내문의 예시를 글자로 옮긴 것" 설명 추가
    v20260828.0006 (R1.5) 카카오톡 링크 미리보기(Open Graph) 태그 추가 + rules-og.png(1200x630)
@@ -146,7 +151,7 @@
    맨 위에 둔 이유: 새 버전이 나왔는지 확인할 때 파일 앞부분만 조금 받아 보기 위함. */
 var RULES_VER = (function(){
   try{ return document.querySelector('meta[name="doc-ver"]').content; }
-  catch(e){ return "v20260915.0001"; }
+  catch(e){ return "v20260917.0001"; }
 })();
 /* 문서 날짜는 RULES_VER 의 날짜 부분에서 자동으로 뽑는다.
    → 규정을 고치고 RULES_VER 만 올리면 표지의 개정일과 부칙의 시행일이 함께 바뀐다.
@@ -156,7 +161,7 @@ function docDate(){
   return m ? (m[1] + '.' + m[2] + '.' + m[3]) : '';
 }
 var REVISED_DATE = docDate();     // 최종 수정일 = 시행일
-var PREV_REVISED = "2026.09.03";  // 종전 규정 개정일(이력 보존용)
+var PREV_REVISED = "2026.09.15";  // 종전 규정 개정일(이력 보존용)
 
 /* ══════════════════════════════════════════════════════════════
    금액·횟수 설정 (설정 화면에서 바꿀 수 있는 값)
@@ -377,6 +382,11 @@ table.t td.hd{background:#f1f0ea;font-weight:700}
 table.t td.em{color:var(--red);font-weight:800}
 table.t .colhi{background:#fdf6e8 !important}
 table.t th.colhi{background:#8a6d1f !important;color:#fff} /* 머리글 강조: 진한 금색 — 흰 글자가 보이도록(연한 배경 금지) */
+/* 가족 할인 묶음 — 개인 등록과 눈으로 구분되도록 초록 계열로 따로 묶는다 */
+table.t th.famhd{background:#1f7d70 !important;color:#fff}
+table.t td.fam{background:#eef7f5 !important}
+table.t .famL{border-left:3px solid #1f7d70}
+table.t th.famhd small{display:block;font-weight:500;font-size:11px;color:#c7e6e0;margin-top:2px}
 table.t td.lft{white-space:normal;text-align:left}
 
 /* 부록 시각 요소 */
@@ -743,7 +753,7 @@ mark{background:#ffe082;border-radius:2px}
             <li><span class="hno">②</span>월 등록 그룹수련생의 수련비는 <b>2개월 단위</b>로 납부하십니다. 등록 기간은 <b>1·2월 / 3·4월 / 5·6월 / 7·8월 / 9·10월 / 11·12월</b>입니다.</li>
             <li><span class="hno">③</span>1개월 수련 기준일수는 <b>주2회 8회, 주3회 12회, 주4회 16회</b> 이상입니다.</li>
             <li><span class="hno">④</span>여행이나 신상의 이유로 <b>한 주일 이상 장기 결석</b>을 하시게 될 경우에는 미리 도장에 알려 주셔야 하며, 차회 등록 시 해당 결석 수련 횟수에 해당하는 비용을 차감하고 납부하시게 됩니다.</li>
-            <li><span class="hno">⑤</span>직계가족 할인을 적용할 때 <b>'직계가족'</b>이란 주민등록등본 또는 건강보험증에 함께 명기된 경우에만 인정됩니다. 할인은 2인 등록 시 1명, 3인 등록 시 2명(A 1명, B 1명)에게 적용됩니다.</li>
+            <li><span class="hno">⑤</span>직계가족 할인을 적용할 때 <b>'직계가족'</b>이란 주민등록등본 또는 건강보험증에 함께 명기된 경우에만 인정됩니다. 할인은 2인 등록 시 1명, 3인 등록 시 2명(A 1명, B 1명)에게 적용됩니다. 다만 <b>기본 수련(월 8회) 이상으로 등록하시는 경우에만 적용</b>되며, 약식수련(월 4회)에는 적용되지 않습니다(제11조 ⑤).</li>
             <li><span class="hno">⑥</span>월 중에 새로 등록하시는 경우에는 그 달의 잔여 수련일 수를 계산한 금액으로 납부하시게 됩니다.</li>
           </ol>
           <div class="dg">
@@ -776,18 +786,32 @@ mark{background:#ffe082;border-radius:2px}
         <div class="jo-body">
           <p class="note">2025년 9월 기준 / 단위: 원 — 나라차태권도의 기본 월 수련 횟수는 8회입니다.</p>
           <div class="tblwrap"><table class="t">
-            <tr><th>구분</th><th>약식수련</th><th class="colhi">기본 수련</th><th>심화 수련</th><th>프리패스</th><th>직계 2인</th><th>직계 3인↑</th></tr>
-            <tr><td class="hd">월 수련일</td><td>4회</td><td class="colhi">8회</td><td>12회</td><td>월 무제한</td><td>8회</td><td>8회</td></tr>
-            <tr><td class="hd">일 수련비</td><td data-cfg="c.d1">25,000</td><td class="colhi" data-cfg="c.d2">22,500</td><td data-cfg="c.d3">20,000</td><td>-</td><td data-cfg="c.dfam2">20,000</td><td data-cfg="c.dfam3">17,500</td></tr>
-            <tr><td class="hd">한달 수련비</td><td data-cfg="c.w1">100,000</td><td class="colhi" data-cfg="c.w2">180,000</td><td data-cfg="c.w3">240,000</td><td data-cfg="c.fp">300,000</td><td data-cfg="c.fam2">160,000</td><td data-cfg="c.fam3">140,000</td></tr>
-            <tr><td class="hd">두달 수련비</td><td class="em" data-cfg="c.w1*2">200,000</td><td class="em colhi" data-cfg="c.w2*2">360,000</td><td class="em" data-cfg="c.w3*2">480,000</td><td class="em" data-cfg="c.fp*2">600,000</td><td class="em" data-cfg="c.fam2*2">320,000</td><td class="em" data-cfg="c.fam3*2">280,000</td></tr>
+            <tr><th rowspan="2">구분</th><th colspan="4">개인 등록</th><th colspan="2" class="famhd famL">가족 할인<small>기본 수련(월 8회) 이상만</small></th></tr>
+            <tr><th>약식수련</th><th class="colhi">기본 수련</th><th>심화 수련</th><th>프리패스</th><th class="famhd famL">직계 2인</th><th class="famhd">직계 3인↑</th></tr>
+            <tr><td class="hd">월 수련일</td><td>4회</td><td class="colhi">8회</td><td>12회</td><td>월 무제한</td><td class="fam famL">8회 이상</td><td class="fam">8회 이상</td></tr>
+            <tr><td class="hd">일 수련비</td><td data-cfg="c.d1">25,000</td><td class="colhi" data-cfg="c.d2">22,500</td><td data-cfg="c.d3">20,000</td><td>-</td><td class="fam famL" data-cfg="c.dfam2">20,000</td><td class="fam" data-cfg="c.dfam3">17,500</td></tr>
+            <tr><td class="hd">한달 수련비</td><td data-cfg="c.w1">100,000</td><td class="colhi" data-cfg="c.w2">180,000</td><td data-cfg="c.w3">240,000</td><td data-cfg="c.fp">300,000</td><td class="fam famL" data-cfg="c.fam2">160,000</td><td class="fam" data-cfg="c.fam3">140,000</td></tr>
+            <tr><td class="hd">두달 수련비</td><td class="em" data-cfg="c.w1*2">200,000</td><td class="em colhi" data-cfg="c.w2*2">360,000</td><td class="em" data-cfg="c.w3*2">480,000</td><td class="em" data-cfg="c.fp*2">600,000</td><td class="em fam famL" data-cfg="c.fam2*2">320,000</td><td class="em fam" data-cfg="c.fam3*2">280,000</td></tr>
           </table></div>
+          <div class="dg">
+            <div class="dg-t">가족 할인, 이렇게 적용됩니다</div>
+            <div class="flow">
+              <div class="step"><span class="k">조건</span><div class="h">기본 수련(월 8회) 이상</div><div class="d"><b>약식수련(월 4회)은 제외</b>됩니다.</div></div>
+              <div class="ar">›</div>
+              <div class="step"><span class="k">범위</span><div class="h">직계가족</div><div class="d">주민등록등본 또는 건강보험증에<br>함께 명기된 경우(제10조 ⑤)</div></div>
+              <div class="ar">›</div>
+              <div class="step good"><span class="k">적용</span><div class="h">2인 등록 → 1명<br>3인 등록 → 2명</div><div class="d">1인당 <span data-cfg="c.fam2" data-suffix="원">160,000원</span> ·
+                3인째부터 <span data-cfg="c.fam3" data-suffix="원">140,000원</span></div></div>
+            </div>
+            <p class="dg-n">표에서 <b style="color:#1f7d70">초록으로 묶인 두 칸</b>이 가족 할인입니다. 성인 수련생의 가족 할인도 같은 기준입니다(제13조 ④).</p>
+          </div>
           <ol class="hang">
             <li><span class="hno">①</span><b>약식수련(월 4회)</b>은 도장 적응 기간이 필요한 <b>킨더(유치부) 수련생에 한하여 한시적으로</b> 등록하실 수 있는 수련 종류입니다. 초등학생 이상 수련생은 약식수련으로 등록하실 수 없으며, 킨더 수련생도 일정 기간 적응하신 후에는 <b>정식수련(월 8회 이상)으로 등록하시는 것을 원칙</b>으로 합니다.</li>
             <li><span class="hno">②</span><b>심화수련 등록</b>은 보강이 가능하며, 기간 연장은 되지 않습니다. <b>환불은 제17조에 따릅니다.</b></li>
             <li><span class="hno">③</span><b>프리패스 등록</b>은 보강과 기간 연장이 되지 않습니다. <b>환불은 제17조에 따릅니다.</b></li>
             <li><span class="hno">④</span>연회원으로 등록하시면 할인 혜택을 받으실 수 있습니다(제12조).</li>
-            <li><span class="hno">⑤</span><b>나라차시범단</b>은 태권도 기술과 함께 리더십·협동심·책임감을 기르기 위해 운영하는 연간 활동 과정입니다. 지원 자격, 선발 절차, 연회비와 용품비, 활동 세부사항은 <b>[부록 5 나라차시범단 운영지침]</b>에 따릅니다.</li>
+            <li><span class="hno">⑤</span><b>직계가족 할인</b>은 <b>기본 수련(월 8회) 이상</b>으로 등록하시는 경우에만 적용됩니다. <b>약식수련(월 4회)에는 적용되지 않습니다.</b> 직계가족의 범위와 할인 적용 인원은 <b>제10조 ⑤항</b>에 따릅니다.</li>
+            <li><span class="hno">⑥</span><b>나라차시범단</b>은 태권도 기술과 함께 리더십·협동심·책임감을 기르기 위해 운영하는 연간 활동 과정입니다. 지원 자격, 선발 절차, 연회비와 용품비, 활동 세부사항은 <b>[부록 5 나라차시범단 운영지침]</b>에 따릅니다.</li>
           </ol>
         </div>
       </article>
@@ -1442,7 +1466,7 @@ mark{background:#ffe082;border-radius:2px}
             <li><span class="hono">2.</span>보강 제도(제15조)는 <b>2026년 8월</b>부터 시행합니다.</li>
             <li><span class="hono">3.</span>승급심사 평가 기준(제26조·제27조)은 도장 심사관리 프로그램의 채점 체계와 동일하게 적용되며, 이전 채점 방식으로 평가된 기록은 구채점 기록으로 구분하여 보존합니다.</li>
             <li><span class="hono">4.</span>수련비 표의 기준 시점은 표마다 명시된 연월(성인용 2024년 8월, 일반·연간회원 2025년 9월)에 따르며, 변경되는 경우에는 도장 안내로 갈음합니다.</li>
-            <li><span class="hono">5.</span>복장 규정(제20조~제22조), 겨루기 특별반(제14조 ③~⑥), 나라차시범단(제11조 ⑤, 부록 5)은 <b class="amendTxt"></b>부터 시행합니다.</li>
+            <li><span class="hono">5.</span>복장 규정(제20조~제22조), 겨루기 특별반(제14조 ③~⑥), 나라차시범단(제11조 ⑥, 부록 5)은 <b class="amendTxt"></b>부터 시행합니다.</li>
             <li><span class="hono">6.</span>환불 규정(제17조, 제11조 ②③) 및 부록 2 환불 계산기는 <b class="amendTxt"></b>부터 시행하며, 시행일 이전에 납부하신 수련비에 대해서도 <b>수련생에게 유리한 기준</b>을 적용합니다.</li>
             <li><span class="hono">7.</span>제9조(수련비 미납), 제12조 ③④항, 제17조 ③항, 제18조 ①②항, 제37조 5호의 개정 사항은 <b class="amendTxt"></b>부터 시행하며, 시행일 이전에 납부하신 수련비에 대해서도 <b>수련생에게 유리한 기준</b>을 적용합니다.</li>
           </ol>
@@ -1606,7 +1630,7 @@ mark{background:#ffe082;border-radius:2px}
       <h3>부록 5 — 나라차시범단 운영지침</h3>
       <article class="jo" id="joB5">
         <div class="jo-body">
-          <p class="note">제11조 ⑤에 따른 나라차시범단의 세부 운영지침입니다.</p>
+          <p class="note">제11조 ⑥에 따른 나라차시범단의 세부 운영지침입니다.</p>
 
           <p><b>1. 활동 기간</b></p>
           <p>매년 1월부터 차기 시범단 선발 시까지(약 12개월)입니다.</p>
