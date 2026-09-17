@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="doc-ver" content="v20260917.0002">
+<meta name="doc-ver" content="v20260917.0003">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차태권도 운영규정</title>
 <meta name="description" content="나라차태권도 분당도장 운영규정 — 제1장 총칙부터 부칙·부록까지 전문 수록 (반응형 웹 문서)">
@@ -137,6 +137,9 @@
    v20260917.0002 — 제12조(연간회원) 표도 같은 방식으로 구분
      · 12개월·6개월 표를 '개인 등록' / '가족 할인'으로 묶고 주2회(월8회)를 기본으로 강조
      · 제12조 ⑤항 신설 — 연간회원도 월 8회 이상만 가족 할인, 두 할인은 중복 적용
+   v20260917.0003 — 제13조(성인) 표도 같은 방식으로 구분
+     · '직계가족 동반 등록 시' 묶음을 '가족 할인' 초록 묶음으로, 8회 등록을 기본으로 강조
+     · ④항 문구를 제11조 ⑤항과 같은 표현으로 통일
    v20260828.0007 (R1.6) 제15조에 도장 배포용 '보강 제도 안내문' 이미지 수록(1200px PNG)
      — 안내문 속 표와 문서의 표가 같은 내용이라, 표에 "안내문의 예시를 글자로 옮긴 것" 설명 추가
    v20260828.0006 (R1.5) 카카오톡 링크 미리보기(Open Graph) 태그 추가 + rules-og.png(1200x630)
@@ -154,7 +157,7 @@
    맨 위에 둔 이유: 새 버전이 나왔는지 확인할 때 파일 앞부분만 조금 받아 보기 위함. */
 var RULES_VER = (function(){
   try{ return document.querySelector('meta[name="doc-ver"]').content; }
-  catch(e){ return "v20260917.0002"; }
+  catch(e){ return "v20260917.0003"; }
 })();
 /* 문서 날짜는 RULES_VER 의 날짜 부분에서 자동으로 뽑는다.
    → 규정을 고치고 RULES_VER 만 올리면 표지의 개정일과 부칙의 시행일이 함께 바뀐다.
@@ -858,15 +861,16 @@ mark{background:#ffe082;border-radius:2px}
         <div class="jo-body">
           <p class="note">2024년 8월 기준 / 단위: 원</p>
           <div class="tblwrap"><table class="t">
-            <tr><th rowspan="2">월 수련비</th><th colspan="2">개인등록 시</th><th colspan="2">직계가족 동반 등록 시(1인)</th></tr>
-            <tr><th>8회 횟수 등록</th><th>월 8회 이상 추가 수련비</th><th>8회 횟수 등록</th><th>월 8회 이상 추가 수련비</th></tr>
-            <tr><td class="hd">단체레슨(50~55분)</td><td class="em" data-cfg="c.adultGroup">140,000</td><td data-cfg="c.adultAdd">10,000</td><td class="em" data-cfg="c.adultFam">120,000</td><td data-cfg="c.adultAdd">10,000</td></tr>
+            <tr><th rowspan="2">월 수련비</th><th colspan="2">개인 등록</th><th colspan="2" class="famhd famL">가족 할인<small>직계가족 동반 등록 시 1인 · 월 8회 이상만</small></th></tr>
+            <tr><th class="colhi">8회 횟수 등록</th><th>월 8회 이상<br><small>추가 수련비</small></th><th class="famhd famL">8회 횟수 등록</th><th class="famhd">월 8회 이상<br><small>추가 수련비</small></th></tr>
+            <tr><td class="hd">단체레슨(50~55분)</td><td class="em colhi" data-cfg="c.adultGroup">140,000</td><td data-cfg="c.adultAdd">10,000</td><td class="em fam famL" data-cfg="c.adultFam">120,000</td><td class="fam" data-cfg="c.adultAdd">10,000</td></tr>
           </table></div>
+          <div class="callout green">표에서 <b>초록으로 묶인 두 칸</b>이 가족 할인입니다. <b>기본 수련(월 8회) 이상</b>으로 등록하시는 경우에만 적용되며, 직계가족이 함께 등록하실 때 <b>1인</b>에게 적용됩니다.</div>
           <ol class="hang">
             <li><span class="hno">①</span>등록하시면 예약 어플 <b>&lt;하이파이브&gt;</b>에 수련권 8회를 충전해 드립니다. 어플에서 수련권으로 예약하신 후 수련하시면 됩니다.</li>
             <li><span class="hno">②</span><b>소수레슨(50분)</b> — 1:1 <span data-cfg="c.p11" data-suffix="원">60,000원</span> / 1:2 <span data-cfg="c.p12" data-suffix="원">50,000원</span> / 1:3 <span data-cfg="c.p13" data-suffix="원">40,000원</span> / 1:5 <span data-cfg="c.p15" data-suffix="원">30,000원</span>입니다. <small>(10회권을 일괄결제하시면 11회를 지급해 드립니다.)</small> 1:1 레슨은 3시간 수련으로, 1:2 레슨은 2시간 수련으로 적용됩니다(승급을 위한 기준 수련시수는 24시간입니다).</li>
             <li><span class="hno">③</span>8회 횟수 기본 등록의 유효기간은 등록하신 후 <b>한 달 2주</b>까지입니다. 개인 사정으로 나오지 못하시는 경우 1회에 한하여 일주일까지 연장하실 수 있습니다.</li>
-            <li><span class="hno">④</span>직계가족 할인은 월 8회 미만 등록 시에는 적용되지 않습니다.</li>
+            <li><span class="hno">④</span><b>직계가족 할인은 기본 수련(월 8회) 이상</b>으로 등록하시는 경우에만 적용됩니다. 월 8회 미만 등록에는 적용되지 않습니다(제10조 ⑤, 제11조 ⑤).</li>
           </ol>
         </div>
       </article>
