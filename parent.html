@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>나라차 학부모</title>
+<meta name="robots" content="noindex">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="나라차태권도">
+<meta property="og:title" content="나라차 학부모 앱">
+<meta property="og:description" content="우리 아이 출석·수련·승급 기록을 언제든 확인하세요">
+<meta property="og:url" content="https://narachadata.github.io/naracha/parent.html">
+<meta property="og:image" content="https://narachadata.github.io/naracha/parent-og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="나라차 학부모">
+<style>
+:root{ --navy:#0B1D3A; --blue:#2B5FB8; --gold:#C9A24B; --red:#D0332A; --green:#1E7B3C;
+  --ink:#1A2233; --sub:#6B7480; --line:#E5E8EF; --bg:#F4F6FA; }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ margin:0; padding:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",sans-serif; }
+body{ padding-bottom:34px; }
+.wrap{ max-width:520px; margin:0 auto; padding:0 14px; }
+.hd{ background:linear-gradient(135deg,#0B1D3A,#16325C); color:#fff; padding:calc(env(safe-area-inset-top,0px) + 16px) 0 14px; }
+.card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin:10px 0; box-shadow:0 1px 4px rgba(15,23,42,.05); }
+.btn{ display:block; width:100%; border:none; border-radius:12px; padding:14px; font-size:15.5px; font-weight:800; cursor:pointer; font-family:inherit; }
+.btn.p{ background:var(--navy); color:#fff; }
+.btn.g{ background:#fff; color:var(--navy); border:1.5px solid var(--line); }
+.chipT{ display:inline-flex; align-items:center; gap:6px; border-radius:12px; padding:8px 14px; font-size:14px; font-weight:800; border:1.5px solid var(--line); background:#fff; cursor:pointer; }
+.chipT.on{ background:var(--navy); color:#fff; border-color:var(--navy); }
+input.code{ width:100%; border:1.5px solid var(--line); border-radius:12px; padding:13px; font-size:17px; font-weight:800; letter-spacing:2px; text-align:center; font-family:monospace; text-transform:uppercase; }
+.sec{ font-size:12px; font-weight:900; color:var(--sub); letter-spacing:.4px; margin:16px 2px 6px; }
+.dot{ width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:#fff; }
+.msg{ font-size:13px; line-height:1.65; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var APP_VER="p1.0";
+var GSHEET_URL="https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
+var KEY="NARACHA-1CW40KHJ";
+var LS="naracha_parent_v1";
+
+/* ══ PWA manifest 주입 (앱 고유번호 naracha-parent, scope는 이 파일 하나) ══ */
+(function(){
+  try{
+    var base=location.origin+location.pathname;
+    var icon=function(sz){
+      var c=document.createElement('canvas'); c.width=c.height=sz;
+      var x=c.getContext('2d');
+      var g=x.createLinearGradient(0,0,sz,sz); g.addColorStop(0,'#0B1D3A'); g.addColorStop(1,'#2B5FB8');
+      x.fillStyle=g; x.beginPath();
+      if(x.roundRect) x.roundRect(0,0,sz,sz,sz*0.22); else x.rect(0,0,sz,sz);
+      x.fill();
+      x.fillStyle='#C9A24B'; x.font='900 '+(sz*0.46)+'px sans-serif'; x.textAlign='center'; x.textBaseline='middle';
+      x.fillText('나',sz/2,sz*0.40);
+      x.fillStyle='#fff'; x.font='800 '+(sz*0.16)+'px sans-serif';
+      x.fillText('학부모',sz/2,sz*0.74);
+      return c.toDataURL('image/png');
+    };
+    var man={ id:'naracha-parent', name:'나라차 학부모', short_name:'나라차 학부모',
+      start_url:base, scope:base, display:'standalone',
+      background_color:'#0B1D3A', theme_color:'#0B1D3A',
+      icons:[{src:icon(192),sizes:'192x192',type:'image/png'},{src:icon(512),sizes:'512x512',type:'image/png'}] };
+    var l=document.createElement('link'); l.rel='manifest';
+    l.href='data:application/manifest+json;charset=utf-8,'+encodeURIComponent(JSON.stringify(man));
+    document.head.appendChild(l);
+  }catch(e){}
+})();
+
+/* ══ 환경 감지 ══ */
+function isStandalone(){ try{ return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; } }
+function isInApp(){ var u=navigator.userAgent||''; return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(u); }
+function isIOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent||''); }
+var deferredPrompt=null;
+window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferredPrompt=e; render(); });
+
+/* ══ 저장 ══ */
+function saved(){ try{ return JSON.parse(localStorage.getItem(LS)||'null'); }catch(e){ return null; } }
+function saveLS(o){ try{ localStorage.setItem(LS, JSON.stringify(o)); }catch(e){} }
+
+/* ══ 코드 (링크 # 뒤 — 서버로 전송되지 않음) ══ */
+function codeFromUrl(){
+  try{
+    var v=String(location.hash||'').replace(/^#/,'');
+    if(!v){ var m=String(location.search||'').match(/[?&]code=([^&]+)/i); v=m?decodeURIComponent(m[1]):''; }
+    v=v.toUpperCase().replace(/[^A-Z0-9]/g,'');
+    return v.length>=6?v:'';
+  }catch(e){ return ''; }
+}
+var __linkCode=codeFromUrl();   /* 주소의 코드를 먼저 붙잡은 뒤 지운다 (화면·공유에 코드가 안 남게) */
+try{ if(location.hash) history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+
+/* ══ 암호화 규격 (관리 앱과 동일) ══ */
+function enc(){ return new TextEncoder(); }
+async function pKey(code){
+  var base=await crypto.subtle.importKey('raw', enc().encode(String(code)), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt:enc().encode('naracha-parent-v1'), iterations:60000, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['decrypt']);
+}
+async function pHash(code){
+  var d=await crypto.subtle.digest('SHA-256', enc().encode('nrc|'+String(code)));
+  return Array.prototype.map.call(new Uint8Array(d), function(b){ return ('0'+b.toString(16)).slice(-2); }).join('').slice(0,24);
+}
+function abFromB64(b){ var s=atob(b), u=new Uint8Array(s.length); for(var i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; }
+
+/* ══ 상태 ══ */
+var ST={ view:'boot', code:'', fam:null, kid:0, err:'', pend:null, needBy:false };
+
+/* ══ 데이터 조회 ══ */
+function fetchStore(){
+  return fetch(GSHEET_URL+'?key='+encodeURIComponent(KEY)+'&store=parent&t='+Date.now())
+    .then(function(r){ if(!r.ok) throw new Error('HTTP'); return r.json(); })
+    .then(function(rows){
+      if(!Array.isArray(rows)) throw new Error('BAD');
+      var txt='';
+      for(var i=0;i<rows.length;i++){ if(rows[i][0]==='JSON'){ for(var j=i+1;j<rows.length;j++) txt+=(rows[j][0]!=null?String(rows[j][0]):''); break; } }
+      if(!txt) throw new Error('EMPTY');
+      var d=JSON.parse(txt);
+      if(!d || !d.parentV || !d.fams) throw new Error('SCHEMA');
+      return d;
+    });
+}
+async function loadFam(code){
+  var d=await fetchStore();
+  var h=await pHash(code);
+  var blob=d.fams[h];
+  if(!blob) throw new Error('NOCODE');
+  var key=await pKey(code);
+  var pt=await crypto.subtle.decrypt({name:'AES-GCM', iv:abFromB64(blob.iv)}, key, abFromB64(blob.ct));
+  var fam=JSON.parse(new TextDecoder().decode(pt));
+  fam.pubT=blob.t||0;
+  return fam;
+}
+
+/* ══ 로그인 흐름 ══ */
+async function tryLogin(code, isNewDevice){
+  ST.err=''; ST.view='loading'; render();
+  try{
+    var fam=await loadFam(code);
+    if(isNewDevice){ ST.pend={code:code, fam:fam}; ST.needBy=true; ST.view='verify'; render(); return; }
+    ST.code=code; ST.fam=fam; ST.kid=0; ST.view='home';
+    saveLS({code:code, ok:1});
+    render();
+  }catch(e){
+    var m=String(e&&e.message||e);
+    ST.err = m==='NOCODE' ? '등록되지 않았거나 폐기된 코드입니다.<br>도장에서 받은 <b>최신 링크</b>로 다시 열어 주세요.'
+      : m==='EMPTY'||m==='SCHEMA' ? '아직 데이터가 준비되지 않았습니다.<br>도장에 문의해 주세요.'
+      : '연결이 원활하지 않습니다. 잠시 후 다시 시도해 주세요.';
+    ST.view='login'; ST.codeInput=code; render();
+  }
+}
+window.verifyBy=function(){
+  var v=(document.getElementById('byIn')||{}).value||'';
+  var d=String(v).replace(/\D/g,'');
+  if(d.length===6) d=(Number(d.slice(0,2))>=30?'19':'20')+d;
+  if(d.length!==8){ ST.err='생년월일 8자리(예: 20190228)를 입력해 주세요.'; render(); return; }
+  var norm=d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);
+  var hit=(ST.pend.fam.kids||[]).some(function(k){ return String(k.by||'').slice(0,10)===norm; });
+  if(!hit){ ST.err='자녀 생년월일과 일치하지 않습니다.<br>다시 확인해 주세요.'; render(); return; }
+  ST.code=ST.pend.code; ST.fam=ST.pend.fam; ST.pend=null; ST.needBy=false; ST.kid=0; ST.view='home';
+  saveLS({code:ST.code, ok:1});
+  render();
+};
+window.doLoginInput=function(){
+  var v=((document.getElementById('codeIn')||{}).value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(v.length<6){ ST.err='도장에서 받은 코드를 입력해 주세요.'; render(); return; }
+  tryLogin(v, true);
+};
+window.doLogout=function(){ if(!confirm('로그아웃할까요?\n다시 보려면 도장에서 받은 링크가 필요합니다.')) return; try{ localStorage.removeItem(LS); }catch(e){} location.reload(); };
+window.doRefresh=function(){ if(ST.code) tryLogin(ST.code, false); };
+window.pickKid=function(i){ ST.kid=i; render(); };
+window.doInstall=function(){ if(deferredPrompt){ deferredPrompt.prompt(); } };
+window.openChrome=function(){
+  var u='intent://'+location.host+location.pathname+(ST.code?('#'+ST.code):'')+'#Intent;scheme=https;package=com.android.chrome;end';
+  location.href=u;
+};
+
+/* ══ 화면 ══ */
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function beltColor(g){
+  g=String(g||'');
+  if(/품|단/.test(g)) return ['#111','#fff','검정'];
+  var m=g.match(/(\d+)급/); var n=m?Number(m[1]):0;
+  if(n>=9) return ['#FFFFFF','#333','흰'];
+  if(n===8) return ['#F6C344','#4a3200','노란'];
+  if(n===7) return ['#F0A030','#4a2a00','주황'];
+  if(n===6) return ['#3FA34D','#fff','초록'];
+  if(n===5) return ['#7C3AED','#fff','보라'];
+  if(n===4) return ['#2B5FB8','#fff','파란'];
+  if(n===3) return ['#8B4513','#fff','밤'];
+  if(n===2) return ['#D0332A','#fff','빨간'];
+  if(n===1) return ['#D0332A','#fff','빨간'];
+  return ['#94A3B8','#fff',''];
+}
+function header(inner){
+  return '<div class="hd"><div class="wrap" style="display:flex;align-items:center;gap:10px">'+
+    '<div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#C9A24B,#E8C878);display:flex;align-items:center;justify-content:center;font-weight:900;color:#0B1D3A;font-size:17px">나</div>'+
+    '<div><div style="font-size:16.5px;font-weight:900">나라차태권도</div><div style="font-size:11px;opacity:.75">학부모 앱</div></div>'+
+    '<span style="flex:1"></span>'+(inner||'')+'</div></div>';
+}
+function installGuide(){
+  if(isStandalone()) return '';
+  if(isInApp()){
+    return '<div class="card" style="border-color:#C9A24B;background:#FFFBEF">'+
+      '<b style="font-size:14.5px">📲 홈 화면에 설치하면 다음부터 앱처럼 열려요</b>'+
+      (isIOS()
+        ? '<div class="msg" style="margin-top:6px">① 오른쪽 아래 <b>⋯ (점 세 개)</b> → <b>다른 브라우저로 열기(Safari)</b><br>② Safari에서 <b>공유 <span style="font-size:15px">⎋</span></b> → <b>홈 화면에 추가</b></div>'
+        : '<div class="msg" style="margin-top:6px">아래 버튼으로 Chrome에서 연 뒤, 안내에 따라 설치를 눌러 주세요.</div><button class="btn p" style="margin-top:8px" onclick="openChrome()">Chrome으로 열기</button>')+
+      '</div>';
+  }
+  if(deferredPrompt){
+    return '<div class="card" style="border-color:#C9A24B;background:#FFFBEF"><b style="font-size:14.5px">📲 홈 화면에 설치</b>'+
+      '<div class="msg" style="margin-top:4px">설치하면 아이콘으로 언제든 바로 열 수 있어요.</div>'+
+      '<button class="btn p" style="margin-top:8px" onclick="doInstall()">앱 설치하기</button></div>';
+  }
+  if(isIOS()){
+    return '<div class="card" style="border-color:#C9A24B;background:#FFFBEF"><b style="font-size:14.5px">📲 홈 화면에 설치</b>'+
+      '<div class="msg" style="margin-top:6px">Safari 아래 <b>공유 <span style="font-size:15px">⎋</span></b> 버튼 → <b>홈 화면에 추가</b>를 눌러 주세요.</div></div>';
+  }
+  return '';
+}
+function vLogin(){
+  return header()+'<div class="wrap">'+installGuide()+
+    '<div class="card"><b style="font-size:15.5px">우리 아이 수련 기록 보기</b>'+
+    '<div class="msg" style="color:var(--sub);margin:6px 0 10px">도장에서 카톡으로 보내드린 <b>링크</b>를 누르면 자동으로 열립니다.<br>코드를 직접 넣으실 수도 있어요.</div>'+
+    (ST.err?'<div class="msg" style="color:var(--red);margin-bottom:8px">'+ST.err+'</div>':'')+
+    '<input id="codeIn" class="code" maxlength="12" placeholder="코드 입력" value="'+esc(ST.codeInput||'')+'">'+
+    '<button class="btn p" style="margin-top:10px" onclick="doLoginInput()">확인</button>'+
+    '<div class="msg" style="color:var(--sub);margin-top:10px">코드가 없거나 잊으셨다면 도장으로 연락 주세요 ☎</div></div></div>';
+}
+function vVerify(){
+  return header()+'<div class="wrap"><div class="card"><b style="font-size:15.5px">🔒 처음 연결하는 기기입니다</b>'+
+    '<div class="msg" style="color:var(--sub);margin:6px 0 10px">보안을 위해 <b>자녀 생년월일</b>을 한 번만 확인합니다.<br>(형제 중 아무나 한 명)</div>'+
+    (ST.err?'<div class="msg" style="color:var(--red);margin-bottom:8px">'+ST.err+'</div>':'')+
+    '<input id="byIn" class="code" inputmode="numeric" maxlength="10" placeholder="예: 20190228">'+
+    '<button class="btn p" style="margin-top:10px" onclick="verifyBy()">확인</button></div></div>';
+}
+function vLoading(){ return header()+'<div class="wrap"><div class="card" style="text-align:center;color:var(--sub);padding:34px 0">불러오는 중…</div></div>'; }
+function attCal(att){
+  var days=Object.keys(att||{}).sort();
+  if(!days.length) return '<div class="msg" style="color:var(--sub)">최근 출석 기록이 없습니다.</div>';
+  /* 최근 8주 월~토 격자 */
+  var today=new Date(); var end=new Date(today);
+  var day=end.getDay(); end.setDate(end.getDate()+(6-day));
+  var rows=[], WD=['월','화','수','목','금','토'];
+  for(var w=7;w>=0;w--){
+    var cells=[], label='';
+    for(var i=1;i<=6;i++){
+      var d=new Date(end); d.setDate(end.getDate()-w*7-(6-i));
+      var ds=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+      if(i===1) label=(d.getMonth()+1)+'/'+d.getDate();
+      var v=(att||{})[ds];
+      var bg=v==='출석'?'#1E7B3C':(v==='결석'?'#E5A0A0':(v?'#2B5FB8':'#EFF1F5'));
+      var tx=v?'#fff':'#B8BFC9';
+      var lb=v==='출석'?'●':(v==='결석'?'✕':(v?String(v).slice(0,2):''));
+      cells.push('<div class="dot" title="'+ds+(v?' '+v:'')+'" style="background:'+bg+';color:'+tx+'">'+lb+'</div>');
+    }
+    rows.push('<div style="display:flex;align-items:center;gap:5px;margin:4px 0"><span style="width:38px;font-size:10.5px;color:var(--sub);font-weight:700">'+label+'</span>'+cells.join('')+'</div>');
+  }
+  return '<div style="display:flex;gap:5px;margin:0 0 4px 43px">'+WD.map(function(w){return '<span style="width:26px;text-align:center;font-size:10px;color:var(--sub);font-weight:800">'+w+'</span>';}).join('')+'</div>'+rows.join('')+
+    '<div class="msg" style="color:var(--sub);margin-top:6px">● 출석 · ✕ 결석 · 파란 칸은 보강 등 특별 수련</div>';
+}
+function vHome(){
+  var f=ST.fam||{kids:[]};
+  var kids=f.kids||[];
+  var k=kids[Math.min(ST.kid,kids.length-1)]||{};
+  var bc=beltColor(k.grade);
+  var acc=Number(k.acc)||0, goal=24, pct=Math.min(100,Math.round(acc/goal*100));
+  var tabs=kids.length>1
+    ? '<div style="display:flex;gap:7px;margin:12px 0 2px;flex-wrap:wrap">'+kids.map(function(kk,i){ return '<span class="chipT'+(i===ST.kid?' on':'')+'" onclick="pickKid('+i+')">'+esc(kk.n)+'</span>'; }).join('')+'</div>'
+    : '';
+  var promos=(k.promos||[]);
+  var tl=promos.length
+    ? promos.slice().reverse().map(function(p,i){
+        var b2=beltColor(p.g);
+        return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-top:'+(i?'1px solid var(--line)':'none')+'">'+
+          '<span style="width:16px;height:16px;border-radius:50%;background:'+b2[0]+';border:2px solid #fff;box-shadow:0 0 0 1.5px var(--line)"></span>'+
+          '<b style="font-size:14px">'+esc(p.g)+'</b><span style="flex:1"></span>'+
+          '<span style="font-size:12px;color:var(--sub)">'+esc(p.d)+'</span></div>';
+      }).join('')
+    : '<div class="msg" style="color:var(--sub)">승급 기록이 아직 없습니다. 첫 심사를 응원해 주세요! 🥋</div>';
+  return header('<button onclick="doRefresh()" title="새로고침" style="background:rgba(255,255,255,.14);border:none;color:#fff;border-radius:10px;padding:7px 12px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit">↻ 새로고침</button>')+
+    '<div class="wrap">'+
+    tabs+
+    '<div class="card" style="display:flex;align-items:center;gap:14px">'+
+      '<div style="width:56px;height:56px;border-radius:16px;background:'+bc[0]+';display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.08)">🥋</div>'+
+      '<div style="flex:1"><div style="font-size:18px;font-weight:900">'+esc(k.n)+'</div>'+
+      '<div style="font-size:12.5px;color:var(--sub);margin-top:2px">'+esc(k.grade||'급수 준비 중')+(k.b?' · '+esc(String(k.b).replace(/^\d/,'')):'')+'</div></div>'+
+    '</div>'+
+    installGuide()+
+    '<div class="sec">🥋 다음 심사까지</div>'+
+    '<div class="card">'+
+      '<div style="display:flex;align-items:baseline;gap:8px"><b style="font-size:24px">'+acc+'</b><span style="font-size:13px;color:var(--sub)">/ '+goal+'회 수련</span>'+
+      '<span style="flex:1"></span><b style="color:'+(acc>=goal?'var(--green)':'var(--blue)')+';font-size:13.5px">'+(acc>=goal?'심사 요건 충족! 🎉':(goal-acc)+'회 남음')+'</b></div>'+
+      '<div style="height:12px;background:#EFF1F5;border-radius:9999px;margin-top:9px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,#2B5FB8,#C9A24B);border-radius:9999px"></div></div>'+
+      (k.lastExam?'<div class="msg" style="color:var(--sub);margin-top:7px">마지막 심사: '+esc(k.lastExam)+'</div>':'')+
+    '</div>'+
+    '<div class="sec">📅 최근 출석 (8주)</div>'+
+    '<div class="card">'+attCal(k.att)+'</div>'+
+    '<div class="sec">🏅 승급 이력</div>'+
+    '<div class="card">'+tl+'</div>'+
+    '<div class="msg" style="color:var(--sub);text-align:center;margin:14px 0 6px">'+(f.pubD?esc(f.pubD)+' 기준 · ':'')+'매일 자동 갱신 · 문의는 도장으로 ☎</div>'+
+    '<div style="text-align:center"><button onclick="doLogout()" style="background:none;border:none;color:#B8BFC9;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline">로그아웃</button>'+
+    '<span style="font-size:10.5px;color:#C9CFDA;margin-left:8px">'+APP_VER+'</span></div>'+
+    '</div>';
+}
+function render(){
+  var el=document.getElementById('app'); if(!el) return;
+  el.innerHTML = ST.view==='home'?vHome() : ST.view==='verify'?vVerify() : ST.view==='loading'?vLoading() : vLogin();
+}
+
+/* ══ 시작 ══ */
+(function boot(){
+  var link=__linkCode, sv=saved();
+  if(link){ tryLogin(link, !(sv&&sv.ok&&sv.code===link)); return; }
+  if(sv&&sv.ok&&sv.code){ tryLogin(sv.code, false); return; }
+  ST.view='login'; render();
+})();
+
+/* ══ 새 버전 자동 갱신 (하루 1회 확인) ══ */
+(function(){
+  try{
+    var k='naracha_parent_verchk';
+    if(localStorage.getItem(k)===new Date().toDateString()) return;
+    fetch(location.pathname+'?chk='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){
+      localStorage.setItem(k,new Date().toDateString());
+      var m=t.match(/APP_VER\s*=\s*"([^"]+)"/);
+      if(m && m[1]!==APP_VER){ location.reload(); }
+    }).catch(function(){});
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
