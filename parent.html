@@ -41,7 +41,7 @@ input.code{ width:100%; border:1.5px solid var(--line); border-radius:12px; padd
 <body>
 <div id="app"></div>
 <script>
-var APP_VER="p1.0";
+var APP_VER="p1.1";
 var GSHEET_URL="https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
 var KEY="NARACHA-1CW40KHJ";
 var LS="naracha_parent_v1";
@@ -145,7 +145,7 @@ async function tryLogin(code, isNewDevice){
     if(isNewDevice){ ST.pend={code:code, fam:fam}; ST.needBy=true; ST.view='verify'; render(); return; }
     ST.code=code; ST.fam=fam; ST.kid=0; ST.view='home';
     saveLS({code:code, ok:1});
-    render();
+    render(); reportOpen();
   }catch(e){
     var m=String(e&&e.message||e);
     ST.err = m==='NOCODE' ? '등록되지 않았거나 폐기된 코드입니다.<br>도장에서 받은 <b>최신 링크</b>로 다시 열어 주세요.'
@@ -164,7 +164,7 @@ window.verifyBy=function(){
   if(!hit){ ST.err='자녀 생년월일과 일치하지 않습니다.<br>다시 확인해 주세요.'; render(); return; }
   ST.code=ST.pend.code; ST.fam=ST.pend.fam; ST.pend=null; ST.needBy=false; ST.kid=0; ST.view='home';
   saveLS({code:ST.code, ok:1});
-  render();
+  render(); reportOpen();
 };
 window.doLoginInput=function(){
   var v=((document.getElementById('codeIn')||{}).value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
@@ -180,6 +180,34 @@ window.openChrome=function(){
   location.href=u;
 };
 
+/* ══ 오픈 기록 (도장에서 전달 현황 확인용 — 하루 1회, 개인정보 없음: 코드 해시만) ══ */
+function reportOpen(){
+  try{
+    var k='naracha_parent_open', tdy=new Date().toDateString();
+    if(localStorage.getItem(k)===tdy || !ST.code) return;
+    pHash(ST.code).then(function(h){
+      return fetch(GSHEET_URL+'?key='+encodeURIComponent(KEY)+'&store=popen&v=2&t='+Date.now())
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          var rev=(d&&typeof d.rev==='number')?d.rev:null;
+          var payload={popenV:1, opens:{}};
+          try{
+            var rows=d&&d.rows, txt='';
+            if(Array.isArray(rows)){ for(var i=0;i<rows.length;i++){ if(rows[i][0]==='JSON'){ for(var j=i+1;j<rows.length;j++) txt+=(rows[j][0]!=null?String(rows[j][0]):''); break; } } }
+            if(txt){ var old=JSON.parse(txt); if(old&&old.opens) payload.opens=old.opens; }
+          }catch(e){}
+          var ds=new Date(), today=ds.getFullYear()+'-'+('0'+(ds.getMonth()+1)).slice(-2)+'-'+('0'+ds.getDate()).slice(-2);
+          var e2=payload.opens[h]||{}; if(!e2.f) e2.f=today; e2.l=today; e2.n=(e2.n||0)+1; payload.opens[h]=e2;
+          var s2=JSON.stringify(payload), rows2=[["JSON"]];
+          for(var i2=0;i2<s2.length;i2+=45000) rows2.push([s2.slice(i2,i2+45000)]);
+          var body={key:KEY, store:'popen', rows:rows2}; if(rev!=null) body.baseRev=rev;
+          return fetch(GSHEET_URL,{method:'POST', body:JSON.stringify(body)}).then(function(r){ return r.text(); });
+        })
+        .then(function(t){ if(/^OK/.test(String(t))) localStorage.setItem(k,tdy); })
+        .catch(function(){});
+    }).catch(function(){});
+  }catch(e){}
+}
 /* ══ 화면 ══ */
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function beltColor(g){
