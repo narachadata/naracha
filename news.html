@@ -156,6 +156,8 @@ details.help li{ margin:5px 0; line-height:1.65; }
       <button class="sec" id="btnDemo">데모 데이터</button>
     </div>
   </div>
+  <label class="fl">이 기기 이름 (선택 — 클라우드 목록에 누가 올렸는지 표시)</label>
+  <input type="text" id="inDevice" placeholder="예: 사범님 노트북" style="max-width:280px">
   <div class="status" id="pullStatus">아직 데이터를 불러오지 않았습니다. 접속키를 넣고 [데이터 불러오기]를 누르세요.</div>
   <details class="help"><summary>도움말</summary>
     <ul>
@@ -187,6 +189,24 @@ details.help li{ margin:5px 0; line-height:1.65; }
     </div>
   </div>
   <div class="hint" id="prevMonthHint" style="margin-top:-2px"></div>
+  <div class="row" style="margin-top:6px">
+    <div>
+      <label class="fl">글자 크기</label>
+      <select id="inFontScale">
+        <option value="85">작게 (85%)</option><option value="93">조금 작게</option>
+        <option value="100">보통 (기본)</option><option value="110">조금 크게</option>
+        <option value="120">크게 (120%)</option><option value="130">아주 크게</option>
+      </select>
+    </div>
+    <div>
+      <label class="fl">줄 간격 (행간)</label>
+      <select id="inLineScale">
+        <option value="80">좁게</option><option value="100">보통 (기본)</option>
+        <option value="120">조금 넓게</option><option value="145">넓게</option><option value="175">아주 넓게</option>
+      </select>
+    </div>
+  </div>
+  <div class="hint">기사·인성덕목·체크리스트 글에 적용됩니다. 글자를 키우면 한 장에 안 들어갈 때 자동으로 페이지가 나뉩니다.</div>
   <div class="row">
     <div>
       <label class="fl">도장 로고 이미지 (선택 — 표지·사진 없는 사람 자리에 사용)</label>
@@ -294,9 +314,11 @@ details.help li{ margin:5px 0; line-height:1.65; }
 <!-- 보관함 -->
 <section class="card">
   <h2>📦 지난 호 보관함</h2>
-  <div class="hint">완성된 <b>그림 파일을 그대로 쌓아 두면 용량이 큽니다.</b> 그래서 이 보관함은 그림 대신 <b>만든 재료(설정·글·사진)만</b> 저장해 두고, 나중에 열면 그 자리에서 다시 만들어 냅니다. 용량이 약 1/5로 줄어듭니다.</div>
+  <div class="hint">완성된 <b>그림 파일을 그대로 쌓아 두면 용량이 큽니다.</b> 그래서 이 보관함은 그림 대신 <b>만든 재료(설정·글·사진)만</b> 저장해 두고, 나중에 열면 그 자리에서 다시 만들어 냅니다.<br>
+💻 = 이 기기에 있음 · ☁️ = 클라우드에 있음. <b>[이번 호 보관]을 누르면 클라우드에도 자동으로 올라가서</b> 다른 PC에서 [🔄 클라우드 목록 새로고침] → [받기]로 이어서 작업할 수 있습니다.</div>
   <div class="row" style="margin-top:8px">
     <div style="flex:0 0 auto"><button class="pri" id="btnIssueSave">💾 이번 호 보관</button></div>
+    <div style="flex:0 0 auto"><button class="sec" id="btnCloudRefresh">🔄 클라우드 목록 새로고침</button></div>
     <div style="flex:0 0 auto"><button class="sec" id="btnIssueImport">📂 파일에서 불러오기</button></div>
     <input type="file" id="inIssueFile" accept=".json,application/json" style="display:none">
   </div>
@@ -352,7 +374,7 @@ details.help li{ margin:5px 0; line-height:1.65; }
    나라차 소식지 제작기
    var APP_VER 규칙: 수정할 때마다 +0.1, 내리지 않는다.
    ============================================================ */
-var APP_VER = "v3.1"; /* R3.1: 목차 재구현 — 항목이 많으면(16개 등) 겹쳐 뭉개지던 문제 해결. 항목 수에 맞춰 줄 높이·글자·배지를 자동 계산하고, 한 장에 무리면 여러 장으로 나눔(1/2 표시). 긴 제목은 줄였다가 말줄임. 목차 설명은 행사마다 날짜·인원이 나오도록 개선 · R3.0: ①라차 캐릭터(펭귄) 썸네일 아이콘 — 파비콘·홈화면 아이콘·머리말에 사용 ②화면 디자인 전면 개편 — 종이 질감 배경, 표지 느낌의 머리말(이번 호·계절), 부드러운 그림자 카드, 알약 버튼, 어두운 라이트테이블 미리보기, 선택한 달의 계절색이 화면 전체에 입혀짐 · R2.9: 완성본 보관 기능 — ①[📕 PDF 한 개로 저장](외부 라이브러리 없이 PDF 직접 생성·JPEG 임베드) ②[📦 지난 호 보관함] 결과 이미지가 아니라 재료(설정·글·사진)만 저장해 용량 절약, 목록에서 열기·파일(.json)로 내보내기·삭제, 파일에서 불러오기, 저장공간 사용량 표시(접속키는 보관 대상에서 제외) · R2.8: 1단계 비율 옆에 [🔄 지난달 데이터 반영] 버튼 — 9월에 10월호를 만들 때처럼 달을 바꾸면 그 달의 "지난달" 데이터가 들어가도록. 연·월을 바꾸면 자동으로 재반영(자동으로 넣은 항목은 정리·갱신, 사진을 넣었거나 직접 고친 글은 그대로), 어느 달 데이터가 들어가는지 안내 문구 표시 · R2.7: 기사 카드 제목 중복 제거 — 카드 머리띠 제목과 본문 첫 줄이 같으면 본문에서 빼고, 날짜·인원 줄을 대표 줄로 크게(48px) 올림 · R2.6: 모바일 가독성 기준 재설계 — 소식지 1080px가 폰에서 약 390pt로 보이는 것(글자 ≈ px×0.36) 기준으로 기사 본문 최소 44px(≈16pt) 보장, 그보다 작아지면 줄이지 않고 페이지 분할(장수 최소·같으면 큰 글자). 제목은 42px까지만 줄이고 길면 두 줄, 소제목은 본문급 크기, 다단은 줄이 실제로 들어갈 때만(88% 기준), 칼럼 경계에서 소제목·이어지는 줄 안 끊김, 긴 낱말 글자 단위 줄바꿈. 이름 캡션 최소 30px(국기원·생일) · R2.5: 사진첩(행사·대회 카드) 순서 이동 ↑↓ 버튼 — 목록 순서=소식지 페이지 순서, 중간 배치 가능. 행사·대회 카드에 사진을 넣으면 기사 다음에 사진 페이지가 붙는 안내 보강 · R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
+var APP_VER = "v3.3"; /* R3.3: 클라우드 보관 연동 — 보관한 호가 다른 PC에서도 보인다. 나라차 Apps Script를 그대로 사용(서버 수정 불필요·관리자 키 필요), 호마다 별도 창고 news_YYYYMM + 목록 창고 news. [이번 호 보관]하면 자동 업로드, 다른 PC에서 [🔄 클라우드 목록 새로고침]→[받기]. fail-closed·baseRev 충돌감지·묘비 유지, 기기 이름 표시 · R3.2: ①사진 배치 선택 — 사진첩마다 모양(자동·정사각형·가로 4:3/3:2·와이드 16:9·세로 3:4)과 열 수를 고를 수 있고, 모양을 고르면 그 비율을 지켜 가운데 배치(한 장에 몇 장 들어가는지 자동 계산) ②글자 크기·줄 간격(행간) 배율 설정 — 기사·인성덕목·체크리스트에 적용 · R3.1: 목차 재구현 — 항목이 많으면(16개 등) 겹쳐 뭉개지던 문제 해결. 항목 수에 맞춰 줄 높이·글자·배지를 자동 계산하고, 한 장에 무리면 여러 장으로 나눔(1/2 표시). 긴 제목은 줄였다가 말줄임. 목차 설명은 행사마다 날짜·인원이 나오도록 개선 · R3.0: ①라차 캐릭터(펭귄) 썸네일 아이콘 — 파비콘·홈화면 아이콘·머리말에 사용 ②화면 디자인 전면 개편 — 종이 질감 배경, 표지 느낌의 머리말(이번 호·계절), 부드러운 그림자 카드, 알약 버튼, 어두운 라이트테이블 미리보기, 선택한 달의 계절색이 화면 전체에 입혀짐 · R2.9: 완성본 보관 기능 — ①[📕 PDF 한 개로 저장](외부 라이브러리 없이 PDF 직접 생성·JPEG 임베드) ②[📦 지난 호 보관함] 결과 이미지가 아니라 재료(설정·글·사진)만 저장해 용량 절약, 목록에서 열기·파일(.json)로 내보내기·삭제, 파일에서 불러오기, 저장공간 사용량 표시(접속키는 보관 대상에서 제외) · R2.8: 1단계 비율 옆에 [🔄 지난달 데이터 반영] 버튼 — 9월에 10월호를 만들 때처럼 달을 바꾸면 그 달의 "지난달" 데이터가 들어가도록. 연·월을 바꾸면 자동으로 재반영(자동으로 넣은 항목은 정리·갱신, 사진을 넣었거나 직접 고친 글은 그대로), 어느 달 데이터가 들어가는지 안내 문구 표시 · R2.7: 기사 카드 제목 중복 제거 — 카드 머리띠 제목과 본문 첫 줄이 같으면 본문에서 빼고, 날짜·인원 줄을 대표 줄로 크게(48px) 올림 · R2.6: 모바일 가독성 기준 재설계 — 소식지 1080px가 폰에서 약 390pt로 보이는 것(글자 ≈ px×0.36) 기준으로 기사 본문 최소 44px(≈16pt) 보장, 그보다 작아지면 줄이지 않고 페이지 분할(장수 최소·같으면 큰 글자). 제목은 42px까지만 줄이고 길면 두 줄, 소제목은 본문급 크기, 다단은 줄이 실제로 들어갈 때만(88% 기준), 칼럼 경계에서 소제목·이어지는 줄 안 끊김, 긴 낱말 글자 단위 줄바꿈. 이름 캡션 최소 30px(국기원·생일) · R2.5: 사진첩(행사·대회 카드) 순서 이동 ↑↓ 버튼 — 목록 순서=소식지 페이지 순서, 중간 배치 가능. 행사·대회 카드에 사진을 넣으면 기사 다음에 사진 페이지가 붙는 안내 보강 · R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
 document.getElementById("verLabel").textContent = APP_VER;
 
 var GAS = "https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
@@ -364,7 +386,7 @@ var S = {
   key:"", year:(new Date()).getFullYear(), month:(new Date()).getMonth()+1, ratio:"45",
   virtueName:"", virtueDef:"", virtueItems:"",
   schedMain:"", schedClosed:"",
-  calDays:{}, calColors:{}, calNote:"",
+  calDays:{}, calColors:{}, calNote:"", fontScale:100, lineScale:100, device:"",
   kkwSub:"", kkwSel:{}, kkwManual:[],
   bdayOff:{},
   albumTitle:"", bgPanel:true,
@@ -971,6 +993,29 @@ function renderAlbumsEditor(){
     });
     tySel.onchange=function(){ al.type=tySel.value; albumsSave(); renderAlbumsEditor(); };
     tyD.appendChild(tySel); row2.appendChild(tyD);
+    /* [R3.2] 사진 모양·열 수 */
+    var shD=document.createElement("div"); shD.style.flex="0 0 auto";
+    var shL=document.createElement("label"); shL.className="fl"; shL.textContent="사진 모양";
+    var shSel=document.createElement("select");
+    PHOTO_SHAPES.forEach(function(o){
+      var op=document.createElement("option"); op.value=o[0]; op.textContent=o[1];
+      if((al.shape||"auto")===o[0]) op.selected=true;
+      shSel.appendChild(op);
+    });
+    shSel.onchange=function(){ al.shape=shSel.value; albumsSave(); renderAlbumsEditor(); };
+    shD.appendChild(shL); shD.appendChild(shSel); row2.appendChild(shD);
+    if((al.shape||"auto")!=="auto"){
+      var coD=document.createElement("div"); coD.style.flex="0 0 auto";
+      var coL=document.createElement("label"); coL.className="fl"; coL.textContent="열 수";
+      var coSel=document.createElement("select");
+      [["0","자동"],["1","1열"],["2","2열"],["3","3열"],["4","4열"]].forEach(function(o){
+        var op=document.createElement("option"); op.value=o[0]; op.textContent=o[1];
+        if(String(al.cols||0)===o[0]) op.selected=true;
+        coSel.appendChild(op);
+      });
+      coSel.onchange=function(){ al.cols=Number(coSel.value)||0; albumsSave(); renderAlbumsEditor(); };
+      coD.appendChild(coL); coD.appendChild(coSel); row2.appendChild(coD);
+    }
     if((al.type||"photo")!=="photo"){
       if(al.type==="exam"||al.type==="comp"){
         var fill=document.createElement("button"); fill.className="sec min";
@@ -1008,8 +1053,9 @@ function renderAlbumsEditor(){
     wrap.appendChild(th);
     if(al.photos.length){
       var cnt=document.createElement("div"); cnt.className="hint";
-      cnt.textContent="사진 "+al.photos.length+"장"+(al.photos.length>9?(" → "+Math.ceil(al.photos.length/9)+"페이지로 나뉩니다"):" (한 페이지)")
-        +" · ✂️ 사진을 클릭하면 잘라내기(크롭)할 수 있어요";
+      var per0=albumLayout(al, pageH()).per;
+      cnt.textContent="사진 "+al.photos.length+"장 · 한 장에 "+per0+"장씩 → "
+        +Math.ceil(al.photos.length/per0)+"페이지 · ✂️ 사진을 클릭하면 잘라내기(크롭)할 수 있어요";
       wrap.appendChild(cnt);
     }
     box.appendChild(wrap);
@@ -1568,13 +1614,13 @@ function drawVirtue(no){
   var items=(S.virtueItems||"").split("\n").map(function(s){return s.trim();}).filter(Boolean);
   var top=hy+80, bottom=panelBottom(H);
   var defH=defLines.length*48+50;   /* 정의 + 구분선 */
-  var itf=40, allLines=null, step=0, indW=0;
-  for(;itf>=26;itf-=2){
+  var itf=Math.round(40*fSc()), allLines=null, step=0, indW=0;
+  for(;itf>=Math.round(26*fSc());itf-=2){
     x2.font="700 "+itf+"px 'Gowun Dodum'";
     indW=x2.measureText("0. ").width;
     allLines=items.map(function(it,i){ return wrapLines(x2,it, W-300-indW); });
     var nl=allLines.reduce(function(a,b){return a+b.length;},0);
-    step=itf+14;
+    step=itf+Math.round(14*lSc());
     if(defH+60+nl*step+(items.length-1)*24 <= bottom-top) break;
   }
   var blockH=defH+60+allLines.reduce(function(a,b){return a+b.length;},0)*step+(items.length-1)*24;
@@ -1889,12 +1935,12 @@ function drawChecklist(no){
   var items=(S.virtueItems||"").split("\n").map(function(s){return s.trim();}).filter(Boolean);
   var top=t2+70, bottom=panelBottom(H);
   /* 크기 자동: 전체 줄 수 기준 */
-  var itf=38, allLines=null, step=0;
-  for(;itf>=26;itf-=2){
+  var itf=Math.round(38*fSc()), allLines=null, step=0;
+  for(;itf>=Math.round(26*fSc());itf-=2){
     x2.font="700 "+itf+"px 'Gowun Dodum'";
     allLines=items.map(function(it){ return wrapLines(x2,it, W-360); });
     var nl=allLines.reduce(function(a,b){return a+b.length;},0);
-    step=itf+14;
+    step=itf+Math.round(14*lSc());
     if(nl*step + (items.length-1)*40 <= bottom-top) break;
   }
   var blockH=allLines.reduce(function(a,b){return a+b.length;},0)*step + (items.length-1)*40;
@@ -1957,6 +2003,12 @@ function magHeader(x2,H,no,title){
    소식지 1080px 폭이 휴대폰에서 약 390pt로 보이므로 실제 글자 크기 ≈ px × 0.36.
    본문 44px = 약 16pt(한글 본문 최소), 50px = 약 18pt. 44px보다 작아지면 줄이지 않고 페이지를 나눈다. */
 var MAG_BODY_MIN=44, MAG_BODY_MAX=58, MAG_HEAD_MIN=42, MAG_SUB=36;
+/* [R3.2] 글자 크기·행간 배율 (설정에서 조정) */
+function fSc(){ var v=Number(S.fontScale||100); return (v>=70&&v<=160)?v/100:1; }
+function lSc(){ var v=Number(S.lineScale||100); return (v>=70&&v<=200)?v/100:1; }
+function bodyMin(){ return Math.round(MAG_BODY_MIN*fSc()); }
+function bodyMax(){ return Math.round(MAG_BODY_MAX*fSc()); }
+function lineGap(){ return Math.round(16*lSc()); }
 function magPt(px){ return Math.round(px*0.361*10)/10; }
 /* 기사(보고) 카드 — 본문 문법: 빈 줄=간격 · [소제목] · 일반 줄(자동 줄바꿈, 이어지는 줄 들여쓰기) */
 function drawInfoCards(no, al, hasPhotos){
@@ -2062,7 +2114,7 @@ function drawInfoCards(no, al, hasPhotos){
     return cols;
   }
   function planPages(bf, cc){
-    var arr=prep(bf,cc), step=bf+16;
+    var arr=prep(bf,cc), step=bf+lineGap();
     var tot=hOf(arr,step);
     var nCols=Math.max(cc, Math.ceil(tot/availH));
     nCols=Math.ceil(nCols/cc)*cc;
@@ -2083,7 +2135,7 @@ function drawInfoCards(no, al, hasPhotos){
   }
   /* 1) 한 장에 들어가는 "가장 큰" 글자 (44px 밑으로는 절대 내려가지 않는다) */
   var pagePlans=null;
-  for(var bf=MAG_BODY_MAX; bf>=MAG_BODY_MIN && !pagePlans; bf-=2){
+  for(var bf=bodyMax(); bf>=bodyMin() && !pagePlans; bf-=2){
     for(var cc=1; cc<=3; cc++){
       if(!colFits(bf,cc)) continue;
       var pl=planPages(bf,cc);
@@ -2093,7 +2145,7 @@ function drawInfoCards(no, al, hasPhotos){
   /* 2) 한 장에 안 들어가면 → 글자를 줄이지 않고 페이지를 나눈다 (장수 최소, 같으면 큰 글자) */
   if(!pagePlans){
     var cands=[];
-    for(var bf2=MAG_BODY_MIN+8; bf2>=MAG_BODY_MIN; bf2-=2){
+    for(var bf2=bodyMin()+8; bf2>=bodyMin(); bf2-=2){
       for(var cc2=1; cc2<=3; cc2++){
         if(!colFits(bf2,cc2)) continue;
         cands.push({bf:bf2, pl:planPages(bf2,cc2)});
@@ -2104,7 +2156,7 @@ function drawInfoCards(no, al, hasPhotos){
       cands=cands.filter(function(o){ return o.pl.length===minP; });
       cands.sort(function(a,b){ return b.bf-a.bf; });
       pagePlans=cands[0].pl;
-    }else pagePlans=planPages(MAG_BODY_MIN,1);
+    }else pagePlans=planPages(bodyMin(),1);
   }
   /* 렌더 */
   var out=[], total=pagePlans.length;
@@ -2132,7 +2184,7 @@ function drawInfoCards(no, al, hasPhotos){
     x2.beginPath(); x2.moveTo(cx0+50,y); x2.lineTo(cx0+cw0-50,y); x2.stroke();
     x2.lineWidth=1; x2.beginPath(); x2.moveTo(cx0+50,y+6); x2.lineTo(cx0+cw0-50,y+6); x2.stroke();
     y+=40;
-    var bf2=pg.bf, step=bf2+16, cols=pg.colArrs.length;
+    var bf2=pg.bf, step=bf2+lineGap(), cols=pg.colArrs.length;
     var colW=(cw0-100-(cols-1)*40)/cols;
     /* 세로 중앙 (가장 높은 칼럼 기준) */
     var maxH2=0; pg.colArrs.forEach(function(a){ maxH2=Math.max(maxH2,hOf(a,step)); });
@@ -2162,27 +2214,63 @@ function drawInfoCards(no, al, hasPhotos){
   });
   return out;
 }
+/* [R3.2] 사진 배치 — 모양(정사각형·가로형 등)과 열 수를 고를 수 있다.
+   자동이면 종전처럼 높이를 꽉 채우고, 모양을 고르면 그 비율을 지켜 배치한다. */
+var PHOTO_SHAPES=[["auto","자동 (꽉 채움)",0],["sq","정사각형 1:1",1],["w43","가로형 4:3",4/3],
+                  ["w32","가로형 3:2",1.5],["w169","와이드 16:9",16/9],["t34","세로형 3:4",0.75]];
+function shapeRatio(k){
+  for(var i=0;i<PHOTO_SHAPES.length;i++) if(PHOTO_SHAPES[i][0]===k) return PHOTO_SHAPES[i][2];
+  return 0;
+}
+function albumLayout(al, H){
+  var gp=14, left=54, topY=216, bottom=H-100;
+  var availH=bottom-topY, availW=W-left*2;
+  var ar=shapeRatio(al.shape||"auto");
+  if(!ar) return {auto:true, gp:gp, left:left, topY:topY, availH:availH, per:9};
+  var cols=Number(al.cols||0)||0;
+  if(!cols) cols=(ar>=1.5)?2:3;                    /* 와이드는 2열, 그 외 3열 */
+  var cw=(availW-(cols-1)*gp)/cols, ch=cw/ar;
+  var rowsFit=Math.max(1, Math.floor((availH+gp)/(ch+gp)));
+  return {auto:false, gp:gp, left:left, topY:topY, availH:availH,
+          cols:cols, cw:cw, ch:ch, per:Math.max(1, cols*rowsFit)};
+}
 function drawAlbumPages(no, ai, startIdx){
   var pages=[], H=pageH(), al=ALBUMS[ai];
   var imgs=(IMGS.albums[ai]||[]).filter(Boolean);
   if(!imgs.length) return pages;
-  var chunks=balancedChunks(imgs, 9);   /* 한 페이지 최대 9장 */
+  var L=albumLayout(al, H);
+  var chunks=balancedChunks(imgs, L.per);
   var multi=(chunks.length>1)||(startIdx>0);
   chunks.forEach(function(chunk,pi){
     var c=magBase(), x2=c.getContext("2d");
     var bno=multi?(no+"-"+(startIdx+pi+1)):no;
-    var top=magHeader(x2,H,bno,al.title||"사진첩");
-    /* 사진 영역: 액자 안에서 최대 크기 */
-    var gp=14, left=54, topY=top+10, bottom=H-100;
-    var rowsDef=albumRowsDef(chunk.length);
-    var rH=(bottom-topY-(rowsDef.length-1)*gp)/rowsDef.length;
+    magHeader(x2,H,bno,al.title||"사진첩");
     var k=0;
-    rowsDef.forEach(function(cnt,ri){
-      var cw=(W-left*2-(cnt-1)*gp)/cnt;
-      for(var ci=0;ci<cnt && k<chunk.length;ci++){
-        squareItem(x2, chunk[k++], left+ci*(cw+gp), topY+ri*(rH+gp), cw, rH);
+    if(L.auto){
+      var rowsDef=albumRowsDef(chunk.length);
+      var rH=(L.availH-(rowsDef.length-1)*L.gp)/rowsDef.length;
+      rowsDef.forEach(function(cnt,ri){
+        var cw=(W-L.left*2-(cnt-1)*L.gp)/cnt;
+        for(var ci=0;ci<cnt && k<chunk.length;ci++){
+          squareItem(x2, chunk[k++], L.left+ci*(cw+L.gp), L.topY+ri*(rH+L.gp), cw, rH);
+        }
+      });
+    }else{
+      /* 정해진 비율 — 마지막 줄은 가운데 정렬, 블록 전체를 세로 중앙에 */
+      var rows=Math.ceil(chunk.length/L.cols);
+      var cw2=L.cw, ch2=L.ch;
+      var blockH=rows*ch2+(rows-1)*L.gp;
+      if(blockH>L.availH){ var sc=L.availH/blockH; cw2*=sc; ch2*=sc; blockH=L.availH; }
+      var y0=L.topY+Math.max(0,(L.availH-blockH)/2);
+      for(var r=0;r<rows;r++){
+        var inRow=Math.min(L.cols, chunk.length-r*L.cols);
+        var rowW=inRow*cw2+(inRow-1)*L.gp;
+        var x0=(W-rowW)/2;
+        for(var ci2=0;ci2<inRow;ci2++){
+          squareItem(x2, chunk[k++], x0+ci2*(cw2+L.gp), y0+r*(ch2+L.gp), cw2, ch2);
+        }
       }
-    });
+    }
     footer(x2,H);
     pages.push({name:"사진_"+(al.title||("사진첩"+(ai+1)))+(chunks.length>1?("_"+(pi+1)):""), canvas:c});
   });
@@ -2402,6 +2490,121 @@ function dlBlob(bl, name){
 /* ============================================================
    [R2.9] 호 보관함 — 결과 이미지가 아니라 "재료"만 저장(용량 절약)
    ============================================================ */
+/* ============================================================
+   [R3.3] 클라우드 보관 — 다른 PC와 연동
+   나라차 Apps Script를 그대로 쓴다(서버 수정 불필요, 관리자 키 필요).
+   · 호마다 별도 창고 news_YYYYMM (시트 탭 자동 생성) → 한 호만 주고받아 가볍다
+   · 목록 창고 news = {newsV:1, issues:{ym:{savedAt,photos,bytes,by,del}}, t}
+   · 절대규칙: 응답이 이상하면 절대 POST하지 않는다(fail-closed) · baseRev로 충돌 감지 · 삭제는 묘비
+   ============================================================ */
+var CLOUD_IDX=null;          /* 클라우드 목록 (없으면 null) */
+var CLOUD_ERR="";
+function ymStore(ym){ return "news_"+String(ym).replace(/[^0-9]/g,""); }
+function cloudOn(){ return !!(S.key||"").trim(); }
+/* GET — 정상 응답만 통과. 비어 있으면 data:null (이건 정상) */
+function newsGet(store){
+  return fetch(GAS+"?key="+encodeURIComponent(S.key)+"&store="+encodeURIComponent(store)+"&v=2")
+    .then(function(r){ if(!r.ok) throw new Error("서버 응답 오류("+r.status+")"); return r.json(); })
+    .then(function(j){
+      if(j && j.error==="AUTH") throw new Error("AUTH");
+      if(j && j.error) throw new Error(String(j.error));
+      var rows=(j && Array.isArray(j.rows))?j.rows:(Array.isArray(j)?j:null);
+      if(!rows) throw new Error("응답 형식이 올바르지 않습니다");
+      return { rev:(j && typeof j.rev==="number")?j.rev:null, data:joinChunks(rows) };
+    });
+}
+/* POST — 반드시 GET으로 rev를 확인한 뒤에만 부른다 */
+function newsPost(store, obj, baseRev){
+  var str=JSON.stringify(obj);
+  var rows=[["JSON"]];
+  for(var i=0;i<str.length;i+=45000) rows.push([str.slice(i,i+45000)]);
+  var body={ key:S.key, store:store, rows:rows };
+  if(typeof baseRev==="number") body.baseRev=baseRev;
+  return fetch(GAS, {method:"POST", body:JSON.stringify(body)})
+    .then(function(r){ return r.text(); })
+    .then(function(t){
+      t=String(t||"").trim();
+      if(t.indexOf("OK")===0) return t;
+      if(t.indexOf("CONFLICT")===0) throw new Error("CONFLICT");
+      if(t==="AUTH_FAIL") throw new Error("AUTH");
+      if(t==="BUSY") throw new Error("서버가 바쁩니다. 잠시 후 다시 시도해 주세요");
+      throw new Error("저장 실패: "+t);
+    });
+}
+function cloudMsg(e){
+  var m=String((e&&e.message)||e);
+  if(m==="AUTH") return "이 기능은 관리자 접속키가 필요합니다.\n⚙️ 설정에서 관장님 키로 바꾸거나, 서버(Apps Script)의 allow()에 news를 추가해 주세요.";
+  if(m==="CONFLICT") return "다른 기기에서 먼저 올렸습니다. [클라우드 목록 새로고침] 후 다시 시도해 주세요.";
+  return m;
+}
+/* 목록 불러오기 */
+function cloudRefresh(silent){
+  if(!cloudOn()){ CLOUD_ERR="접속키가 없습니다"; if(!silent) alert("⚙️ 설정에서 접속키를 먼저 입력해 주세요."); return Promise.resolve(); }
+  return newsGet("news").then(function(r){
+    var d=r.data;
+    CLOUD_IDX=(d && d.newsV && d.issues)?d.issues:{};
+    CLOUD_ERR="";
+    renderIssueList();
+if(cloudOn()) cloudRefresh(true);   /* [R3.3] 시작할 때 클라우드 목록 조용히 확인 */
+  }).catch(function(e){
+    CLOUD_IDX=null; CLOUD_ERR=cloudMsg(e);
+    renderIssueList();
+    if(!silent) alert("클라우드 목록을 가져오지 못했습니다.\n\n"+CLOUD_ERR);
+  });
+}
+/* 색인에 한 호 반영 (항상 최신 rev 위에 얹는다) */
+function cloudIndexPut(ym, meta){
+  return newsGet("news").then(function(r){
+    var d=(r.data && r.data.newsV)?r.data:{newsV:1, issues:{}, t:0};
+    if(!d.issues) d.issues={};
+    d.issues[ym]=meta;
+    d.t=Date.now();
+    return newsPost("news", d, r.rev).then(function(){ CLOUD_IDX=d.issues; });
+  });
+}
+/* 한 호 올리기 */
+function cloudPush(ym, silent){
+  if(!cloudOn()) return Promise.reject(new Error("접속키가 없습니다"));
+  return idbGet("issue:"+ym).then(function(str){
+    if(!str) throw new Error("이 기기에 보관된 내용이 없습니다");
+    var pack=null; try{ pack=JSON.parse(str); }catch(e){}
+    if(!pack) throw new Error("보관 내용을 읽지 못했습니다");
+    pack.by=(S.device||"").trim()||pack.by||"";
+    var st=ymStore(ym);
+    return newsGet(st).then(function(r){
+      return newsPost(st, pack, r.rev);
+    }).then(function(){
+      var ph=0; (pack.albums||[]).forEach(function(a){ ph+=(a.photos||[]).length; });
+      return cloudIndexPut(ym, { savedAt:pack.savedAt||Date.now(), photos:ph,
+        bytes:new Blob([str]).size, by:pack.by||"" });
+    });
+  }).then(function(){
+    renderIssueList();
+    if(!silent) alert(ym.replace("-","년 ")+"월호를 클라우드에 올렸습니다.\n다른 PC에서 [클라우드 목록 새로고침] 후 [받기]를 누르면 그대로 열립니다.");
+  });
+}
+/* 한 호 내려받기 (이 기기 보관함에 저장) */
+function cloudPullIssue(ym, thenOpen){
+  if(!cloudOn()){ alert("⚙️ 설정에서 접속키를 먼저 입력해 주세요."); return; }
+  newsGet(ymStore(ym)).then(function(r){
+    if(!r.data || !r.data.nlIssue) throw new Error("클라우드에 이 호의 내용이 없습니다");
+    var pack=r.data, str=JSON.stringify(pack);
+    var ph=0; (pack.albums||[]).forEach(function(a){ ph+=(a.photos||[]).length; });
+    return idbSet("issue:"+ym, str).then(function(){
+      return issueIndexLoad().then(function(list){
+        list=list.filter(function(o){ return o.ym!==ym; });
+        list.push({ ym:ym, y:Number(ym.slice(0,4)), m:Number(ym.slice(5,7)),
+          savedAt:pack.savedAt||Date.now(), photos:ph, bytes:new Blob([str]).size, pages:0 });
+        list.sort(function(a,b){ return b.ym.localeCompare(a.ym); });
+        return issueIndexSave(list);
+      });
+    }).then(function(){
+      renderIssueList();
+      if(thenOpen){ applyIssue(pack); }
+      else alert(ym.replace("-","년 ")+"월호를 이 기기로 받았습니다. 목록에서 [열기]를 누르세요.");
+    });
+  }).catch(function(e){ alert("받기 실패\n\n"+cloudMsg(e)); });
+}
 function issueKey(y,m){ return "issue:"+y+"-"+("0"+m).slice(-2); }
 function curIssueYm(){ return S.year+"-"+("0"+S.month).slice(-2); }
 function issuePack(){
@@ -2410,6 +2613,8 @@ function issuePack(){
   return { nlIssue:1, ver:APP_VER, ym:curIssueYm(), savedAt:Date.now(),
     s:s2, albums:ALBUMS, cover:COVERIMG||"", bg:BGIMG||"", logo:LOGO||"" };
 }
+function esc(v){ return String(v==null?"":v).replace(/[&<>"']/g,function(ch){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]; }); }
 function fmtMB(b){ return (b/1048576).toFixed(b>1048576?1:2)+"MB"; }
 function issueIndexLoad(){
   return idbGet("issueIndex").then(function(v){
@@ -2431,6 +2636,14 @@ function saveIssue(){
       list.sort(function(a,b){ return b.ym.localeCompare(a.ym); });
       return issueIndexSave(list).then(function(){
         renderIssueList();
+        /* [R3.3] 보관하면 클라우드에도 자동으로 올린다 (실패해도 이 기기 보관은 남는다) */
+        if(cloudOn()){
+          return cloudPush(pack.ym, true).then(function(){
+            alert(S.year+"년 "+S.month+"월호를 보관했습니다. ("+fmtMB(bytes)+" · 사진 "+ph+"장)\n☁️ 클라우드에도 올렸습니다 — 다른 PC에서 [받기]로 열 수 있습니다.");
+          }).catch(function(e){
+            alert(S.year+"년 "+S.month+"월호를 이 기기에 보관했습니다. ("+fmtMB(bytes)+")\n\n다만 클라우드 올리기는 실패했습니다:\n"+cloudMsg(e));
+          });
+        }
         alert(S.year+"년 "+S.month+"월호를 보관했습니다. ("+fmtMB(bytes)+" · 사진 "+ph+"장)\n\n기기를 바꿔도 쓰려면 목록의 [파일로 내보내기]로 파일도 함께 받아 두세요.");
       });
     });
@@ -2477,31 +2690,60 @@ function deleteIssue(ym){
 function renderIssueList(){
   var box=document.getElementById("issueList"); if(!box) return;
   issueIndexLoad().then(function(list){
+    var map={};
+    list.forEach(function(o){ map[o.ym]={ ym:o.ym, y:o.y, m:o.m, savedAt:o.savedAt, photos:o.photos, bytes:o.bytes, local:o }; });
+    if(CLOUD_IDX){
+      Object.keys(CLOUD_IDX).forEach(function(ym){
+        var c=CLOUD_IDX[ym]; if(!c || c.del) return;
+        if(!map[ym]) map[ym]={ ym:ym, y:Number(ym.slice(0,4)), m:Number(ym.slice(5,7)),
+          savedAt:c.savedAt, photos:c.photos, bytes:c.bytes };
+        map[ym].cloud=c;
+      });
+    }
+    var rows=Object.keys(map).sort().reverse().map(function(k){ return map[k]; });
     box.innerHTML="";
-    if(!list.length){ box.innerHTML='<div class="hint">아직 보관된 호가 없습니다. 소식지를 완성한 뒤 [💾 이번 호 보관]을 눌러 보세요.</div>'; }
+    if(!rows.length){
+      box.innerHTML='<div class="hint">아직 보관된 호가 없습니다. 소식지를 완성한 뒤 [💾 이번 호 보관]을 눌러 보세요.</div>';
+    }
     var totB=0;
-    list.forEach(function(o){
-      totB+=o.bytes||0;
+    rows.forEach(function(o){
+      if(o.local) totB+=o.local.bytes||0;
       var d=new Date(o.savedAt||0);
       var row=document.createElement("div");
-      row.style.cssText="display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-top:6px;background:#fffdf8";
-      var t=document.createElement("div"); t.style.flex="1"; t.style.minWidth="200px";
-      t.innerHTML="<b>"+o.y+"년 "+o.m+"월호</b> <span style='color:#999;font-size:12px'>사진 "+(o.photos||0)+"장 · "+fmtMB(o.bytes||0)
-        +" · "+(d.getFullYear()||"")+"."+(d.getMonth()+1)+"."+d.getDate()+" 보관</span>";
+      row.style.cssText="display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin-top:7px;background:#fffdf8";
+      var t=document.createElement("div"); t.style.flex="1"; t.style.minWidth="220px";
+      var where=(o.local?"<span title='이 기기에 있음'>💻</span>":"")+(o.cloud?"<span title='클라우드에 있음'>☁️</span>":"");
+      var newer="";
+      if(o.local && o.cloud){
+        if((o.cloud.savedAt||0)>(o.local.savedAt||0)+2000) newer=" <b style='color:#B5273A'>· 클라우드가 더 최신</b>";
+        else if((o.local.savedAt||0)>(o.cloud.savedAt||0)+2000) newer=" <b style='color:#B5273A'>· 이 기기가 더 최신</b>";
+      }
+      t.innerHTML="<b>"+o.y+"년 "+o.m+"월호</b> "+where
+        +" <span style='color:#999;font-size:12px'>사진 "+(o.photos||0)+"장 · "+fmtMB(o.bytes||0)
+        +" · "+(d.getFullYear()||"")+"."+(d.getMonth()+1)+"."+d.getDate()
+        +((o.cloud&&o.cloud.by)?(" · "+esc(o.cloud.by)):"")+"</span>"+newer;
       row.appendChild(t);
-      [["열기",function(){ openIssue(o.ym); }],["파일로 내보내기",function(){ exportIssue(o.ym); }],["삭제",function(){ deleteIssue(o.ym); }]]
-        .forEach(function(bd){
-          var b2=document.createElement("button"); b2.className="sec min"; b2.textContent=bd[0]; b2.onclick=bd[1];
-          row.appendChild(b2);
-        });
+      function btn(label,fn,dis){
+        var b2=document.createElement("button"); b2.className="sec min"; b2.textContent=label;
+        if(dis) b2.disabled=true; else b2.onclick=fn;
+        row.appendChild(b2);
+      }
+      btn("열기", function(){ o.local?openIssue(o.ym):cloudPullIssue(o.ym,true); });
+      if(o.local) btn("☁️ 올리기", function(){
+        var b3=this; cloudPush(o.ym,false).catch(function(e){ alert("올리기 실패\n\n"+cloudMsg(e)); });
+      });
+      if(o.cloud) btn("⬇️ 받기", function(){ cloudPullIssue(o.ym,false); });
+      if(o.local) btn("파일로 내보내기", function(){ exportIssue(o.ym); });
+      if(o.local) btn("삭제", function(){ deleteIssue(o.ym); });
       box.appendChild(row);
     });
     var q=document.getElementById("issueQuota");
-    var base="보관된 호 "+list.length+"개 · 합계 약 "+fmtMB(totB);
+    var base="이 기기 보관 "+list.length+"개 · 합계 약 "+fmtMB(totB)
+      +(CLOUD_IDX?("   |   ☁️ 클라우드 "+Object.keys(CLOUD_IDX).filter(function(k){return !CLOUD_IDX[k].del;}).length+"개")
+                 :(CLOUD_ERR?("   |   ☁️ "+CLOUD_ERR.split("\n")[0]):"   |   ☁️ 목록을 아직 안 불러옴"));
     if(navigator.storage && navigator.storage.estimate){
       navigator.storage.estimate().then(function(es){
-        var used=es.usage||0, quota=es.quota||0;
-        q.textContent=base+"   |   이 기기 브라우저 저장공간: "+fmtMB(used)+" 사용 / 약 "+(quota/1073741824).toFixed(1)+"GB 사용 가능";
+        q.textContent=base+"   |   브라우저 저장공간 "+fmtMB(es.usage||0)+" 사용 / 약 "+((es.quota||0)/1073741824).toFixed(1)+"GB";
       }).catch(function(){ q.textContent=base; });
     }else q.textContent=base;
   });
@@ -2617,6 +2859,10 @@ function initInputs(){
   mo.onchange=function(){ S.month=Number(mo.value); saveS(); renderCalEditor(); renderBdayEditor(); onPeriodChange(); };
   document.getElementById("btnReapply").onclick=function(){ reapplyMonthData(false); };
   document.getElementById("inRatio").onchange=function(){ S.ratio=this.value; saveS(); updateSizeGuide(); };
+  var fsEl=document.getElementById("inFontScale"), lsEl=document.getElementById("inLineScale");
+  fsEl.value=String(S.fontScale||100); lsEl.value=String(S.lineScale||100);
+  fsEl.onchange=function(){ S.fontScale=Number(this.value)||100; saveS(); };
+  lsEl.onchange=function(){ S.lineScale=Number(this.value)||100; saveS(); };
   updateSizeGuide();
   updatePrevHint();
   ["inVirtueName","inVirtueDef","inVirtueItems","inSchedMain","inSchedClosed","inCalNote","inKkwSub"].forEach(function(id){
@@ -2685,6 +2931,10 @@ function initInputs(){
   document.getElementById("btnSavePdf").onclick=savePdf;
   document.getElementById("btnIssueSave").onclick=function(){ saveIssue(); };
   document.getElementById("btnIssueImport").onclick=function(){ document.getElementById("inIssueFile").click(); };
+  document.getElementById("btnCloudRefresh").onclick=function(){ cloudRefresh(false); };
+  var dvEl=document.getElementById("inDevice");
+  dvEl.value=S.device||"";
+  dvEl.oninput=function(){ S.device=this.value; saveS(); };
   document.getElementById("inIssueFile").onchange=function(){
     var f=this.files&&this.files[0]; if(!f) return;
     var fr=new FileReader();
