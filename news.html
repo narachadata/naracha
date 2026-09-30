@@ -372,8 +372,18 @@ details.help[open] summary{ margin-bottom:6px; }
     <div style="flex:0 0 auto"><button class="pri" id="btnMake">🖼️ 소식지 만들기 (미리보기)</button></div>
     <div style="flex:0 0 auto"><button class="sec" id="btnSaveAll">💾 전체 PNG 저장</button></div>
     <div style="flex:0 0 auto"><button class="sec" id="btnSavePdf">📕 PDF 한 개로 저장</button></div>
+    <div style="flex:0 0 auto"><button class="sec" id="btnSaveTv">🎬 TV용 영상 저장 (16:9)</button></div>
   </div>
   <div class="hint">밴드에 올릴 때는 <b>PNG</b>(한 장씩), 보관·인쇄용으로는 <b>PDF</b>(전체 한 파일)를 쓰세요. 전체 PNG 저장 시 브라우저가 「여러 파일 다운로드 허용」을 물으면 허용을 누르세요.</div>
+  <div class="row" style="margin-top:6px">
+    <div><label class="fl">TV 영상 · 한 장 보여주는 시간</label>
+      <select id="inTvSec"><option value="3">3초</option><option value="4">4초</option><option value="5" selected>5초</option><option value="6">6초</option><option value="8">8초</option></select></div>
+    <div><label class="fl">넘김 시간</label>
+      <select id="inTvTurn"><option value="0.6">0.6초 (빠르게)</option><option value="0.9" selected>0.9초 (보통)</option><option value="1.3">1.3초 (천천히)</option></select></div>
+    <div><label class="fl">화면 배치</label>
+      <select id="inTvStyle"><option value="panel" selected>제목 패널 + 소식지</option><option value="center">소식지만 가운데</option></select></div>
+  </div>
+  <div class="hint">TV·빔프로젝터 송출용 <b>1920×1080</b> 영상입니다. 소식지 장면이 <b>책장 넘기듯</b> 전환되며, 마지막 장 다음에는 첫 장으로 이어져 <b>반복 재생</b>해도 자연스럽습니다.<br>⚠️ 만드는 동안 화면을 그대로 두세요(다른 창으로 가리거나 최소화하면 영상이 끊깁니다). 길이 = 장수 × (보여주는 시간 + 넘김 시간).</div>
   <div id="previewArea"></div>
 </section>
 
@@ -404,6 +414,12 @@ details.help[open] summary{ margin-bottom:6px; }
 </main>
 </div>
 <!-- 미리보기 확대 모달 -->
+<div id="tvModal" style="display:none;position:fixed;inset:0;background:rgba(12,16,28,.92);z-index:130;align-items:center;justify-content:center;flex-direction:column">
+  <canvas id="tvCv" style="width:min(88vw,1180px);max-height:70vh;border-radius:10px;box-shadow:0 10px 50px rgba(0,0,0,.6);background:#000"></canvas>
+  <div style="margin-top:14px;color:#fff;font-size:15px" id="tvProg">준비 중…</div>
+  <div style="margin-top:6px;color:#b9c2d6;font-size:13px">영상을 만드는 동안 이 창을 그대로 두세요.</div>
+  <div style="margin-top:12px"><button id="tvCancel" class="sec min">■ 중지</button></div>
+</div>
 <div id="viewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:120;align-items:center;justify-content:center;flex-direction:column">
   <div style="display:flex;align-items:center;gap:14px;max-width:96vw;max-height:92vh">
     <button id="viewPrev" style="background:rgba(255,255,255,.15);color:#fff;font-size:26px;border-radius:50%;width:48px;height:48px;flex:0 0 auto">‹</button>
@@ -442,7 +458,7 @@ details.help[open] summary{ margin-bottom:6px; }
    나라차 소식지 제작기
    var APP_VER 규칙: 수정할 때마다 +0.1, 내리지 않는다.
    ============================================================ */
-var APP_VER = "v4.8"; /* R4.8: 명단 페이지(대상자·국기원·생일) 행과 행 사이 여백을 칸 크기에 비례해 넓힘 — 위아래가 답답해 보이던 문제 · R4.7: 명단 페이지 겹침 수정 — ①칸 높이를 «실제로 그리는 높이»와 똑같이 계산(종전엔 급수 줄이 빠져 아랫줄 사진과 겹침) ②이름·급수·날짜가 칸 폭을 넘으면 자동으로 글자를 줄임 ③생일자는 날짜(작게·회갈색)를 위에, 이름을 아래에 두 줄로 · R4.6: ①승급심사 대상자 = 나라차 프로그램 출석현황의 [심사확정] 체크 기준으로 변경(종전 추천 기준 폐지), 급수 낮은 순 ②[🔄 승급심사 대상자 불러오기] 전용 버튼 — [지난달 데이터 반영]과 따로, 명단이 바뀌면 이 버튼만 누르면 최신으로 갱신(선택도 초기화) ③휴일·휴관 글자가 지나치게 커지지 않도록 수련 내용보다 4px까지만 크게 · R4.5: 달력 수련 내용 글자 키움 — 긴 줄은 칸 안에서 자동 줄바꿈해 남는 세로 공간을 쓰게 함(종전엔 긴 한 줄에 맞추느라 달력 전체가 작아졌다) · R4.4: 휴일·휴관처럼 일정만 있는 칸의 글자 크기를 서로 같게(가장 빠듯한 칸 기준으로 통일, 수련 내용보다는 크게) — 종전엔 병합 폭에 따라 칸마다 달랐다 · R4.3: 달력 입력을 「날짜 옆 일정」과 「수련 내용」으로 분리 — 칸마다 일정 한 줄 입력칸(색: 파랑·빨강)과 내용 입력칸(색 5종)을 따로 둠. 옛 저장분은 자동 이관(일정 낱말이 섞인 칸에서 일정 줄만 라벨로 분리) · R4.2: ①승급심사 추천자 명단 페이지 추가(국기원 페이지 바로 앞) — 나라차 프로그램과 같은 규칙(누적 14회 이상·국기원 대기 제외 또는 지도진 수동추천), 현재 급수 → 취득 예정 급수 함께 표기 ②국기원·생일·추천자 명단은 15명까지 한 페이지에(열 수를 자동으로 늘려 배치) · R4.1: 수련계획표를 원본 소식지 형태로 — ①수련 내용은 여러 날 반복돼도 날마다 그대로 표기(병합하지 않음), 병합은 「추석 연휴 휴관」처럼 특별 일정만 있는 연속 칸에만 ②수련 내용이 함께 있는 날의 특별 일정(정기승급심사 등)은 날짜 바로 오른쪽에 색 알약 라벨로 표기하고 칸 배경도 옅게 ③마지막 줄 빈칸에 인성덕목 문구를 넣어 달력이 꽉 차게 · R4.0: 수련계획표에서 대체휴무·승급심사 같은 특별 일정은 글자를 조금 크게(+5px) — 글자색을 지정했거나 휴관·휴일·심사·대회·행사 등이 들어간 칸. 일반 수련 내용은 종전대로 균일 · R3.9: 수련계획표 글자 크기 균일화 — 2~3일 병합 칸 글자가 일별 칸보다 훨씬 크게 나오던 문제(병합만 최대 30px 허용·넓은 폭이라 줄지 않음). 이제 달력 전체에서 가장 빠듯한 칸에 맞춘 공통 크기를 쓰고, 병합 칸도 +2px까지만 · R3.8: [지난달 데이터 반영]을 이미 눌렀으면 바로 아래에 「✅ 이번 달 이미 반영됨 — n월 …을 m/d hh:mm에 반영」 표시(아직이면 눌러 달라는 안내). 호(연·월)마다 따로 기억 · R3.7: UI 전면 개편 — 전문 편집 프로그램 형태(상단 앱바 + 좌측 구역 레일 + 흰 패널). 안내 글이 희미하던 문제 수정(#4A5265·13px·Pretendard), 중립 회색 작업면 + 브랜드 네이비 크롬, 계절색은 이번 호 칩에만. 상단에 [미리보기 만들기] 상시 버튼 · R3.6: 개별 사진마다 모양 지정(자동·정사각형·가로·세로) + 줄맞춤(justified) 배치 — 지정한 사진은 그 비율대로, 나머지는 원본 비율대로 자동 배치하며 줄 폭을 꽉 채운다 · R3.5: 자동저장 + 편집권(잠금) — 한 달치는 한 PC에서만 저장, 다른 PC에서 열면 「작업 중」 경고와 [이어서 작업하기], 1분 하트비트·3분 임대 만료 · R3.4: 사범 키로도 클라우드 저장 가능 — 창고 이름을 att_news·att_news_YYYYMM 으로(서버 allow()가 사범 키에 att_ 접두어를 허용). 서버 수정 불필요. 예전 news 창고에 올린 호도 목록·받기에서 그대로 보임 · R3.3: 클라우드 보관 연동 — 보관한 호가 다른 PC에서도 보인다. 나라차 Apps Script를 그대로 사용(서버 수정 불필요·관리자 키 필요), 호마다 별도 창고 news_YYYYMM + 목록 창고 news. [이번 호 보관]하면 자동 업로드, 다른 PC에서 [🔄 클라우드 목록 새로고침]→[받기]. fail-closed·baseRev 충돌감지·묘비 유지, 기기 이름 표시 · R3.2: ①사진 배치 선택 — 사진첩마다 모양(자동·정사각형·가로 4:3/3:2·와이드 16:9·세로 3:4)과 열 수를 고를 수 있고, 모양을 고르면 그 비율을 지켜 가운데 배치(한 장에 몇 장 들어가는지 자동 계산) ②글자 크기·줄 간격(행간) 배율 설정 — 기사·인성덕목·체크리스트에 적용 · R3.1: 목차 재구현 — 항목이 많으면(16개 등) 겹쳐 뭉개지던 문제 해결. 항목 수에 맞춰 줄 높이·글자·배지를 자동 계산하고, 한 장에 무리면 여러 장으로 나눔(1/2 표시). 긴 제목은 줄였다가 말줄임. 목차 설명은 행사마다 날짜·인원이 나오도록 개선 · R3.0: ①라차 캐릭터(펭귄) 썸네일 아이콘 — 파비콘·홈화면 아이콘·머리말에 사용 ②화면 디자인 전면 개편 — 종이 질감 배경, 표지 느낌의 머리말(이번 호·계절), 부드러운 그림자 카드, 알약 버튼, 어두운 라이트테이블 미리보기, 선택한 달의 계절색이 화면 전체에 입혀짐 · R2.9: 완성본 보관 기능 — ①[📕 PDF 한 개로 저장](외부 라이브러리 없이 PDF 직접 생성·JPEG 임베드) ②[📦 지난 호 보관함] 결과 이미지가 아니라 재료(설정·글·사진)만 저장해 용량 절약, 목록에서 열기·파일(.json)로 내보내기·삭제, 파일에서 불러오기, 저장공간 사용량 표시(접속키는 보관 대상에서 제외) · R2.8: 1단계 비율 옆에 [🔄 지난달 데이터 반영] 버튼 — 9월에 10월호를 만들 때처럼 달을 바꾸면 그 달의 "지난달" 데이터가 들어가도록. 연·월을 바꾸면 자동으로 재반영(자동으로 넣은 항목은 정리·갱신, 사진을 넣었거나 직접 고친 글은 그대로), 어느 달 데이터가 들어가는지 안내 문구 표시 · R2.7: 기사 카드 제목 중복 제거 — 카드 머리띠 제목과 본문 첫 줄이 같으면 본문에서 빼고, 날짜·인원 줄을 대표 줄로 크게(48px) 올림 · R2.6: 모바일 가독성 기준 재설계 — 소식지 1080px가 폰에서 약 390pt로 보이는 것(글자 ≈ px×0.36) 기준으로 기사 본문 최소 44px(≈16pt) 보장, 그보다 작아지면 줄이지 않고 페이지 분할(장수 최소·같으면 큰 글자). 제목은 42px까지만 줄이고 길면 두 줄, 소제목은 본문급 크기, 다단은 줄이 실제로 들어갈 때만(88% 기준), 칼럼 경계에서 소제목·이어지는 줄 안 끊김, 긴 낱말 글자 단위 줄바꿈. 이름 캡션 최소 30px(국기원·생일) · R2.5: 사진첩(행사·대회 카드) 순서 이동 ↑↓ 버튼 — 목록 순서=소식지 페이지 순서, 중간 배치 가능. 행사·대회 카드에 사진을 넣으면 기사 다음에 사진 페이지가 붙는 안내 보강 · R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
+var APP_VER = "v4.9"; /* R4.9: [🎬 TV용 영상 저장 (16:9)] — 같은 소식지를 1920×1080 영상으로 저장(TV·빔프로젝터 송출용). 책장 넘기듯 전환, 마지막 장→첫 장으로 이어져 반복 재생에 자연스러움. 한 장 시간·넘김 시간·배치(제목 패널/가운데) 선택. 외부 프로그램 없이 브라우저 녹화(MP4 우선, 안 되면 WebM) · R4.8: 명단 페이지(대상자·국기원·생일) 행과 행 사이 여백을 칸 크기에 비례해 넓힘 — 위아래가 답답해 보이던 문제 · R4.7: 명단 페이지 겹침 수정 — ①칸 높이를 «실제로 그리는 높이»와 똑같이 계산(종전엔 급수 줄이 빠져 아랫줄 사진과 겹침) ②이름·급수·날짜가 칸 폭을 넘으면 자동으로 글자를 줄임 ③생일자는 날짜(작게·회갈색)를 위에, 이름을 아래에 두 줄로 · R4.6: ①승급심사 대상자 = 나라차 프로그램 출석현황의 [심사확정] 체크 기준으로 변경(종전 추천 기준 폐지), 급수 낮은 순 ②[🔄 승급심사 대상자 불러오기] 전용 버튼 — [지난달 데이터 반영]과 따로, 명단이 바뀌면 이 버튼만 누르면 최신으로 갱신(선택도 초기화) ③휴일·휴관 글자가 지나치게 커지지 않도록 수련 내용보다 4px까지만 크게 · R4.5: 달력 수련 내용 글자 키움 — 긴 줄은 칸 안에서 자동 줄바꿈해 남는 세로 공간을 쓰게 함(종전엔 긴 한 줄에 맞추느라 달력 전체가 작아졌다) · R4.4: 휴일·휴관처럼 일정만 있는 칸의 글자 크기를 서로 같게(가장 빠듯한 칸 기준으로 통일, 수련 내용보다는 크게) — 종전엔 병합 폭에 따라 칸마다 달랐다 · R4.3: 달력 입력을 「날짜 옆 일정」과 「수련 내용」으로 분리 — 칸마다 일정 한 줄 입력칸(색: 파랑·빨강)과 내용 입력칸(색 5종)을 따로 둠. 옛 저장분은 자동 이관(일정 낱말이 섞인 칸에서 일정 줄만 라벨로 분리) · R4.2: ①승급심사 추천자 명단 페이지 추가(국기원 페이지 바로 앞) — 나라차 프로그램과 같은 규칙(누적 14회 이상·국기원 대기 제외 또는 지도진 수동추천), 현재 급수 → 취득 예정 급수 함께 표기 ②국기원·생일·추천자 명단은 15명까지 한 페이지에(열 수를 자동으로 늘려 배치) · R4.1: 수련계획표를 원본 소식지 형태로 — ①수련 내용은 여러 날 반복돼도 날마다 그대로 표기(병합하지 않음), 병합은 「추석 연휴 휴관」처럼 특별 일정만 있는 연속 칸에만 ②수련 내용이 함께 있는 날의 특별 일정(정기승급심사 등)은 날짜 바로 오른쪽에 색 알약 라벨로 표기하고 칸 배경도 옅게 ③마지막 줄 빈칸에 인성덕목 문구를 넣어 달력이 꽉 차게 · R4.0: 수련계획표에서 대체휴무·승급심사 같은 특별 일정은 글자를 조금 크게(+5px) — 글자색을 지정했거나 휴관·휴일·심사·대회·행사 등이 들어간 칸. 일반 수련 내용은 종전대로 균일 · R3.9: 수련계획표 글자 크기 균일화 — 2~3일 병합 칸 글자가 일별 칸보다 훨씬 크게 나오던 문제(병합만 최대 30px 허용·넓은 폭이라 줄지 않음). 이제 달력 전체에서 가장 빠듯한 칸에 맞춘 공통 크기를 쓰고, 병합 칸도 +2px까지만 · R3.8: [지난달 데이터 반영]을 이미 눌렀으면 바로 아래에 「✅ 이번 달 이미 반영됨 — n월 …을 m/d hh:mm에 반영」 표시(아직이면 눌러 달라는 안내). 호(연·월)마다 따로 기억 · R3.7: UI 전면 개편 — 전문 편집 프로그램 형태(상단 앱바 + 좌측 구역 레일 + 흰 패널). 안내 글이 희미하던 문제 수정(#4A5265·13px·Pretendard), 중립 회색 작업면 + 브랜드 네이비 크롬, 계절색은 이번 호 칩에만. 상단에 [미리보기 만들기] 상시 버튼 · R3.6: 개별 사진마다 모양 지정(자동·정사각형·가로·세로) + 줄맞춤(justified) 배치 — 지정한 사진은 그 비율대로, 나머지는 원본 비율대로 자동 배치하며 줄 폭을 꽉 채운다 · R3.5: 자동저장 + 편집권(잠금) — 한 달치는 한 PC에서만 저장, 다른 PC에서 열면 「작업 중」 경고와 [이어서 작업하기], 1분 하트비트·3분 임대 만료 · R3.4: 사범 키로도 클라우드 저장 가능 — 창고 이름을 att_news·att_news_YYYYMM 으로(서버 allow()가 사범 키에 att_ 접두어를 허용). 서버 수정 불필요. 예전 news 창고에 올린 호도 목록·받기에서 그대로 보임 · R3.3: 클라우드 보관 연동 — 보관한 호가 다른 PC에서도 보인다. 나라차 Apps Script를 그대로 사용(서버 수정 불필요·관리자 키 필요), 호마다 별도 창고 news_YYYYMM + 목록 창고 news. [이번 호 보관]하면 자동 업로드, 다른 PC에서 [🔄 클라우드 목록 새로고침]→[받기]. fail-closed·baseRev 충돌감지·묘비 유지, 기기 이름 표시 · R3.2: ①사진 배치 선택 — 사진첩마다 모양(자동·정사각형·가로 4:3/3:2·와이드 16:9·세로 3:4)과 열 수를 고를 수 있고, 모양을 고르면 그 비율을 지켜 가운데 배치(한 장에 몇 장 들어가는지 자동 계산) ②글자 크기·줄 간격(행간) 배율 설정 — 기사·인성덕목·체크리스트에 적용 · R3.1: 목차 재구현 — 항목이 많으면(16개 등) 겹쳐 뭉개지던 문제 해결. 항목 수에 맞춰 줄 높이·글자·배지를 자동 계산하고, 한 장에 무리면 여러 장으로 나눔(1/2 표시). 긴 제목은 줄였다가 말줄임. 목차 설명은 행사마다 날짜·인원이 나오도록 개선 · R3.0: ①라차 캐릭터(펭귄) 썸네일 아이콘 — 파비콘·홈화면 아이콘·머리말에 사용 ②화면 디자인 전면 개편 — 종이 질감 배경, 표지 느낌의 머리말(이번 호·계절), 부드러운 그림자 카드, 알약 버튼, 어두운 라이트테이블 미리보기, 선택한 달의 계절색이 화면 전체에 입혀짐 · R2.9: 완성본 보관 기능 — ①[📕 PDF 한 개로 저장](외부 라이브러리 없이 PDF 직접 생성·JPEG 임베드) ②[📦 지난 호 보관함] 결과 이미지가 아니라 재료(설정·글·사진)만 저장해 용량 절약, 목록에서 열기·파일(.json)로 내보내기·삭제, 파일에서 불러오기, 저장공간 사용량 표시(접속키는 보관 대상에서 제외) · R2.8: 1단계 비율 옆에 [🔄 지난달 데이터 반영] 버튼 — 9월에 10월호를 만들 때처럼 달을 바꾸면 그 달의 "지난달" 데이터가 들어가도록. 연·월을 바꾸면 자동으로 재반영(자동으로 넣은 항목은 정리·갱신, 사진을 넣었거나 직접 고친 글은 그대로), 어느 달 데이터가 들어가는지 안내 문구 표시 · R2.7: 기사 카드 제목 중복 제거 — 카드 머리띠 제목과 본문 첫 줄이 같으면 본문에서 빼고, 날짜·인원 줄을 대표 줄로 크게(48px) 올림 · R2.6: 모바일 가독성 기준 재설계 — 소식지 1080px가 폰에서 약 390pt로 보이는 것(글자 ≈ px×0.36) 기준으로 기사 본문 최소 44px(≈16pt) 보장, 그보다 작아지면 줄이지 않고 페이지 분할(장수 최소·같으면 큰 글자). 제목은 42px까지만 줄이고 길면 두 줄, 소제목은 본문급 크기, 다단은 줄이 실제로 들어갈 때만(88% 기준), 칼럼 경계에서 소제목·이어지는 줄 안 끊김, 긴 낱말 글자 단위 줄바꿈. 이름 캡션 최소 30px(국기원·생일) · R2.5: 사진첩(행사·대회 카드) 순서 이동 ↑↓ 버튼 — 목록 순서=소식지 페이지 순서, 중간 배치 가능. 행사·대회 카드에 사진을 넣으면 기사 다음에 사진 페이지가 붙는 안내 보강 · R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
 document.getElementById("verLabel").textContent = APP_VER;
 
 var GAS = "https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
@@ -456,6 +472,7 @@ var S = {
   schedMain:"", schedClosed:"",
   calDays:{}, calColors:{}, calEv:{}, calNote:"", fontScale:100, lineScale:100, device:"", applied:{},
   kkwSub:"", kkwSel:{}, kkwManual:[], recSub:"", recSel:{}, recPulledT:0,
+  tvSec:5, tvTurn:0.9, tvStyle:"panel",
   bdayOff:{},
   albumTitle:"", bgPanel:true,
   pages:{cover:true,toc:true,virtue:true,schedule:true,cal:true,rec:true,kkw:true,bday:true,album:true,check:true}
@@ -2779,6 +2796,178 @@ function drawAlbumPages(no, ai, startIdx){
 /* ============================================================
    전체 만들기
    ============================================================ */
+
+/* ============================================================
+   [R4.9] TV(16:9) 영상 만들기 — 페이지 넘김 전환
+   화면에 보이는 것과 같은 소식지 장면을 1920×1080 캔버스에 합성해
+   MediaRecorder로 녹화한다(외부 프로그램·라이브러리 없음).
+   ============================================================ */
+var TVW=1920, TVH=1080;
+var TV={ busy:false, cancel:false };
+var TV_LABEL={ "표지":"표지", "목차":"목차", "인성덕목":"이달의 인성덕목", "일정":"이달의 일정",
+  "수련계획표":"수련계획표", "승급심사추천":"승급심사 대상자", "국기원심사":"국기원 승품(단) 심사",
+  "생일자":"이달의 생일", "실천체크리스트":"실천 체크리스트" };
+function tvLabel(nm){
+  nm=String(nm||"");
+  var mPart=nm.match(/_(\d+)$/), part=mPart?(" ("+mPart[1]+")"):"";
+  if(mPart) nm=nm.slice(0, nm.length-mPart[0].length);
+  if(nm.indexOf("보고_")===0) nm=nm.slice(3);
+  return (TV_LABEL[nm]||nm)+part;
+}
+function tvGeo(){
+  var pw=W, ph=pageH(), style=S.tvStyle||"panel";
+  var gh=Math.round(TVH*(style==="center"?0.93:0.86));
+  var gw=Math.round(gh*pw/ph);
+  var maxW=(style==="center")?(TVW-120):Math.round(TVW*0.56);
+  if(gw>maxW){ gw=maxW; gh=Math.round(gw*ph/pw); }
+  var gx=(style==="center")?Math.round((TVW-gw)/2):(TVW-120-gw);
+  return { x:gx, y:Math.round((TVH-gh)/2), w:gw, h:gh, style:style };
+}
+function tvBg(x){
+  var t=theme();
+  var g=x.createLinearGradient(0,0,0,TVH);
+  g.addColorStop(0,t.sky); g.addColorStop(1,t.ground);
+  x.fillStyle=g; x.fillRect(0,0,TVW,TVH);
+  /* 은은한 장식 원 */
+  x.save(); x.globalAlpha=0.35; x.fillStyle=t.bush2||"#fff";
+  x.beginPath(); x.arc(-120, TVH+60, 420, 0, 6.3); x.fill();
+  x.beginPath(); x.arc(TVW+140, -100, 380, 0, 6.3); x.fill();
+  x.restore();
+}
+function tvPanel(x, label, no, total, alpha){
+  if((S.tvStyle||"panel")!=="panel") return;
+  var t=theme(), g=tvGeo();
+  var px=110, pw=g.x-110-110;
+  if(pw<300) return;
+  x.save(); x.globalAlpha=Math.max(0,Math.min(1,alpha));
+  x.textAlign="left"; x.textBaseline="alphabetic";
+  var y=Math.round(TVH*0.30);
+  /* 로고 */
+  if(IMGS.logo){
+    var lh=72, lw=IMGS.logo.width*(lh/IMGS.logo.height);
+    if(lw>pw){ lw=pw; lh=IMGS.logo.height*(lw/IMGS.logo.width); }
+    x.drawImage(IMGS.logo, px, y-lh-28, lw, lh);
+  }
+  x.fillStyle=NAVY; x.font="700 30px 'Noto Sans KR'";
+  x.fillText("나라차태권도 소식지", px, y);
+  x.fillStyle=t.title; x.font=Math.round(TVH*0.10)+"px 'Jua'";
+  x.fillText(S.year+"년 "+S.month+"월호", px, y+Math.round(TVH*0.11));
+  x.strokeStyle=t.leaf||NAVY; x.lineWidth=5; x.globalAlpha=Math.max(0,Math.min(1,alpha))*0.7;
+  x.beginPath(); x.moveTo(px, y+Math.round(TVH*0.155)); x.lineTo(px+Math.min(pw,320), y+Math.round(TVH*0.155)); x.stroke();
+  x.globalAlpha=Math.max(0,Math.min(1,alpha));
+  /* 현재 장면 이름 */
+  var f=56; x.font="700 "+f+"px 'Noto Sans KR'";
+  while(f>28 && x.measureText(label).width>pw){ f-=2; x.font="700 "+f+"px 'Noto Sans KR'"; }
+  x.fillStyle=NAVY; x.fillText(label, px, y+Math.round(TVH*0.245));
+  x.fillStyle="#6B7285"; x.font="500 32px 'Noto Sans KR'";
+  x.fillText(no+" / "+total, px, y+Math.round(TVH*0.305));
+  x.restore();
+}
+function tvSheet(x, img, g){
+  x.save();
+  x.shadowColor="rgba(0,0,0,0.30)"; x.shadowBlur=46; x.shadowOffsetY=16;
+  x.fillStyle="#ffffff"; x.fillRect(g.x, g.y, g.w, g.h);
+  x.restore();
+  x.drawImage(img, g.x, g.y, g.w, g.h);
+}
+/* 넘어가는 장 — 왼쪽 가장자리를 축으로 접힌다(책장 넘김) */
+function tvFold(x, img, g, cosv){
+  var back=(cosv<0), a=Math.abs(cosv), vw=g.w*a;
+  if(vw<1) return;
+  var N=32;
+  x.save();
+  for(var i=0;i<N;i++){
+    var t0=i/N, t1=(i+1)/N;
+    var s0=back?(1-t1):t0;
+    var k=1-0.05*t1*(1-a);                 /* 멀어지는 쪽이 살짝 짧아 보이게 */
+    var dh=g.h*k, dy=g.y+(g.h-dh)/2;
+    x.drawImage(img, s0*img.width, 0, img.width/N, img.height,
+                g.x+vw*t0, dy, vw/N+0.8, dh);
+  }
+  if(back){   /* 종이 뒷면 — 내용이 은은하게만 비치도록 */
+    x.fillStyle="rgba(252,250,245,0.90)"; x.fillRect(g.x, g.y, vw, g.h);
+    x.fillStyle="rgba(0,0,0,0.04)"; x.fillRect(g.x, g.y, vw, g.h);
+  }
+  /* 접히는 쪽 음영 */
+  var sh=x.createLinearGradient(g.x+vw*0.55, 0, g.x+vw, 0);
+  sh.addColorStop(0,"rgba(0,0,0,0)"); sh.addColorStop(1,"rgba(0,0,0,"+(0.30*(1-a)).toFixed(3)+")");
+  x.fillStyle=sh; x.fillRect(g.x+vw*0.55, g.y, vw*0.45, g.h);
+  /* 넘어가는 장이 아래 장에 드리우는 그림자 */
+  var cast=x.createLinearGradient(g.x+vw, 0, g.x+vw+90, 0);
+  cast.addColorStop(0,"rgba(0,0,0,"+(0.26*(1-Math.abs(a-0)*0)).toFixed(3)+")");
+  cast.addColorStop(1,"rgba(0,0,0,0)");
+  x.fillStyle=cast; x.fillRect(g.x+vw, g.y, 90, g.h);
+  x.restore();
+}
+function tvFrame(x, i, j, p){
+  tvBg(x);
+  var g=tvGeo();
+  if(p==null){
+    tvPanel(x, tvLabel(MADE[i].name), i+1, MADE.length, 1);
+    tvSheet(x, MADE[i].canvas, g);
+    return;
+  }
+  if(p<0.5) tvPanel(x, tvLabel(MADE[i].name), i+1, MADE.length, 1-p*2);
+  else      tvPanel(x, tvLabel(MADE[j].name), j+1, MADE.length, (p-0.5)*2);
+  tvSheet(x, MADE[j].canvas, g);          /* 아래에 다음 장 */
+  tvFold(x, MADE[i].canvas, g, Math.cos(Math.PI*p));
+}
+function tvMime(){
+  if(!window.MediaRecorder) return "";
+  var list=["video/mp4;codecs=avc1.4d002a","video/mp4","video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm"];
+  for(var i=0;i<list.length;i++){ try{ if(MediaRecorder.isTypeSupported(list[i])) return list[i]; }catch(e){} }
+  return "";
+}
+function makeTvVideo(){
+  if(TV.busy) return;
+  if(!MADE.length){ alert("먼저 [소식지 만들기]를 눌러 주세요."); return; }
+  var mime=tvMime();
+  if(!mime){ alert("이 브라우저는 영상 저장을 지원하지 않습니다. 크롬(Chrome)에서 열어 주세요."); return; }
+  var sec=Number(S.tvSec||5), turn=Number(S.tvTurn||0.9);
+  var totalSec=MADE.length*(sec+turn);
+  var cv=document.getElementById("tvCv"); cv.width=TVW; cv.height=TVH;
+  var x=cv.getContext("2d");
+  var modal=document.getElementById("tvModal"), prog=document.getElementById("tvProg");
+  modal.style.display="flex";
+  TV.busy=true; TV.cancel=false;
+  tvFrame(x, 0, null, null);
+  var stream=cv.captureStream(30);
+  var rec;
+  try{ rec=new MediaRecorder(stream,{mimeType:mime, videoBitsPerSecond:9000000}); }
+  catch(e){ rec=new MediaRecorder(stream,{mimeType:mime}); }
+  var chunks=[];
+  rec.ondataavailable=function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+  rec.onstop=function(){
+    TV.busy=false;
+    try{ stream.getTracks().forEach(function(tr){ tr.stop(); }); }catch(e){}
+    modal.style.display="none";
+    if(TV.cancel && !chunks.length) return;
+    var ext=(mime.indexOf("mp4")>=0)?"mp4":"webm";
+    var blob=new Blob(chunks,{type:mime.split(";")[0]});
+    var a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="나라차소식지_"+S.year+("0"+S.month).slice(-2)+"_TV."+ext;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+    var mb=(blob.size/1048576).toFixed(1);
+    setStatus("TV용 영상을 저장했습니다 — "+MADE.length+"장 · "+Math.round(totalSec)+"초 · "+mb+"MB ("+ext.toUpperCase()+")","ok");
+  };
+  rec.start(1000);
+  var t0=performance.now();
+  function step(){
+    if(TV.cancel){ if(rec.state!=="inactive") rec.stop(); return; }
+    var el=(performance.now()-t0)/1000;
+    if(el>=totalSec){ if(rec.state!=="inactive") rec.stop(); return; }
+    var unit=sec+turn, i=Math.floor(el/unit), q=el-i*unit;
+    if(i>=MADE.length) i=MADE.length-1;
+    if(q<sec) tvFrame(x, i, null, null);
+    else tvFrame(x, i, (i+1)%MADE.length, (q-sec)/turn);
+    prog.textContent="영상 만드는 중… "+Math.min(100,Math.round(el/totalSec*100))+"%  ("+(i+1)+" / "+MADE.length+"장 · 전체 "+Math.round(totalSec)+"초)";
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
 var MADE=[];   /* {name, canvas} */
 function selectedKkw(){
   var out=[];
@@ -3570,6 +3759,9 @@ function initInputs(){
   document.getElementById("pgSchedule").checked=!!S.pages.schedule;
   document.getElementById("pgCal").checked=!!S.pages.cal;
   document.getElementById("pgRec").checked=(S.pages.rec!==false);
+  document.getElementById("inTvSec").value=String(S.tvSec||5);
+  document.getElementById("inTvTurn").value=String(S.tvTurn||0.9);
+  document.getElementById("inTvStyle").value=S.tvStyle||"panel";
   document.getElementById("pgKkw").checked=!!S.pages.kkw;
   document.getElementById("pgBday").checked=!!S.pages.bday;
   document.getElementById("pgAlbum").checked=!!S.pages.album;
@@ -3599,6 +3791,17 @@ function initInputs(){
     showSettings(el.style.display==="none");
   };
   document.getElementById("btnVirtueAuto").onclick=function(){ autoVirtue(true); };
+  document.getElementById("btnSaveTv").onclick=makeTvVideo;
+  document.getElementById("tvCancel").onclick=function(){ TV.cancel=true; };
+  ["inTvSec","inTvTurn","inTvStyle"].forEach(function(id){
+    var el=document.getElementById(id);
+    el.onchange=function(){
+      S.tvSec=Number(document.getElementById("inTvSec").value);
+      S.tvTurn=Number(document.getElementById("inTvTurn").value);
+      S.tvStyle=document.getElementById("inTvStyle").value;
+      saveS();
+    };
+  });
   document.getElementById("btnMake").onclick=makeAll;
   document.getElementById("btnMakeTop").onclick=makeAll;
   initRail();
