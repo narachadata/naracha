@@ -324,17 +324,26 @@ details.help[open] summary{ margin-bottom:6px; }
     <textarea id="inCalNote" rows="2" placeholder="예: 인성덕목 : 정의 — 정직하고 공정한 마음을 갖고 떳떳하게 생활하는 것."></textarea>
   </div>
 
-  <div class="pgToggle"><input type="checkbox" id="pgRec" checked><span>승급심사 대상자 명단</span></div>
+  <div class="pgToggle"><input type="checkbox" id="pgRec" checked><span>승급심사 추천자 명단</span></div>
   <div class="sub" id="subRec">
-    <label class="fl">부제목</label>
-    <input type="text" id="inRecSub" placeholder="예: 10월 정기승급심사 대상자">
-    <label class="fl">대상자 (수련생관리 프로그램에서 <b>[심사확정]</b> 표시된 수련생 — 체크한 사람만 실립니다)</label>
+    <label class="fl">심사 일정 한 줄 (제목 아래 띠)</label>
+    <input type="text" id="inRecSub" placeholder="예: 10/26(월)·27(화) 오후 6시 심사 | 신청서 7일 전 제출">
+    <div class="row" style="margin-top:6px">
+      <div><label class="fl">심사 기준 회차</label>
+        <select id="inRecGoal"><option value="20">20회</option><option value="22">22회</option><option value="24" selected>24회</option><option value="26">26회</option><option value="28">28회</option></select></div>
+      <div style="align-self:end;padding-bottom:6px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="chkRecKkw"><span>국기원 승품 심사 예정자도 함께 싣기</span></label>
+        <div class="hint" style="margin-top:2px">국기원 전용 페이지가 따로 있으므로 평소에는 꺼 두세요.</div></div>
+    </div>
+    <label class="fl">추천자 (나라차 프로그램의 <b>심사 추천</b> 명단 전체 — 체크한 사람만 실립니다)</label>
     <div class="row" style="margin:2px 0 8px">
-      <div style="flex:0 0 auto"><button class="sec min" id="btnRecPull" title="수련생관리 프로그램에서 심사확정 명단을 지금 다시 불러옵니다">🔄 승급심사 대상자 불러오기</button></div>
+      <div style="flex:0 0 auto"><button class="sec min" id="btnRecPull" title="수련생관리 프로그램에서 심사 추천 명단을 지금 다시 불러옵니다">🔄 승급심사 추천자 불러오기</button></div>
       <div style="align-self:center"><span class="hint" id="recPullInfo">아직 불러오지 않았습니다.</span></div>
     </div>
-    <div class="chipList" id="recList"><span class="hint">위 [🔄 승급심사 대상자 불러오기]를 누르면 명단이 나타납니다.</span></div>
-    <div class="hint">기준: 나라차 프로그램 <b>출석현황</b>에서 <b>[심사확정]</b>에 체크된 수련생. 급수가 낮은 순서로 실립니다.<br>명단이 바뀌면 이 버튼을 다시 눌러 주세요 — <b>[지난달 데이터 반영]</b>과는 따로 움직입니다.</div>
+    <div class="chipList" id="recList"><span class="hint">위 [🔄 승급심사 추천자 불러오기]를 누르면 명단이 나타납니다.</span></div>
+    <label class="fl">아래 안내 문구 (비워 두면 기본 문구가 들어갑니다)</label>
+    <textarea id="inRecNote" rows="3" placeholder="비워 두면 자동으로 들어갑니다 — 추천 기준 / 출석에 따라 확정 / 심사일 10일 전 개별 톡 안내"></textarea>
+    <div class="hint">명단은 나라차 프로그램의 <b>심사 추천</b>(지난 심사 이후 누적 14회 이상 또는 지도진 추천) 전체입니다. 그 안에서 <b>기준 회차</b> 도달 여부로 「심사 대상」과 「조금 더 힘내요」로 나뉘고, 부족한 사람은 <b>몇 회 남았는지</b> 함께 표시됩니다.<br>명단이 바뀌면 불러오기 버튼을 다시 눌러 주세요 — <b>[지난달 데이터 반영]</b>과는 따로 움직입니다.</div>
   </div>
   <div class="pgToggle"><input type="checkbox" id="pgKkw" checked><span>국기원 승품(단) 심사 응시예정자</span></div>
   <div class="sub" id="subKkw">
@@ -458,7 +467,7 @@ details.help[open] summary{ margin-bottom:6px; }
    나라차 소식지 제작기
    var APP_VER 규칙: 수정할 때마다 +0.1, 내리지 않는다.
    ============================================================ */
-var APP_VER = "v4.9"; /* R4.9: [🎬 TV용 영상 저장 (16:9)] — 같은 소식지를 1920×1080 영상으로 저장(TV·빔프로젝터 송출용). 책장 넘기듯 전환, 마지막 장→첫 장으로 이어져 반복 재생에 자연스러움. 한 장 시간·넘김 시간·배치(제목 패널/가운데) 선택. 외부 프로그램 없이 브라우저 녹화(MP4 우선, 안 되면 WebM) · R4.8: 명단 페이지(대상자·국기원·생일) 행과 행 사이 여백을 칸 크기에 비례해 넓힘 — 위아래가 답답해 보이던 문제 · R4.7: 명단 페이지 겹침 수정 — ①칸 높이를 «실제로 그리는 높이»와 똑같이 계산(종전엔 급수 줄이 빠져 아랫줄 사진과 겹침) ②이름·급수·날짜가 칸 폭을 넘으면 자동으로 글자를 줄임 ③생일자는 날짜(작게·회갈색)를 위에, 이름을 아래에 두 줄로 · R4.6: ①승급심사 대상자 = 나라차 프로그램 출석현황의 [심사확정] 체크 기준으로 변경(종전 추천 기준 폐지), 급수 낮은 순 ②[🔄 승급심사 대상자 불러오기] 전용 버튼 — [지난달 데이터 반영]과 따로, 명단이 바뀌면 이 버튼만 누르면 최신으로 갱신(선택도 초기화) ③휴일·휴관 글자가 지나치게 커지지 않도록 수련 내용보다 4px까지만 크게 · R4.5: 달력 수련 내용 글자 키움 — 긴 줄은 칸 안에서 자동 줄바꿈해 남는 세로 공간을 쓰게 함(종전엔 긴 한 줄에 맞추느라 달력 전체가 작아졌다) · R4.4: 휴일·휴관처럼 일정만 있는 칸의 글자 크기를 서로 같게(가장 빠듯한 칸 기준으로 통일, 수련 내용보다는 크게) — 종전엔 병합 폭에 따라 칸마다 달랐다 · R4.3: 달력 입력을 「날짜 옆 일정」과 「수련 내용」으로 분리 — 칸마다 일정 한 줄 입력칸(색: 파랑·빨강)과 내용 입력칸(색 5종)을 따로 둠. 옛 저장분은 자동 이관(일정 낱말이 섞인 칸에서 일정 줄만 라벨로 분리) · R4.2: ①승급심사 추천자 명단 페이지 추가(국기원 페이지 바로 앞) — 나라차 프로그램과 같은 규칙(누적 14회 이상·국기원 대기 제외 또는 지도진 수동추천), 현재 급수 → 취득 예정 급수 함께 표기 ②국기원·생일·추천자 명단은 15명까지 한 페이지에(열 수를 자동으로 늘려 배치) · R4.1: 수련계획표를 원본 소식지 형태로 — ①수련 내용은 여러 날 반복돼도 날마다 그대로 표기(병합하지 않음), 병합은 「추석 연휴 휴관」처럼 특별 일정만 있는 연속 칸에만 ②수련 내용이 함께 있는 날의 특별 일정(정기승급심사 등)은 날짜 바로 오른쪽에 색 알약 라벨로 표기하고 칸 배경도 옅게 ③마지막 줄 빈칸에 인성덕목 문구를 넣어 달력이 꽉 차게 · R4.0: 수련계획표에서 대체휴무·승급심사 같은 특별 일정은 글자를 조금 크게(+5px) — 글자색을 지정했거나 휴관·휴일·심사·대회·행사 등이 들어간 칸. 일반 수련 내용은 종전대로 균일 · R3.9: 수련계획표 글자 크기 균일화 — 2~3일 병합 칸 글자가 일별 칸보다 훨씬 크게 나오던 문제(병합만 최대 30px 허용·넓은 폭이라 줄지 않음). 이제 달력 전체에서 가장 빠듯한 칸에 맞춘 공통 크기를 쓰고, 병합 칸도 +2px까지만 · R3.8: [지난달 데이터 반영]을 이미 눌렀으면 바로 아래에 「✅ 이번 달 이미 반영됨 — n월 …을 m/d hh:mm에 반영」 표시(아직이면 눌러 달라는 안내). 호(연·월)마다 따로 기억 · R3.7: UI 전면 개편 — 전문 편집 프로그램 형태(상단 앱바 + 좌측 구역 레일 + 흰 패널). 안내 글이 희미하던 문제 수정(#4A5265·13px·Pretendard), 중립 회색 작업면 + 브랜드 네이비 크롬, 계절색은 이번 호 칩에만. 상단에 [미리보기 만들기] 상시 버튼 · R3.6: 개별 사진마다 모양 지정(자동·정사각형·가로·세로) + 줄맞춤(justified) 배치 — 지정한 사진은 그 비율대로, 나머지는 원본 비율대로 자동 배치하며 줄 폭을 꽉 채운다 · R3.5: 자동저장 + 편집권(잠금) — 한 달치는 한 PC에서만 저장, 다른 PC에서 열면 「작업 중」 경고와 [이어서 작업하기], 1분 하트비트·3분 임대 만료 · R3.4: 사범 키로도 클라우드 저장 가능 — 창고 이름을 att_news·att_news_YYYYMM 으로(서버 allow()가 사범 키에 att_ 접두어를 허용). 서버 수정 불필요. 예전 news 창고에 올린 호도 목록·받기에서 그대로 보임 · R3.3: 클라우드 보관 연동 — 보관한 호가 다른 PC에서도 보인다. 나라차 Apps Script를 그대로 사용(서버 수정 불필요·관리자 키 필요), 호마다 별도 창고 news_YYYYMM + 목록 창고 news. [이번 호 보관]하면 자동 업로드, 다른 PC에서 [🔄 클라우드 목록 새로고침]→[받기]. fail-closed·baseRev 충돌감지·묘비 유지, 기기 이름 표시 · R3.2: ①사진 배치 선택 — 사진첩마다 모양(자동·정사각형·가로 4:3/3:2·와이드 16:9·세로 3:4)과 열 수를 고를 수 있고, 모양을 고르면 그 비율을 지켜 가운데 배치(한 장에 몇 장 들어가는지 자동 계산) ②글자 크기·줄 간격(행간) 배율 설정 — 기사·인성덕목·체크리스트에 적용 · R3.1: 목차 재구현 — 항목이 많으면(16개 등) 겹쳐 뭉개지던 문제 해결. 항목 수에 맞춰 줄 높이·글자·배지를 자동 계산하고, 한 장에 무리면 여러 장으로 나눔(1/2 표시). 긴 제목은 줄였다가 말줄임. 목차 설명은 행사마다 날짜·인원이 나오도록 개선 · R3.0: ①라차 캐릭터(펭귄) 썸네일 아이콘 — 파비콘·홈화면 아이콘·머리말에 사용 ②화면 디자인 전면 개편 — 종이 질감 배경, 표지 느낌의 머리말(이번 호·계절), 부드러운 그림자 카드, 알약 버튼, 어두운 라이트테이블 미리보기, 선택한 달의 계절색이 화면 전체에 입혀짐 · R2.9: 완성본 보관 기능 — ①[📕 PDF 한 개로 저장](외부 라이브러리 없이 PDF 직접 생성·JPEG 임베드) ②[📦 지난 호 보관함] 결과 이미지가 아니라 재료(설정·글·사진)만 저장해 용량 절약, 목록에서 열기·파일(.json)로 내보내기·삭제, 파일에서 불러오기, 저장공간 사용량 표시(접속키는 보관 대상에서 제외) · R2.8: 1단계 비율 옆에 [🔄 지난달 데이터 반영] 버튼 — 9월에 10월호를 만들 때처럼 달을 바꾸면 그 달의 "지난달" 데이터가 들어가도록. 연·월을 바꾸면 자동으로 재반영(자동으로 넣은 항목은 정리·갱신, 사진을 넣었거나 직접 고친 글은 그대로), 어느 달 데이터가 들어가는지 안내 문구 표시 · R2.7: 기사 카드 제목 중복 제거 — 카드 머리띠 제목과 본문 첫 줄이 같으면 본문에서 빼고, 날짜·인원 줄을 대표 줄로 크게(48px) 올림 · R2.6: 모바일 가독성 기준 재설계 — 소식지 1080px가 폰에서 약 390pt로 보이는 것(글자 ≈ px×0.36) 기준으로 기사 본문 최소 44px(≈16pt) 보장, 그보다 작아지면 줄이지 않고 페이지 분할(장수 최소·같으면 큰 글자). 제목은 42px까지만 줄이고 길면 두 줄, 소제목은 본문급 크기, 다단은 줄이 실제로 들어갈 때만(88% 기준), 칼럼 경계에서 소제목·이어지는 줄 안 끊김, 긴 낱말 글자 단위 줄바꿈. 이름 캡션 최소 30px(국기원·생일) · R2.5: 사진첩(행사·대회 카드) 순서 이동 ↑↓ 버튼 — 목록 순서=소식지 페이지 순서, 중간 배치 가능. 행사·대회 카드에 사진을 넣으면 기사 다음에 사진 페이지가 붙는 안내 보강 · R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
+var APP_VER = "v5.0"; /* R5.0: 승급심사 추천자 페이지 전면 개편(관장님 전달메모 서식) — ①대상은 나라차 프로그램의 «심사 추천» 명단 «전체»(누적 14회 이상 또는 지도진 추천) ②기준 회차(기본 24회)로 「심사 대상」/「조금 더 힘내요(N회 남음)」 두 묶음 + 「국기원 승품 심사 예정」 ③사진 대신 이름·띠색 막대·반 칩으로 한 장에 많이 담음 ④제목은 「10월」 주황 + 「승급심사 추천자」, 제목 아래 심사 일정 한 줄 ⑤하단 안내: 추천 기준 · 출석에 따라 확정 · 심사일 10일 전 개별 톡 신청서 안내(수정 가능) · R4.9: [🎬 TV용 영상 저장 (16:9)] — 같은 소식지를 1920×1080 영상으로 저장(TV·빔프로젝터 송출용). 책장 넘기듯 전환, 마지막 장→첫 장으로 이어져 반복 재생에 자연스러움. 한 장 시간·넘김 시간·배치(제목 패널/가운데) 선택. 외부 프로그램 없이 브라우저 녹화(MP4 우선, 안 되면 WebM) · R4.8: 명단 페이지(대상자·국기원·생일) 행과 행 사이 여백을 칸 크기에 비례해 넓힘 — 위아래가 답답해 보이던 문제 · R4.7: 명단 페이지 겹침 수정 — ①칸 높이를 «실제로 그리는 높이»와 똑같이 계산(종전엔 급수 줄이 빠져 아랫줄 사진과 겹침) ②이름·급수·날짜가 칸 폭을 넘으면 자동으로 글자를 줄임 ③생일자는 날짜(작게·회갈색)를 위에, 이름을 아래에 두 줄로 · R4.6: ①승급심사 대상자 = 나라차 프로그램 출석현황의 [심사확정] 체크 기준으로 변경(종전 추천 기준 폐지), 급수 낮은 순 ②[🔄 승급심사 대상자 불러오기] 전용 버튼 — [지난달 데이터 반영]과 따로, 명단이 바뀌면 이 버튼만 누르면 최신으로 갱신(선택도 초기화) ③휴일·휴관 글자가 지나치게 커지지 않도록 수련 내용보다 4px까지만 크게 · R4.5: 달력 수련 내용 글자 키움 — 긴 줄은 칸 안에서 자동 줄바꿈해 남는 세로 공간을 쓰게 함(종전엔 긴 한 줄에 맞추느라 달력 전체가 작아졌다) · R4.4: 휴일·휴관처럼 일정만 있는 칸의 글자 크기를 서로 같게(가장 빠듯한 칸 기준으로 통일, 수련 내용보다는 크게) — 종전엔 병합 폭에 따라 칸마다 달랐다 · R4.3: 달력 입력을 「날짜 옆 일정」과 「수련 내용」으로 분리 — 칸마다 일정 한 줄 입력칸(색: 파랑·빨강)과 내용 입력칸(색 5종)을 따로 둠. 옛 저장분은 자동 이관(일정 낱말이 섞인 칸에서 일정 줄만 라벨로 분리) · R4.2: ①승급심사 추천자 명단 페이지 추가(국기원 페이지 바로 앞) — 나라차 프로그램과 같은 규칙(누적 14회 이상·국기원 대기 제외 또는 지도진 수동추천), 현재 급수 → 취득 예정 급수 함께 표기 ②국기원·생일·추천자 명단은 15명까지 한 페이지에(열 수를 자동으로 늘려 배치) · R4.1: 수련계획표를 원본 소식지 형태로 — ①수련 내용은 여러 날 반복돼도 날마다 그대로 표기(병합하지 않음), 병합은 「추석 연휴 휴관」처럼 특별 일정만 있는 연속 칸에만 ②수련 내용이 함께 있는 날의 특별 일정(정기승급심사 등)은 날짜 바로 오른쪽에 색 알약 라벨로 표기하고 칸 배경도 옅게 ③마지막 줄 빈칸에 인성덕목 문구를 넣어 달력이 꽉 차게 · R4.0: 수련계획표에서 대체휴무·승급심사 같은 특별 일정은 글자를 조금 크게(+5px) — 글자색을 지정했거나 휴관·휴일·심사·대회·행사 등이 들어간 칸. 일반 수련 내용은 종전대로 균일 · R3.9: 수련계획표 글자 크기 균일화 — 2~3일 병합 칸 글자가 일별 칸보다 훨씬 크게 나오던 문제(병합만 최대 30px 허용·넓은 폭이라 줄지 않음). 이제 달력 전체에서 가장 빠듯한 칸에 맞춘 공통 크기를 쓰고, 병합 칸도 +2px까지만 · R3.8: [지난달 데이터 반영]을 이미 눌렀으면 바로 아래에 「✅ 이번 달 이미 반영됨 — n월 …을 m/d hh:mm에 반영」 표시(아직이면 눌러 달라는 안내). 호(연·월)마다 따로 기억 · R3.7: UI 전면 개편 — 전문 편집 프로그램 형태(상단 앱바 + 좌측 구역 레일 + 흰 패널). 안내 글이 희미하던 문제 수정(#4A5265·13px·Pretendard), 중립 회색 작업면 + 브랜드 네이비 크롬, 계절색은 이번 호 칩에만. 상단에 [미리보기 만들기] 상시 버튼 · R3.6: 개별 사진마다 모양 지정(자동·정사각형·가로·세로) + 줄맞춤(justified) 배치 — 지정한 사진은 그 비율대로, 나머지는 원본 비율대로 자동 배치하며 줄 폭을 꽉 채운다 · R3.5: 자동저장 + 편집권(잠금) — 한 달치는 한 PC에서만 저장, 다른 PC에서 열면 「작업 중」 경고와 [이어서 작업하기], 1분 하트비트·3분 임대 만료 · R3.4: 사범 키로도 클라우드 저장 가능 — 창고 이름을 att_news·att_news_YYYYMM 으로(서버 allow()가 사범 키에 att_ 접두어를 허용). 서버 수정 불필요. 예전 news 창고에 올린 호도 목록·받기에서 그대로 보임 · R3.3: 클라우드 보관 연동 — 보관한 호가 다른 PC에서도 보인다. 나라차 Apps Script를 그대로 사용(서버 수정 불필요·관리자 키 필요), 호마다 별도 창고 news_YYYYMM + 목록 창고 news. [이번 호 보관]하면 자동 업로드, 다른 PC에서 [🔄 클라우드 목록 새로고침]→[받기]. fail-closed·baseRev 충돌감지·묘비 유지, 기기 이름 표시 · R3.2: ①사진 배치 선택 — 사진첩마다 모양(자동·정사각형·가로 4:3/3:2·와이드 16:9·세로 3:4)과 열 수를 고를 수 있고, 모양을 고르면 그 비율을 지켜 가운데 배치(한 장에 몇 장 들어가는지 자동 계산) ②글자 크기·줄 간격(행간) 배율 설정 — 기사·인성덕목·체크리스트에 적용 · R3.1: 목차 재구현 — 항목이 많으면(16개 등) 겹쳐 뭉개지던 문제 해결. 항목 수에 맞춰 줄 높이·글자·배지를 자동 계산하고, 한 장에 무리면 여러 장으로 나눔(1/2 표시). 긴 제목은 줄였다가 말줄임. 목차 설명은 행사마다 날짜·인원이 나오도록 개선 · R3.0: ①라차 캐릭터(펭귄) 썸네일 아이콘 — 파비콘·홈화면 아이콘·머리말에 사용 ②화면 디자인 전면 개편 — 종이 질감 배경, 표지 느낌의 머리말(이번 호·계절), 부드러운 그림자 카드, 알약 버튼, 어두운 라이트테이블 미리보기, 선택한 달의 계절색이 화면 전체에 입혀짐 · R2.9: 완성본 보관 기능 — ①[📕 PDF 한 개로 저장](외부 라이브러리 없이 PDF 직접 생성·JPEG 임베드) ②[📦 지난 호 보관함] 결과 이미지가 아니라 재료(설정·글·사진)만 저장해 용량 절약, 목록에서 열기·파일(.json)로 내보내기·삭제, 파일에서 불러오기, 저장공간 사용량 표시(접속키는 보관 대상에서 제외) · R2.8: 1단계 비율 옆에 [🔄 지난달 데이터 반영] 버튼 — 9월에 10월호를 만들 때처럼 달을 바꾸면 그 달의 "지난달" 데이터가 들어가도록. 연·월을 바꾸면 자동으로 재반영(자동으로 넣은 항목은 정리·갱신, 사진을 넣었거나 직접 고친 글은 그대로), 어느 달 데이터가 들어가는지 안내 문구 표시 · R2.7: 기사 카드 제목 중복 제거 — 카드 머리띠 제목과 본문 첫 줄이 같으면 본문에서 빼고, 날짜·인원 줄을 대표 줄로 크게(48px) 올림 · R2.6: 모바일 가독성 기준 재설계 — 소식지 1080px가 폰에서 약 390pt로 보이는 것(글자 ≈ px×0.36) 기준으로 기사 본문 최소 44px(≈16pt) 보장, 그보다 작아지면 줄이지 않고 페이지 분할(장수 최소·같으면 큰 글자). 제목은 42px까지만 줄이고 길면 두 줄, 소제목은 본문급 크기, 다단은 줄이 실제로 들어갈 때만(88% 기준), 칼럼 경계에서 소제목·이어지는 줄 안 끊김, 긴 낱말 글자 단위 줄바꿈. 이름 캡션 최소 30px(국기원·생일) · R2.5: 사진첩(행사·대회 카드) 순서 이동 ↑↓ 버튼 — 목록 순서=소식지 페이지 순서, 중간 배치 가능. 행사·대회 카드에 사진을 넣으면 기사 다음에 사진 페이지가 붙는 안내 보강 · R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
 document.getElementById("verLabel").textContent = APP_VER;
 
 var GAS = "https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
@@ -473,6 +482,7 @@ var S = {
   calDays:{}, calColors:{}, calEv:{}, calNote:"", fontScale:100, lineScale:100, device:"", applied:{},
   kkwSub:"", kkwSel:{}, kkwManual:[], recSub:"", recSel:{}, recPulledT:0,
   tvSec:5, tvTurn:0.9, tvStyle:"panel",
+  recGoal:24, recKkw:false, recNote:"",
   bdayOff:{},
   albumTitle:"", bgPanel:true,
   pages:{cover:true,toc:true,virtue:true,schedule:true,cal:true,rec:true,kkw:true,bday:true,album:true,check:true}
@@ -714,8 +724,7 @@ function kkwLvOrder(lv){
   if(!m) return 99;
   return (+m[1]) + (m[2]==="단"?10:0);
 }
-/* [R4.6] 승급심사 대상자 — 나라차 프로그램 출석현황의 «심사확정» 체크(examConfirm.conf)
-   ready = (누적 수련횟수 14회 이상 && 국기원 대기 아님) || 지도진 수동추천(mrec) */
+/* 다음 급수 (나라차 프로그램과 같은 규칙) */
 function nextGradeOf(g){
   g=String(g||"").trim(); if(!g) return "";
   var m=g.match(/^(\d+)품\s*(\d+)급$/);
@@ -726,16 +735,43 @@ function nextGradeOf(g){
   if(m){ var k2=+m[1]-1; return k2>0 ? k2+"급" : "1품 후보(국기원)"; }
   return g;
 }
+/* [R5.0] 승급심사 추천자 — 나라차 프로그램의 «심사 추천» 명단 전체
+   (지난 심사 이후 누적 14회 이상 · 국기원 대기자 제외, 또는 지도진 수동추천)
+   그 안에서 기준 회차(기본 24회) 도달 여부로 «심사 대상» / «조금 더 힘내요»를 가른다. */
+var GUP_BELT={9:"흰띠",8:"노란띠",7:"주황띠",6:"초록띠",5:"파란띠",4:"보라띠",3:"밤띠",2:"빨간띠",1:"빨간띠"};
+var BELT_HEX={"흰띠":"#FFFFFF","노란띠":"#F5D01E","주황띠":"#F08A1E","초록띠":"#2E9E52","파란띠":"#1E6FD9",
+  "보라띠":"#7B4BC4","밤띠":"#6B4423","빨간띠":"#D42A3A","국기원빨강":"#D42A3A","품띠":"#D42A3A","검은띠":"#1A1A1A"};
+/* 급수 → 띠 이름 (품·단은 검은띠, 품보는 빨강+검정) */
+function beltOf(g){
+  g=String(g||"").trim(); var m;
+  if(m=g.match(/^(\d+)급$/)) return GUP_BELT[+m[1]]||"";
+  if(/품보|품\s*보/.test(g)) return "품띠";
+  if(/^\d+품/.test(g)) return /\d+급/.test(g) ? "품띠" : "검은띠";
+  if(/^\d+단/.test(g)) return "검은띠";
+  return "";
+}
+function beltHex(b){ return BELT_HEX[b]||"#9A9A9A"; }
+function isPumBelt(b){ return b==="품띠"; }   /* 빨강+검정 두 색 */
+/* 반 이름 정리: "2초주니어(8~10)" → "초주니어" */
+function clsOf(st){
+  var b=String((st&&st.b)||"").trim();
+  b=b.replace(/^\d+/,"").replace(/\([^)]*\)/g,"").trim();
+  return b;
+}
 function recCandidates(){
   if(!DATA.att) return [];
   var acc=mget(DATA.att.acc), ec=mget(DATA.att.examConfirm);
+  var kl=(DATA.att.kkw && DATA.att.kkw.list)||[];
   var out=[];
   activeStudents().forEach(function(st){
     var e=ec[st.n]||{};
-    if(!e.conf) return;   /* 심사확정 체크가 된 수련생만 */
-    out.push({ n:st.n, grade:st.grade||"", target:nextGradeOf(st.grade),
-               acc:Number(acc[st.n]||0), adult:isAdult(st), photo:photoOf(st.n),
-               auto:true, gi:gradeOrder(st.grade) });
+    var inKkw=kl.indexOf(st.n)>-1;
+    var a=Number(acc[st.n]||0);
+    var ready=((a>=14) && !inKkw) || !!e.mrec;     /* 나라차 프로그램의 심사추천 기준 */
+    if(!ready) return;
+    var belt=beltOf(st.grade);
+    out.push({ n:st.n, grade:st.grade||"", target:nextGradeOf(st.grade), belt:belt, cls:clsOf(st),
+               acc:a, adult:isAdult(st), photo:photoOf(st.n), auto:true, gi:gradeOrder(st.grade) });
   });
   out.sort(function(a,b){ return a.gi-b.gi || (a.n<b.n?-1:1); });
   return out;
@@ -770,7 +806,8 @@ function kkwCandidates(){
     if(!target) target=(s.grade||"").trim();
     var e=ec[s.n]||{};
     var auto=!!(e.kconf || e.mkkw || inList);
-    out.push({ n:s.n, grade:s.grade||"", target:target, adult:isAdult(s), photo:photoOf(s.n), auto:auto });
+    out.push({ n:s.n, grade:s.grade||"", target:target, adult:isAdult(s), photo:photoOf(s.n), auto:auto,
+               belt:beltOf(s.grade), cls:clsOf(s) });
   });
   out.sort(function(a,b){ return kkwLvOrder(a.target)-kkwLvOrder(b.target) || (a.n<b.n?-1:1); });
   return out;
@@ -1042,7 +1079,7 @@ function renderRecEditor(){
   box.innerHTML="";
   var cands=recCandidates();
   if(!cands.length){
-    box.innerHTML='<span class="hint">심사확정된 수련생이 없습니다. 나라차 프로그램 출석현황에서 [심사확정]을 체크한 뒤 위 버튼을 눌러 주세요.</span>';
+    box.innerHTML='<span class="hint">심사 추천 대상이 없습니다. (지난 심사 이후 누적 14회 이상 또는 지도진 추천 표시)</span>';
     updateRecPullInfo(); return;
   }
   cands.forEach(function(c){
@@ -1051,8 +1088,9 @@ function renderRecEditor(){
     var cb=document.createElement("input"); cb.type="checkbox"; cb.checked=checked;
     cb.onchange=function(){ if(!S.recSel) S.recSel={}; S.recSel[c.n]=cb.checked; saveS(); };
     var lv=document.createElement("span"); lv.className="lv"; lv.textContent=c.grade||"-";
+    if(Number(c.acc)>=Number(S.recGoal||24)) lab.style.borderColor="#2E9E52";
     lab.appendChild(cb); lab.appendChild(lv);
-    lab.appendChild(document.createTextNode(c.n+(c.adult?"님":"")+" ("+c.acc+"회)"));
+    lab.appendChild(document.createTextNode(c.n+(c.adult?"님":"")+" · "+(c.belt||c.grade||"")+" · "+c.acc+"회"));
     box.appendChild(lab);
   });
   updateRecPullInfo();
@@ -2243,54 +2281,188 @@ function balancedChunks(list, per0){
   for(var i=0;i<list.length;i+=per) out.push(list.slice(i,i+per));
   return out;
 }
-/* [R4.2/R4.6] 승급심사 대상자 명단 — 국기원 페이지 바로 앞에 들어간다 */
+/* [R5.0] 승급심사 추천자 명단 — 관장님 지침(2026-09-29 전달메모) 서식
+   ① 심사 대상(기준 회차 도달 예정) ② 조금 더 힘내요(회차 부족) ③ 국기원 승품 심사 예정
+   사진 없이 이름·띠·반만 담아 한 장에 많이 들어간다. 국기원 페이지 바로 앞. */
+function recGroups(list){
+  var goal=Number(S.recGoal||24);
+  var g1=[], g2=[];
+  list.forEach(function(c){ (c.acc>=goal ? g1 : g2).push(c); });
+  var g3=[];
+  if(S.recKkw===true){
+    selectedKkw().forEach(function(k){
+      g3.push({ n:k.n, belt:beltOf(k.grade||k.target), cls:k.cls||"", grade:k.grade||"",
+                target:k.target||"", adult:k.adult, acc:0 });
+    });
+  }
+  var out=[];
+  if(g1.length) out.push({ key:"ok",   t:"심사 대상 ("+goal+"회 도달 예정)", c:"#2E9E52",
+                           note:g1.length+"명 · 결석 없이 수련하면 응시", items:g1 });
+  if(g2.length) out.push({ key:"more", t:"조금 더 힘내요 (회차 부족)", c:"#E08A1E",
+                           note:g2.length+"명 · 추가 수련 시 응시 가능", items:g2, showLack:true });
+  if(g3.length) out.push({ key:"kkw",  t:"국기원 승품(단) 심사 예정", c:"#7B4BC4",
+                           note:g3.length+"명 · 국기원 심사", items:g3 });
+  return out;
+}
+function recNoteLines(){
+  var txt=String(S.recNote||"").trim();
+  if(txt) return txt.split("\n").map(function(l){ return l.trim(); }).filter(Boolean);
+  var goal=Number(S.recGoal||24);
+  return [
+    "추천 기준 : 지난 심사 이후 수련 14회 이상 · 심사일까지 "+goal+"회 도달 예상",
+    "이 명단은 지금까지의 수련 횟수로 산정한 예정자이며, "+S.month+"월 출석에 따라 최종 확정됩니다.",
+    "확정되신 분께는 심사일 10일 전까지 개별 톡으로 심사 신청서를 보내 드립니다."
+  ];
+}
+/* 두 가지 색으로 쓰는 큰 제목 (예: 「10월」 주황 + 「 승급심사 추천자」 갈색) */
+function titleTwo(x2, a1, b1, cx, cy, fs, ca, cb){
+  x2.save();
+  x2.font=fs+"px 'Jua'"; x2.textAlign="left"; x2.textBaseline="middle"; x2.lineJoin="round";
+  var wa=x2.measureText(a1).width, wb=x2.measureText(b1).width;
+  var x0=cx-(wa+wb)/2;
+  x2.strokeStyle="#fffdf4"; x2.lineWidth=Math.round(fs*0.16);
+  x2.shadowColor="rgba(0,0,0,0.15)"; x2.shadowOffsetY=4;
+  x2.strokeText(a1,x0,cy); x2.strokeText(b1,x0+wa,cy);
+  x2.shadowColor="transparent";
+  x2.fillStyle=ca; x2.fillText(a1,x0,cy);
+  x2.fillStyle=cb; x2.fillText(b1,x0+wa,cy);
+  x2.restore();
+}
+function drawBeltBar(x2, x, y, w, h, belt){
+  var r=Math.min(3,w/2);
+  function bar(col,yy,hh){ x2.fillStyle=col; x2.beginPath();
+    x2.moveTo(x+r,yy); x2.arcTo(x+w,yy,x+w,yy+hh,r); x2.arcTo(x+w,yy+hh,x,yy+hh,r);
+    x2.arcTo(x,yy+hh,x,yy,r); x2.arcTo(x,yy,x+w,yy,r); x2.closePath(); x2.fill(); }
+  if(isPumBelt(belt)){ bar("#D42A3A",y,h/2); bar("#1A1A1A",y+h/2,h/2); }
+  else bar(beltHex(belt), y, h);
+  if(belt==="흰띠"||!belt){ x2.strokeStyle="#C9C2B4"; x2.lineWidth=1.5; x2.strokeRect(x+0.75,y+0.75,w-1.5,h-1.5); }
+}
 function drawRecPages(no, list){
-  var t=theme(), pages=[], H=pageH(), R=S.ratio;
-  var hy=(R==="11")?150:190, sy0=(R==="11")?230:300;
-  var chunks=balancedChunks(list, 15);
-  chunks.forEach(function(chunk,pi){
+  var t=theme(), pages=[], H=pageH(), R=S.ratio, sq=(R==="11");
+  var hy=sq?150:190, sy0=sq?226:292;
+  var groups=recGroups(list);
+  if(!groups.length) return pages;
+  var PAD=96, COLS=(R==="916")?3:4, GAP=16;
+  var cw=Math.round((W-PAD*2-GAP*(COLS-1))/COLS), chH=100;
+  var HEAD=66, SECGAP=26, ROW=chH+14;
+  /* 부제목(심사 일정) 높이 */
+  var sub=String(S.recSub||"").trim();
+  var subH=sub?86:0;
+  var notes=recNoteLines();
+  var NOTE_F=22, noteH=notes.length*(NOTE_F+12)+26;
+  var top0=sy0+subH+(sub?18:4), bottom=panelBottom(H);
+  /* 블록(=칸 한 줄) 만들기 */
+  var blocks=[];
+  groups.forEach(function(g){
+    for(var i=0;i<g.items.length;i+=COLS)
+      blocks.push({ g:g, row:g.items.slice(i,i+COLS), first:(i===0) });
+  });
+  /* 페이지 나누기 — 한쪽으로 몰리지 않게 고르게 */
+  var avail=bottom-top0;
+  function packWith(limit){
+    var out=[], cur=[], h=0, prev=null;
+    blocks.forEach(function(bk){
+      var head=(!cur.length || prev!==bk.g);
+      var need=(head?HEAD+(cur.length?SECGAP:0):0)+ROW;
+      if(cur.length && h+need>limit){ out.push(cur); cur=[]; h=0; prev=null; head=true; need=HEAD+ROW; }
+      cur.push({b:bk, head:head, cont:(head && !bk.first)}); h+=need; prev=bk.g;
+    });
+    if(cur.length) out.push(cur);
+    return out;
+  }
+  function heightOf(pg){
+    var h=0, prev=null;
+    pg.forEach(function(it){ if(it.head) h+=HEAD+(prev?SECGAP:0); h+=ROW; prev=it.b.g; });
+    return h;
+  }
+  var plan=packWith(avail);
+  var want=plan.length;
+  if(heightOf(plan[plan.length-1])+noteH>avail) want++;   /* 안내 문구 자리 */
+  var totalH=0; plan.forEach(function(pg){ totalH+=heightOf(pg); });
+  if(want>1){
+    /* 장수를 늘리지 않는 선에서 가장 고르게 나뉘는 높이를 찾는다 */
+    var base=Math.ceil((totalH+noteH)/want);
+    for(var k=0;k<=8;k++){
+      var lim=Math.min(avail, Math.max(HEAD+ROW, base+Math.round(k*ROW*0.5)));
+      var p2=packWith(lim);
+      if(p2.length<=want && heightOf(p2[p2.length-1])+noteH<=avail){ plan=p2; break; }
+      if(lim>=avail) break;
+    }
+  }
+  plan.forEach(function(pg, pi){
     var c=pageBase(3+pi), x2=c.getContext("2d");
-    badge(x2,150,hy,chunks.length>1?(no+"-"+(pi+1)):no,t);
-    titleText(x2,"승급심사 대상자", W/2+30, hy, R==="11"?68:76, t);
-    var subB=sy0, sub=S.recSub||(S.month+"월 정기승급심사 대상자");
+    /* 이 장의 내용 높이 — 적게 차면 세로 가운데로 올려 빈 느낌을 없앤다 */
+    var contentH=heightOf(pg);
+    var isLast=(pi===plan.length-1);
+    var blockH=contentH+(isLast?(noteH+14):0);
+    var top=top0+Math.max(0, (bottom-top0-blockH)/2);
+    badge(x2,150,hy,plan.length>1?(no+"-"+(pi+1)):no,t);
+    titleTwo(x2, S.month+"월", " 승급심사 추천자", W/2+30, hy, sq?64:72, "#E07B2A", t.title);
     if(sub){
-      x2.font="500 36px 'Gowun Dodum'";
-      var sw=x2.measureText(sub).width+80, sx=W/2-sw/2, sy=sy0;
-      x2.fillStyle="#EDF1F8"; x2.strokeStyle=NAVY; x2.lineWidth=3;
-      rrect(x2,sx,sy,sw,76,16); x2.fill(); x2.stroke();
+      x2.font="700 34px 'Noto Sans KR'";
+      var f=34; while(f>22 && x2.measureText(sub).width>W-PAD*2-56){ f-=1; x2.font="700 "+f+"px 'Noto Sans KR'"; }
+      var bw=W-PAD*2, bx=PAD, by=sy0;
+      x2.fillStyle="#FFFFFF"; x2.strokeStyle=NAVY; x2.lineWidth=3;
+      rrect(x2,bx,by,bw,68,16); x2.fill(); x2.stroke();
       x2.fillStyle=NAVY; x2.textAlign="center"; x2.textBaseline="middle";
-      x2.fillText(sub, W/2, sy+40);
-      subB=sy0+76;
+      x2.fillText(sub, W/2, by+34);
     }
-    var n=chunk.length, top=subB+30, bottom=panelBottom(H);
-    /* [R4.7] 사진 + 이름줄 + 급수줄 + 여백 = 칸 높이 (그리는 높이와 똑같이 계산해 겹침 방지) */
-    var cF=function(cw){ return Math.max(20, Math.min(36, Math.round(cw*0.14))); };
-    var cellHf=function(cw){ var f=cF(cw); return cw + 12 + Math.round(f*1.28) + Math.round(f*0.78*1.32) + rowGapOf(cw); };
-    var G=fitGrid(n, W-140, bottom-top, 300, 110, cellHf);
-    if(!G) G={cols:5, cw:150, gap:20, rows:Math.ceil(n/5)};
-    var capF=cF(G.cw), gF=Math.round(capF*0.78), cellH=cellHf(G.cw);
-    var startY=top+Math.max(0,(bottom-top-(G.rows*cellH-rowGapOf(G.cw)))/2);
-    for(var idx=0; idx<n; idx++){
-      var r=Math.floor(idx/G.cols), col=idx%G.cols;
-      var inRow=Math.min(G.cols, n-r*G.cols);
-      var rowW=inRow*G.cw+(inRow-1)*G.gap;
-      var x=(W-rowW)/2+col*(G.cw+G.gap), y=startY+r*cellH;
-      var p=chunk[idx];
-      var img=(!p.adult&&p.photo)?IMGS.map[p.n]:null;
-      if(img) squareItem(x2,img,x,y,G.cw,G.cw);
-      else circleItem(x2,null,x+G.cw/2,y+G.cw/2,G.cw/2-8,t);
-      var mw=G.cw+G.gap*0.5, cx=x+G.cw/2, ty=y+G.cw+12;
-      x2.textAlign="center"; x2.textBaseline="top";
-      var ntxt=p.n+(p.adult?"님":"");
-      x2.font="700 "+fitText(x2,ntxt,mw,capF,"700","Noto Sans KR",16)+"px 'Noto Sans KR'";
-      x2.fillStyle="#222"; x2.fillText(ntxt, cx, ty);
-      var gtxt=(p.grade||"")+" → "+(p.target||"");
-      x2.font="500 "+fitText(x2,gtxt,mw,gF,"500","Noto Sans KR",13)+"px 'Noto Sans KR'";
-      x2.fillStyle=NAVY; x2.fillText(gtxt, cx, ty+Math.round(capF*1.28));
-      x2.textBaseline="middle";
+    var y=top, prevG=null;
+    pg.forEach(function(it){
+      var b=it.b;
+      if(it.head){
+        if(prevG) y+=SECGAP;
+        var g=b.g, cont=it.cont;
+        /* 색 점 */
+        x2.fillStyle=g.c; x2.beginPath(); x2.arc(PAD+9, y+26, 9, 0, 6.3); x2.fill();
+        x2.textAlign="left"; x2.textBaseline="middle";
+        x2.font="700 32px 'Noto Sans KR'"; x2.fillStyle="#2A2A2A";
+        var ttl=g.t+(cont?" (이어서)":"");
+        x2.fillText(ttl, PAD+30, y+26);
+        var tw=x2.measureText(ttl).width;
+        x2.font="500 21px 'Noto Sans KR'"; x2.fillStyle="#857C70";
+        var nw=x2.measureText(g.note).width;
+        x2.textAlign="right"; x2.fillText(g.note, W-PAD, y+27);
+        var lx0=PAD+30+tw+18, lx1=W-PAD-nw-18;
+        if(lx1>lx0+20){ x2.strokeStyle="#DCD4C6"; x2.lineWidth=2;
+          x2.beginPath(); x2.moveTo(lx0,y+27); x2.lineTo(lx1,y+27); x2.stroke(); }
+        y+=HEAD;
+        prevG=g;
+      }
+      b.row.forEach(function(p,ci){
+        var x=PAD+ci*(cw+GAP);
+        x2.fillStyle="#F7F2E8"; rrect(x2,x,y,cw,chH,14); x2.fill();
+        /* 이름 */
+        var nm=p.n+(p.adult?"님":"");
+        x2.textAlign="center"; x2.textBaseline="top";
+        x2.font="700 "+fitText(x2,nm,cw-24,30,"700","Noto Sans KR",18)+"px 'Noto Sans KR'";
+        x2.fillStyle="#2A2A2A"; x2.fillText(nm, x+cw/2, y+16);
+        /* 띠 + 반 (+부족 회차) */
+        var lack=(b.g.showLack && Number(S.recGoal||24)-p.acc>0) ? (" · "+(Number(S.recGoal||24)-p.acc)+"회 남음") : "";
+        var info=[p.belt||p.grade, p.cls].filter(Boolean).join(" · ")+lack;
+        if(!info) info=p.grade||"";
+        var ifz=fitText(x2, info, cw-46, 20, "500","Noto Sans KR", 13);
+        x2.font="500 "+ifz+"px 'Noto Sans KR'";
+        var iw=x2.measureText(info).width, bx0=x+(cw-(iw+14))/2;
+        drawBeltBar(x2, bx0, y+chH-34, 8, 22, p.belt);
+        x2.textAlign="left"; x2.fillStyle="#5A5348";
+        x2.fillText(info, bx0+14, y+chH-33);
+      });
+      y+=ROW;
+    });
+    /* 마지막 장 하단 안내 */
+    if(pi===plan.length-1){
+      var ny=y+30;
+      x2.textAlign="center"; x2.textBaseline="top"; x2.fillStyle="#6E665A";
+      notes.forEach(function(l,li){
+        var nf=fitText(x2,l,W-PAD*2,NOTE_F,"500","Noto Sans KR",15);
+        x2.font="500 "+nf+"px 'Noto Sans KR'";
+        x2.fillText(l, W/2, ny+li*(NOTE_F+12));
+      });
     }
+    x2.textAlign="left"; x2.textBaseline="alphabetic";
     footer(x2,c.height);
-    pages.push({name:"승급심사추천"+(chunks.length>1?("_"+(pi+1)):""), canvas:c});
+    pages.push({name:"승급심사추천"+(plan.length>1?("_"+(pi+1)):""), canvas:c});
   });
   return pages;
 }
@@ -2805,7 +2977,7 @@ function drawAlbumPages(no, ai, startIdx){
 var TVW=1920, TVH=1080;
 var TV={ busy:false, cancel:false };
 var TV_LABEL={ "표지":"표지", "목차":"목차", "인성덕목":"이달의 인성덕목", "일정":"이달의 일정",
-  "수련계획표":"수련계획표", "승급심사추천":"승급심사 대상자", "국기원심사":"국기원 승품(단) 심사",
+  "수련계획표":"수련계획표", "승급심사추천":"승급심사 추천자", "국기원심사":"국기원 승품(단) 심사",
   "생일자":"이달의 생일", "실천체크리스트":"실천 체크리스트" };
 function tvLabel(nm){
   nm=String(nm||"");
@@ -2999,7 +3171,7 @@ function makeAll(){
   bs.forEach(function(b){ glyphs+=b.n; });
   ks.forEach(function(k2){ glyphs+=k2.n+k2.target; });
   rs.forEach(function(r2){ glyphs+=r2.n+r2.grade+r2.target; });
-  glyphs+="승급심사 대상자→회";
+  glyphs+="승급심사 추천자→회 남음 이어서 도달 예정 조금 더 힘내요";
   var uniq=""; (function(){ var seen={}; for(var i=0;i<glyphs.length;i++){ var ch=glyphs[i]; if(!seen[ch]&&ch!==" "&&ch!=="\n"){ seen[ch]=1; uniq+=ch; } } })();
   var fontJobs=[
     document.fonts.load("100px 'Jua'",uniq),
@@ -3017,7 +3189,7 @@ function makeAll(){
     if(S.pages.schedule){ no++; plan.push({no:no,kind:"schedule"}); entries.push({title:S.month+"월 SCHEDULE", desc:S.month+"월 일정을 안내드려요."}); }
     if(S.pages.cal){ no++; plan.push({no:no,kind:"cal"}); entries.push({title:S.month+"월 수련계획표", desc:"매일의 수련 프로그램을 캘린더로 확인하실 수 있습니다."}); }
     /* 내용이 없는 페이지는 아예 만들지 않는다 (빈 카드가 밴드에 올라가는 것 방지) */
-    if(S.pages.rec && rs.length){ no++; plan.push({no:no,kind:"rec"}); entries.push({title:S.month+"월 승급심사 대상자", desc:"이번 달 정기승급심사에 응시하는 수련생 명단입니다."}); }
+    if(S.pages.rec && rs.length){ no++; plan.push({no:no,kind:"rec"}); entries.push({title:S.month+"월 승급심사 추천자", desc:"이번 달 정기승급심사 추천 명단입니다."}); }
     if(S.pages.kkw && ks.length){ no++; plan.push({no:no,kind:"kkw"}); entries.push({title:"국기원승품(단) 응시예정자", desc:"국기원심사 대상자를 안내합니다."}); }
     if(S.pages.bday && bs.length){ no++; plan.push({no:no,kind:"bday"}); entries.push({title:S.month+"월 생일자", desc:"생일을 축하합니다~"}); }
     if(S.pages.album){
@@ -3759,6 +3931,9 @@ function initInputs(){
   document.getElementById("pgSchedule").checked=!!S.pages.schedule;
   document.getElementById("pgCal").checked=!!S.pages.cal;
   document.getElementById("pgRec").checked=(S.pages.rec!==false);
+  document.getElementById("inRecGoal").value=String(S.recGoal||24);
+  document.getElementById("chkRecKkw").checked=(S.recKkw===true);
+  document.getElementById("inRecNote").value=S.recNote||"";
   document.getElementById("inTvSec").value=String(S.tvSec||5);
   document.getElementById("inTvTurn").value=String(S.tvTurn||0.9);
   document.getElementById("inTvStyle").value=S.tvStyle||"panel";
@@ -3807,6 +3982,9 @@ function initInputs(){
   initRail();
   document.getElementById("btnSaveAll").onclick=saveAllPng;
   document.getElementById("btnRecPull").onclick=pullRec;
+  document.getElementById("inRecGoal").onchange=function(){ S.recGoal=Number(this.value); saveS(); renderRecEditor(); };
+  document.getElementById("chkRecKkw").onchange=function(){ S.recKkw=this.checked; saveS(); };
+  document.getElementById("inRecNote").oninput=function(){ S.recNote=this.value; saveS(); };
   document.getElementById("btnKkwAdd").onclick=function(){
     var n=document.getElementById("inKkwAddName").value.trim();
     var lv=document.getElementById("inKkwAddLv").value.trim();
