@@ -482,7 +482,7 @@ details.help[open] summary{ margin-bottom:6px; }
    나라차 소식지 제작기
    var APP_VER 규칙: 수정할 때마다 +0.1, 내리지 않는다.
    ============================================================ */
-var APP_VER = "v6.9"; /* R6.9: 목차 포토앨범 설명(사진첩 제목들)을 자르지 않고 모두 표시 — 글자를 34→24px까지 줄이고 그래도 길면 여러 줄 · 품 2급→다음 품(국기원 대기)로 오기 수정(1품 2급 → 2품) · R6.8: 추천자 안내 상자 경고 문장 교체(관장님) — 「수련 횟수는 정규수련 및 보강수련 횟수 포함이며, 대회 준비를 위한 수련은 수련 횟수에 포함되지 않습니다. 명단이나 수련 횟수가 다르다고 생각되시면 도장으로 문의 바랍니다.」 · R6.7: 관장님 2차 수정요청(25쪽본 대조) 반영 — ①운영표 JSON 갱신(week_rule·application_dates 내장) ②1주 시작일은 운영표 주차 규칙 우선(10월 = 9/28, 연휴 건너뜀), 하단 띠 범위도 운영표 그대로(1주 9/28~10/2 …), 심사일 미입력 시 운영표 심사일 자동 ③04 승급심사 안내 알약 「10/26(월)·27(화) 오후 6시 | 신청서·심사비 납부 10/19(월)까지」·하단 「심사 신청서는 10/12(월)·13(화) 개별 톡으로 …」(운영표 없으면 심사일로 계산) ④05 국기원은 한 묶음 유지 + 「응시 월은 수련 진도에 따라 개별 안내드립니다」 · R6.6: 02 SCHEDULE 시안 맞춤 — 강조를 구절 단위(정기승급심사·심사 신청서·…마감 줄 전체)로만, **…** 직접 표시 지원, 흐름 상자 날짜 「10/12·13 신청서 톡 … 10/26·27 심사」 · R6.5: 최종본 주차 규칙 — 주차를 심사 주기로 셈(지난 심사 다음 수업일 = 1주차 → 4주차 심사점검 → 심사, 5주차 없음). 03 달력에 왼쪽 「주차」 열(1주 9/28~ · 4주 심사점검 · 심사 28일~11월 1주), 심사 다음 날 칸에 점선 경계 + 「11월 1주 →」, 하단 띠 「1주 · 9/28~10/2 / 차기 … 10/26·27 / 승급심사」, 안내 문구 「주차는 심사 다음 수업일부터 셉니다」. 03-1~03-3 안내 두 줄도 최종본 문안. 지난 심사일 입력(비우면 심사 기록에서 자동) · R6.4: ①국기원 응시예정자를 회차(12월/3월)별로 나눠 장을 구성 — 편집 화면에서 사람마다 회차 선택(기본은 다음 회차) ②목차 포토앨범 줄은 설명(사진첩 제목들)까지 두 줄, 설명 34px · R6.3: 관장님 수정 시안 반영 — ②02 SCHEDULE: 날짜 열+내용 열(심사·마감 등 굵게), 휴관은 빨강, 아래 「승급심사 흐름」 상자(심사일로 자동: 14일 전 톡 → 7일 전 마감 → 심사) ③03 수련계획표: 칸마다 날짜 + 일정 알약(휴관 빨강·심사 남색·대회 주황·행사 초록) + 체력훈련(초록 글씨), 아래 주차 띠(운영표 주차 집중 과목) + 「수련 안내(03-1~03-3)를 봐 주세요」 안내 · R6.2: 관장님 연동자료(2026-09-30) 반영 1단계 — ①월간 운영표 JSON 내장(2026-10~2027-09) + 교체 업로드(호 보관에 포함돼 다른 PC와 공유) ②「월 수련 안내」 반별 3장(03-1~03-3): 반 표식 배너(띠 칩)·이달의 품새/진도 상자·주차별 표 ③「승급심사 안내」 1장(04): 급별 차기·격파·품새 표 + 상급반 상자 ④추천자 명단(04-1~)의 추천 기준 상자를 관장님 스니펫 디자인·문안으로(추천 14회 → 응시 24회) ⑤여러 장이면 「보강 후 심사 대상」은 새 장에서 ⑥목차에 수련 안내·심사 안내 추가, 배지 03-1식 표기 ⑦국기원 제목·목차 「국기원 승품(단) 응시예정자」로 통일, 국기원 이름·생일 날짜 36px 이상 ⑧인성덕목에 운영표 사자성어(품행방정) 표기 ⑨하단 「NARACHA 나라차태권도」 띄어쓰기 · R6.1: 승급심사 추천자 — 묶음 머리의 「(이어서)」·인원수 제거, 두 단 사이 세로 구분선, 띠 명칭에서 「품띠」 삭제 · R6.0: 목차의 포토앨범 한 줄은 매거진 섹션 전체(사진첩+보고 카드) 범위 「포토앨범 (07 ~ 11)」로(페이지 번호는 각각 유지) · 다른 PC 이어 작업 보강 — ①앱을 열 때 클라우드에 더 새 내용이 있으면 받아서 열지 묻기 ②[받기]→「받아서 열기」로 바로 적용, [열기]는 클라우드가 더 새것이면 클라우드에서 ③자동 업로드 45초→15초, 창을 숨기면 즉시 업로드, 미업로드 변경이 있으면 닫기 전에 확인 · R5.9: 승급심사 추천자 개편(관장님 지침) — ①심사일까지 수련하면 기준 회차(24회)에 닿는지 계산(주당 횟수 × 남은 주, 달력 휴관 제외)해 「심사 대상(24회 도달 예정)」/「보강 후 심사 대상(보강 N회 필요, 적은 순)」 두 묶음 ②묶음 안은 「9급 흰띠 → 8급 노란띠」 소제목 아래 이름만 크게(칩 없음) ③추천 기준 3줄을 첫 장 위쪽 금색 박스로 ④심사일·기준 회차 입력 추가, 주1회 수련생은 18회 기준(프로그램 R4.410) · R5.8: 목차 정리 — ①사진만 있는 사진첩들은 «포토앨범» 한 묶음(번호 하나, 07-1·07-2…)으로 묶고 목차엔 「포토앨범 (07-1 ~ 07-6)」 한 줄 ②목차는 항상 한 장(항목 많으면 줄 높이·글자 자동 축소) ③KIS 방과후 행사는 소식지 자동 반영에서 제외(기존 자동 항목도 정리) · R5.7: ①표지 새 디자인 — 하늘→땅 그라데이션, 월별 모티프(봄 꽃·잎 / 여름 해·물방울 / 가을 단풍·도토리 / 겨울 눈)를 가장자리에 흩뿌림, 큰 숫자 「10」+「월」, 「NARACHA NEWS LETTER · OCTOBER 2026」 자간 표기, 계절 한 줄 문구(월별 기본·직접 입력 가능), 이중 액자 카드 ②승급심사 추천자 푸터가 금색 테두리와 겹치던 것 수정 · R5.6: 디자인 전수 점검(디자이너 3인 검토 반영) — ①사진첩: 좌우 폭 960px로 통일·간격 16·모서리 16, 줄 폭은 항상 꽉 채우고 높이로 페이지를 채움(세로사진 칸 236px 미만 조합 배제) ②글 카드: 카드 높이를 내용에 맞춤, 본문 폭 확장, 이어지는 줄은 「이름 — 」 뒤에 맞춰 내어쓰기, 소제목 위 띄우고 아래 붙임, 행간 20, 콜론·날짜 표기 통일(8월 3일) ③목차 항목 40px↑·배지 숫자 확대 ④인성덕목 정의문 40px 진하게, 구분선을 본문 폭에 맞춤, 본문 44px ⑤체크리스트 한 줄 제목·점선 상하 균등·본문 44px ⑥일정이 비면 페이지 생성 안 함 ⑦달력 토요일 숫자 파랑, 격자 위 여백 축소 ⑧승급심사 칩 확대(116px)·흰띠 채움 ⑨국기원·생일 네모 격자 우선(4명=2×2), 캡션 확대, 장식 간격 확보, 색종이 배지 겹침 제거 ⑩표지 News Letter 대비·제목 간격 · R5.5: 승급심사 추천자 장을 다른 장과 확실히 구분 — 도복 남색 바탕 + 금색 이중 테두리·모서리 마름모, 금색 번호 배지, 「10월」 금색 + 「승급심사 추천자」 흰색 제목, 흰 카드 칩(그림자), 전용 푸터. 밝은 파스텔 사이에서 눈에 띄도록(학부모 주목·도장 마케팅 목적) · R5.4: ①얼굴 사진을 한 장도 못 받았는데 소식지를 만들면 경고(종전엔 조용히 로고만 들어갔다) ②[승급심사 추천자 불러오기]가 사진 창고도 함께 받아 새로 찍은 사진이 반영되도록 · R5.3: 승급심사 추천자 — 「심사 기준 회차」로 묶음을 나누던 것을 없앰. 지금 심사 추천에 있는 사람이 곧 이번 달 대상이므로 한 묶음으로 싣는다(국기원 묶음은 선택 그대로) · R5.2: TV 영상 전환은 «카드 넘김» 한 가지로 정리(책장 넘김 삭제) · R5.1: TV 영상 — ①오른쪽 소식지를 더 크게(화면 높이의 92%·폭 한도 64%) ②전환 기본을 «카드 넘김»으로: 앞 장을 살짝 앞으로 당겼다가 뒤로 밀어 넣으면 뒤에서 기다리던 다음 장이 올라온다(책장 넘김도 선택 가능) · R5.0: 승급심사 추천자 페이지 전면 개편(관장님 전달메모 서식) — ①대상은 나라차 프로그램의 «심사 추천» 명단 «전체»(누적 14회 이상 또는 지도진 추천) ②기준 회차(기본 24회)로 「심사 대상」/「조금 더 힘내요(N회 남음)」 두 묶음 + 「국기원 승품 심사 예정」 ③사진 대신 이름·띠색 막대·반 칩으로 한 장에 많이 담음 ④제목은 「10월」 주황 + 「승급심사 추천자」, 제목 아래 심사 일정 한 줄 ⑤하단 안내: 추천 기준 · 출석에 따라 확정 · 심사일 10일 전 개별 톡 신청서 안내(수정 가능) · R4.9: [🎬 TV용 영상 저장 (16:9)] — 같은 소식지를 1920×1080 영상으로 저장(TV·빔프로젝터 송출용). 책장 넘기듯 전환, 마지막 장→첫 장으로 이어져 반복 재생에 자연스러움. 한 장 시간·넘김 시간·배치(제목 패널/가운데) 선택. 외부 프로그램 없이 브라우저 녹화(MP4 우선, 안 되면 WebM) · R4.8: 명단 페이지(대상자·국기원·생일) 행과 행 사이 여백을 칸 크기에 비례해 넓힘 — 위아래가 답답해 보이던 문제 · R4.7: 명단 페이지 겹침 수정 — ①칸 높이를 «실제로 그리는 높이»와 똑같이 계산(종전엔 급수 줄이 빠져 아랫줄 사진과 겹침) ②이름·급수·날짜가 칸 폭을 넘으면 자동으로 글자를 줄임 ③생일자는 날짜(작게·회갈색)를 위에, 이름을 아래에 두 줄로 · R4.6: ①승급심사 대상자 = 나라차 프로그램 출석현황의 [심사확정] 체크 기준으로 변경(종전 추천 기준 폐지), 급수 낮은 순 ②[🔄 승급심사 대상자 불러오기] 전용 버튼 — [지난달 데이터 반영]과 따로, 명단이 바뀌면 이 버튼만 누르면 최신으로 갱신(선택도 초기화) ③휴일·휴관 글자가 지나치게 커지지 않도록 수련 내용보다 4px까지만 크게 · R4.5: 달력 수련 내용 글자 키움 — 긴 줄은 칸 안에서 자동 줄바꿈해 남는 세로 공간을 쓰게 함(종전엔 긴 한 줄에 맞추느라 달력 전체가 작아졌다) · R4.4: 휴일·휴관처럼 일정만 있는 칸의 글자 크기를 서로 같게(가장 빠듯한 칸 기준으로 통일, 수련 내용보다는 크게) — 종전엔 병합 폭에 따라 칸마다 달랐다 · R4.3: 달력 입력을 「날짜 옆 일정」과 「수련 내용」으로 분리 — 칸마다 일정 한 줄 입력칸(색: 파랑·빨강)과 내용 입력칸(색 5종)을 따로 둠. 옛 저장분은 자동 이관(일정 낱말이 섞인 칸에서 일정 줄만 라벨로 분리) · R4.2: ①승급심사 추천자 명단 페이지 추가(국기원 페이지 바로 앞) — 나라차 프로그램과 같은 규칙(누적 14회 이상·국기원 대기 제외 또는 지도진 수동추천), 현재 급수 → 취득 예정 급수 함께 표기 ②국기원·생일·추천자 명단은 15명까지 한 페이지에(열 수를 자동으로 늘려 배치) · R4.1: 수련계획표를 원본 소식지 형태로 — ①수련 내용은 여러 날 반복돼도 날마다 그대로 표기(병합하지 않음), 병합은 「추석 연휴 휴관」처럼 특별 일정만 있는 연속 칸에만 ②수련 내용이 함께 있는 날의 특별 일정(정기승급심사 등)은 날짜 바로 오른쪽에 색 알약 라벨로 표기하고 칸 배경도 옅게 ③마지막 줄 빈칸에 인성덕목 문구를 넣어 달력이 꽉 차게 · R4.0: 수련계획표에서 대체휴무·승급심사 같은 특별 일정은 글자를 조금 크게(+5px) — 글자색을 지정했거나 휴관·휴일·심사·대회·행사 등이 들어간 칸. 일반 수련 내용은 종전대로 균일 · R3.9: 수련계획표 글자 크기 균일화 — 2~3일 병합 칸 글자가 일별 칸보다 훨씬 크게 나오던 문제(병합만 최대 30px 허용·넓은 폭이라 줄지 않음). 이제 달력 전체에서 가장 빠듯한 칸에 맞춘 공통 크기를 쓰고, 병합 칸도 +2px까지만 · R3.8: [지난달 데이터 반영]을 이미 눌렀으면 바로 아래에 「✅ 이번 달 이미 반영됨 — n월 …을 m/d hh:mm에 반영」 표시(아직이면 눌러 달라는 안내). 호(연·월)마다 따로 기억 · R3.7: UI 전면 개편 — 전문 편집 프로그램 형태(상단 앱바 + 좌측 구역 레일 + 흰 패널). 안내 글이 희미하던 문제 수정(#4A5265·13px·Pretendard), 중립 회색 작업면 + 브랜드 네이비 크롬, 계절색은 이번 호 칩에만. 상단에 [미리보기 만들기] 상시 버튼 · R3.6: 개별 사진마다 모양 지정(자동·정사각형·가로·세로) + 줄맞춤(justified) 배치 — 지정한 사진은 그 비율대로, 나머지는 원본 비율대로 자동 배치하며 줄 폭을 꽉 채운다 · R3.5: 자동저장 + 편집권(잠금) — 한 달치는 한 PC에서만 저장, 다른 PC에서 열면 「작업 중」 경고와 [이어서 작업하기], 1분 하트비트·3분 임대 만료 · R3.4: 사범 키로도 클라우드 저장 가능 — 창고 이름을 att_news·att_news_YYYYMM 으로(서버 allow()가 사범 키에 att_ 접두어를 허용). 서버 수정 불필요. 예전 news 창고에 올린 호도 목록·받기에서 그대로 보임 · R3.3: 클라우드 보관 연동 — 보관한 호가 다른 PC에서도 보인다. 나라차 Apps Script를 그대로 사용(서버 수정 불필요·관리자 키 필요), 호마다 별도 창고 news_YYYYMM + 목록 창고 news. [이번 호 보관]하면 자동 업로드, 다른 PC에서 [🔄 클라우드 목록 새로고침]→[받기]. fail-closed·baseRev 충돌감지·묘비 유지, 기기 이름 표시 · R3.2: ①사진 배치 선택 — 사진첩마다 모양(자동·정사각형·가로 4:3/3:2·와이드 16:9·세로 3:4)과 열 수를 고를 수 있고, 모양을 고르면 그 비율을 지켜 가운데 배치(한 장에 몇 장 들어가는지 자동 계산) ②글자 크기·줄 간격(행간) 배율 설정 — 기사·인성덕목·체크리스트에 적용 · R3.1: 목차 재구현 — 항목이 많으면(16개 등) 겹쳐 뭉개지던 문제 해결. 항목 수에 맞춰 줄 높이·글자·배지를 자동 계산하고, 한 장에 무리면 여러 장으로 나눔(1/2 표시). 긴 제목은 줄였다가 말줄임. 목차 설명은 행사마다 날짜·인원이 나오도록 개선 · R3.0: ①라차 캐릭터(펭귄) 썸네일 아이콘 — 파비콘·홈화면 아이콘·머리말에 사용 ②화면 디자인 전면 개편 — 종이 질감 배경, 표지 느낌의 머리말(이번 호·계절), 부드러운 그림자 카드, 알약 버튼, 어두운 라이트테이블 미리보기, 선택한 달의 계절색이 화면 전체에 입혀짐 · R2.9: 완성본 보관 기능 — ①[📕 PDF 한 개로 저장](외부 라이브러리 없이 PDF 직접 생성·JPEG 임베드) ②[📦 지난 호 보관함] 결과 이미지가 아니라 재료(설정·글·사진)만 저장해 용량 절약, 목록에서 열기·파일(.json)로 내보내기·삭제, 파일에서 불러오기, 저장공간 사용량 표시(접속키는 보관 대상에서 제외) · R2.8: 1단계 비율 옆에 [🔄 지난달 데이터 반영] 버튼 — 9월에 10월호를 만들 때처럼 달을 바꾸면 그 달의 "지난달" 데이터가 들어가도록. 연·월을 바꾸면 자동으로 재반영(자동으로 넣은 항목은 정리·갱신, 사진을 넣었거나 직접 고친 글은 그대로), 어느 달 데이터가 들어가는지 안내 문구 표시 · R2.7: 기사 카드 제목 중복 제거 — 카드 머리띠 제목과 본문 첫 줄이 같으면 본문에서 빼고, 날짜·인원 줄을 대표 줄로 크게(48px) 올림 · R2.6: 모바일 가독성 기준 재설계 — 소식지 1080px가 폰에서 약 390pt로 보이는 것(글자 ≈ px×0.36) 기준으로 기사 본문 최소 44px(≈16pt) 보장, 그보다 작아지면 줄이지 않고 페이지 분할(장수 최소·같으면 큰 글자). 제목은 42px까지만 줄이고 길면 두 줄, 소제목은 본문급 크기, 다단은 줄이 실제로 들어갈 때만(88% 기준), 칼럼 경계에서 소제목·이어지는 줄 안 끊김, 긴 낱말 글자 단위 줄바꿈. 이름 캡션 최소 30px(국기원·생일) · R2.5: 사진첩(행사·대회 카드) 순서 이동 ↑↓ 버튼 — 목록 순서=소식지 페이지 순서, 중간 배치 가능. 행사·대회 카드에 사진을 넣으면 기사 다음에 사진 페이지가 붙는 안내 보강 · R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
+var APP_VER = "v7.0"; /* R7.0: 모바일 가독성 — 장수·디자인은 그대로 두고 작은 글자를 키움. ①02 SCHEDULE: 남는 공간만큼 글자 확대(줄바꿈이 새로 생기지 않는 최대), 날짜 열 폭을 실제 날짜에 맞춤, 흐름 상자는 「→」 단위로만 줄바꿈 ②03 수련계획표: 칸을 넓히고 날짜·일정 알약·체력훈련 글자 확대(낱말이 잘리지 않는 최대, 유난히 긴 낱말만 그 줄 축소), 요일·주차·하단 띠·안내 확대 ③03-1~3 수련 안내: 설명 글자를 따로 키우고 좌우 열 나눔을 내용에 맞춤 ④04 승급심사 안내: 표 간격을 줄여 본문 확대, 안내는 「·」 단위 줄바꿈 ⑤04-1 추천자: 안내 상자·소제목 확대(장수가 늘면 자동으로 종전 크기) ⑥05 국기원 안내 한 줄·목차 포토앨범 설명 확대 ⑦줄 맨 앞이 「·」로 시작하지 않게 · R6.9: 목차 포토앨범 설명(사진첩 제목들)을 자르지 않고 모두 표시 — 글자를 34→24px까지 줄이고 그래도 길면 여러 줄 · 품 2급→다음 품(국기원 대기)로 오기 수정(1품 2급 → 2품) · R6.8: 추천자 안내 상자 경고 문장 교체(관장님) — 「수련 횟수는 정규수련 및 보강수련 횟수 포함이며, 대회 준비를 위한 수련은 수련 횟수에 포함되지 않습니다. 명단이나 수련 횟수가 다르다고 생각되시면 도장으로 문의 바랍니다.」 · R6.7: 관장님 2차 수정요청(25쪽본 대조) 반영 — ①운영표 JSON 갱신(week_rule·application_dates 내장) ②1주 시작일은 운영표 주차 규칙 우선(10월 = 9/28, 연휴 건너뜀), 하단 띠 범위도 운영표 그대로(1주 9/28~10/2 …), 심사일 미입력 시 운영표 심사일 자동 ③04 승급심사 안내 알약 「10/26(월)·27(화) 오후 6시 | 신청서·심사비 납부 10/19(월)까지」·하단 「심사 신청서는 10/12(월)·13(화) 개별 톡으로 …」(운영표 없으면 심사일로 계산) ④05 국기원은 한 묶음 유지 + 「응시 월은 수련 진도에 따라 개별 안내드립니다」 · R6.6: 02 SCHEDULE 시안 맞춤 — 강조를 구절 단위(정기승급심사·심사 신청서·…마감 줄 전체)로만, **…** 직접 표시 지원, 흐름 상자 날짜 「10/12·13 신청서 톡 … 10/26·27 심사」 · R6.5: 최종본 주차 규칙 — 주차를 심사 주기로 셈(지난 심사 다음 수업일 = 1주차 → 4주차 심사점검 → 심사, 5주차 없음). 03 달력에 왼쪽 「주차」 열(1주 9/28~ · 4주 심사점검 · 심사 28일~11월 1주), 심사 다음 날 칸에 점선 경계 + 「11월 1주 →」, 하단 띠 「1주 · 9/28~10/2 / 차기 … 10/26·27 / 승급심사」, 안내 문구 「주차는 심사 다음 수업일부터 셉니다」. 03-1~03-3 안내 두 줄도 최종본 문안. 지난 심사일 입력(비우면 심사 기록에서 자동) · R6.4: ①국기원 응시예정자를 회차(12월/3월)별로 나눠 장을 구성 — 편집 화면에서 사람마다 회차 선택(기본은 다음 회차) ②목차 포토앨범 줄은 설명(사진첩 제목들)까지 두 줄, 설명 34px · R6.3: 관장님 수정 시안 반영 — ②02 SCHEDULE: 날짜 열+내용 열(심사·마감 등 굵게), 휴관은 빨강, 아래 「승급심사 흐름」 상자(심사일로 자동: 14일 전 톡 → 7일 전 마감 → 심사) ③03 수련계획표: 칸마다 날짜 + 일정 알약(휴관 빨강·심사 남색·대회 주황·행사 초록) + 체력훈련(초록 글씨), 아래 주차 띠(운영표 주차 집중 과목) + 「수련 안내(03-1~03-3)를 봐 주세요」 안내 · R6.2: 관장님 연동자료(2026-09-30) 반영 1단계 — ①월간 운영표 JSON 내장(2026-10~2027-09) + 교체 업로드(호 보관에 포함돼 다른 PC와 공유) ②「월 수련 안내」 반별 3장(03-1~03-3): 반 표식 배너(띠 칩)·이달의 품새/진도 상자·주차별 표 ③「승급심사 안내」 1장(04): 급별 차기·격파·품새 표 + 상급반 상자 ④추천자 명단(04-1~)의 추천 기준 상자를 관장님 스니펫 디자인·문안으로(추천 14회 → 응시 24회) ⑤여러 장이면 「보강 후 심사 대상」은 새 장에서 ⑥목차에 수련 안내·심사 안내 추가, 배지 03-1식 표기 ⑦국기원 제목·목차 「국기원 승품(단) 응시예정자」로 통일, 국기원 이름·생일 날짜 36px 이상 ⑧인성덕목에 운영표 사자성어(품행방정) 표기 ⑨하단 「NARACHA 나라차태권도」 띄어쓰기 · R6.1: 승급심사 추천자 — 묶음 머리의 「(이어서)」·인원수 제거, 두 단 사이 세로 구분선, 띠 명칭에서 「품띠」 삭제 · R6.0: 목차의 포토앨범 한 줄은 매거진 섹션 전체(사진첩+보고 카드) 범위 「포토앨범 (07 ~ 11)」로(페이지 번호는 각각 유지) · 다른 PC 이어 작업 보강 — ①앱을 열 때 클라우드에 더 새 내용이 있으면 받아서 열지 묻기 ②[받기]→「받아서 열기」로 바로 적용, [열기]는 클라우드가 더 새것이면 클라우드에서 ③자동 업로드 45초→15초, 창을 숨기면 즉시 업로드, 미업로드 변경이 있으면 닫기 전에 확인 · R5.9: 승급심사 추천자 개편(관장님 지침) — ①심사일까지 수련하면 기준 회차(24회)에 닿는지 계산(주당 횟수 × 남은 주, 달력 휴관 제외)해 「심사 대상(24회 도달 예정)」/「보강 후 심사 대상(보강 N회 필요, 적은 순)」 두 묶음 ②묶음 안은 「9급 흰띠 → 8급 노란띠」 소제목 아래 이름만 크게(칩 없음) ③추천 기준 3줄을 첫 장 위쪽 금색 박스로 ④심사일·기준 회차 입력 추가, 주1회 수련생은 18회 기준(프로그램 R4.410) · R5.8: 목차 정리 — ①사진만 있는 사진첩들은 «포토앨범» 한 묶음(번호 하나, 07-1·07-2…)으로 묶고 목차엔 「포토앨범 (07-1 ~ 07-6)」 한 줄 ②목차는 항상 한 장(항목 많으면 줄 높이·글자 자동 축소) ③KIS 방과후 행사는 소식지 자동 반영에서 제외(기존 자동 항목도 정리) · R5.7: ①표지 새 디자인 — 하늘→땅 그라데이션, 월별 모티프(봄 꽃·잎 / 여름 해·물방울 / 가을 단풍·도토리 / 겨울 눈)를 가장자리에 흩뿌림, 큰 숫자 「10」+「월」, 「NARACHA NEWS LETTER · OCTOBER 2026」 자간 표기, 계절 한 줄 문구(월별 기본·직접 입력 가능), 이중 액자 카드 ②승급심사 추천자 푸터가 금색 테두리와 겹치던 것 수정 · R5.6: 디자인 전수 점검(디자이너 3인 검토 반영) — ①사진첩: 좌우 폭 960px로 통일·간격 16·모서리 16, 줄 폭은 항상 꽉 채우고 높이로 페이지를 채움(세로사진 칸 236px 미만 조합 배제) ②글 카드: 카드 높이를 내용에 맞춤, 본문 폭 확장, 이어지는 줄은 「이름 — 」 뒤에 맞춰 내어쓰기, 소제목 위 띄우고 아래 붙임, 행간 20, 콜론·날짜 표기 통일(8월 3일) ③목차 항목 40px↑·배지 숫자 확대 ④인성덕목 정의문 40px 진하게, 구분선을 본문 폭에 맞춤, 본문 44px ⑤체크리스트 한 줄 제목·점선 상하 균등·본문 44px ⑥일정이 비면 페이지 생성 안 함 ⑦달력 토요일 숫자 파랑, 격자 위 여백 축소 ⑧승급심사 칩 확대(116px)·흰띠 채움 ⑨국기원·생일 네모 격자 우선(4명=2×2), 캡션 확대, 장식 간격 확보, 색종이 배지 겹침 제거 ⑩표지 News Letter 대비·제목 간격 · R5.5: 승급심사 추천자 장을 다른 장과 확실히 구분 — 도복 남색 바탕 + 금색 이중 테두리·모서리 마름모, 금색 번호 배지, 「10월」 금색 + 「승급심사 추천자」 흰색 제목, 흰 카드 칩(그림자), 전용 푸터. 밝은 파스텔 사이에서 눈에 띄도록(학부모 주목·도장 마케팅 목적) · R5.4: ①얼굴 사진을 한 장도 못 받았는데 소식지를 만들면 경고(종전엔 조용히 로고만 들어갔다) ②[승급심사 추천자 불러오기]가 사진 창고도 함께 받아 새로 찍은 사진이 반영되도록 · R5.3: 승급심사 추천자 — 「심사 기준 회차」로 묶음을 나누던 것을 없앰. 지금 심사 추천에 있는 사람이 곧 이번 달 대상이므로 한 묶음으로 싣는다(국기원 묶음은 선택 그대로) · R5.2: TV 영상 전환은 «카드 넘김» 한 가지로 정리(책장 넘김 삭제) · R5.1: TV 영상 — ①오른쪽 소식지를 더 크게(화면 높이의 92%·폭 한도 64%) ②전환 기본을 «카드 넘김»으로: 앞 장을 살짝 앞으로 당겼다가 뒤로 밀어 넣으면 뒤에서 기다리던 다음 장이 올라온다(책장 넘김도 선택 가능) · R5.0: 승급심사 추천자 페이지 전면 개편(관장님 전달메모 서식) — ①대상은 나라차 프로그램의 «심사 추천» 명단 «전체»(누적 14회 이상 또는 지도진 추천) ②기준 회차(기본 24회)로 「심사 대상」/「조금 더 힘내요(N회 남음)」 두 묶음 + 「국기원 승품 심사 예정」 ③사진 대신 이름·띠색 막대·반 칩으로 한 장에 많이 담음 ④제목은 「10월」 주황 + 「승급심사 추천자」, 제목 아래 심사 일정 한 줄 ⑤하단 안내: 추천 기준 · 출석에 따라 확정 · 심사일 10일 전 개별 톡 신청서 안내(수정 가능) · R4.9: [🎬 TV용 영상 저장 (16:9)] — 같은 소식지를 1920×1080 영상으로 저장(TV·빔프로젝터 송출용). 책장 넘기듯 전환, 마지막 장→첫 장으로 이어져 반복 재생에 자연스러움. 한 장 시간·넘김 시간·배치(제목 패널/가운데) 선택. 외부 프로그램 없이 브라우저 녹화(MP4 우선, 안 되면 WebM) · R4.8: 명단 페이지(대상자·국기원·생일) 행과 행 사이 여백을 칸 크기에 비례해 넓힘 — 위아래가 답답해 보이던 문제 · R4.7: 명단 페이지 겹침 수정 — ①칸 높이를 «실제로 그리는 높이»와 똑같이 계산(종전엔 급수 줄이 빠져 아랫줄 사진과 겹침) ②이름·급수·날짜가 칸 폭을 넘으면 자동으로 글자를 줄임 ③생일자는 날짜(작게·회갈색)를 위에, 이름을 아래에 두 줄로 · R4.6: ①승급심사 대상자 = 나라차 프로그램 출석현황의 [심사확정] 체크 기준으로 변경(종전 추천 기준 폐지), 급수 낮은 순 ②[🔄 승급심사 대상자 불러오기] 전용 버튼 — [지난달 데이터 반영]과 따로, 명단이 바뀌면 이 버튼만 누르면 최신으로 갱신(선택도 초기화) ③휴일·휴관 글자가 지나치게 커지지 않도록 수련 내용보다 4px까지만 크게 · R4.5: 달력 수련 내용 글자 키움 — 긴 줄은 칸 안에서 자동 줄바꿈해 남는 세로 공간을 쓰게 함(종전엔 긴 한 줄에 맞추느라 달력 전체가 작아졌다) · R4.4: 휴일·휴관처럼 일정만 있는 칸의 글자 크기를 서로 같게(가장 빠듯한 칸 기준으로 통일, 수련 내용보다는 크게) — 종전엔 병합 폭에 따라 칸마다 달랐다 · R4.3: 달력 입력을 「날짜 옆 일정」과 「수련 내용」으로 분리 — 칸마다 일정 한 줄 입력칸(색: 파랑·빨강)과 내용 입력칸(색 5종)을 따로 둠. 옛 저장분은 자동 이관(일정 낱말이 섞인 칸에서 일정 줄만 라벨로 분리) · R4.2: ①승급심사 추천자 명단 페이지 추가(국기원 페이지 바로 앞) — 나라차 프로그램과 같은 규칙(누적 14회 이상·국기원 대기 제외 또는 지도진 수동추천), 현재 급수 → 취득 예정 급수 함께 표기 ②국기원·생일·추천자 명단은 15명까지 한 페이지에(열 수를 자동으로 늘려 배치) · R4.1: 수련계획표를 원본 소식지 형태로 — ①수련 내용은 여러 날 반복돼도 날마다 그대로 표기(병합하지 않음), 병합은 「추석 연휴 휴관」처럼 특별 일정만 있는 연속 칸에만 ②수련 내용이 함께 있는 날의 특별 일정(정기승급심사 등)은 날짜 바로 오른쪽에 색 알약 라벨로 표기하고 칸 배경도 옅게 ③마지막 줄 빈칸에 인성덕목 문구를 넣어 달력이 꽉 차게 · R4.0: 수련계획표에서 대체휴무·승급심사 같은 특별 일정은 글자를 조금 크게(+5px) — 글자색을 지정했거나 휴관·휴일·심사·대회·행사 등이 들어간 칸. 일반 수련 내용은 종전대로 균일 · R3.9: 수련계획표 글자 크기 균일화 — 2~3일 병합 칸 글자가 일별 칸보다 훨씬 크게 나오던 문제(병합만 최대 30px 허용·넓은 폭이라 줄지 않음). 이제 달력 전체에서 가장 빠듯한 칸에 맞춘 공통 크기를 쓰고, 병합 칸도 +2px까지만 · R3.8: [지난달 데이터 반영]을 이미 눌렀으면 바로 아래에 「✅ 이번 달 이미 반영됨 — n월 …을 m/d hh:mm에 반영」 표시(아직이면 눌러 달라는 안내). 호(연·월)마다 따로 기억 · R3.7: UI 전면 개편 — 전문 편집 프로그램 형태(상단 앱바 + 좌측 구역 레일 + 흰 패널). 안내 글이 희미하던 문제 수정(#4A5265·13px·Pretendard), 중립 회색 작업면 + 브랜드 네이비 크롬, 계절색은 이번 호 칩에만. 상단에 [미리보기 만들기] 상시 버튼 · R3.6: 개별 사진마다 모양 지정(자동·정사각형·가로·세로) + 줄맞춤(justified) 배치 — 지정한 사진은 그 비율대로, 나머지는 원본 비율대로 자동 배치하며 줄 폭을 꽉 채운다 · R3.5: 자동저장 + 편집권(잠금) — 한 달치는 한 PC에서만 저장, 다른 PC에서 열면 「작업 중」 경고와 [이어서 작업하기], 1분 하트비트·3분 임대 만료 · R3.4: 사범 키로도 클라우드 저장 가능 — 창고 이름을 att_news·att_news_YYYYMM 으로(서버 allow()가 사범 키에 att_ 접두어를 허용). 서버 수정 불필요. 예전 news 창고에 올린 호도 목록·받기에서 그대로 보임 · R3.3: 클라우드 보관 연동 — 보관한 호가 다른 PC에서도 보인다. 나라차 Apps Script를 그대로 사용(서버 수정 불필요·관리자 키 필요), 호마다 별도 창고 news_YYYYMM + 목록 창고 news. [이번 호 보관]하면 자동 업로드, 다른 PC에서 [🔄 클라우드 목록 새로고침]→[받기]. fail-closed·baseRev 충돌감지·묘비 유지, 기기 이름 표시 · R3.2: ①사진 배치 선택 — 사진첩마다 모양(자동·정사각형·가로 4:3/3:2·와이드 16:9·세로 3:4)과 열 수를 고를 수 있고, 모양을 고르면 그 비율을 지켜 가운데 배치(한 장에 몇 장 들어가는지 자동 계산) ②글자 크기·줄 간격(행간) 배율 설정 — 기사·인성덕목·체크리스트에 적용 · R3.1: 목차 재구현 — 항목이 많으면(16개 등) 겹쳐 뭉개지던 문제 해결. 항목 수에 맞춰 줄 높이·글자·배지를 자동 계산하고, 한 장에 무리면 여러 장으로 나눔(1/2 표시). 긴 제목은 줄였다가 말줄임. 목차 설명은 행사마다 날짜·인원이 나오도록 개선 · R3.0: ①라차 캐릭터(펭귄) 썸네일 아이콘 — 파비콘·홈화면 아이콘·머리말에 사용 ②화면 디자인 전면 개편 — 종이 질감 배경, 표지 느낌의 머리말(이번 호·계절), 부드러운 그림자 카드, 알약 버튼, 어두운 라이트테이블 미리보기, 선택한 달의 계절색이 화면 전체에 입혀짐 · R2.9: 완성본 보관 기능 — ①[📕 PDF 한 개로 저장](외부 라이브러리 없이 PDF 직접 생성·JPEG 임베드) ②[📦 지난 호 보관함] 결과 이미지가 아니라 재료(설정·글·사진)만 저장해 용량 절약, 목록에서 열기·파일(.json)로 내보내기·삭제, 파일에서 불러오기, 저장공간 사용량 표시(접속키는 보관 대상에서 제외) · R2.8: 1단계 비율 옆에 [🔄 지난달 데이터 반영] 버튼 — 9월에 10월호를 만들 때처럼 달을 바꾸면 그 달의 "지난달" 데이터가 들어가도록. 연·월을 바꾸면 자동으로 재반영(자동으로 넣은 항목은 정리·갱신, 사진을 넣었거나 직접 고친 글은 그대로), 어느 달 데이터가 들어가는지 안내 문구 표시 · R2.7: 기사 카드 제목 중복 제거 — 카드 머리띠 제목과 본문 첫 줄이 같으면 본문에서 빼고, 날짜·인원 줄을 대표 줄로 크게(48px) 올림 · R2.6: 모바일 가독성 기준 재설계 — 소식지 1080px가 폰에서 약 390pt로 보이는 것(글자 ≈ px×0.36) 기준으로 기사 본문 최소 44px(≈16pt) 보장, 그보다 작아지면 줄이지 않고 페이지 분할(장수 최소·같으면 큰 글자). 제목은 42px까지만 줄이고 길면 두 줄, 소제목은 본문급 크기, 다단은 줄이 실제로 들어갈 때만(88% 기준), 칼럼 경계에서 소제목·이어지는 줄 안 끊김, 긴 낱말 글자 단위 줄바꿈. 이름 캡션 최소 30px(국기원·생일) · R2.5: 사진첩(행사·대회 카드) 순서 이동 ↑↓ 버튼 — 목록 순서=소식지 페이지 순서, 중간 배치 가능. 행사·대회 카드에 사진을 넣으면 기사 다음에 사진 페이지가 붙는 안내 보강 · R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
 document.getElementById("verLabel").textContent = APP_VER;
 
 var GAS = "https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
@@ -1776,7 +1776,9 @@ function footer(x2,H){
 }
 function wrapLines(x2, text, maxW){
   var out=[], line="";
-  var words=String(text||"").split(/\s+/);
+  var words0=String(text||"").split(/\s+/), words=[];
+  /* [R7.0] 가운뎃점(·)은 앞 낱말에 붙인다 — 줄 맨 앞이 「·」로 시작하지 않게 */
+  words0.forEach(function(w0){ if((w0==="·"||w0==="/") && words.length) words[words.length-1]+=" "+w0; else words.push(w0); });
   for(var i=0;i<words.length;i++){
     var t=line?(line+" "+words[i]):words[i];
     if(x2.measureText(t).width>maxW && line){ out.push(line); line=words[i]; }
@@ -2027,7 +2029,7 @@ function drawTocPages(entries){
   entries.forEach(function(e){
     if(e.kind!=="photos" || !e.desc) return;
     var df2=34; mcT.font="500 "+df2+"px 'Noto Sans KR'";
-    while(df2>24 && mcT.measureText(e.desc).width>maxW0){ df2--; mcT.font="500 "+df2+"px 'Noto Sans KR'"; }
+    while(df2>28 && mcT.measureText(e.desc).width>maxW0){ df2--; mcT.font="500 "+df2+"px 'Noto Sans KR'"; }
     e._df=df2; e._dl=wrapLines(mcT, e.desc, maxW0);
     e._extra=e._dl.length*Math.round(df2*1.2)+10;
     extraTotal+=e._extra;
@@ -2151,6 +2153,16 @@ function chipLabel(x2,x,y,txt,fg){
   x2.fillStyle=fg; x2.textAlign="left"; x2.textBaseline="middle";
   x2.fillText(txt,x+28,y+31);
 }
+/* [R7.0] 모바일 가독성 — 여백이 남으면 글자를 키운다. 간격은 sf, 작은 본문 글자는 sf×bs 로 따로 키워
+   «작은 글자가 가장 커지는» 조합을 고른다(장수는 그대로). 안 들어가면 종전처럼 전체를 줄인다. */
+function bestScale(layout, bottom, sfMax, sfMin, bsMax, sfLow){
+  var cands=[], bs, sf;
+  for(bs=bsMax; bs>=1-1e-9; bs-=0.05) for(sf=sfMax; sf>=(sfLow||0.9)-1e-9; sf-=0.04) cands.push([sf,bs]);
+  cands.sort(function(a,b){ return (b[0]*b[1]-a[0]*a[1]) || (b[0]-a[0]); });
+  for(var i=0;i<cands.length;i++){ var L=layout(cands[i][0],cands[i][1]); if(L.h<=bottom) return L; }
+  var L2=null; for(sf=0.88; sf>=sfMin-1e-9; sf-=0.04){ L2=layout(sf,1); if(L2.h<=bottom) break; }
+  return L2;
+}
 function panelBottom(H){ return (S.ratio==="11")?900:((S.ratio==="45")?1180:1640); }
 /* [R6.3] 02 SCHEDULE — 관장님 수정 시안: 날짜 열 + 내용 열, 휴관은 빨강, 아래 「승급심사 흐름」 상자 */
 function splitSched(l){
@@ -2189,9 +2201,15 @@ function drawSchedule(no){
   var flow=schedFlowText();
   /* [R6.6] 시안처럼 구절만 남색 굵게: 정기승급심사 · 심사 신청서 · …마감(줄 전체) · 국기원 심사. **…** 로 직접 표시도 가능 */
   var KWP=/(정기승급심사|승급심사|국기원 심사|심사 신청서|심사신청서|심사비 납부 마감|납부 마감|신청 마감)/;
+  /* [R7.0] 날짜 열 폭은 실제 날짜 글자에 맞춘다(고정 256px이면 글자를 키울 때 내용 열이 좁아져 줄바꿈이 늘었다) */
+  function dateW(sf){
+    var fs=Math.round(27*sf), w=0; mc.font="900 "+fs+"px 'Noto Sans KR'";
+    main.concat(closed).forEach(function(l){ var d=splitSched(l)[0]; if(d) w=Math.max(w, mc.measureText(d).width); });
+    return Math.max(Math.round(150*sf), Math.min(Math.round(w)+Math.round(30*sf), Math.round((W-PAD*2)*0.42)));
+  }
   function prep(arr, red, sf){
     var f=function(v){ return Math.round(v*sf); };
-    var DW=f(256), TX=PAD+f(36)+DW, TW=W-PAD-TX;
+    var DW=dateW(sf), TX=PAD+f(36)+DW, TW=W-PAD-TX;
     return arr.map(function(l){
       var sp=splitSched(l), date=sp[0], txt=sp[1];
       var segs=[];
@@ -2212,14 +2230,33 @@ function drawSchedule(no){
     var h=0; if(L.mi.length){ h+=L.secH; L.mi.forEach(function(it){ h+=it.h; }); }
     if(L.ci.length){ h+=f(26)+L.secH; L.ci.forEach(function(it){ h+=it.h; }); }
     L.listH=h;
-    L.flowLines=flow?richWrap(mc, boldSegs(flow, TR_C.ink, TR_C.navy), W-PAD*2-f(52), f(26)):[];
+    /* [R7.0] 흐름은 「→」 앞에서만 줄을 바꾼다(「10/19 / 신청서 마감」처럼 날짜와 내용이 갈라지지 않게) */
+    L.flowLines=[];
+    if(flow){
+      var steps=flow.split(/\s*→\s*/).map(function(st){ return st.trim(); }).filter(Boolean), maxFW=W-PAD*2-f(52), curL=[], curW=0;
+      steps.forEach(function(st, si){
+        var segs=boldSegs(st+(si<steps.length-1?" →":""), TR_C.ink, TR_C.navy), sw=0;
+        segs.forEach(function(sg){ mc.font=(sg.b?"900 ":"500 ")+f(26)+"px 'Noto Sans KR'"; sg.w=mc.measureText(sg.t).width; sw+=sg.w; });
+        mc.font="500 "+f(26)+"px 'Noto Sans KR'"; var spw=mc.measureText(" ").width;
+        if(curL.length && curW+spw+sw>maxFW){ L.flowLines.push(curL); curL=[]; curW=0; }
+        if(curL.length){ curL.push({t:" ", c:TR_C.ink, b:false, w:spw}); curW+=spw; }
+        segs.forEach(function(sg){ curL.push(sg); }); curW+=sw;
+      });
+      if(curL.length) L.flowLines.push(curL);
+    }
     L.flowH=flow?(f(20)+f(38)+f(10)+L.flowLines.length*f(38)+f(20)):0;
     L.h=y+h+(flow?(f(30)+L.flowH):0);
+    L.wr=0; L.mi.concat(L.ci).forEach(function(it){ L.wr+=Math.max(1,it.lines.length); });
     return L;
   }
-  var L=null;
-  for(var sf=1; sf>=0.7; sf-=0.04){ L=layout(sf); if(L.h<=bottom) break; }
+  /* [R7.0] 남는 세로 공간만큼 글자를 키운다(최대 1.5배). 단, 키워서 줄바꿈이 새로 생기는 크기는 고르지 않는다 */
+  var L=null, baseWr=layout(1).wr;
+  for(var sf=1.5; sf>=1-1e-9; sf-=0.02){ var Lc=layout(sf); if(Lc.h<=bottom && Lc.wr<=baseWr){ L=Lc; break; } }
+  if(!L){ for(var sf=1; sf>=0.7; sf-=0.04){ L=layout(sf); if(L.h<=bottom) break; } }
   var f=function(v){ return Math.round(v*L.sf); };
+  /* 그래도 남는 공간은 줄 사이에 조금 나눠 준다(답답하지 않게) */
+  var nIt=L.mi.length+L.ci.length, slack=bottom-L.h, addGap=nIt?Math.max(0, Math.min(f(14), Math.floor(slack/(nIt+1)))):0;
+  L.mi.concat(L.ci).forEach(function(it){ it.h+=addGap; });
   var y=L.y;
   function drawSec(label, items, red){
     /* 구역 라벨 */
@@ -2228,7 +2265,7 @@ function drawSchedule(no){
     x2.fillStyle=TR_C.box; x2.strokeStyle="#e6b56a"; x2.lineWidth=2; rrect(x2,PAD,y,lw,f(52),f(12)); x2.fill(); x2.stroke();
     x2.fillStyle=TR_C.brown; x2.textAlign="left"; x2.textBaseline="middle"; x2.fillText(label, PAD+f(20), y+f(27));
     y+=L.secH;
-    var DW=f(256), TX=PAD+f(36)+DW;
+    var DW=dateW(L.sf), TX=PAD+f(36)+DW;
     items.forEach(function(it){
       var cy=y+f(19);
       x2.fillStyle=red?"#b5121b":TR_C.orange; x2.beginPath(); x2.arc(PAD+f(8), cy, f(7), 0, 6.3); x2.fill();
@@ -2302,15 +2339,15 @@ function drawCalendar(no){
   rrect(x2,40,40,W-80,H-80,40); x2.fill(); x2.globalAlpha=1;
   badge(x2,150,140,no,t);
   titleTwo(x2, S.month+"월", " 수련계획표", W/2+30, 140, 84, t.title, TR_C.orange);
-  var WK=92, gx=70+WK+10, gw=W-140-WK-10, cols=6, cw=gw/cols;   /* [R6.5] 왼쪽 주차 열 */
+  var MX=58, WK=90, gx=MX+WK+8, gw=W-MX*2-WK-8, cols=6, cw=gw/cols;   /* [R6.5] 왼쪽 주차 열 · [R7.0] 좌우 여백을 줄여 칸을 넓힘 */
   /* 범례 */
-  x2.fillStyle="#2e7d44"; rrect(x2, gx+gw-118, 196, 14, 14, 3); x2.fill();
-  x2.font="700 "+19+"px 'Noto Sans KR'"; x2.fillStyle="#2e7d44"; x2.textAlign="left"; x2.textBaseline="middle"; x2.fillText("체력훈련", gx+gw-98, 203);
+  x2.fillStyle="#2e7d44"; rrect(x2, gx+gw-132, 194, 16, 16, 3); x2.fill();
+  x2.font="700 "+23+"px 'Noto Sans KR'"; x2.fillStyle="#2e7d44"; x2.textAlign="left"; x2.textBaseline="middle"; x2.fillText("체력훈련", gx+gw-108, 203);
   /* 요일 */
-  var days=["MON","TUE","WED","THU","FRI","SAT"], gy0=236;
+  var days=["MON","TUE","WED","THU","FRI","SAT"], gy0=238;
   x2.textAlign="center"; x2.textBaseline="middle";
-  x2.font="700 20px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab; x2.fillText("주차", 70+WK/2, gy0);
-  for(var i=0;i<cols;i++){ x2.font="700 20px 'Noto Sans KR'"; x2.fillStyle=(i===5)?"#1f5fbf":TR_C.lab; x2.fillText(days[i], gx+cw*(i+0.5), gy0); }
+  x2.font="700 24px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab; x2.fillText("주차", MX+WK/2, gy0);
+  for(var i=0;i<cols;i++){ x2.font="700 24px 'Noto Sans KR'"; x2.fillStyle=(i===5)?"#1f5fbf":TR_C.lab; x2.fillText(days[i], gx+cw*(i+0.5), gy0); }
   var gy=gy0+24;
   /* 주 나누기 */
   var last=monthDays(), weeks=[], cur=[null,null,null,null,null,null];
@@ -2345,7 +2382,7 @@ function drawCalendar(no){
   if(hasTrain) n1=n1.concat([{t:" · 자세한 수련 내용은 반별 ",c:TR_C.ink,b:true},{t:"수련 안내(03-1 ~ 03-"+["초급반","중급반","상급반"].filter(function(cn){return !!trainingFor(S.year,S.month,cn);}).length+")",c:TR_C.navy,b:true},{t:"를 봐 주세요",c:TR_C.ink,b:true}]);
   noteSegs.push(n1);
   String(S.calNote||"").split("\n").map(function(l){return l.trim();}).filter(Boolean).forEach(function(l){ noteSegs.push([{t:l,c:TR_C.ink,b:true}]); });
-  var noteH=noteSegs.length?noteSegs.length*30+10:0, bandH=showBands?100:0;
+  var NLH=36, noteH=noteSegs.length?noteSegs.length*NLH+6:0, bandH=showBands?112:0;
   var gBottom=H-110-noteH-bandH-(noteSegs.length?16:0)-(showBands?16:0);
   var rh=(gBottom-gy)/weeks.length;
   /* 칸 내용 만들기 */
@@ -2364,78 +2401,114 @@ function drawCalendar(no){
       CELLS.push({ d:d, x:gx+cw*ci, y:gy+rh*r, col:ci, tags:tags, fit:fit, plain:plain, closed:closed, exam:exam, bodyColor:S.calColors[k]||"", nextStart:nextStart });
     });
   });
-  /* 글자 배율: 모든 칸이 들어가는 최대 */
-  function needH(C, sf){
-    var f=function(v){ return Math.round(v*sf); }, h=f(34), inner=cw-f(16);
-    if(C.nextStart) h+=f(24)+f(5);
-    C.tags.forEach(function(tg){ mc.font="900 "+f(17)+"px 'Noto Sans KR'"; var n=wrapLines(mc,tg,inner-f(12)).length; h+=n*f(21)+f(8)+f(5); });
-    C.plain.concat(C.fit).forEach(function(l){ mc.font="700 "+f(18)+"px 'Noto Sans KR'"; h+=wrapLines(mc,l,inner).length*f(23)+f(3); });
-    return h+f(6);
+  /* [R7.0] 칸 글자 크기 — 일정 알약(TF)·수련 내용(BF)을 «칸 폭 안에서 낱말이 잘리지 않는 가장 큰 크기»로 통일.
+     유난히 긴 낱말 한두 개 때문에 전체가 작아지지 않도록 그 줄만 15%까지 줄인다. 세로로 넘치면 함께 줄인다. */
+  var PADC=6, inner=cw-PADC*2, NUMF=27, TOPH=NUMF+9;
+  function tokW(font, txt){ mc.font=font; var w=0; String(txt).split(/\s+/).forEach(function(tk){ w=Math.max(w, mc.measureText(tk).width); }); return w; }
+  function lineFont(l, BF){   /* 이 줄에 쓸 크기: 낱말이 폭을 넘으면 85%까지만 줄임 */
+    var s2=BF; while(s2>Math.ceil(BF*0.85) && tokW("700 "+s2+"px 'Noto Sans KR'", l)>inner) s2--; return s2;
   }
-  var sf=1;
-  for(; sf>=0.6; sf-=0.04){ var ok=true; for(var i2=0;i2<CELLS.length;i2++){ var C0=CELLS[i2]; if(C0.empty) continue; if(needH(C0,sf)>rh){ ok=false; break; } } if(ok) break; }
-  var f=function(v){ return Math.round(v*sf); };
+  function cellPlan(C, TF, BF){
+    var h=TOPH, P={ tags:[], rows:[] };
+    if(C.nextStart) h+=TF+10+5;
+    C.tags.forEach(function(tg){ mc.font="900 "+TF+"px 'Noto Sans KR'"; var ls=wrapLines(mc,tg,inner-10); P.tags.push(ls); h+=ls.length*(TF+4)+8+5; });
+    C.plain.concat(C.fit).forEach(function(l){ var fs=lineFont(l,BF); mc.font="700 "+fs+"px 'Noto Sans KR'"; var ls=wrapLines(mc,l,inner); P.rows.push({fs:fs, ls:ls}); h+=ls.length*Math.round(fs*1.24)+3; });
+    P.h=h+5; return P;
+  }
+  /* 내용이 유난히 많은 칸은 그 칸만 70%까지 줄인다(한 칸 때문에 달력 전체가 작아지지 않게) */
+  function cellQ(C, TF, BF){
+    for(var q=1; q>=0.7-1e-9; q-=0.05){ if(cellPlan(C, Math.round(TF*q), Math.round(BF*q)).h<=rh) return q; }
+    return 0;
+  }
+  function allFit(TF, BF){
+    for(var i2=0;i2<CELLS.length;i2++){ var C0=CELLS[i2]; if(C0.empty) continue;
+      if(!cellQ(C0,TF,BF)) return false;
+      for(var j=0;j<C0.tags.length;j++){
+        if(tokW("900 "+TF+"px 'Noto Sans KR'", C0.tags[j])>inner-10) return false;
+        if(TF>17){ mc.font="900 17px 'Noto Sans KR'"; var n0=wrapLines(mc,C0.tags[j],inner-10).length; mc.font="900 "+TF+"px 'Noto Sans KR'"; if(wrapLines(mc,C0.tags[j],inner-10).length>n0) return false; }   /* 키워서 알약이 두 줄이 되면 안 됨 */
+      }
+      var rows=C0.plain.concat(C0.fit); for(var j2=0;j2<rows.length;j2++){ if(tokW("700 "+lineFont(rows[j2],BF)+"px 'Noto Sans KR'", rows[j2])>inner) return false; }
+    }
+    return true;
+  }
+  var TF=21, BF=24;
+  while(TF>13 && !allFit(TF, 13)) TF--;        /* 알약: 낱말이 잘리지 않는 최대 */
+  while(BF>13 && !allFit(TF, BF)){ BF--; if(BF<TF-1 && TF>13) TF--; }
+  var GTF=TF, GBF=BF;
   /* 그리기 */
   CELLS.forEach(function(C){
     if(C.empty) return;
+    var q=cellQ(C,GTF,GBF)||0.7;
+    var TF=Math.round(GTF*q), BF=Math.round(GBF*q);      /* 이 칸에서만 쓰는 크기 */
+    var P=cellPlan(C,TF,BF);
     x2.fillStyle=C.closed?"#fdecec":"#ffffff"; x2.fillRect(C.x,C.y,cw,rh);
     x2.strokeStyle=TR_C.dash; x2.lineWidth=1.5; x2.strokeRect(C.x,C.y,cw,rh);
     if(C.nextStart){ x2.save(); x2.strokeStyle=TR_C.brown; x2.lineWidth=3; x2.setLineDash([6,5]); x2.beginPath(); x2.moveTo(C.x+1,C.y); x2.lineTo(C.x+1,C.y+rh); x2.stroke(); x2.restore(); }
     x2.textAlign="left"; x2.textBaseline="top";
-    x2.font="900 "+f(23)+"px 'Noto Sans KR'"; x2.fillStyle=C.closed?"#b5121b":(C.col===5?"#1f5fbf":TR_C.ink);
-    x2.fillText(String(C.d), C.x+f(8), C.y+f(7));
-    var yy=C.y+f(34), inner=cw-f(16);
+    x2.font="900 "+NUMF+"px 'Noto Sans KR'"; x2.fillStyle=C.closed?"#b5121b":(C.col===5?"#1f5fbf":TR_C.ink);
+    x2.fillText(String(C.d), C.x+PADC+2, C.y+6);
+    var yy=C.y+TOPH;
     if(C.nextStart){
-      var nb=CW.nextM+"월 1주 →"; x2.font="900 "+f(15)+"px 'Noto Sans KR'";
-      var nw2=Math.min(inner, x2.measureText(nb).width+f(16)), nh=f(24);
-      x2.fillStyle="#fff"; x2.strokeStyle=TR_C.brown; x2.lineWidth=2; rrect(x2,C.x+f(8),yy,nw2,nh,nh/2); x2.fill(); x2.stroke();
-      x2.fillStyle=TR_C.brown; x2.textAlign="center"; x2.textBaseline="middle"; x2.fillText(nb, C.x+f(8)+nw2/2, yy+nh/2+1);
-      x2.textAlign="left"; x2.textBaseline="top"; yy+=nh+f(5);
+      var nb=CW.nextM+"월 1주 →"; var nf=Math.max(15,TF-2); x2.font="900 "+nf+"px 'Noto Sans KR'";
+      while(nf>13 && x2.measureText(nb).width+14>inner){ nf--; x2.font="900 "+nf+"px 'Noto Sans KR'"; }
+      var nw2=Math.min(inner, x2.measureText(nb).width+14), nh=TF+10;
+      x2.fillStyle="#fff"; x2.strokeStyle=TR_C.brown; x2.lineWidth=2; rrect(x2,C.x+PADC,yy,nw2,nh,nh/2); x2.fill(); x2.stroke();
+      x2.fillStyle=TR_C.brown; x2.textAlign="center"; x2.textBaseline="middle"; x2.fillText(nb, C.x+PADC+nw2/2, yy+nh/2+1);
+      x2.textAlign="left"; x2.textBaseline="top"; yy+=nh+5;
     }
-    C.tags.forEach(function(tg){
-      x2.font="900 "+f(17)+"px 'Noto Sans KR'";
-      var ls=wrapLines(x2,tg,inner-f(12)), tw=0; ls.forEach(function(l){ tw=Math.max(tw,x2.measureText(l).width); });
-      var pw=Math.min(inner, tw+f(12)), ph=ls.length*f(21)+f(8);
-      x2.fillStyle=tagColorOf(tg); rrect(x2,C.x+f(8),yy,pw,ph,f(5)); x2.fill();
+    C.tags.forEach(function(tg,ti){
+      x2.font="900 "+TF+"px 'Noto Sans KR'";
+      var ls=P.tags[ti], tw=0; ls.forEach(function(l){ tw=Math.max(tw,x2.measureText(l).width); });
+      var pw=Math.min(inner, tw+10), ph=ls.length*(TF+4)+8;
+      x2.fillStyle=tagColorOf(tg); rrect(x2,C.x+PADC,yy,pw,ph,5); x2.fill();
       x2.fillStyle="#fff"; x2.textAlign="center"; x2.textBaseline="middle";
-      ls.forEach(function(l,li){ x2.fillText(l, C.x+f(8)+pw/2, yy+f(4)+li*f(21)+f(10)); });
-      x2.textAlign="left"; x2.textBaseline="top"; yy+=ph+f(5);
+      ls.forEach(function(l,li){ x2.fillText(l, C.x+PADC+pw/2, yy+4+li*(TF+4)+(TF+4)/2+1); });
+      x2.textAlign="left"; x2.textBaseline="top"; yy+=ph+5;
     });
-    C.plain.forEach(function(l){ x2.font="700 "+f(18)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.ink; wrapLines(x2,l,inner).forEach(function(w){ x2.fillText(w, C.x+f(8), yy); yy+=f(23); }); yy+=f(3); });
-    C.fit.forEach(function(l){ x2.font="700 "+f(18)+"px 'Noto Sans KR'"; x2.fillStyle=C.bodyColor||"#2e7d44"; wrapLines(x2,l,inner).forEach(function(w){ x2.fillText(w, C.x+f(8), yy); yy+=f(23); }); yy+=f(3); });
+    var np=C.plain.length;
+    P.rows.forEach(function(R,ri){
+      x2.font="700 "+R.fs+"px 'Noto Sans KR'"; x2.fillStyle=(ri<np)?TR_C.ink:(C.bodyColor||"#2e7d44");
+      R.ls.forEach(function(w){ x2.fillText(w, C.x+PADC, yy); yy+=Math.round(R.fs*1.24); }); yy+=3;
+    });
   });
   /* [R6.5] 왼쪽 주차 열 */
   CW.rows.forEach(function(o,r){
-    var bx=70, by=gy+rh*r+6, bh=rh-12, ex=(o.kind==="exam");
+    var bx=MX, by=gy+rh*r+6, bh=rh-12, ex=(o.kind==="exam");
     x2.fillStyle=ex?"#fdecec":TR_C.box; rrect(x2,bx,by,WK,bh,14); x2.fill();
     x2.textAlign="center"; x2.textBaseline="middle";
-    var lf=ex?26:24; x2.font="900 "+lf+"px 'Noto Sans KR'"; while(lf>13 && x2.measureText(o.label).width>WK-10){ lf--; x2.font="900 "+lf+"px 'Noto Sans KR'"; }
+    var lf=ex?32:30; x2.font="900 "+lf+"px 'Noto Sans KR'"; while(lf>13 && x2.measureText(o.label).width>WK-10){ lf--; x2.font="900 "+lf+"px 'Noto Sans KR'"; }
     x2.fillStyle=ex?"#b5121b":TR_C.brown;
-    var smallLines=o.small?wrapLines(x2,o.small,WK-10):[];
+    var SMF=19; x2.font="700 "+SMF+"px 'Noto Sans KR'";
+    var smallLines=o.small?wrapLines(x2,o.small,WK-8):[];
+    smallLines.forEach(function(l){ while(SMF>14 && x2.measureText(l).width>WK-6){ SMF--; x2.font="700 "+SMF+"px 'Noto Sans KR'"; } });
+    var SLH=SMF+4;
     x2.font="900 "+lf+"px 'Noto Sans KR'";
-    var cy=by+bh/2-(smallLines.length?9*smallLines.length:0);
+    var cy=by+bh/2-(smallLines.length?(SLH*smallLines.length+6)/2:0);
     x2.fillText(o.label, bx+WK/2, cy);
-    if(smallLines.length){ x2.font="700 15px 'Noto Sans KR'"; x2.fillStyle=ex?"#b5121b":TR_C.lab; smallLines.forEach(function(l,li){ x2.fillText(l, bx+WK/2, cy+lf*0.7+8+li*18); }); }
+    if(smallLines.length){ x2.font="700 "+SMF+"px 'Noto Sans KR'"; x2.fillStyle=ex?"#b5121b":TR_C.lab; smallLines.forEach(function(l,li){ x2.fillText(l, bx+WK/2, cy+lf*0.62+6+SLH/2+li*SLH); }); }
   });
   var yb=gBottom;
   if(showBands){
-    yb+=16; var bw=(W-140-(bands.length-1)*10)/bands.length, bx0=70;
+    yb+=16; var bw=(W-MX*2-(bands.length-1)*10)/bands.length, bx0=MX;
     bands.forEach(function(bd,i){
       var bx=bx0+i*(bw+10);
       x2.fillStyle=bd.ex?"#fdecec":TR_C.box; rrect(x2,bx,yb,bw,bandH,14); x2.fill();
       x2.textAlign="center"; x2.textBaseline="middle";
-      var tf=18; x2.font="700 "+tf+"px 'Noto Sans KR'"; while(tf>12 && x2.measureText(bd.i).width>bw-14){ tf--; x2.font="700 "+tf+"px 'Noto Sans KR'"; }
-      x2.fillStyle=bd.ex?"#b5121b":TR_C.lab; x2.fillText(bd.i, bx+bw/2, yb+30);
-      var ff=24; x2.font="900 "+ff+"px 'Noto Sans KR'"; while(ff>13 && x2.measureText(bd.b).width>bw-14){ ff--; x2.font="900 "+ff+"px 'Noto Sans KR'"; }
-      x2.fillStyle=bd.ex?"#b5121b":TR_C.ink; x2.fillText(bd.b, bx+bw/2, yb+66);
+      var tf=23; x2.font="700 "+tf+"px 'Noto Sans KR'"; while(tf>12 && x2.measureText(bd.i).width>bw-12){ tf--; x2.font="700 "+tf+"px 'Noto Sans KR'"; }
+      x2.fillStyle=bd.ex?"#b5121b":TR_C.lab; x2.fillText(bd.i, bx+bw/2, yb+33);
+      var ff=30; x2.font="900 "+ff+"px 'Noto Sans KR'"; while(ff>13 && x2.measureText(bd.b).width>bw-12){ ff--; x2.font="900 "+ff+"px 'Noto Sans KR'"; }
+      x2.fillStyle=bd.ex?"#b5121b":TR_C.ink; x2.fillText(bd.b, bx+bw/2, yb+75);
     });
     yb+=bandH;
   }
   if(noteSegs.length){
     yb+=16;
     noteSegs.forEach(function(segs,i){
-      var lines=richWrap(mc, segs, gw, 22); var lw=0; lines[0].forEach(function(sg){ lw+=sg.w; });
-      richDraw(x2, [lines[0]], W/2-lw/2, yb+i*30, 22, 30);
+      /* [R7.0] 한 줄에 들어가는 가장 큰 글자(27→20px) */
+      var nf=27, lines=richWrap(mc, segs, W-MX*2-24, nf);
+      while(nf>20 && lines.length>1){ nf--; lines=richWrap(mc, segs, W-MX*2-24, nf); }
+      var lw=0; lines[0].forEach(function(sg){ lw+=sg.w; });
+      richDraw(x2, [lines[0]], W/2-lw/2, yb+i*NLH, nf, NLH);
     });
   }
   footer(x2,H);
@@ -2650,39 +2723,48 @@ function drawTrainingPages(no, clsList, sub){
     var y=drawClassBanner(x2, hy+Math.round(sq?86:100), cls, tr.belts||[], 1);
     /* 세로로 다 들어가는 배율 찾기 */
     var cards=trainingCards(tr), weeks=tr.weeks||[];
-    function layout(sf){
-      var f=function(v){ return Math.round(v*sf); };
-      var L={ sf:sf, items:[], h:0 };
-      var yy=y+f(22);
-      L.cardY=yy; L.cardH=f(96); yy+=L.cardH+f(22);
-      var col1x=PAD+f(80), col1w=f(392), col2x=PAD+f(494), col2w=W-PAD-(PAD+f(494));
-      L.rows=[];
+    function layout(sf, bs){
+      var f=function(v){ return Math.round(v*sf); }, g=function(v){ return Math.round(v*sf*bs); };
+      var L={ sf:sf, bs:bs, items:[], h:0 };
+      var yy=y+f(20);
+      L.cardY=yy; L.cardH=f(100); yy+=L.cardH+f(18);
+      var yyStart=yy;
+      /* [R7.0] 왼쪽(품새)·오른쪽(기술) 열 나눔을 내용에 맞춰 고른다 — 전체 높이가 가장 낮은 나눔 */
+      var best=null;
+      [494, 450, 410].forEach(function(c2){ var R=rowsFor(c2); if(!best || R.score<best.score-2) best=R; });   /* 품새 이름이 두 줄로 갈라지는 나눔은 뒤로 */
+      L.rows=best.rows; yy=best.yy; L.HF=best.HF;
+      function rowsFor(c2){
+      var yy=best?best.y0:yyStart, y0=yy;
+      var col1x=PAD+f(80), col2x=PAD+Math.round(c2*Math.min(1,sf)), col1w=col2x-col1x-f(22), col2w=W-PAD-col2x;
+      var HF=Math.max(f(26), g(21)+3), rows=[], pen=0;
       weeks.forEach(function(wk){
         var name=(wk.poomsae||[]).map(function(p){ return p.name; }).join(" · ");
-        mc.font="900 "+f(26)+"px 'Noto Sans KR'"; var nl=wrapLines(mc,name,col1w);
-        mc.font="500 "+f(20)+"px 'Noto Sans KR'"; var ll=wrapLines(mc,String(wk.learn||""),col1w);
-        mc.font="500 "+f(19)+"px 'Noto Sans KR'"; var tl=wrapLines(mc,String(wk.tech||""),col2w);
-        var h1=nl.length*f(32)+ll.length*f(26)+f(4), h2=f(32)+tl.length*f(25);
-        var rh=Math.max(h1,h2,f(64))+f(28);
-        L.rows.push({ y:yy, h:rh, wk:wk, nl:nl, ll:ll, tl:tl, col1x:col1x, col2x:col2x });
+        mc.font="900 "+HF+"px 'Noto Sans KR'"; var nl=wrapLines(mc,name,col1w); if(nl.length>1) pen+=80;
+        mc.font="500 "+g(21)+"px 'Noto Sans KR'"; var ll=wrapLines(mc,String(wk.learn||""),col1w);
+        mc.font="500 "+g(21)+"px 'Noto Sans KR'"; var tl=wrapLines(mc,String(wk.tech||""),col2w);
+        var HL=Math.round(HF*1.24);
+        var h1=nl.length*HL+ll.length*g(27)+f(4), h2=HL+tl.length*g(27);
+        var rh=Math.max(h1,h2,f(64))+f(24);
+        rows.push({ y:yy, h:rh, wk:wk, nl:nl, ll:ll, tl:tl, col1x:col1x, col2x:col2x });
         yy+=rh;
       });
-      L.noteY=yy+f(16); L.h=L.noteY+f(52);
+      return { rows:rows, yy:yy, h:yy-y0, score:yy-y0+pen, y0:y0, HF:HF };
+      }
+      L.noteY=yy+f(14); L.h=L.noteY+g(22)*2+f(10);
       return L;
     }
-    var L=null;
-    for(var sf=1; sf>=0.72; sf-=0.04){ L=layout(sf); if(L.h<=bottom) break; }
-    var f=function(v){ return Math.round(v*L.sf); };
+    var L=bestScale(layout, bottom, 1.12, 0.72, 1.4, 0.86);
+    var f=function(v){ return Math.round(v*L.sf); }, g=function(v){ return Math.round(v*L.sf*L.bs); };
     /* 정보 상자 2개 */
     var bw=(W-PAD*2-f(16))/2;
     cards.forEach(function(cd,i){
       var bx=PAD+i*(bw+f(16));
       x2.fillStyle=TR_C.box; rrect(x2,bx,L.cardY,bw,L.cardH,f(17)); x2.fill();
       x2.textAlign="center"; x2.textBaseline="middle";
-      x2.font="700 "+f(18)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab; spacedText(x2, cd.label, bx+bw/2, L.cardY+f(30), 3);
-      var vf=f(27); x2.font="900 "+vf+"px 'Noto Sans KR'";
+      x2.font="700 "+f(22)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab; spacedText(x2, cd.label, bx+bw/2, L.cardY+f(30), 3);
+      var vf=f(30); x2.font="900 "+vf+"px 'Noto Sans KR'";
       while(vf>16 && x2.measureText(cd.value).width>bw-f(24)){ vf--; x2.font="900 "+vf+"px 'Noto Sans KR'"; }
-      x2.fillStyle=TR_C.ink; x2.fillText(cd.value, bx+bw/2, L.cardY+f(66));
+      x2.fillStyle=TR_C.ink; x2.fillText(cd.value, bx+bw/2, L.cardY+f(69));
     });
     /* 주차 표 */
     L.rows.forEach(function(r,ri){
@@ -2692,21 +2774,25 @@ function drawTrainingPages(no, clsList, sub){
       x2.fillText(String(r.wk.week||(ri+1)+"주"), PAD+f(31), r.y+f(14)+f(32)+1);
       x2.textAlign="left"; x2.textBaseline="top";
       var yy=r.y+f(14);
-      x2.font="900 "+f(26)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.ink;
-      r.nl.forEach(function(l){ x2.fillText(l, r.col1x, yy); yy+=f(32); });
-      yy+=f(4); x2.font="500 "+f(20)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.sub;
-      r.ll.forEach(function(l){ x2.fillText(l, r.col1x, yy); yy+=f(26); });
+      var HL=Math.round(L.HF*1.24);
+      x2.font="900 "+L.HF+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.ink;
+      r.nl.forEach(function(l){ x2.fillText(l, r.col1x, yy); yy+=HL; });
+      yy+=f(4); x2.font="500 "+g(21)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.sub;
+      r.ll.forEach(function(l){ x2.fillText(l, r.col1x, yy); yy+=g(27); });
       var y2=r.y+f(14);
-      x2.font="900 "+f(25)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.navy; x2.fillText(String(r.wk.focus||""), r.col2x, y2); y2+=f(32);
-      x2.font="500 "+f(19)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.sub;
-      r.tl.forEach(function(l){ x2.fillText(l, r.col2x, y2); y2+=f(25); });
+      x2.font="900 "+L.HF+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.navy; x2.fillText(String(r.wk.focus||""), r.col2x, y2); y2+=HL;
+      x2.font="500 "+g(21)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.sub;
+      r.tl.forEach(function(l){ x2.fillText(l, r.col2x, y2); y2+=g(27); });
       dashLine(x2, PAD, W-PAD, r.y+r.h-f(2));
     });
     /* 안내 두 줄 */
-    x2.textAlign="center"; x2.textBaseline="top"; x2.fillStyle=TR_C.sub; x2.font="500 "+f(20)+"px 'Noto Sans KR'";
+    x2.textAlign="center"; x2.textBaseline="top"; x2.fillStyle=TR_C.sub;
     var st1=week1Start();
-    x2.fillText("품새는 매주, 기술 과목은 주마다 하나씩 · 품새 한 장은 3개월에 걸쳐 (기본동작 → 1길~6길 → 심화)", W/2, L.noteY);
-    x2.fillText("주차는 심사 다음 수업일부터 셉니다"+(st1?(" ("+S.month+"월 1주차 = "+fmtMD(st1)+"~)"):""), W/2, L.noteY+f(28));
+    ["품새는 매주, 기술 과목은 주마다 하나씩 · 품새 한 장은 3개월에 걸쳐 (기본동작 → 1길~6길 → 심화)",
+     "주차는 심사 다음 수업일부터 셉니다"+(st1?(" ("+S.month+"월 1주차 = "+fmtMD(st1)+"~)"):"")].forEach(function(nt,ni){
+      var nf=g(20); x2.font="500 "+nf+"px 'Noto Sans KR'"; while(nf>15 && x2.measureText(nt).width>W-PAD*2+24){ nf--; x2.font="500 "+nf+"px 'Noto Sans KR'"; }
+      x2.fillText(nt, W/2, L.noteY+ni*g(22)*1.25);
+    });
     footer(x2,H);
     pages.push({ name:"수련안내_"+cls, canvas:c });
   });
@@ -2736,7 +2822,7 @@ function drawExamInfoPage(no){
     pill=exTxt+(timeM?(" "+timeM[0]):"")+"  |  신청서·심사비 납부 "+mdw(t7)+"까지";
     noteApp="심사 신청서는 "+mdw(t14)+"·"+mdw(t13)+" 개별 톡으로 보내드립니다 · "+mdw(t7)+"까지 신청서 제출 + 심사비 납부";
   } else pill=String(S.recSub||"").trim()||String((ex.notice||{}).exam_days||"");
-  var py=hy+Math.round(sq?70:86), pf=26; x2.font="700 "+pf+"px 'Noto Sans KR'";
+  var py=hy+Math.round(sq?70:86), pf=31; x2.font="700 "+pf+"px 'Noto Sans KR'";
   while(pf>16 && x2.measureText(pill).width>W-PAD*2-60){ pf--; x2.font="700 "+pf+"px 'Noto Sans KR'"; }
   var pw=Math.min(W-PAD*2, x2.measureText(pill).width+64);
   x2.fillStyle="#fff"; x2.strokeStyle=TR_C.navy; x2.lineWidth=3; rrect(x2,W/2-pw/2,py,pw,64,16); x2.fill(); x2.stroke();
@@ -2746,64 +2832,88 @@ function drawExamInfoPage(no){
   var groups=[{n:"초급반", rows:yug.filter(function(r){ return /^[6789]급/.test(r.grade); })},{n:"중급반", rows:yug.filter(function(r){ return /^[2345]급/.test(r.grade); })}];
   var boxRows=[["품새",sg.poomsae],["차기",sg.kick],["격파",sg.break],["겨루기딛기",sg.step]].filter(function(r){ return r[1]; });
   var notes=["겨루기딛기 : 초급반 1~4번 · 중급반 5~8번 + 급별 손기술", noteApp||String((ex.notice||{}).application||"")].filter(Boolean);
-  function layout(sf){
-    var f=function(v){ return Math.round(v*sf); };
-    var L={sf:sf, colX:[PAD, PAD+f(150), PAD+f(560), PAD+f(790)], colW:[f(140), f(400), f(220), W-PAD-(PAD+f(790))]};
-    var yy=y0; L.headY=yy; yy+=f(34)+f(8);
+  /* [R7.0] 표 열은 고정 폭(급 118 · 차기 385 · 격파 235 · 품새 150), 본문 글자는 sf×bs 로 키운다 */
+  var CX=[0,118,503,738], CWD=[118,385,235,150];
+  function layout(sf, bs){
+    var f=function(v){ return Math.round(v*sf); }, g=function(v){ return Math.round(v*sf*bs); };
+    var L={sf:sf, bs:bs};
+    /* 열 폭: 각 열에서 가장 긴 글이 한 줄에 들어가도록 나누고, 남는 폭은 차기 열에 준다. 모자라면 비율대로 줄인다(그때만 줄바꿈) */
+    var all=[]; groups.forEach(function(gr){ all=all.concat(gr.rows); });
+    function mx(key, font){ mc.font=font; var w=0; all.forEach(function(r){ w=Math.max(w, mc.measureText(String(r[key]||"")).width); }); return Math.ceil(w); }
+    var wG=6+f(24)+mx("grade","900 "+g(22)+"px 'Noto Sans KR'")+f(22);
+    var wK=mx("kick","500 "+g(21)+"px 'Noto Sans KR'")+26, wB=mx("break","500 "+g(21)+"px 'Noto Sans KR'")+26, wP=mx("poomsae","900 "+g(21)+"px 'Noto Sans KR'")+8;
+    var tot=W-PAD*2-wG, need=wK+wB+wP;
+    if(need<=tot){ var ex=tot-need; wK+=Math.round(ex*0.5); wB+=Math.round(ex*0.5); }
+    else { var kk=(tot-wP)/(wK+wB); wK=Math.floor(wK*kk); wB=tot-wP-wK; }   /* 품새 열은 한 줄 유지, 차기·격파만 낱말 단위로 줄바꿈 */
+    L.colW=[wG,wK,wB,wP]; L.colX=[PAD, PAD+wG, PAD+wG+wK, PAD+wG+wK+wB];
+    var yy=y0; L.headY=yy; yy+=f(34)+f(6);
     L.groups=[];
-    groups.forEach(function(g){
-      var G={ y:yy, rows:[] }; yy+=f(40);
-      g.rows.forEach(function(r){
-        mc.font="500 "+f(21)+"px 'Noto Sans KR'";
-        var kl=wrapLines(mc,String(r.kick||""),L.colW[1]-f(10)), bl=wrapLines(mc,String(r.break||""),L.colW[2]-f(10));
-        mc.font="900 "+f(21)+"px 'Noto Sans KR'"; var pl=wrapLines(mc,String(r.poomsae||""),L.colW[3]-f(4));
-        var n=Math.max(kl.length,bl.length,pl.length), rh=Math.max(f(58), n*f(27)+f(20));
-        G.rows.push({ y:yy, h:rh, r:r, kl:kl, bl:bl, pl:pl }); yy+=rh;
+    groups.forEach(function(gr){
+      var G={ y:yy, rows:[] }; yy+=f(36);
+      gr.rows.forEach(function(r){
+        mc.font="500 "+g(21)+"px 'Noto Sans KR'";
+        var kl=wrapLines(mc,String(r.kick||""),L.colW[1]-16), bl=wrapLines(mc,String(r.break||""),L.colW[2]-16);
+        mc.font="900 "+g(21)+"px 'Noto Sans KR'"; var pl=wrapLines(mc,String(r.poomsae||""),L.colW[3]-2);
+        var n=Math.max(kl.length,bl.length,pl.length), rh=n*g(27)+f(20);
+        G.rows.push({ y:yy, h:rh, r:r, kl:kl, bl:bl, pl:pl, n:n }); yy+=rh;
       });
       L.groups.push(G);
     });
-    yy+=f(18); L.boxY=yy;
-    var lw=f(120), vw=W-PAD*2-f(44)-lw; L.boxLines=[];
-    boxRows.forEach(function(br){ mc.font="500 "+f(20)+"px 'Noto Sans KR'"; var vl=wrapLines(mc,String(br[1]),vw); L.boxLines.push({k:br[0], vl:vl}); });
-    var bh=f(16)+f(30)+f(6); L.boxLines.forEach(function(b){ bh+=b.vl.length*f(30); }); bh+=f(14);
-    L.boxH=bh; yy+=bh+f(18); L.noteY=yy; L.h=yy+notes.length*f(28)+f(8);
+    yy+=f(16); L.boxY=yy;
+    mc.font="900 "+g(21)+"px 'Noto Sans KR'"; var lw=0; boxRows.forEach(function(br){ lw=Math.max(lw, mc.measureText(br[0]).width); });
+    lw=Math.round(lw)+f(22); L.lw=lw;
+    var vw=W-PAD*2-f(44)-lw; L.boxLines=[];
+    boxRows.forEach(function(br){ mc.font="500 "+g(21)+"px 'Noto Sans KR'"; var vl=wrapLines(mc,String(br[1]),vw); L.boxLines.push({k:br[0], vl:vl}); });
+    var bh=f(16)+f(32)+f(6); L.boxLines.forEach(function(bx){ bh+=bx.vl.length*g(30); }); bh+=f(14);
+    L.boxH=bh; yy+=bh+f(16); L.noteY=yy;
+    L.noteLines=[]; mc.font="500 "+g(20)+"px 'Noto Sans KR'";
+    notes.forEach(function(nt){ breakDot(mc, nt, W-PAD*2+16).forEach(function(l){ L.noteLines.push(l); }); });
+    L.h=yy+L.noteLines.length*g(27)+f(6);
+    /* 줄바꿈이 늘어난 만큼 「덜 좋은」 배치로 친다 → bestScale 은 h 만 보므로 여기서 걸러 준다 */
     return L;
   }
-  var L=null;
-  for(var sf=1; sf>=0.7; sf-=0.04){ L=layout(sf); if(L.h<=bottom) break; }
-  var f=function(v){ return Math.round(v*L.sf); };
+  /* 「 · 」 단위로만 줄을 바꾼다(구절이 중간에 갈라지지 않게) */
+  function breakDot(m2, txt, maxW){
+    if(m2.measureText(txt).width<=maxW) return [txt];
+    var parts=String(txt).split(/\s+·\s+/), out=[], cur="";
+    parts.forEach(function(p){ var t2=cur?(cur+" · "+p):p; if(cur && m2.measureText(t2).width>maxW){ out.push(cur); cur=p; } else cur=t2; });
+    if(cur) out.push(cur);
+    return out;
+  }
+  var L=bestScale(layout, bottom+14, 1.08, 0.7, 1.35, 0.8);
+  var f=function(v){ return Math.round(v*L.sf); }, g=function(v){ return Math.round(v*L.sf*L.bs); };
   /* 표 머리 */
-  x2.textAlign="left"; x2.textBaseline="middle"; x2.font="700 "+f(18)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab;
-  ["급","차기","격파","품새"].forEach(function(h,i){ x2.fillText(h, L.colX[i]+f(6), L.headY+f(17)); });
+  x2.textAlign="left"; x2.textBaseline="middle"; x2.font="700 "+g(20)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab;
+  ["급","차기","격파","품새"].forEach(function(h,i){ x2.fillText(h, L.colX[i]+6, L.headY+f(17)); });
   x2.strokeStyle=TR_C.dash; x2.lineWidth=2; x2.beginPath(); x2.moveTo(PAD,L.headY+f(34)); x2.lineTo(W-PAD,L.headY+f(34)); x2.stroke();
   L.groups.forEach(function(G,gi){
-    x2.font="900 "+f(18)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.orange; x2.textAlign="left";
-    spacedText(x2, groups[gi].n, PAD+f(6)+f(44), G.y+f(22), 4);
+    x2.font="900 "+g(20)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.orange; x2.textAlign="left";
+    spacedText(x2, groups[gi].n, PAD+6+g(46), G.y+f(20), 4);
     G.rows.forEach(function(row){
       var r=row.r, cy=row.y+row.h/2;
       var col=BELT_HEX2[r.belt]||"#ccc";
-      x2.fillStyle=col; rrect(x2,L.colX[0]+f(6),cy-f(16),f(14),f(32),4); x2.fill();
-      x2.strokeStyle="#6b5738"; x2.lineWidth=1.5; rrect(x2,L.colX[0]+f(6),cy-f(16),f(14),f(32),4); x2.stroke();
-      x2.font="900 "+f(22)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.ink; x2.textAlign="left"; x2.textBaseline="middle";
-      x2.fillText(r.grade, L.colX[0]+f(30), cy+1);
-      function col2(lines, x, bold, colr){ x2.font=(bold?"900 ":"500 ")+f(21)+"px 'Noto Sans KR'"; x2.fillStyle=colr; var yy=cy-((lines.length-1)*f(27))/2; lines.forEach(function(l){ x2.fillText(l, x, yy); yy+=f(27); }); }
-      col2(row.kl, L.colX[1]+f(6), false, TR_C.ink); col2(row.bl, L.colX[2]+f(6), false, TR_C.ink); col2(row.pl, L.colX[3]+f(2), true, TR_C.navy);
+      x2.fillStyle=col; rrect(x2,L.colX[0]+6,cy-f(16),f(14),f(32),4); x2.fill();
+      x2.strokeStyle="#6b5738"; x2.lineWidth=1.5; rrect(x2,L.colX[0]+6,cy-f(16),f(14),f(32),4); x2.stroke();
+      x2.font="900 "+g(22)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.ink; x2.textAlign="left"; x2.textBaseline="middle";
+      x2.fillText(r.grade, L.colX[0]+6+f(24), cy+1);
+      function col2(lines, x, bold, colr){ x2.font=(bold?"900 ":"500 ")+g(21)+"px 'Noto Sans KR'"; x2.fillStyle=colr; var yy=cy-((lines.length-1)*g(27))/2; lines.forEach(function(l){ x2.fillText(l, x, yy); yy+=g(27); }); }
+      col2(row.kl, L.colX[1]+6, false, TR_C.ink); col2(row.bl, L.colX[2]+6, false, TR_C.ink); col2(row.pl, L.colX[3]+2, true, TR_C.navy);
       dashLine(x2, PAD, W-PAD, row.y+row.h);
     });
   });
   /* 상급반 상자 */
   x2.fillStyle=TR_C.box; rrect(x2,PAD,L.boxY,W-PAD*2,L.boxH,f(17)); x2.fill();
   x2.textAlign="left"; x2.textBaseline="middle";
-  x2.font="900 "+f(22)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.brown; x2.fillText("상급반 (1품 · 2품)", PAD+f(22), L.boxY+f(16)+f(15));
-  var by=L.boxY+f(16)+f(30)+f(6);
+  x2.font="900 "+g(22)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.brown; x2.fillText("상급반 (1품 · 2품)", PAD+f(22), L.boxY+f(16)+f(16));
+  var by=L.boxY+f(16)+f(32)+f(6);
   L.boxLines.forEach(function(b){
-    x2.font="900 "+f(20)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab; x2.fillText(b.k, PAD+f(22), by+f(15));
-    x2.font="500 "+f(20)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.ink;
-    b.vl.forEach(function(l){ x2.fillText(l, PAD+f(22)+f(120), by+f(15)); by+=f(30); });
+    x2.font="900 "+g(21)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab; x2.fillText(b.k, PAD+f(22), by+g(15));
+    x2.font="500 "+g(21)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.ink;
+    b.vl.forEach(function(l){ x2.fillText(l, PAD+f(22)+L.lw, by+g(15)); by+=g(30); });
   });
   /* 안내 */
-  x2.textAlign="center"; x2.textBaseline="top"; x2.font="500 "+f(19)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.sub;
-  notes.forEach(function(n,i){ var nf=f(19); x2.font="500 "+nf+"px 'Noto Sans KR'"; while(nf>13 && x2.measureText(n).width>W-PAD*2){ nf--; x2.font="500 "+nf+"px 'Noto Sans KR'"; } x2.fillText(n, W/2, L.noteY+i*f(28)); });
+  x2.textAlign="center"; x2.textBaseline="top"; x2.font="500 "+g(20)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.sub;
+  L.noteLines.forEach(function(n,i){ var nf=g(20); x2.font="500 "+nf+"px 'Noto Sans KR'"; while(nf>13 && x2.measureText(n).width>W-PAD*2+16){ nf--; x2.font="500 "+nf+"px 'Noto Sans KR'"; } x2.fillText(n, W/2, L.noteY+i*g(27)); });
   footer(x2,H);
   return c;
 }
@@ -2815,6 +2925,7 @@ function richWrap(mc, segs, maxW, fs, fam){
     var toks=String(sg.t).split(/(\s+)/);
     toks.forEach(function(tk){
       if(!tk) return;
+      tk=tk.replace(/\u0001/g," ");                       /* [R7.0] \u0001 = 붙여 쓰는 빈칸(여기서는 줄을 바꾸지 않는다) */
       mc.font=fontOf(sg); var tw=mc.measureText(tk).width;
       if(w+tw>maxW && cur.length && !/^\s+$/.test(tk)){ lines.push(cur); cur=[]; w=0; }
       if(!cur.length && /^\s+$/.test(tk)) return;
@@ -2832,23 +2943,24 @@ function richDraw(x2, lines, x, y, fs, lh, fam){
   });
 }
 /* [R6.2] 추천자 명단 안내 상자 — 관장님 스니펫(2026-09-30) 디자인: 크림 상자 + 금색 테두리, 빨간 경고 띠 */
-function recNoteBox(mc, innerW){
+function recNoteBox(mc, innerW, k){
+  k=k||1; var F=function(v){ return Math.round(v*k); };
   var NAVY2="#1e2b5c", RED2="#c8102e", goal=Number(S.recGoal||24), m=S.month;
   var custom=String(S.recNote||"").trim();
   var padX=26, padY=18, w=innerW-padX*2, h=padY, parts=[];
   if(custom){
-    var cl=[]; mc.font="500 20px 'Noto Sans KR'";
+    var cl=[]; mc.font="500 "+F(20)+"px 'Noto Sans KR'";
     custom.split("\n").forEach(function(l){ wrapLines(mc, l, w).forEach(function(x){ cl.push([{t:x,c:NAVY2,b:false,w:0}]); }); });
     cl.forEach(function(ln){ ln[0].w=mc.measureText(ln[0].t).width; });
-    parts.push({kind:"rows", lines:cl, fs:20, lh:31}); h+=cl.length*31;
+    parts.push({kind:"rows", lines:cl, fs:F(20), lh:F(31)}); h+=cl.length*F(31);
   } else {
-    var hd=richWrap(mc,[{t:"추천",c:RED2,b:true},{t:" : 지난 심사 이후 수련 ",c:NAVY2,b:true},{t:"14회 이상",c:RED2,b:true},{t:" (또는 지도진 추천)  →  ",c:NAVY2,b:true},{t:"응시",c:RED2,b:true},{t:" : 심사일까지 ",c:NAVY2,b:true},{t:goal+"회",c:RED2,b:true},{t:" 도달",c:NAVY2,b:true}], w, 24);
-    parts.push({kind:"head", lines:hd, fs:24, lh:34}); h+=hd.length*34+8+2+10;
-    var r1=richWrap(mc,[{t:"· 이 명단은 이달 말까지 ",c:"#2b2b2b"},{t:goal+"회 도달이 예상되는",c:NAVY2,b:true},{t:" 수련생이며, "+m+"월 출석에 따라 최종 확정됩니다.",c:"#2b2b2b"}], w, 20);
-    var r2=richWrap(mc,[{t:"· 확정된 수련생에게는 심사일 ",c:"#2b2b2b"},{t:"14일 전",c:NAVY2,b:true},{t:"까지 개별 톡으로 심사 신청서를 보내드립니다.",c:"#2b2b2b"}], w, 20);
-    parts.push({kind:"rows", lines:r1.concat(r2), fs:20, lh:31}); h+=(r1.length+r2.length)*31;
-    var wl=richWrap(mc,[{t:"※ 수련 횟수는 정규수련 및 보강수련 횟수 포함이며, 대회 준비를 위한 수련은 수련 횟수에 포함되지 않습니다. 명단이나 수련 횟수가 다르다고 생각되시면 도장으로 문의 바랍니다.",c:"#7a1020",b:true}], w-34, 19);
-    parts.push({kind:"warn", lines:wl, fs:19, lh:28.5}); h+=10+8+wl.length*28.5+8;
+    var hd=richWrap(mc,[{t:"추천",c:RED2,b:true},{t:" : 지난 심사 이후 수련 ",c:NAVY2,b:true},{t:"14회 이상",c:RED2,b:true},{t:" (또는 지도진 추천)  →  ",c:NAVY2,b:true},{t:"응시",c:RED2,b:true},{t:" : 심사일까지 ",c:NAVY2,b:true},{t:goal+"회",c:RED2,b:true},{t:" 도달",c:NAVY2,b:true}], w, F(24));
+    parts.push({kind:"head", lines:hd, fs:F(24), lh:F(34)}); h+=hd.length*F(34)+8+2+10;
+    var r1=richWrap(mc,[{t:"· 이 명단은 이달 말까지 ",c:"#2b2b2b"},{t:goal+"회 도달이 예상되는",c:NAVY2,b:true},{t:" 수련생이며, "+m+"월 출석에 따라 최종 확정됩니다.",c:"#2b2b2b"}], w, F(20));
+    var r2=richWrap(mc,[{t:"· 확정된 수련생에게는 심사일 ",c:"#2b2b2b"},{t:"14일 전",c:NAVY2,b:true},{t:"까지 개별 톡으로 심사 신청서를 보내드립니다.",c:"#2b2b2b"}], w, F(20));
+    parts.push({kind:"rows", lines:r1.concat(r2), fs:F(20), lh:F(31)}); h+=(r1.length+r2.length)*F(31);
+    var wl=richWrap(mc,[{t:"※ 수련 횟수는 정규수련 및 보강수련 횟수 포함이며, 대회 준비를 위한 수련은 수련 횟수에 포함되지 않습니다. 명단이나 수련 횟수가 다르다고 생각되시면 도장으로 문의 바랍니다.",c:"#7a1020",b:true}], w-34, F(19));
+    parts.push({kind:"warn", lines:wl, fs:F(19), lh:F(28.5)}); h+=10+8+wl.length*F(28.5)+8;
   }
   h+=padY;
   return { h:Math.round(h), draw:function(x2, x, y){
@@ -2880,10 +2992,15 @@ function drawRecPages(no, list, forceSub){
   var PAD=96, IND=24, COLGAP=40;
   var COLW=Math.floor((W-PAD*2-IND-COLGAP)/2);          /* [R5.9] 두 단 */
   var mc=document.createElement("canvas").getContext("2d");
-  var F_CAT=34, F_NEED=26, F_GRADE=26, F_NAME=33, LH_NAME=44;
-  var H_CAT=70, H_NEED=48, H_GRADE=40, GAP_CAT=34, GAP_UNIT=16;
+  var F_CAT=34, F_NEED, F_GRADE, F_NAME=33, LH_NAME=44;
+  var H_CAT=70, H_NEED, H_GRADE, GAP_CAT=34, GAP_UNIT=16;
+  var cats, NB, noteH, top1, topN, bottom, plan=[], pg=null, y=0, breakCat2=false;
+  var sub=String(S.recSub||"").trim(), subH=sub?86:0;
+  /* [R7.0] 안내 상자·소제목 글자를 키운 안(k)으로 먼저 짜 보고, 장수가 늘면 종전 크기로 되돌린다 */
+  function setup(k, big){
+  F_NEED=big?29:26; F_GRADE=big?29:26; H_NEED=big?50:48; H_GRADE=big?42:40;
   /* 묶음(unit) = [보강 N회 필요]? + 소제목 + 이름들 — 같은 단에 함께 놓는다 */
-  var cats=[], curCat=null, pend=[];
+  cats=[]; var curCat=null, pend=[];
   blocks.forEach(function(bk){
     if(bk.t==="cat"){ curCat={ head:bk, units:[] }; cats.push(curCat); pend=[]; return; }
     if(bk.t==="need"||bk.t==="grade"){ pend.push(bk); return; }
@@ -2894,13 +3011,11 @@ function drawRecPages(no, list, forceSub){
     u.h+=GAP_UNIT;
     curCat.units.push(u); pend=[];
   });
-  var sub=String(S.recSub||"").trim();
-  var NB=recNoteBox(mc, W-PAD*2), noteH=NB.h;
-  var subH=sub?86:0;
-  var top1=sy0+subH+(sub?14:0)+noteH+30, topN=sy0+subH+(sub?18:4);
-  var bottom=Math.min(panelBottom(H), H-150);
+  NB=recNoteBox(mc, W-PAD*2, k); noteH=NB.h;
+  top1=sy0+subH+(sub?14:0)+noteH+30; topN=sy0+subH+(sub?18:4);
+  bottom=Math.min(panelBottom(H), H-150);
+  }
   /* ── 배치 계산: 장마다 {y, items:[{kind:'cat'|'unit', x, y, ...}]} ── */
-  var plan=[], pg=null, y=0, breakCat2=false;
   function newPage(){ pg={ items:[] }; plan.push(pg); y=(plan.length===1)?top1:topN; }
   function buildPlan(){ plan=[]; pg=null; y=0; newPage();
   cats.forEach(function(cat, ci){
@@ -2933,8 +3048,11 @@ function drawRecPages(no, list, forceSub){
     }
   });
   }
-  buildPlan();
-  if(plan.length>1 && cats.length>1){ breakCat2=true; buildPlan(); }
+  function planFor(k, big){ setup(k, big); breakCat2=false; buildPlan(); if(plan.length>1 && cats.length>1){ breakCat2=true; buildPlan(); } return plan.length; }
+  /* 장수가 종전과 같을 때만 키운다 */
+  var nOld=planFor(1,false), tries=[[1.18,true],[1.12,true],[1.12,false],[1.06,false]], done=false;
+  for(var ti=0; ti<tries.length && !done; ti++){ if(planFor(tries[ti][0],tries[ti][1])===nOld) done=true; }
+  if(!done) planFor(1,false);
   /* ── 그리기 ── */
   plan.forEach(function(page, pi){
     var c=recPageBase(), x2=c.getContext("2d");
@@ -2976,8 +3094,8 @@ function drawRecPages(no, list, forceSub){
         if(p.t==="need"){
           x2.font="700 "+F_NEED+"px 'Noto Sans KR'";
           var pw=x2.measureText(p.text).width+36;
-          x2.fillStyle=REC_GOLD; rrect(x2,ux,uy+4,pw,38,19); x2.fill();
-          x2.fillStyle=REC_NAVY; x2.fillText(p.text, ux+18, uy+23);
+          x2.fillStyle=REC_GOLD; rrect(x2,ux,uy+4,pw,H_NEED-10,(H_NEED-10)/2); x2.fill();
+          x2.fillStyle=REC_NAVY; x2.fillText(p.text, ux+18, uy+4+(H_NEED-10)/2+1);
           uy+=H_NEED;
         } else if(p.t==="grade"){
           x2.font="700 "+F_GRADE+"px 'Noto Sans KR'"; x2.fillStyle="#F6D98A";
@@ -3034,9 +3152,9 @@ function _drawKkwGroup(no, list, subText, pageOff, forceSub){
       subB=sy0+76;
     }
     /* [R6.7] 안내 한 줄 */
-    x2.font="700 24px 'Noto Sans KR'"; x2.fillStyle="#6B6357"; x2.textAlign="center"; x2.textBaseline="middle";
-    x2.fillText("응시 월은 수련 진도에 따라 개별 안내드립니다.", W/2, subB+30);
-    subB+=44;
+    x2.font="700 30px 'Noto Sans KR'"; x2.fillStyle="#6B6357"; x2.textAlign="center"; x2.textBaseline="middle";
+    x2.fillText("응시 월은 수련 진도에 따라 개별 안내드립니다.", W/2, subB+34);
+    subB+=52;
     var n=chunk.length, top=subB+30, bottom=panelBottom(H)-30;
     var cF=function(cw){ return Math.max(36, Math.min(40, Math.round(cw*0.14))); };   /* [R6.2] 13pt(36px) 이상 */
     var cellHf=function(cw){ var f=cF(cw); return cw + 12 + Math.round(f*1.32) + rowGapOf(cw); };
