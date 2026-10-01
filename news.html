@@ -403,12 +403,14 @@ details.help[open] summary{ margin-bottom:6px; }
     <div><label class="fl">TV 영상 · 한 장 보여주는 시간</label>
       <select id="inTvSec"><option value="3">3초</option><option value="4">4초</option><option value="5" selected>5초</option><option value="6">6초</option><option value="8">8초</option></select></div>
     <div><label class="fl">넘김 시간</label>
-      <select id="inTvTurn"><option value="0.6">0.6초 (빠르게)</option><option value="0.9" selected>0.9초 (보통)</option><option value="1.3">1.3초 (천천히)</option></select></div>
-    <div><label class="fl">화면 배치</label>
-      <select id="inTvStyle"><option value="panel" selected>제목 패널 + 소식지</option><option value="center">소식지만 가운데</option></select></div>
+      <select id="inTvTurn"><option value="0.6">0.6초 (빠르게)</option><option value="0.9">0.9초 (보통)</option><option value="1.2" selected>1.2초 (부드럽게)</option><option value="1.6">1.6초 (천천히)</option></select></div>
+    <div><label class="fl">전환 모양</label>
+      <select id="inTvStyle"><option value="soft" selected>부드럽게 겹치며 넘김</option><option value="slide">옆으로 밀기</option><option value="fade">제자리 겹침(페이드)</option></select></div>
+    <div style="flex:0 0 auto;align-self:flex-end"><button class="sec" id="btnTvPreview">📺 TV 화면 미리보기</button></div>
   </div>
-  <div class="hint">TV·빔프로젝터 송출용 <b>1920×1080</b> 영상입니다. 소식지 장면이 <b>카드를 넘기듯</b>(앞으로 당겼다 뒤로 들어감) 전환되며, 마지막 장 다음에는 첫 장으로 이어져 <b>반복 재생</b>해도 자연스럽습니다.<br>⚠️ 만드는 동안 화면을 그대로 두세요(다른 창으로 가리거나 최소화하면 영상이 끊깁니다). 길이 = 장수 × (보여주는 시간 + 넘김 시간).</div>
+  <div class="hint">TV·빔프로젝터 송출용 <b>1920×1080</b> 영상입니다. 밴드용 세로 소식지를 그대로 넣지 않고, 같은 내용을 <b>TV 화면 비율(16:9)에 맞춰 가로형으로 다시 배치</b>해 화면 가득 보여줍니다. 장면은 부드럽게 겹치며 넘어가고, 마지막 장 다음에는 첫 장으로 이어져 <b>반복 재생</b>해도 자연스럽습니다. [📺 TV 화면 미리보기]로 먼저 확인할 수 있습니다.<br>⚠️ 만드는 동안 화면을 그대로 두세요(다른 창으로 가리거나 최소화하면 영상이 끊깁니다). 길이 = 장수 × (보여주는 시간 + 넘김 시간).</div>
   <div id="previewArea"></div>
+  <div id="tvPreviewArea"></div>
 </section>
 
 <!-- 보관함 -->
@@ -482,7 +484,7 @@ details.help[open] summary{ margin-bottom:6px; }
    나라차 소식지 제작기
    var APP_VER 규칙: 수정할 때마다 +0.1, 내리지 않는다.
    ============================================================ */
-var APP_VER = "v7.0"; /* R7.0: 모바일 가독성 — 장수·디자인은 그대로 두고 작은 글자를 키움. ①02 SCHEDULE: 남는 공간만큼 글자 확대(줄바꿈이 새로 생기지 않는 최대), 날짜 열 폭을 실제 날짜에 맞춤, 흐름 상자는 「→」 단위로만 줄바꿈 ②03 수련계획표: 칸을 넓히고 날짜·일정 알약·체력훈련 글자 확대(낱말이 잘리지 않는 최대, 유난히 긴 낱말만 그 줄 축소), 요일·주차·하단 띠·안내 확대 ③03-1~3 수련 안내: 설명 글자를 따로 키우고 좌우 열 나눔을 내용에 맞춤 ④04 승급심사 안내: 표 간격을 줄여 본문 확대, 안내는 「·」 단위 줄바꿈 ⑤04-1 추천자: 안내 상자·소제목 확대(장수가 늘면 자동으로 종전 크기) ⑥05 국기원 안내 한 줄·목차 포토앨범 설명 확대 ⑦줄 맨 앞이 「·」로 시작하지 않게 · R6.9: 목차 포토앨범 설명(사진첩 제목들)을 자르지 않고 모두 표시 — 글자를 34→24px까지 줄이고 그래도 길면 여러 줄 · 품 2급→다음 품(국기원 대기)로 오기 수정(1품 2급 → 2품) · R6.8: 추천자 안내 상자 경고 문장 교체(관장님) — 「수련 횟수는 정규수련 및 보강수련 횟수 포함이며, 대회 준비를 위한 수련은 수련 횟수에 포함되지 않습니다. 명단이나 수련 횟수가 다르다고 생각되시면 도장으로 문의 바랍니다.」 · R6.7: 관장님 2차 수정요청(25쪽본 대조) 반영 — ①운영표 JSON 갱신(week_rule·application_dates 내장) ②1주 시작일은 운영표 주차 규칙 우선(10월 = 9/28, 연휴 건너뜀), 하단 띠 범위도 운영표 그대로(1주 9/28~10/2 …), 심사일 미입력 시 운영표 심사일 자동 ③04 승급심사 안내 알약 「10/26(월)·27(화) 오후 6시 | 신청서·심사비 납부 10/19(월)까지」·하단 「심사 신청서는 10/12(월)·13(화) 개별 톡으로 …」(운영표 없으면 심사일로 계산) ④05 국기원은 한 묶음 유지 + 「응시 월은 수련 진도에 따라 개별 안내드립니다」 · R6.6: 02 SCHEDULE 시안 맞춤 — 강조를 구절 단위(정기승급심사·심사 신청서·…마감 줄 전체)로만, **…** 직접 표시 지원, 흐름 상자 날짜 「10/12·13 신청서 톡 … 10/26·27 심사」 · R6.5: 최종본 주차 규칙 — 주차를 심사 주기로 셈(지난 심사 다음 수업일 = 1주차 → 4주차 심사점검 → 심사, 5주차 없음). 03 달력에 왼쪽 「주차」 열(1주 9/28~ · 4주 심사점검 · 심사 28일~11월 1주), 심사 다음 날 칸에 점선 경계 + 「11월 1주 →」, 하단 띠 「1주 · 9/28~10/2 / 차기 … 10/26·27 / 승급심사」, 안내 문구 「주차는 심사 다음 수업일부터 셉니다」. 03-1~03-3 안내 두 줄도 최종본 문안. 지난 심사일 입력(비우면 심사 기록에서 자동) · R6.4: ①국기원 응시예정자를 회차(12월/3월)별로 나눠 장을 구성 — 편집 화면에서 사람마다 회차 선택(기본은 다음 회차) ②목차 포토앨범 줄은 설명(사진첩 제목들)까지 두 줄, 설명 34px · R6.3: 관장님 수정 시안 반영 — ②02 SCHEDULE: 날짜 열+내용 열(심사·마감 등 굵게), 휴관은 빨강, 아래 「승급심사 흐름」 상자(심사일로 자동: 14일 전 톡 → 7일 전 마감 → 심사) ③03 수련계획표: 칸마다 날짜 + 일정 알약(휴관 빨강·심사 남색·대회 주황·행사 초록) + 체력훈련(초록 글씨), 아래 주차 띠(운영표 주차 집중 과목) + 「수련 안내(03-1~03-3)를 봐 주세요」 안내 · R6.2: 관장님 연동자료(2026-09-30) 반영 1단계 — ①월간 운영표 JSON 내장(2026-10~2027-09) + 교체 업로드(호 보관에 포함돼 다른 PC와 공유) ②「월 수련 안내」 반별 3장(03-1~03-3): 반 표식 배너(띠 칩)·이달의 품새/진도 상자·주차별 표 ③「승급심사 안내」 1장(04): 급별 차기·격파·품새 표 + 상급반 상자 ④추천자 명단(04-1~)의 추천 기준 상자를 관장님 스니펫 디자인·문안으로(추천 14회 → 응시 24회) ⑤여러 장이면 「보강 후 심사 대상」은 새 장에서 ⑥목차에 수련 안내·심사 안내 추가, 배지 03-1식 표기 ⑦국기원 제목·목차 「국기원 승품(단) 응시예정자」로 통일, 국기원 이름·생일 날짜 36px 이상 ⑧인성덕목에 운영표 사자성어(품행방정) 표기 ⑨하단 「NARACHA 나라차태권도」 띄어쓰기 · R6.1: 승급심사 추천자 — 묶음 머리의 「(이어서)」·인원수 제거, 두 단 사이 세로 구분선, 띠 명칭에서 「품띠」 삭제 · R6.0: 목차의 포토앨범 한 줄은 매거진 섹션 전체(사진첩+보고 카드) 범위 「포토앨범 (07 ~ 11)」로(페이지 번호는 각각 유지) · 다른 PC 이어 작업 보강 — ①앱을 열 때 클라우드에 더 새 내용이 있으면 받아서 열지 묻기 ②[받기]→「받아서 열기」로 바로 적용, [열기]는 클라우드가 더 새것이면 클라우드에서 ③자동 업로드 45초→15초, 창을 숨기면 즉시 업로드, 미업로드 변경이 있으면 닫기 전에 확인 · R5.9: 승급심사 추천자 개편(관장님 지침) — ①심사일까지 수련하면 기준 회차(24회)에 닿는지 계산(주당 횟수 × 남은 주, 달력 휴관 제외)해 「심사 대상(24회 도달 예정)」/「보강 후 심사 대상(보강 N회 필요, 적은 순)」 두 묶음 ②묶음 안은 「9급 흰띠 → 8급 노란띠」 소제목 아래 이름만 크게(칩 없음) ③추천 기준 3줄을 첫 장 위쪽 금색 박스로 ④심사일·기준 회차 입력 추가, 주1회 수련생은 18회 기준(프로그램 R4.410) · R5.8: 목차 정리 — ①사진만 있는 사진첩들은 «포토앨범» 한 묶음(번호 하나, 07-1·07-2…)으로 묶고 목차엔 「포토앨범 (07-1 ~ 07-6)」 한 줄 ②목차는 항상 한 장(항목 많으면 줄 높이·글자 자동 축소) ③KIS 방과후 행사는 소식지 자동 반영에서 제외(기존 자동 항목도 정리) · R5.7: ①표지 새 디자인 — 하늘→땅 그라데이션, 월별 모티프(봄 꽃·잎 / 여름 해·물방울 / 가을 단풍·도토리 / 겨울 눈)를 가장자리에 흩뿌림, 큰 숫자 「10」+「월」, 「NARACHA NEWS LETTER · OCTOBER 2026」 자간 표기, 계절 한 줄 문구(월별 기본·직접 입력 가능), 이중 액자 카드 ②승급심사 추천자 푸터가 금색 테두리와 겹치던 것 수정 · R5.6: 디자인 전수 점검(디자이너 3인 검토 반영) — ①사진첩: 좌우 폭 960px로 통일·간격 16·모서리 16, 줄 폭은 항상 꽉 채우고 높이로 페이지를 채움(세로사진 칸 236px 미만 조합 배제) ②글 카드: 카드 높이를 내용에 맞춤, 본문 폭 확장, 이어지는 줄은 「이름 — 」 뒤에 맞춰 내어쓰기, 소제목 위 띄우고 아래 붙임, 행간 20, 콜론·날짜 표기 통일(8월 3일) ③목차 항목 40px↑·배지 숫자 확대 ④인성덕목 정의문 40px 진하게, 구분선을 본문 폭에 맞춤, 본문 44px ⑤체크리스트 한 줄 제목·점선 상하 균등·본문 44px ⑥일정이 비면 페이지 생성 안 함 ⑦달력 토요일 숫자 파랑, 격자 위 여백 축소 ⑧승급심사 칩 확대(116px)·흰띠 채움 ⑨국기원·생일 네모 격자 우선(4명=2×2), 캡션 확대, 장식 간격 확보, 색종이 배지 겹침 제거 ⑩표지 News Letter 대비·제목 간격 · R5.5: 승급심사 추천자 장을 다른 장과 확실히 구분 — 도복 남색 바탕 + 금색 이중 테두리·모서리 마름모, 금색 번호 배지, 「10월」 금색 + 「승급심사 추천자」 흰색 제목, 흰 카드 칩(그림자), 전용 푸터. 밝은 파스텔 사이에서 눈에 띄도록(학부모 주목·도장 마케팅 목적) · R5.4: ①얼굴 사진을 한 장도 못 받았는데 소식지를 만들면 경고(종전엔 조용히 로고만 들어갔다) ②[승급심사 추천자 불러오기]가 사진 창고도 함께 받아 새로 찍은 사진이 반영되도록 · R5.3: 승급심사 추천자 — 「심사 기준 회차」로 묶음을 나누던 것을 없앰. 지금 심사 추천에 있는 사람이 곧 이번 달 대상이므로 한 묶음으로 싣는다(국기원 묶음은 선택 그대로) · R5.2: TV 영상 전환은 «카드 넘김» 한 가지로 정리(책장 넘김 삭제) · R5.1: TV 영상 — ①오른쪽 소식지를 더 크게(화면 높이의 92%·폭 한도 64%) ②전환 기본을 «카드 넘김»으로: 앞 장을 살짝 앞으로 당겼다가 뒤로 밀어 넣으면 뒤에서 기다리던 다음 장이 올라온다(책장 넘김도 선택 가능) · R5.0: 승급심사 추천자 페이지 전면 개편(관장님 전달메모 서식) — ①대상은 나라차 프로그램의 «심사 추천» 명단 «전체»(누적 14회 이상 또는 지도진 추천) ②기준 회차(기본 24회)로 「심사 대상」/「조금 더 힘내요(N회 남음)」 두 묶음 + 「국기원 승품 심사 예정」 ③사진 대신 이름·띠색 막대·반 칩으로 한 장에 많이 담음 ④제목은 「10월」 주황 + 「승급심사 추천자」, 제목 아래 심사 일정 한 줄 ⑤하단 안내: 추천 기준 · 출석에 따라 확정 · 심사일 10일 전 개별 톡 신청서 안내(수정 가능) · R4.9: [🎬 TV용 영상 저장 (16:9)] — 같은 소식지를 1920×1080 영상으로 저장(TV·빔프로젝터 송출용). 책장 넘기듯 전환, 마지막 장→첫 장으로 이어져 반복 재생에 자연스러움. 한 장 시간·넘김 시간·배치(제목 패널/가운데) 선택. 외부 프로그램 없이 브라우저 녹화(MP4 우선, 안 되면 WebM) · R4.8: 명단 페이지(대상자·국기원·생일) 행과 행 사이 여백을 칸 크기에 비례해 넓힘 — 위아래가 답답해 보이던 문제 · R4.7: 명단 페이지 겹침 수정 — ①칸 높이를 «실제로 그리는 높이»와 똑같이 계산(종전엔 급수 줄이 빠져 아랫줄 사진과 겹침) ②이름·급수·날짜가 칸 폭을 넘으면 자동으로 글자를 줄임 ③생일자는 날짜(작게·회갈색)를 위에, 이름을 아래에 두 줄로 · R4.6: ①승급심사 대상자 = 나라차 프로그램 출석현황의 [심사확정] 체크 기준으로 변경(종전 추천 기준 폐지), 급수 낮은 순 ②[🔄 승급심사 대상자 불러오기] 전용 버튼 — [지난달 데이터 반영]과 따로, 명단이 바뀌면 이 버튼만 누르면 최신으로 갱신(선택도 초기화) ③휴일·휴관 글자가 지나치게 커지지 않도록 수련 내용보다 4px까지만 크게 · R4.5: 달력 수련 내용 글자 키움 — 긴 줄은 칸 안에서 자동 줄바꿈해 남는 세로 공간을 쓰게 함(종전엔 긴 한 줄에 맞추느라 달력 전체가 작아졌다) · R4.4: 휴일·휴관처럼 일정만 있는 칸의 글자 크기를 서로 같게(가장 빠듯한 칸 기준으로 통일, 수련 내용보다는 크게) — 종전엔 병합 폭에 따라 칸마다 달랐다 · R4.3: 달력 입력을 「날짜 옆 일정」과 「수련 내용」으로 분리 — 칸마다 일정 한 줄 입력칸(색: 파랑·빨강)과 내용 입력칸(색 5종)을 따로 둠. 옛 저장분은 자동 이관(일정 낱말이 섞인 칸에서 일정 줄만 라벨로 분리) · R4.2: ①승급심사 추천자 명단 페이지 추가(국기원 페이지 바로 앞) — 나라차 프로그램과 같은 규칙(누적 14회 이상·국기원 대기 제외 또는 지도진 수동추천), 현재 급수 → 취득 예정 급수 함께 표기 ②국기원·생일·추천자 명단은 15명까지 한 페이지에(열 수를 자동으로 늘려 배치) · R4.1: 수련계획표를 원본 소식지 형태로 — ①수련 내용은 여러 날 반복돼도 날마다 그대로 표기(병합하지 않음), 병합은 「추석 연휴 휴관」처럼 특별 일정만 있는 연속 칸에만 ②수련 내용이 함께 있는 날의 특별 일정(정기승급심사 등)은 날짜 바로 오른쪽에 색 알약 라벨로 표기하고 칸 배경도 옅게 ③마지막 줄 빈칸에 인성덕목 문구를 넣어 달력이 꽉 차게 · R4.0: 수련계획표에서 대체휴무·승급심사 같은 특별 일정은 글자를 조금 크게(+5px) — 글자색을 지정했거나 휴관·휴일·심사·대회·행사 등이 들어간 칸. 일반 수련 내용은 종전대로 균일 · R3.9: 수련계획표 글자 크기 균일화 — 2~3일 병합 칸 글자가 일별 칸보다 훨씬 크게 나오던 문제(병합만 최대 30px 허용·넓은 폭이라 줄지 않음). 이제 달력 전체에서 가장 빠듯한 칸에 맞춘 공통 크기를 쓰고, 병합 칸도 +2px까지만 · R3.8: [지난달 데이터 반영]을 이미 눌렀으면 바로 아래에 「✅ 이번 달 이미 반영됨 — n월 …을 m/d hh:mm에 반영」 표시(아직이면 눌러 달라는 안내). 호(연·월)마다 따로 기억 · R3.7: UI 전면 개편 — 전문 편집 프로그램 형태(상단 앱바 + 좌측 구역 레일 + 흰 패널). 안내 글이 희미하던 문제 수정(#4A5265·13px·Pretendard), 중립 회색 작업면 + 브랜드 네이비 크롬, 계절색은 이번 호 칩에만. 상단에 [미리보기 만들기] 상시 버튼 · R3.6: 개별 사진마다 모양 지정(자동·정사각형·가로·세로) + 줄맞춤(justified) 배치 — 지정한 사진은 그 비율대로, 나머지는 원본 비율대로 자동 배치하며 줄 폭을 꽉 채운다 · R3.5: 자동저장 + 편집권(잠금) — 한 달치는 한 PC에서만 저장, 다른 PC에서 열면 「작업 중」 경고와 [이어서 작업하기], 1분 하트비트·3분 임대 만료 · R3.4: 사범 키로도 클라우드 저장 가능 — 창고 이름을 att_news·att_news_YYYYMM 으로(서버 allow()가 사범 키에 att_ 접두어를 허용). 서버 수정 불필요. 예전 news 창고에 올린 호도 목록·받기에서 그대로 보임 · R3.3: 클라우드 보관 연동 — 보관한 호가 다른 PC에서도 보인다. 나라차 Apps Script를 그대로 사용(서버 수정 불필요·관리자 키 필요), 호마다 별도 창고 news_YYYYMM + 목록 창고 news. [이번 호 보관]하면 자동 업로드, 다른 PC에서 [🔄 클라우드 목록 새로고침]→[받기]. fail-closed·baseRev 충돌감지·묘비 유지, 기기 이름 표시 · R3.2: ①사진 배치 선택 — 사진첩마다 모양(자동·정사각형·가로 4:3/3:2·와이드 16:9·세로 3:4)과 열 수를 고를 수 있고, 모양을 고르면 그 비율을 지켜 가운데 배치(한 장에 몇 장 들어가는지 자동 계산) ②글자 크기·줄 간격(행간) 배율 설정 — 기사·인성덕목·체크리스트에 적용 · R3.1: 목차 재구현 — 항목이 많으면(16개 등) 겹쳐 뭉개지던 문제 해결. 항목 수에 맞춰 줄 높이·글자·배지를 자동 계산하고, 한 장에 무리면 여러 장으로 나눔(1/2 표시). 긴 제목은 줄였다가 말줄임. 목차 설명은 행사마다 날짜·인원이 나오도록 개선 · R3.0: ①라차 캐릭터(펭귄) 썸네일 아이콘 — 파비콘·홈화면 아이콘·머리말에 사용 ②화면 디자인 전면 개편 — 종이 질감 배경, 표지 느낌의 머리말(이번 호·계절), 부드러운 그림자 카드, 알약 버튼, 어두운 라이트테이블 미리보기, 선택한 달의 계절색이 화면 전체에 입혀짐 · R2.9: 완성본 보관 기능 — ①[📕 PDF 한 개로 저장](외부 라이브러리 없이 PDF 직접 생성·JPEG 임베드) ②[📦 지난 호 보관함] 결과 이미지가 아니라 재료(설정·글·사진)만 저장해 용량 절약, 목록에서 열기·파일(.json)로 내보내기·삭제, 파일에서 불러오기, 저장공간 사용량 표시(접속키는 보관 대상에서 제외) · R2.8: 1단계 비율 옆에 [🔄 지난달 데이터 반영] 버튼 — 9월에 10월호를 만들 때처럼 달을 바꾸면 그 달의 "지난달" 데이터가 들어가도록. 연·월을 바꾸면 자동으로 재반영(자동으로 넣은 항목은 정리·갱신, 사진을 넣었거나 직접 고친 글은 그대로), 어느 달 데이터가 들어가는지 안내 문구 표시 · R2.7: 기사 카드 제목 중복 제거 — 카드 머리띠 제목과 본문 첫 줄이 같으면 본문에서 빼고, 날짜·인원 줄을 대표 줄로 크게(48px) 올림 · R2.6: 모바일 가독성 기준 재설계 — 소식지 1080px가 폰에서 약 390pt로 보이는 것(글자 ≈ px×0.36) 기준으로 기사 본문 최소 44px(≈16pt) 보장, 그보다 작아지면 줄이지 않고 페이지 분할(장수 최소·같으면 큰 글자). 제목은 42px까지만 줄이고 길면 두 줄, 소제목은 본문급 크기, 다단은 줄이 실제로 들어갈 때만(88% 기준), 칼럼 경계에서 소제목·이어지는 줄 안 끊김, 긴 낱말 글자 단위 줄바꿈. 이름 캡션 최소 30px(국기원·생일) · R2.5: 사진첩(행사·대회 카드) 순서 이동 ↑↓ 버튼 — 목록 순서=소식지 페이지 순서, 중간 배치 가능. 행사·대회 카드에 사진을 넣으면 기사 다음에 사진 페이지가 붙는 안내 보강 · R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
+var APP_VER = "v7.1"; /* R7.1: TV용 영상 전면 개편 — 세로 소식지를 화면에 끼워 넣지 않고, 같은 내용을 16:9(1920×1080) 가로형으로 «다시 배치»해 화면 가득 송출. ①표지: 왼쪽 큰 「10월」·오른쪽 로고/NEWS LETTER/「소식지」 ②목차 두 단 ③일정: 주요 일정(왼쪽)·휴관 안내+흐름 상자(오른쪽) ④수련계획표: 날짜 옆에 내용, 왼쪽 주차 칸에 기간·집중 과목 ⑤수련 안내: 반 표식과 정보 상자를 한 줄에 ⑥승급심사 안내: 급별 표(왼쪽)·상급반 상자(오른쪽) ⑦추천자: 세 단(첫 장은 왼쪽에 안내 상자) ⑧국기원·생일: 옆으로 넓게, 글자 확대 ⑨전환 3종 — 부드럽게 넘김(기본·글자 겹침 없음)/옆으로 밀기/제자리 겹침, 넘김 1.2초 기본 ⑩[📺 TV 화면 미리보기] 버튼(장별 PNG 저장 가능). 세로 소식지(밴드용) 출력은 그대로 · R7.0: 모바일 가독성 — 장수·디자인은 그대로 두고 작은 글자를 키움. ①02 SCHEDULE: 남는 공간만큼 글자 확대(줄바꿈이 새로 생기지 않는 최대), 날짜 열 폭을 실제 날짜에 맞춤, 흐름 상자는 「→」 단위로만 줄바꿈 ②03 수련계획표: 칸을 넓히고 날짜·일정 알약·체력훈련 글자 확대(낱말이 잘리지 않는 최대, 유난히 긴 낱말만 그 줄 축소), 요일·주차·하단 띠·안내 확대 ③03-1~3 수련 안내: 설명 글자를 따로 키우고 좌우 열 나눔을 내용에 맞춤 ④04 승급심사 안내: 표 간격을 줄여 본문 확대, 안내는 「·」 단위 줄바꿈 ⑤04-1 추천자: 안내 상자·소제목 확대(장수가 늘면 자동으로 종전 크기) ⑥05 국기원 안내 한 줄·목차 포토앨범 설명 확대 ⑦줄 맨 앞이 「·」로 시작하지 않게 · R6.9: 목차 포토앨범 설명(사진첩 제목들)을 자르지 않고 모두 표시 — 글자를 34→24px까지 줄이고 그래도 길면 여러 줄 · 품 2급→다음 품(국기원 대기)로 오기 수정(1품 2급 → 2품) · R6.8: 추천자 안내 상자 경고 문장 교체(관장님) — 「수련 횟수는 정규수련 및 보강수련 횟수 포함이며, 대회 준비를 위한 수련은 수련 횟수에 포함되지 않습니다. 명단이나 수련 횟수가 다르다고 생각되시면 도장으로 문의 바랍니다.」 · R6.7: 관장님 2차 수정요청(25쪽본 대조) 반영 — ①운영표 JSON 갱신(week_rule·application_dates 내장) ②1주 시작일은 운영표 주차 규칙 우선(10월 = 9/28, 연휴 건너뜀), 하단 띠 범위도 운영표 그대로(1주 9/28~10/2 …), 심사일 미입력 시 운영표 심사일 자동 ③04 승급심사 안내 알약 「10/26(월)·27(화) 오후 6시 | 신청서·심사비 납부 10/19(월)까지」·하단 「심사 신청서는 10/12(월)·13(화) 개별 톡으로 …」(운영표 없으면 심사일로 계산) ④05 국기원은 한 묶음 유지 + 「응시 월은 수련 진도에 따라 개별 안내드립니다」 · R6.6: 02 SCHEDULE 시안 맞춤 — 강조를 구절 단위(정기승급심사·심사 신청서·…마감 줄 전체)로만, **…** 직접 표시 지원, 흐름 상자 날짜 「10/12·13 신청서 톡 … 10/26·27 심사」 · R6.5: 최종본 주차 규칙 — 주차를 심사 주기로 셈(지난 심사 다음 수업일 = 1주차 → 4주차 심사점검 → 심사, 5주차 없음). 03 달력에 왼쪽 「주차」 열(1주 9/28~ · 4주 심사점검 · 심사 28일~11월 1주), 심사 다음 날 칸에 점선 경계 + 「11월 1주 →」, 하단 띠 「1주 · 9/28~10/2 / 차기 … 10/26·27 / 승급심사」, 안내 문구 「주차는 심사 다음 수업일부터 셉니다」. 03-1~03-3 안내 두 줄도 최종본 문안. 지난 심사일 입력(비우면 심사 기록에서 자동) · R6.4: ①국기원 응시예정자를 회차(12월/3월)별로 나눠 장을 구성 — 편집 화면에서 사람마다 회차 선택(기본은 다음 회차) ②목차 포토앨범 줄은 설명(사진첩 제목들)까지 두 줄, 설명 34px · R6.3: 관장님 수정 시안 반영 — ②02 SCHEDULE: 날짜 열+내용 열(심사·마감 등 굵게), 휴관은 빨강, 아래 「승급심사 흐름」 상자(심사일로 자동: 14일 전 톡 → 7일 전 마감 → 심사) ③03 수련계획표: 칸마다 날짜 + 일정 알약(휴관 빨강·심사 남색·대회 주황·행사 초록) + 체력훈련(초록 글씨), 아래 주차 띠(운영표 주차 집중 과목) + 「수련 안내(03-1~03-3)를 봐 주세요」 안내 · R6.2: 관장님 연동자료(2026-09-30) 반영 1단계 — ①월간 운영표 JSON 내장(2026-10~2027-09) + 교체 업로드(호 보관에 포함돼 다른 PC와 공유) ②「월 수련 안내」 반별 3장(03-1~03-3): 반 표식 배너(띠 칩)·이달의 품새/진도 상자·주차별 표 ③「승급심사 안내」 1장(04): 급별 차기·격파·품새 표 + 상급반 상자 ④추천자 명단(04-1~)의 추천 기준 상자를 관장님 스니펫 디자인·문안으로(추천 14회 → 응시 24회) ⑤여러 장이면 「보강 후 심사 대상」은 새 장에서 ⑥목차에 수련 안내·심사 안내 추가, 배지 03-1식 표기 ⑦국기원 제목·목차 「국기원 승품(단) 응시예정자」로 통일, 국기원 이름·생일 날짜 36px 이상 ⑧인성덕목에 운영표 사자성어(품행방정) 표기 ⑨하단 「NARACHA 나라차태권도」 띄어쓰기 · R6.1: 승급심사 추천자 — 묶음 머리의 「(이어서)」·인원수 제거, 두 단 사이 세로 구분선, 띠 명칭에서 「품띠」 삭제 · R6.0: 목차의 포토앨범 한 줄은 매거진 섹션 전체(사진첩+보고 카드) 범위 「포토앨범 (07 ~ 11)」로(페이지 번호는 각각 유지) · 다른 PC 이어 작업 보강 — ①앱을 열 때 클라우드에 더 새 내용이 있으면 받아서 열지 묻기 ②[받기]→「받아서 열기」로 바로 적용, [열기]는 클라우드가 더 새것이면 클라우드에서 ③자동 업로드 45초→15초, 창을 숨기면 즉시 업로드, 미업로드 변경이 있으면 닫기 전에 확인 · R5.9: 승급심사 추천자 개편(관장님 지침) — ①심사일까지 수련하면 기준 회차(24회)에 닿는지 계산(주당 횟수 × 남은 주, 달력 휴관 제외)해 「심사 대상(24회 도달 예정)」/「보강 후 심사 대상(보강 N회 필요, 적은 순)」 두 묶음 ②묶음 안은 「9급 흰띠 → 8급 노란띠」 소제목 아래 이름만 크게(칩 없음) ③추천 기준 3줄을 첫 장 위쪽 금색 박스로 ④심사일·기준 회차 입력 추가, 주1회 수련생은 18회 기준(프로그램 R4.410) · R5.8: 목차 정리 — ①사진만 있는 사진첩들은 «포토앨범» 한 묶음(번호 하나, 07-1·07-2…)으로 묶고 목차엔 「포토앨범 (07-1 ~ 07-6)」 한 줄 ②목차는 항상 한 장(항목 많으면 줄 높이·글자 자동 축소) ③KIS 방과후 행사는 소식지 자동 반영에서 제외(기존 자동 항목도 정리) · R5.7: ①표지 새 디자인 — 하늘→땅 그라데이션, 월별 모티프(봄 꽃·잎 / 여름 해·물방울 / 가을 단풍·도토리 / 겨울 눈)를 가장자리에 흩뿌림, 큰 숫자 「10」+「월」, 「NARACHA NEWS LETTER · OCTOBER 2026」 자간 표기, 계절 한 줄 문구(월별 기본·직접 입력 가능), 이중 액자 카드 ②승급심사 추천자 푸터가 금색 테두리와 겹치던 것 수정 · R5.6: 디자인 전수 점검(디자이너 3인 검토 반영) — ①사진첩: 좌우 폭 960px로 통일·간격 16·모서리 16, 줄 폭은 항상 꽉 채우고 높이로 페이지를 채움(세로사진 칸 236px 미만 조합 배제) ②글 카드: 카드 높이를 내용에 맞춤, 본문 폭 확장, 이어지는 줄은 「이름 — 」 뒤에 맞춰 내어쓰기, 소제목 위 띄우고 아래 붙임, 행간 20, 콜론·날짜 표기 통일(8월 3일) ③목차 항목 40px↑·배지 숫자 확대 ④인성덕목 정의문 40px 진하게, 구분선을 본문 폭에 맞춤, 본문 44px ⑤체크리스트 한 줄 제목·점선 상하 균등·본문 44px ⑥일정이 비면 페이지 생성 안 함 ⑦달력 토요일 숫자 파랑, 격자 위 여백 축소 ⑧승급심사 칩 확대(116px)·흰띠 채움 ⑨국기원·생일 네모 격자 우선(4명=2×2), 캡션 확대, 장식 간격 확보, 색종이 배지 겹침 제거 ⑩표지 News Letter 대비·제목 간격 · R5.5: 승급심사 추천자 장을 다른 장과 확실히 구분 — 도복 남색 바탕 + 금색 이중 테두리·모서리 마름모, 금색 번호 배지, 「10월」 금색 + 「승급심사 추천자」 흰색 제목, 흰 카드 칩(그림자), 전용 푸터. 밝은 파스텔 사이에서 눈에 띄도록(학부모 주목·도장 마케팅 목적) · R5.4: ①얼굴 사진을 한 장도 못 받았는데 소식지를 만들면 경고(종전엔 조용히 로고만 들어갔다) ②[승급심사 추천자 불러오기]가 사진 창고도 함께 받아 새로 찍은 사진이 반영되도록 · R5.3: 승급심사 추천자 — 「심사 기준 회차」로 묶음을 나누던 것을 없앰. 지금 심사 추천에 있는 사람이 곧 이번 달 대상이므로 한 묶음으로 싣는다(국기원 묶음은 선택 그대로) · R5.2: TV 영상 전환은 «카드 넘김» 한 가지로 정리(책장 넘김 삭제) · R5.1: TV 영상 — ①오른쪽 소식지를 더 크게(화면 높이의 92%·폭 한도 64%) ②전환 기본을 «카드 넘김»으로: 앞 장을 살짝 앞으로 당겼다가 뒤로 밀어 넣으면 뒤에서 기다리던 다음 장이 올라온다(책장 넘김도 선택 가능) · R5.0: 승급심사 추천자 페이지 전면 개편(관장님 전달메모 서식) — ①대상은 나라차 프로그램의 «심사 추천» 명단 «전체»(누적 14회 이상 또는 지도진 추천) ②기준 회차(기본 24회)로 「심사 대상」/「조금 더 힘내요(N회 남음)」 두 묶음 + 「국기원 승품 심사 예정」 ③사진 대신 이름·띠색 막대·반 칩으로 한 장에 많이 담음 ④제목은 「10월」 주황 + 「승급심사 추천자」, 제목 아래 심사 일정 한 줄 ⑤하단 안내: 추천 기준 · 출석에 따라 확정 · 심사일 10일 전 개별 톡 신청서 안내(수정 가능) · R4.9: [🎬 TV용 영상 저장 (16:9)] — 같은 소식지를 1920×1080 영상으로 저장(TV·빔프로젝터 송출용). 책장 넘기듯 전환, 마지막 장→첫 장으로 이어져 반복 재생에 자연스러움. 한 장 시간·넘김 시간·배치(제목 패널/가운데) 선택. 외부 프로그램 없이 브라우저 녹화(MP4 우선, 안 되면 WebM) · R4.8: 명단 페이지(대상자·국기원·생일) 행과 행 사이 여백을 칸 크기에 비례해 넓힘 — 위아래가 답답해 보이던 문제 · R4.7: 명단 페이지 겹침 수정 — ①칸 높이를 «실제로 그리는 높이»와 똑같이 계산(종전엔 급수 줄이 빠져 아랫줄 사진과 겹침) ②이름·급수·날짜가 칸 폭을 넘으면 자동으로 글자를 줄임 ③생일자는 날짜(작게·회갈색)를 위에, 이름을 아래에 두 줄로 · R4.6: ①승급심사 대상자 = 나라차 프로그램 출석현황의 [심사확정] 체크 기준으로 변경(종전 추천 기준 폐지), 급수 낮은 순 ②[🔄 승급심사 대상자 불러오기] 전용 버튼 — [지난달 데이터 반영]과 따로, 명단이 바뀌면 이 버튼만 누르면 최신으로 갱신(선택도 초기화) ③휴일·휴관 글자가 지나치게 커지지 않도록 수련 내용보다 4px까지만 크게 · R4.5: 달력 수련 내용 글자 키움 — 긴 줄은 칸 안에서 자동 줄바꿈해 남는 세로 공간을 쓰게 함(종전엔 긴 한 줄에 맞추느라 달력 전체가 작아졌다) · R4.4: 휴일·휴관처럼 일정만 있는 칸의 글자 크기를 서로 같게(가장 빠듯한 칸 기준으로 통일, 수련 내용보다는 크게) — 종전엔 병합 폭에 따라 칸마다 달랐다 · R4.3: 달력 입력을 「날짜 옆 일정」과 「수련 내용」으로 분리 — 칸마다 일정 한 줄 입력칸(색: 파랑·빨강)과 내용 입력칸(색 5종)을 따로 둠. 옛 저장분은 자동 이관(일정 낱말이 섞인 칸에서 일정 줄만 라벨로 분리) · R4.2: ①승급심사 추천자 명단 페이지 추가(국기원 페이지 바로 앞) — 나라차 프로그램과 같은 규칙(누적 14회 이상·국기원 대기 제외 또는 지도진 수동추천), 현재 급수 → 취득 예정 급수 함께 표기 ②국기원·생일·추천자 명단은 15명까지 한 페이지에(열 수를 자동으로 늘려 배치) · R4.1: 수련계획표를 원본 소식지 형태로 — ①수련 내용은 여러 날 반복돼도 날마다 그대로 표기(병합하지 않음), 병합은 「추석 연휴 휴관」처럼 특별 일정만 있는 연속 칸에만 ②수련 내용이 함께 있는 날의 특별 일정(정기승급심사 등)은 날짜 바로 오른쪽에 색 알약 라벨로 표기하고 칸 배경도 옅게 ③마지막 줄 빈칸에 인성덕목 문구를 넣어 달력이 꽉 차게 · R4.0: 수련계획표에서 대체휴무·승급심사 같은 특별 일정은 글자를 조금 크게(+5px) — 글자색을 지정했거나 휴관·휴일·심사·대회·행사 등이 들어간 칸. 일반 수련 내용은 종전대로 균일 · R3.9: 수련계획표 글자 크기 균일화 — 2~3일 병합 칸 글자가 일별 칸보다 훨씬 크게 나오던 문제(병합만 최대 30px 허용·넓은 폭이라 줄지 않음). 이제 달력 전체에서 가장 빠듯한 칸에 맞춘 공통 크기를 쓰고, 병합 칸도 +2px까지만 · R3.8: [지난달 데이터 반영]을 이미 눌렀으면 바로 아래에 「✅ 이번 달 이미 반영됨 — n월 …을 m/d hh:mm에 반영」 표시(아직이면 눌러 달라는 안내). 호(연·월)마다 따로 기억 · R3.7: UI 전면 개편 — 전문 편집 프로그램 형태(상단 앱바 + 좌측 구역 레일 + 흰 패널). 안내 글이 희미하던 문제 수정(#4A5265·13px·Pretendard), 중립 회색 작업면 + 브랜드 네이비 크롬, 계절색은 이번 호 칩에만. 상단에 [미리보기 만들기] 상시 버튼 · R3.6: 개별 사진마다 모양 지정(자동·정사각형·가로·세로) + 줄맞춤(justified) 배치 — 지정한 사진은 그 비율대로, 나머지는 원본 비율대로 자동 배치하며 줄 폭을 꽉 채운다 · R3.5: 자동저장 + 편집권(잠금) — 한 달치는 한 PC에서만 저장, 다른 PC에서 열면 「작업 중」 경고와 [이어서 작업하기], 1분 하트비트·3분 임대 만료 · R3.4: 사범 키로도 클라우드 저장 가능 — 창고 이름을 att_news·att_news_YYYYMM 으로(서버 allow()가 사범 키에 att_ 접두어를 허용). 서버 수정 불필요. 예전 news 창고에 올린 호도 목록·받기에서 그대로 보임 · R3.3: 클라우드 보관 연동 — 보관한 호가 다른 PC에서도 보인다. 나라차 Apps Script를 그대로 사용(서버 수정 불필요·관리자 키 필요), 호마다 별도 창고 news_YYYYMM + 목록 창고 news. [이번 호 보관]하면 자동 업로드, 다른 PC에서 [🔄 클라우드 목록 새로고침]→[받기]. fail-closed·baseRev 충돌감지·묘비 유지, 기기 이름 표시 · R3.2: ①사진 배치 선택 — 사진첩마다 모양(자동·정사각형·가로 4:3/3:2·와이드 16:9·세로 3:4)과 열 수를 고를 수 있고, 모양을 고르면 그 비율을 지켜 가운데 배치(한 장에 몇 장 들어가는지 자동 계산) ②글자 크기·줄 간격(행간) 배율 설정 — 기사·인성덕목·체크리스트에 적용 · R3.1: 목차 재구현 — 항목이 많으면(16개 등) 겹쳐 뭉개지던 문제 해결. 항목 수에 맞춰 줄 높이·글자·배지를 자동 계산하고, 한 장에 무리면 여러 장으로 나눔(1/2 표시). 긴 제목은 줄였다가 말줄임. 목차 설명은 행사마다 날짜·인원이 나오도록 개선 · R3.0: ①라차 캐릭터(펭귄) 썸네일 아이콘 — 파비콘·홈화면 아이콘·머리말에 사용 ②화면 디자인 전면 개편 — 종이 질감 배경, 표지 느낌의 머리말(이번 호·계절), 부드러운 그림자 카드, 알약 버튼, 어두운 라이트테이블 미리보기, 선택한 달의 계절색이 화면 전체에 입혀짐 · R2.9: 완성본 보관 기능 — ①[📕 PDF 한 개로 저장](외부 라이브러리 없이 PDF 직접 생성·JPEG 임베드) ②[📦 지난 호 보관함] 결과 이미지가 아니라 재료(설정·글·사진)만 저장해 용량 절약, 목록에서 열기·파일(.json)로 내보내기·삭제, 파일에서 불러오기, 저장공간 사용량 표시(접속키는 보관 대상에서 제외) · R2.8: 1단계 비율 옆에 [🔄 지난달 데이터 반영] 버튼 — 9월에 10월호를 만들 때처럼 달을 바꾸면 그 달의 "지난달" 데이터가 들어가도록. 연·월을 바꾸면 자동으로 재반영(자동으로 넣은 항목은 정리·갱신, 사진을 넣었거나 직접 고친 글은 그대로), 어느 달 데이터가 들어가는지 안내 문구 표시 · R2.7: 기사 카드 제목 중복 제거 — 카드 머리띠 제목과 본문 첫 줄이 같으면 본문에서 빼고, 날짜·인원 줄을 대표 줄로 크게(48px) 올림 · R2.6: 모바일 가독성 기준 재설계 — 소식지 1080px가 폰에서 약 390pt로 보이는 것(글자 ≈ px×0.36) 기준으로 기사 본문 최소 44px(≈16pt) 보장, 그보다 작아지면 줄이지 않고 페이지 분할(장수 최소·같으면 큰 글자). 제목은 42px까지만 줄이고 길면 두 줄, 소제목은 본문급 크기, 다단은 줄이 실제로 들어갈 때만(88% 기준), 칼럼 경계에서 소제목·이어지는 줄 안 끊김, 긴 낱말 글자 단위 줄바꿈. 이름 캡션 최소 30px(국기원·생일) · R2.5: 사진첩(행사·대회 카드) 순서 이동 ↑↓ 버튼 — 목록 순서=소식지 페이지 순서, 중간 배치 가능. 행사·대회 카드에 사진을 넣으면 기사 다음에 사진 페이지가 붙는 안내 보강 · R2.4: 소식지 명단(대회 보고·행사 기사) 정렬 — 학년 낮은 순→높은 순(같은 학년은 생일 늦은 순, 학년 모르면 뒤) · R2.3: 미리보기 이미지 클릭 → 확대 보기 모달(이전/다음·키보드 ←→·Esc) · R2.2: ①글 카드 시인성 개편 — 최소 36px 보장, 넘치면 40px 고정으로 여러 장 분할("이어서 2/3" 표시), [소제목] 문법·다단(1~3단)·이어지는 줄 들여쓰기 ②승급심사 보고 형식 개선 — 날짜 4회 이상이면 "21일~29일 · 총 7회", 취득 급수는 [취득 급수] 아래 한 줄씩·급수 순 정렬 ③지난달 행사·대회 자동 반영 — 데이터 불러오면 행사(대회출전=대회 보고·기타=기사)와 비어 있는 승급심사 보고를 자동 생성 · R2.1: 웹진(글) 카드 본문 글자를 글자 수에 맞춰 들어가는 최대 크기로(최대 54px — 짧은 보고는 큰 글자로 꽉 차게), 제목도 58px까지 확대 · R2.0: ①사진첩 → "지난달 우리 도장은~" 매거진 섹션(크래프트지 톤·이중 액자, 발행 전달 기준) — 종류별(사진만/승급심사 보고/대회 보고/직접 기사) 글 카드 1장+사진 페이지 구성, 승급심사는 심사 창고(history)에서 날짜·응시 인원·합격·취득 급수 자동, 대회는 행사 창고(대회출전)에서 대회명·날짜·참가자(이름 가운데 O 마스킹·학년 표기)·결과 자동 ②기본 비율 4:5(1080×1350)로 변경·선택지 첫 번째 ③1~12월 기본 인성덕목 내장(성실·감사·예의·배려·효도·협동·인내·용기·정의·존중·책임·나눔) — 비어 있으면 자동 입력 ④월별 파스텔 배경 다양화(2월 연보라·4월 라벤더·6월 민트·8월 연노랑·10월 살구 등) ⑤exam·work 창고 추가 수신(GET 전용) · R1.9: 1:1 흰 판 확장(위 44·옆 48부터, 아래 900) — 라인 밖 여백 축소·안쪽 칸 확대, 생일 제목 겹침 재확인 · R1.8: 1:1 상단 바깥 여백 축소(흰 판 64px부터) + HAPPY BIRTHDAY 제목 위치·크기 조정 — 제목이 판 가장자리에 닿던 문제 해결 · R1.7: 달력 칸별 글자색 선택 — 칸 위 색 점(검정·파랑·빨강·녹색·진노랑) 클릭, 편집칸·생성 이미지 모두 적용. 색 미지정 시 「휴관」 자동 빨강은 유지 · R1.6: 사진첩 썸네일 아래에 "✂️ 사진을 클릭하면 잘라내기(크롭)" 안내 문구 표시 · R1.5: ①인성덕목 조사 교정 — 받침 유무에 따라 '~란?'/'~이란?' 자동(정의란?·협동이란?) ②인성덕목·실천 체크리스트 본문 글꼴 굵게(700) · R1.4: ①사진첩 다중화 — 기본 제목 체력훈련·태권도수련·정기승급심사 + [사진첩 추가], 사진첩마다 별도 페이지 ②페이지당 최대 9장, 장수(1~9)별 모자이크 자동 배치, 여백 최소화(구름판 없이 사진 최대) ③주제목=사진첩 이름·부제=지난달 n월 사진첩 배지 ④사진 자르기(크롭) 편집기 — 끌어서 위치·확대·비율(1:1, 4:3, 3:4, 16:9) ⑤마지막 페이지 '덕목' 실천 체크리스트(체크 아이콘·점선 구분) 추가 · R1.3: 접속키(데이터 연결) 단계를 ⚙️ 설정으로 분리(평소 숨김·키 없거나 연결 실패 시 자동 표시), 헤더에 데이터 상태 요약, 단계 번호 재정렬(기본 설정=1단계·페이지 내용=2단계·만들기=3단계) · R1.2: ①기본 비율 1:1(샘플과 동일)·비율별 배치 적응 ②1~12월 고정 표지·장식 디자인 내장(월별 팔레트+모티프: 눈·벚꽃·꽃·비·태양·단풍·도토리) — 표지를 직접 올리면 그것이 우선 ③나라차 로고 내장(표지·푸터·사진 없는 자리) ④접속키 저장 시 열 때 자동 데이터 불러오기 ⑤표지·배경 픽셀 가이드 표시 ⑥디자인 전문가 리뷰 반영 — 폰트 글리프 예열(굵기 섞임 방지), 인원 적을 때 셀 확대+중앙 배치, 빈 페이지 생성 안 함, flat 도형 장식(실사 이모지 제거), 스티커 제목 그림자, 브랜드 네이비/레드, 일정 칩+내어쓰기, 달력 휴관 셀 틴트, 이중 링, 표지 호수 배지 · R1.1: 표지·배경 이미지 업로드 적용 · R1.0: 최초 제작 — att·photo 창고 읽기(GET 전용), 8종 페이지, PNG 저장 */
 document.getElementById("verLabel").textContent = APP_VER;
 
 var GAS = "https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
@@ -496,7 +498,7 @@ var S = {
   schedMain:"", schedClosed:"",
   calDays:{}, calColors:{}, calEv:{}, calNote:"", fontScale:100, lineScale:100, device:"", applied:{},
   kkwSub:"", kkwSel:{}, kkwManual:[], kkwRound:{}, recSub:"", recSel:{}, recPulledT:0,
-  tvSec:5, tvTurn:0.9, tvStyle:"panel",
+  tvSec:5, tvTurn:1.2, tvStyle:"soft",
   recKkw:false, recNote:"", coverLine:"", recDate:"", recGoal:24, virtueIdiom:"", schedFlow:"", prevExamDate:"",
   bdayOff:{},
   albumTitle:"", bgPanel:true,
@@ -1508,7 +1510,9 @@ function readImageFile(file, maxPx, q){
 /* ============================================================
    그리기 (캔버스)
    ============================================================ */
-function pageH(){ return S.ratio==="916"?1920:(S.ratio==="45"?1350:1080); }
+/* [R7.1] TV(16:9) 화면 — TVM 이 켜진 동안 W=1920·세로 1080 으로 «가로형 배치»를 그린다(영상 전용, 평소 소식지에는 영향 없음) */
+var TVM=false;
+function pageH(){ if(TVM) return 1080; return S.ratio==="916"?1920:(S.ratio==="45"?1350:1080); }
 var W=1080;
 
 var NAVY="#1D2E5C", BRAND_RED="#B5273A";   /* 로고 브랜드 컬러 */
@@ -1650,6 +1654,7 @@ function heartShape(x2,x,y,s,c){
 function confetti(x2,y0,y1){
   var cols=["#F9C4D2","#A8E6CF","#FFE08A","#8FC3EE"];
   var pts=[[236,y0-46],[930,y0-10],[250,y1+6],[830,y1+12],[90,(y0+y1)/2],[990,(y0+y1)/2],[350,y0-26],[790,y0-34]];
+  if(TVM) pts=[[420,y0-40],[1500,y0-30],[300,y0+34],[1620,y0+30],[560,y0+44],[1380,y0+46],[700,y0-48],[1240,y0-50]];
   pts.forEach(function(p,i){
     var col=cols[i%4];
     x2.save(); x2.translate(p[0],p[1]); x2.rotate((i%5-2)*0.5);
@@ -1724,6 +1729,7 @@ function pageBase(seed){
       x2.save(); x2.globalAlpha=0.88;
       var sq2=(S.ratio==="11"), v45=(S.ratio==="45");
       var rr=46, px=(sq2||v45)?48:62, py=sq2?44:(v45?56:100), pw=(sq2||v45)?(W-96):(W-124), ph=sq2?(H-180):(v45?(H-196):(H-290));
+      if(TVM){ px=40; py=34; pw=W-80; ph=H-124; }
       x2.fillStyle="#fffdf4";
       x2.beginPath();
       x2.moveTo(px+rr,py); x2.arcTo(px+pw,py,px+pw,py+ph,rr); x2.arcTo(px+pw,py+ph,px,py+ph,rr);
@@ -1736,7 +1742,8 @@ function pageBase(seed){
   x2.fillStyle=t.sky; x2.fillRect(0,0,W,H);
   drawBushes(x2,H,t);
   drawGround(x2,H,t);
-  if(S.ratio==="11") cloudPanel(x2, 48, 44, W-96, H-180, "#fffdf4");   /* 바깥 여백 최소화 — 안쪽 칸 최대 */
+  if(TVM) cloudPanel(x2, 40, 34, W-80, H-124, "#fffdf4");
+  else if(S.ratio==="11") cloudPanel(x2, 48, 44, W-96, H-180, "#fffdf4");   /* 바깥 여백 최소화 — 안쪽 칸 최대 */
   else if(S.ratio==="45") cloudPanel(x2, 48, 56, W-96, H-196, "#fffdf4");
   else cloudPanel(x2, 62, 100, W-124, H-290, "#fffdf4");
   emoDeco(x2,H,t,seed||0);
@@ -1769,9 +1776,9 @@ function footer(x2,H){
   var tw=x2.measureText(txt).width;
   var mh=36, mw=0;
   if(IMGS.logo && IMGS.logoIsEmb){ mw=IMGS.logo.width*(mh/IMGS.logo.height)+14; }
-  var x0=W/2-(tw+mw)/2;
-  if(mw){ x2.drawImage(IMGS.logo, x0, H-64-mh/2, mw-14, mh); }
-  x2.fillText(txt, x0+mw, H-64);
+  var x0=W/2-(tw+mw)/2, fy=TVM?(H-46):(H-64);
+  if(mw){ x2.drawImage(IMGS.logo, x0, fy-mh/2, mw-14, mh); }
+  x2.fillText(txt, x0+mw, fy);
   x2.textAlign="center";
 }
 function wrapLines(x2, text, maxW){
@@ -1876,6 +1883,7 @@ function drawCover(){
   }
   /* [R5.7] 표지 새 디자인 — 월별 모티프를 가장자리에 흩뿌리고, 큰 숫자 「10」+「월」,
      영문 월 이름, 계절 한 줄 문구, 이중 액자 카드. 다른 장과 달리 표지만의 편집 디자인 느낌. */
+  if(TVM) return drawCoverTV();
   var c=newCanvas(), x2=c.getContext("2d"), H=c.height, t=theme(), m=Number(S.month)||1;
   var sq=(S.ratio==="11");
   /* 하늘→땅 그라데이션 + 은은한 빛 */
@@ -1962,6 +1970,81 @@ function drawCover(){
   footer(x2,H);
   return c;
 }
+/* [R7.1] TV(16:9) 표지 — 왼쪽에 큰 「10월」, 오른쪽에 로고·NEWS LETTER·「소식지」·계절 문구 */
+function drawCoverTV(){
+  var c=newCanvas(), x2=c.getContext("2d"), H=c.height, t=theme(), m=Number(S.month)||1;
+  var g=x2.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,t.sky); g.addColorStop(0.6,t.sky); g.addColorStop(1,t.ground);
+  x2.fillStyle=g; x2.fillRect(0,0,W,H);
+  var rg=x2.createRadialGradient(W*0.82,H*0.12,20,W*0.82,H*0.12,W*0.5);
+  rg.addColorStop(0,"rgba(255,255,255,0.55)"); rg.addColorStop(1,"rgba(255,255,255,0)");
+  x2.fillStyle=rg; x2.fillRect(0,0,W,H);
+  drawBushes(x2,H,t); drawGround(x2,H,t);
+  var cx0=70, cy0=56, cw=W-140, chh=H-56-150;
+  x2.save(); x2.shadowColor="rgba(0,0,0,0.12)"; x2.shadowBlur=30; x2.shadowOffsetY=10;
+  x2.fillStyle="#FFFDF6"; rrect(x2,cx0,cy0,cw,chh,44); x2.fill(); x2.restore();
+  x2.save(); x2.globalAlpha=0.85; x2.strokeStyle=t.accent; x2.lineWidth=2.5;
+  rrect(x2,cx0+18,cy0+18,cw-36,chh-36,32); x2.stroke(); x2.restore();
+  coverMotifs(x2,H,t,m,cy0,chh);
+  var midY=cy0+chh/2;
+  /* 왼쪽: 큰 숫자 + 월 */
+  var LX=cx0+cw*0.275, nf=470, wf=180;
+  x2.font=nf+"px 'Jua'"; var nw=x2.measureText(String(m)).width;
+  x2.font=wf+"px 'Jua'"; var ww=x2.measureText("월").width;
+  var gap=14, x0=LX-(nw+gap+ww)/2, by=midY+nf*0.34;
+  x2.textAlign="left"; x2.textBaseline="alphabetic"; x2.lineJoin="round";
+  x2.save(); x2.font=nf+"px 'Jua'";
+  x2.shadowColor="rgba(0,0,0,0.16)"; x2.shadowOffsetY=12; x2.shadowBlur=0;
+  x2.strokeStyle="#fffdf4"; x2.lineWidth=Math.round(nf*0.075); x2.strokeText(String(m), x0, by);
+  x2.shadowColor="transparent"; x2.fillStyle=t.monthColor; x2.fillText(String(m), x0, by);
+  x2.font=wf+"px 'Jua'";
+  x2.shadowColor="rgba(0,0,0,0.14)"; x2.shadowOffsetY=8;
+  x2.strokeStyle="#fffdf4"; x2.lineWidth=Math.round(wf*0.10); x2.strokeText("월", x0+nw+gap, by);
+  x2.shadowColor="transparent"; x2.fillStyle=t.title; x2.fillText("월", x0+nw+gap, by);
+  x2.restore();
+  /* 가운데 세로 구분선 */
+  x2.save(); x2.globalAlpha=0.7; x2.strokeStyle=t.accent; x2.lineWidth=2.5;
+  x2.beginPath(); x2.moveTo(cx0+cw*0.52, cy0+110); x2.lineTo(cx0+cw*0.52, cy0+chh-110); x2.stroke(); x2.restore();
+  /* 오른쪽 */
+  var RX=cx0+cw*0.755, y=cy0+64;
+  x2.textAlign="center"; x2.textBaseline="middle";
+  if(IMGS.logo){
+    var li=IMGS.logo, lh=100, ls=lh/li.height; if(li.width*ls>340){ ls=340/li.width; lh=li.height*ls; }
+    x2.drawImage(li, RX-li.width*ls/2, y, li.width*ls, lh); y+=lh;
+    if(IMGS.logoIsEmb){ x2.fillStyle="#222"; x2.font="900 38px 'Noto Sans KR'"; x2.fillText("NARACHA", RX, y+28); x2.font="500 21px 'Noto Sans KR'"; x2.fillText("Taekwondo", RX, y+60); y+=76; }
+  } else { x2.fillStyle="#222"; x2.font="900 56px 'Noto Sans KR'"; x2.fillText("NARACHA", RX, y+50); x2.font="500 26px 'Noto Sans KR'"; x2.fillText("TAEKWONDO", RX, y+100); y+=130; }
+  var yNL=y+44;
+  x2.font="700 32px 'Noto Sans KR'"; x2.fillStyle=t.title;
+  x2.save(); x2.globalAlpha=0.85; spacedText(x2,"NARACHA NEWS LETTER", RX, yNL, 8); x2.restore();
+  var nlw=x2.measureText("NARACHA NEWS LETTER").width+8*18;
+  x2.strokeStyle=t.accent; x2.lineWidth=2;
+  x2.beginPath(); x2.moveTo(RX-nlw/2-78, yNL); x2.lineTo(RX-nlw/2-24, yNL); x2.moveTo(RX+nlw/2+24, yNL); x2.lineTo(RX+nlw/2+78, yNL); x2.stroke();
+  x2.font="500 27px 'Noto Sans KR'"; x2.fillStyle="#8A8478";
+  spacedText(x2, MONTH_EN[m]+"  "+S.year, RX, yNL+46, 6);
+  /* 아래에서부터: 호수 알약 → 계절 문구 → 그 사이에 「소식지」 */
+  var pTxt=String(S.year).slice(2)+"년 "+S.month+"월호";
+  x2.font="40px 'Jua'";
+  var pw2=x2.measureText(pTxt).width+80, ph2=68, py2=cy0+chh-54-ph2;
+  x2.fillStyle=NAVY; rrect(x2,RX-pw2/2,py2,pw2,ph2,ph2/2); x2.fill();
+  x2.fillStyle="#fff"; x2.fillText(pTxt, RX, py2+ph2/2+1);
+  var line=String(S.coverLine||"").trim()||MONTH_LINE[m]||"", yTop=yNL+46+34, yBot=py2-28;
+  if(line){
+    var lf=42; x2.font="700 "+lf+"px 'Gowun Dodum'";
+    while(lf>30 && x2.measureText(line).width>cw*0.44){ lf--; x2.font="700 "+lf+"px 'Gowun Dodum'"; }
+    var lls=wrapLines(x2,line,cw*0.44), llh=Math.round(lf*1.3);
+    x2.fillStyle=t.title; x2.save(); x2.globalAlpha=0.92;
+    lls.forEach(function(l,i){ x2.fillText(l, RX, yBot-(lls.length-1-i)*llh-lf/2); });
+    x2.restore();
+    yBot-=lls.length*llh+10;
+  }
+  var fSos=Math.max(120, Math.min(230, Math.round((yBot-yTop)*0.86))), ySos=(yTop+yBot)/2+4;
+  x2.font=fSos+"px 'Jua'"; x2.lineJoin="round";
+  x2.save(); x2.shadowColor="rgba(0,0,0,0.10)"; x2.shadowOffsetY=8;
+  x2.strokeStyle=t.title; x2.lineWidth=Math.round(fSos*0.105); x2.strokeText("소식지", RX, ySos); x2.restore();
+  x2.fillStyle="#fffdf4"; x2.fillText("소식지", RX, ySos);
+  footer(x2,H);
+  return c;
+}
 var MONTH_EN=["","JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
 var MONTH_LINE={ 1:"새해 첫 발차기, 힘차게 시작해요", 2:"겨울을 이겨낸 몸과 마음, 한 뼘 더 자랍니다",
   3:"봄바람 타고 새 학기, 새로운 시작", 4:"꽃 피는 계절, 우리도 활짝 피어나요",
@@ -2014,7 +2097,8 @@ function drawTocPages(entries){
   var H=pageH(), t=theme(), out=[];
   var sq=(S.ratio==="11");
   var titleY=sq?170:200, titleF=sq?88:98;
-  var top=titleY+titleF*0.55+(sq?42:54);
+  if(TVM){ titleY=124; titleF=88; }
+  var top=titleY+titleF*0.55+(TVM?34:(sq?42:54));
   var bottom=panelBottom(H)-16;
   var availH=Math.max(220, bottom-top);
   var n=Math.max(1, entries.length);
@@ -2022,25 +2106,28 @@ function drawTocPages(entries){
   /* [R5.8] 목차는 항상 한 장 — 항목이 많으면 줄 높이·글자를 줄여서 넣는다(사진첩은 포토앨범 한 줄로 묶이므로 보통 12줄 이내) */
   var DESC_AT=96;
   var pages=1, per=n;
+  /* [R7.1] TV(16:9)는 두 단 */
+  var NC=(TVM && n>=5)?2:1, CGAP=90, colW=(W-96-86-(NC-1)*CGAP)/NC;
+  per=Math.ceil(n/NC);
   /* [R6.9] 포토앨범 설명(사진첩 제목들)은 잘라내지 않고 다 보이게 — 글자를 줄이고, 그래도 길면 여러 줄 */
   var mcT=document.createElement("canvas").getContext("2d");
-  var maxW0=W-86-(96+32+32+26);
+  var maxW0=colW-(32+32+26);
   var extraTotal=0;
   entries.forEach(function(e){
     if(e.kind!=="photos" || !e.desc) return;
-    var df2=34; mcT.font="500 "+df2+"px 'Noto Sans KR'";
+    var df2=TVM?38:34; mcT.font="500 "+df2+"px 'Noto Sans KR'";
     while(df2>28 && mcT.measureText(e.desc).width>maxW0){ df2--; mcT.font="500 "+df2+"px 'Noto Sans KR'"; }
     e._df=df2; e._dl=wrapLines(mcT, e.desc, maxW0);
     e._extra=e._dl.length*Math.round(df2*1.2)+10;
     extraTotal+=e._extra;
   });
-  var rh=Math.min(152, (availH-extraTotal)/per);
+  var rh=Math.min(TVM?168:152, (availH-extraTotal)/per);
   var showDesc=(rh>=DESC_AT);
-  var badgeR=Math.max(18, Math.min(32, Math.round(rh*0.28)));
-  var tf=showDesc ? Math.max(40, Math.min(48, Math.round(rh*0.34)))
-                  : Math.max(30, Math.min(48, Math.round(rh*0.56)));
-  var df=Math.max(22, Math.min(28, Math.round(tf*0.6)));
-  var xBadge=96+badgeR, xText=xBadge+badgeR+26, maxW=W-86-xText;
+  var badgeR=Math.max(18, Math.min(TVM?38:32, Math.round(rh*0.28)));
+  var tf=showDesc ? Math.max(40, Math.min(TVM?60:48, Math.round(rh*0.34)))
+                  : Math.max(30, Math.min(TVM?60:48, Math.round(rh*0.56)));
+  var df=Math.max(22, Math.min(TVM?36:28, Math.round(tf*0.6)));
+  var xBadge=96+badgeR, xText=xBadge+badgeR+26, maxW=96+colW-xText;
   function fitCut(x2, str, w){
     if(x2.measureText(str).width<=w) return str;
     while(str.length>4 && x2.measureText(str+"…").width>w) str=str.slice(0,-1);
@@ -2054,13 +2141,16 @@ function drawTocPages(entries){
       x2.textAlign="center"; x2.textBaseline="middle";
       x2.fillText((p+1)+" / "+pages, W/2, titleY+titleF*0.55+18);
     }
-    var slice=entries.slice(p*per,(p+1)*per);
-    var y=top+Math.max(0,(availH-slice.length*rh-extraTotal)/2)+rh/2;
+    for(var colI=0; colI<NC; colI++){
+    var slice=entries.slice(colI*per,(colI+1)*per);
+    var colX0=96+colI*(colW+CGAP);
+    xBadge=colX0+badgeR; xText=xBadge+badgeR+26; maxW=colX0+colW-xText;
+    var y=top+Math.max(0,(availH-per*rh-extraTotal)/2)+rh/2;
     slice.forEach(function(e,i){
       var two=(!showDesc && e.kind==="photos" && e.desc);
       var EXTRA=two?e._extra:0;
       if(two) y+=EXTRA/2;
-      var no=(e.no!=null)?e.no:(p*per+i+1);   /* [R6.0] 실제 페이지 번호 */
+      var no=(e.no!=null)?e.no:(colI*per+i+1);   /* [R6.0] 실제 페이지 번호 */
       var noTxt=e.noText||("0"+no).slice(-2);
       x2.fillStyle=NAVY;
       x2.beginPath(); x2.arc(xBadge,y,badgeR,0,6.3); x2.fill();
@@ -2076,17 +2166,19 @@ function drawTocPages(entries){
       if((showDesc||two) && e.desc){
         var df2=two?e._df:df;
         x2.font="500 "+df2+"px 'Noto Sans KR'"; x2.fillStyle="#7A6F60";
+        if(TVM && !two){ while(df2>22 && x2.measureText(String(e.desc)).width>maxW){ df2--; x2.font="500 "+df2+"px 'Noto Sans KR'"; } }
         var dls=two?e._dl:[fitCut(x2, String(e.desc), maxW)];
         dls.forEach(function(dl,di){ x2.fillText(dl, xText, tY+f2*0.5+df2*0.75+di*Math.round(df2*1.2)); });
       }
       var lineY=y+rh/2+(two?EXTRA/2:0);
       if(i<slice.length-1){
         x2.strokeStyle=t.accent; x2.setLineDash([2,9]); x2.lineWidth=3;
-        x2.beginPath(); x2.moveTo(xBadge-badgeR, lineY); x2.lineTo(W-86, lineY); x2.stroke();
+        x2.beginPath(); x2.moveTo(xBadge-badgeR, lineY); x2.lineTo(colX0+colW, lineY); x2.stroke();
         x2.setLineDash([]);
       }
       y+=rh+(two?EXTRA/2:0);
     });
+    }
     footer(x2,H);
     out.push({name:"목차"+(pages>1?("_"+(p+1)):""), canvas:c});
   }
@@ -2101,18 +2193,19 @@ function withIran(w){
 }
 function drawVirtue(no){
   var c=pageBase(2), x2=c.getContext("2d"), H=c.height, t=theme();
-  var sq=(S.ratio==="11"), hy=sq?150:190;
+  var sq=(S.ratio==="11"), hy=TVM?124:(sq?150:190);
   badge(x2,150,hy,no,t);
   var vt="인성덕목 : "+(S.virtueName||"—")+(S.virtueIdiom?(" · "+S.virtueIdiom):"");
   titleText(x2, vt, W/2+30, hy, Math.min(sq?70:76, vt.length>12?(sq?56:62):(sq?70:76)), t);
   /* 정의 */
-  x2.font="700 40px 'Gowun Dodum'"; x2.fillStyle="#3A3A3A"; x2.textAlign="center"; x2.textBaseline="middle";
+  var DF=TVM?50:40, DLH=TVM?68:54;
+  x2.font="700 "+DF+"px 'Gowun Dodum'"; x2.fillStyle="#3A3A3A"; x2.textAlign="center"; x2.textBaseline="middle";
   var defLines=wrapLines(x2, withIran(S.virtueName)+(S.virtueDef||""), W-306);
   /* 실천 항목: 크기 자동 조절 + 내어쓰기 + 전체 블록 세로 중앙 */
   var items=(S.virtueItems||"").split("\n").map(function(s){return s.trim();}).filter(Boolean);
   var top=hy+80, bottom=panelBottom(H)-36;
-  var defH=defLines.length*54+50;   /* 정의 + 구분선 */
-  var itf=Math.round(44*fSc()), allLines=null, step=0, indW=0;
+  var defH=defLines.length*DLH+50;   /* 정의 + 구분선 */
+  var itf=Math.round((TVM?58:44)*fSc()), allLines=null, step=0, indW=0;
   for(;itf>=Math.round(26*fSc());itf-=2){
     x2.font="700 "+itf+"px 'Gowun Dodum'";
     indW=x2.measureText("0. ").width;
@@ -2123,16 +2216,19 @@ function drawVirtue(no){
   }
   var blockH=defH+60+allLines.reduce(function(a,b){return a+b.length;},0)*step+(items.length-1)*24;
   var y=top+Math.max(0,(bottom-top-blockH)/2)+24;
-  x2.font="700 40px 'Gowun Dodum'"; x2.fillStyle="#3A3A3A"; x2.textAlign="center";
-  defLines.forEach(function(l){ x2.fillText(l, W/2, y); y+=54; });
+  x2.font="700 "+DF+"px 'Gowun Dodum'"; x2.fillStyle="#3A3A3A"; x2.textAlign="center";
+  defLines.forEach(function(l){ x2.fillText(l, W/2, y); y+=DLH; });
+  /* [R7.1] TV: 실천 항목 묶음을 화면 가운데에 */
+  var XL=150;
+  if(TVM){ x2.font="700 "+itf+"px 'Gowun Dodum'"; var mxw=0; allLines.forEach(function(ls){ ls.forEach(function(l){ mxw=Math.max(mxw, x2.measureText(l).width+indW); }); }); XL=Math.max(150, Math.round((W-mxw)/2)); }
   x2.strokeStyle="#8a7a5a"; x2.lineWidth=3;
-  x2.beginPath(); x2.moveTo(150,y+8); x2.lineTo(W-150,y+8); x2.stroke();
+  x2.beginPath(); x2.moveTo(TVM?Math.max(150,XL-60):150,y+8); x2.lineTo(TVM?(W-Math.max(150,XL-60)):(W-150),y+8); x2.stroke();
   y+=60+itf/2;
   x2.textAlign="left";
   items.forEach(function(it,i){
     x2.font="700 "+itf+"px 'Gowun Dodum'"; x2.fillStyle="#3a3a3a";
     allLines[i].forEach(function(l,j){
-      x2.fillText(j===0?((i+1)+". "+l):l, j===0?150:(150+indW), y);
+      x2.fillText(j===0?((i+1)+". "+l):l, j===0?XL:(XL+indW), y);
       y+=step;
     });
     y+=24;
@@ -2163,7 +2259,7 @@ function bestScale(layout, bottom, sfMax, sfMin, bsMax, sfLow){
   var L2=null; for(sf=0.88; sf>=sfMin-1e-9; sf-=0.04){ L2=layout(sf,1); if(L2.h<=bottom) break; }
   return L2;
 }
-function panelBottom(H){ return (S.ratio==="11")?900:((S.ratio==="45")?1180:1640); }
+function panelBottom(H){ if(TVM) return 946; return (S.ratio==="11")?900:((S.ratio==="45")?1180:1640); }
 /* [R6.3] 02 SCHEDULE — 관장님 수정 시안: 날짜 열 + 내용 열, 휴관은 빨강, 아래 「승급심사 흐름」 상자 */
 function splitSched(l){
   var m=l.match(/^(.*?)\s*[:：]\s*(.+)$/);
@@ -2191,10 +2287,10 @@ function boldSegs(txt, colN, colB){
 }
 function drawSchedule(no){
   var c=pageBase(3), x2=c.getContext("2d"), H=c.height, t=theme();
-  var sq=(S.ratio==="11"), hy=sq?150:200, PAD=96;
+  var sq=(S.ratio==="11"), hy=TVM?124:(sq?150:200), PAD=96;
   var mc=document.createElement("canvas").getContext("2d");
   badge(x2,150,hy,no,t);
-  titleTwo(x2, S.month+"월", " SCHEDULE", W/2+30, hy, sq?76:86, t.title, TR_C.orange);
+  titleTwo(x2, S.month+"월", " SCHEDULE", W/2+30, hy, TVM?88:(sq?76:86), t.title, TR_C.orange);
   var main=(S.schedMain||"").split("\n").map(function(s){return s.trim();}).filter(Boolean);
   var closed=(S.schedClosed||"").split("\n").map(function(s){return s.trim();}).filter(Boolean);
   var bottom=panelBottom(H)-16;
@@ -2202,14 +2298,17 @@ function drawSchedule(no){
   /* [R6.6] 시안처럼 구절만 남색 굵게: 정기승급심사 · 심사 신청서 · …마감(줄 전체) · 국기원 심사. **…** 로 직접 표시도 가능 */
   var KWP=/(정기승급심사|승급심사|국기원 심사|심사 신청서|심사신청서|심사비 납부 마감|납부 마감|신청 마감)/;
   /* [R7.0] 날짜 열 폭은 실제 날짜 글자에 맞춘다(고정 256px이면 글자를 키울 때 내용 열이 좁아져 줄바꿈이 늘었다) */
-  function dateW(sf){
+  /* [R7.1] TV(16:9): 주요 일정(왼쪽) · 휴관 안내(오른쪽) 두 단 */
+  var TWO=TVM && main.length>0 && closed.length>0;
+  var AX=PAD, AW=TWO?Math.round((W-PAD*2)*0.60):(W-PAD*2), BX=TWO?(PAD+AW+80):PAD, BW=TWO?(W-PAD-BX):(W-PAD*2);
+  function dateW(sf, arr, RW){
     var fs=Math.round(27*sf), w=0; mc.font="900 "+fs+"px 'Noto Sans KR'";
-    main.concat(closed).forEach(function(l){ var d=splitSched(l)[0]; if(d) w=Math.max(w, mc.measureText(d).width); });
-    return Math.max(Math.round(150*sf), Math.min(Math.round(w)+Math.round(30*sf), Math.round((W-PAD*2)*0.42)));
+    (arr||main.concat(closed)).forEach(function(l){ var d=splitSched(l)[0]; if(d) w=Math.max(w, mc.measureText(d).width); });
+    return Math.max(Math.round((TVM?90:150)*sf), Math.min(Math.round(w)+Math.round(30*sf), Math.round((RW||(W-PAD*2))*0.42)));
   }
-  function prep(arr, red, sf){
+  function prep(arr, red, sf, RX, RW, dwArr){
     var f=function(v){ return Math.round(v*sf); };
-    var DW=dateW(sf), TX=PAD+f(36)+DW, TW=W-PAD-TX;
+    var DW=dateW(sf, dwArr, RW), TX=RX+f(36)+DW, TW=RX+RW-TX;
     return arr.map(function(l){
       var sp=splitSched(l), date=sp[0], txt=sp[1];
       var segs=[];
@@ -2225,15 +2324,16 @@ function drawSchedule(no){
     var f=function(v){ return Math.round(v*sf); };
     var L={sf:sf, y:hy+f(76)};
     var y=L.y;
-    L.mi=prep(main,false,sf); L.ci=prep(closed,true,sf);
+    L.mi=prep(main,false,sf,AX,AW,TWO?main:null); L.ci=prep(closed,true,sf,BX,BW,TWO?closed:null);
     L.secH=f(52)+f(14);
     var h=0; if(L.mi.length){ h+=L.secH; L.mi.forEach(function(it){ h+=it.h; }); }
-    if(L.ci.length){ h+=f(26)+L.secH; L.ci.forEach(function(it){ h+=it.h; }); }
+    var hB=0; if(TWO){ hB=L.secH; L.ci.forEach(function(it){ hB+=it.h; }); }
+    else if(L.ci.length){ h+=f(26)+L.secH; L.ci.forEach(function(it){ h+=it.h; }); }
     L.listH=h;
     /* [R7.0] 흐름은 「→」 앞에서만 줄을 바꾼다(「10/19 / 신청서 마감」처럼 날짜와 내용이 갈라지지 않게) */
     L.flowLines=[];
     if(flow){
-      var steps=flow.split(/\s*→\s*/).map(function(st){ return st.trim(); }).filter(Boolean), maxFW=W-PAD*2-f(52), curL=[], curW=0;
+      var steps=flow.split(/\s*→\s*/).map(function(st){ return st.trim(); }).filter(Boolean), maxFW=(TWO?BW:(W-PAD*2))-f(52), curL=[], curW=0;
       steps.forEach(function(st, si){
         var segs=boldSegs(st+(si<steps.length-1?" →":""), TR_C.ink, TR_C.navy), sw=0;
         segs.forEach(function(sg){ mc.font=(sg.b?"900 ":"500 ")+f(26)+"px 'Noto Sans KR'"; sg.w=mc.measureText(sg.t).width; sw+=sg.w; });
@@ -2246,45 +2346,53 @@ function drawSchedule(no){
     }
     L.flowH=flow?(f(20)+f(38)+f(10)+L.flowLines.length*f(38)+f(20)):0;
     L.h=y+h+(flow?(f(30)+L.flowH):0);
+    if(TWO) L.h=y+Math.max(h, hB+(flow?(f(30)+L.flowH):0));   /* TV: 흐름 상자는 오른쪽 단(휴관 안내 아래) */
     L.wr=0; L.mi.concat(L.ci).forEach(function(it){ L.wr+=Math.max(1,it.lines.length); });
     return L;
   }
   /* [R7.0] 남는 세로 공간만큼 글자를 키운다(최대 1.5배). 단, 키워서 줄바꿈이 새로 생기는 크기는 고르지 않는다 */
   var L=null, baseWr=layout(1).wr;
-  for(var sf=1.5; sf>=1-1e-9; sf-=0.02){ var Lc=layout(sf); if(Lc.h<=bottom && Lc.wr<=baseWr){ L=Lc; break; } }
+  for(var sf=(TVM?2.6:1.5); sf>=1-1e-9; sf-=0.02){ var Lc=layout(sf); if(Lc.h<=bottom && Lc.wr<=baseWr){ L=Lc; break; } }
   if(!L){ for(var sf=1; sf>=0.7; sf-=0.04){ L=layout(sf); if(L.h<=bottom) break; } }
   var f=function(v){ return Math.round(v*L.sf); };
   /* 그래도 남는 공간은 줄 사이에 조금 나눠 준다(답답하지 않게) */
-  var nIt=L.mi.length+L.ci.length, slack=bottom-L.h, addGap=nIt?Math.max(0, Math.min(f(14), Math.floor(slack/(nIt+1)))):0;
+  var nIt=TWO?Math.max(L.mi.length,L.ci.length):(L.mi.length+L.ci.length), slack=bottom-L.h, addGap=nIt?Math.max(0, Math.min(f(14), Math.floor(slack/(nIt+1)))):0;
   L.mi.concat(L.ci).forEach(function(it){ it.h+=addGap; });
   var y=L.y;
-  function drawSec(label, items, red){
+  function drawSec(label, items, red, RX, RW, dwArr){
     /* 구역 라벨 */
     x2.font="900 "+f(22)+"px 'Noto Sans KR'";
     var lw=x2.measureText(label).width+f(40);
-    x2.fillStyle=TR_C.box; x2.strokeStyle="#e6b56a"; x2.lineWidth=2; rrect(x2,PAD,y,lw,f(52),f(12)); x2.fill(); x2.stroke();
-    x2.fillStyle=TR_C.brown; x2.textAlign="left"; x2.textBaseline="middle"; x2.fillText(label, PAD+f(20), y+f(27));
+    x2.fillStyle=TR_C.box; x2.strokeStyle="#e6b56a"; x2.lineWidth=2; rrect(x2,RX,y,lw,f(52),f(12)); x2.fill(); x2.stroke();
+    x2.fillStyle=TR_C.brown; x2.textAlign="left"; x2.textBaseline="middle"; x2.fillText(label, RX+f(20), y+f(27));
     y+=L.secH;
-    var DW=dateW(L.sf), TX=PAD+f(36)+DW;
+    var DW=dateW(L.sf, dwArr, RW), TX=RX+f(36)+DW;
     items.forEach(function(it){
       var cy=y+f(19);
-      x2.fillStyle=red?"#b5121b":TR_C.orange; x2.beginPath(); x2.arc(PAD+f(8), cy, f(7), 0, 6.3); x2.fill();
+      x2.fillStyle=red?"#b5121b":TR_C.orange; x2.beginPath(); x2.arc(RX+f(8), cy, f(7), 0, 6.3); x2.fill();
       x2.font="900 "+f(27)+"px 'Noto Sans KR'"; x2.fillStyle=red?"#b5121b":TR_C.ink; x2.textAlign="left"; x2.textBaseline="middle";
       var df=f(27); while(df>16 && x2.measureText(it.date).width>DW-f(10)){ df--; x2.font="900 "+df+"px 'Noto Sans KR'"; }
-      x2.fillText(it.date, PAD+f(36), cy);
+      x2.fillText(it.date, RX+f(36), cy);
       richDraw(x2, it.lines, TX, y, f(27), f(38));
       y+=it.h;
     });
   }
-  if(L.mi.length) drawSec("주요 일정", L.mi, false);
-  if(L.ci.length){ y+=f(26); drawSec("휴관 안내", L.ci, true); }
+  if(TWO){
+    var yTop=y; drawSec("주요 일정", L.mi, false, AX, AW, main); var yA=y;
+    y=yTop; drawSec("휴관 안내", L.ci, true, BX, BW, closed); var yB=y; y=Math.max(y,yA);
+    x2.save(); x2.strokeStyle=TR_C.dash; x2.lineWidth=2; x2.setLineDash([3,8]); x2.beginPath(); x2.moveTo(BX-40,yTop+6); x2.lineTo(BX-40,Math.max(y-f(14), bottom-10)); x2.stroke(); x2.restore();
+  } else {
+    if(L.mi.length) drawSec("주요 일정", L.mi, false, PAD, W-PAD*2, null);
+    if(L.ci.length){ y+=f(26); drawSec("휴관 안내", L.ci, true, PAD, W-PAD*2, null); }
+  }
   if(flow){
-    var by=Math.max(y+f(30), bottom-L.flowH);
-    x2.fillStyle="#e8eefb"; x2.strokeStyle=TR_C.navy; x2.lineWidth=2; rrect(x2,PAD,by,W-PAD*2,L.flowH,f(20)); x2.fill(); x2.stroke();
+    var FX=TWO?BX:PAD, FW=TWO?BW:(W-PAD*2);
+    var by=Math.max((TWO?yB:y)+f(30), bottom-L.flowH);
+    x2.fillStyle="#e8eefb"; x2.strokeStyle=TR_C.navy; x2.lineWidth=2; rrect(x2,FX,by,FW,L.flowH,f(20)); x2.fill(); x2.stroke();
     x2.font="900 "+f(23)+"px 'Noto Sans KR'"; var kw=x2.measureText("승급심사 흐름").width+f(40);
-    x2.fillStyle=TR_C.navy; rrect(x2,PAD+f(26),by+f(20),kw,f(38),f(10)); x2.fill();
-    x2.fillStyle="#fff"; x2.textAlign="left"; x2.textBaseline="middle"; x2.fillText("승급심사 흐름", PAD+f(46), by+f(20)+f(19));
-    richDraw(x2, L.flowLines, PAD+f(26), by+f(20)+f(38)+f(10), f(26), f(38));
+    x2.fillStyle=TR_C.navy; rrect(x2,FX+f(26),by+f(20),kw,f(38),f(10)); x2.fill();
+    x2.fillStyle="#fff"; x2.textAlign="left"; x2.textBaseline="middle"; x2.fillText("승급심사 흐름", FX+f(46), by+f(20)+f(19));
+    richDraw(x2, L.flowLines, FX+f(26), by+f(20)+f(38)+f(10), f(26), f(38));
   }
   footer(x2,H);
   return c;
@@ -2337,18 +2445,22 @@ function drawCalendar(no){
   if(IMGS.bg){ coverFit(x2, IMGS.bg, 0, 0, W, H); } else { x2.fillStyle=t.sky; x2.fillRect(0,0,W,H); }
   x2.globalAlpha=IMGS.bg?0.93:1; x2.fillStyle="#fffdf4";
   rrect(x2,40,40,W-80,H-80,40); x2.fill(); x2.globalAlpha=1;
-  badge(x2,150,140,no,t);
-  titleTwo(x2, S.month+"월", " 수련계획표", W/2+30, 140, 84, t.title, TR_C.orange);
-  var MX=58, WK=90, gx=MX+WK+8, gw=W-MX*2-WK-8, cols=6, cw=gw/cols;   /* [R6.5] 왼쪽 주차 열 · [R7.0] 좌우 여백을 줄여 칸을 넓힘 */
+  badge(x2,150,TVM?116:140,no,t);
+  titleTwo(x2, S.month+"월", " 수련계획표", W/2+30, TVM?116:140, 84, t.title, TR_C.orange);
+  var MX=TVM?64:58, WK=TVM?226:90, gx=MX+WK+8, gw=W-MX*2-WK-8, cols=6, cw=gw/cols;   /* [R6.5] 왼쪽 주차 열 · [R7.0] 좌우 여백을 줄여 칸을 넓힘 */
   /* 범례 */
+  if(TVM){ x2.fillStyle="#2e7d44"; rrect(x2, gx+gw-150, 132, 20, 20, 4); x2.fill();
+    x2.font="700 28px 'Noto Sans KR'"; x2.fillStyle="#2e7d44"; x2.textAlign="left"; x2.textBaseline="middle"; x2.fillText("체력훈련", gx+gw-120, 143); }
+  else {
   x2.fillStyle="#2e7d44"; rrect(x2, gx+gw-132, 194, 16, 16, 3); x2.fill();
   x2.font="700 "+23+"px 'Noto Sans KR'"; x2.fillStyle="#2e7d44"; x2.textAlign="left"; x2.textBaseline="middle"; x2.fillText("체력훈련", gx+gw-108, 203);
+  }
   /* 요일 */
-  var days=["MON","TUE","WED","THU","FRI","SAT"], gy0=238;
+  var days=["MON","TUE","WED","THU","FRI","SAT"], gy0=TVM?196:238, HDF=TVM?30:24;
   x2.textAlign="center"; x2.textBaseline="middle";
-  x2.font="700 24px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab; x2.fillText("주차", MX+WK/2, gy0);
-  for(var i=0;i<cols;i++){ x2.font="700 24px 'Noto Sans KR'"; x2.fillStyle=(i===5)?"#1f5fbf":TR_C.lab; x2.fillText(days[i], gx+cw*(i+0.5), gy0); }
-  var gy=gy0+24;
+  x2.font="700 "+HDF+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab; x2.fillText("주차", MX+WK/2, gy0);
+  for(var i=0;i<cols;i++){ x2.font="700 "+HDF+"px 'Noto Sans KR'"; x2.fillStyle=(i===5)?"#1f5fbf":TR_C.lab; x2.fillText(days[i], gx+cw*(i+0.5), gy0); }
+  var gy=gy0+(TVM?28:24);
   /* 주 나누기 */
   var last=monthDays(), weeks=[], cur=[null,null,null,null,null,null];
   for(var d=1;d<=last;d++){
@@ -2361,29 +2473,29 @@ function drawCalendar(no){
   /* 아래 요소: 주차 띠(심사 주기) + 안내 */
   var tr0=trainingFor(S.year,S.month,"초급반");
   var CW=cycleWeeks(weeks);
-  var bands=[];
-  CW.rows.forEach(function(o){
+  var bands=[], rowInfo=[];
+  CW.rows.forEach(function(o, oi){
     var wr=weekRuleFor(S.year,S.month);
     if(o.kind==="week"){
       var st=(o.k===1 && CW.start1)?fmtMD(CW.start1):(S.month+"/"+o.ds[0]);
       var en=(o.k===1 && CW.start1 && Number(CW.start1.slice(5,7))!==Number(S.month))?(S.month+"/"+o.ds[o.ds.length-1]):String(o.ds[o.ds.length-1]);
       var rng=(wr && wr["week"+o.k])?String(wr["week"+o.k]):(st+"~"+en);   /* [R6.7] 운영표 범위 우선 */
       var focus=(tr0&&tr0.weeks&&tr0.weeks[o.k-1])?String(tr0.weeks[o.k-1].focus||""):"";
-      bands.push({ i:o.k+"주 · "+rng, b:focus, ex:false });
+      bands.push({ i:o.k+"주 · "+rng, b:focus, ex:false }); rowInfo[oi]={ rng:rng, focus:focus };
     } else if(o.kind==="exam"){
       var exs=(wr&&wr.exam)?String(wr.exam):(S.month+"/"+o.examDays.join("·"));
       bands.push({ i:exs, b:"승급심사", ex:true });
     }
   });
-  var showBands=bands.length>0;
+  var showBands=bands.length>0 && !TVM;   /* TV: 주차 띠 내용은 왼쪽 주차 열에 함께 적는다 */
   var hasTrain=(S.pages.train!==false) && !!(trainingFor(S.year,S.month,"초급반")||trainingFor(S.year,S.month,"중급반")||trainingFor(S.year,S.month,"상급반"));
   var noteSegs=[];
   var n1=[{t:"주차는 심사 다음 수업일부터 셉니다",c:TR_C.ink,b:true}];
   if(hasTrain) n1=n1.concat([{t:" · 자세한 수련 내용은 반별 ",c:TR_C.ink,b:true},{t:"수련 안내(03-1 ~ 03-"+["초급반","중급반","상급반"].filter(function(cn){return !!trainingFor(S.year,S.month,cn);}).length+")",c:TR_C.navy,b:true},{t:"를 봐 주세요",c:TR_C.ink,b:true}]);
   noteSegs.push(n1);
   String(S.calNote||"").split("\n").map(function(l){return l.trim();}).filter(Boolean).forEach(function(l){ noteSegs.push([{t:l,c:TR_C.ink,b:true}]); });
-  var NLH=36, noteH=noteSegs.length?noteSegs.length*NLH+6:0, bandH=showBands?112:0;
-  var gBottom=H-110-noteH-bandH-(noteSegs.length?16:0)-(showBands?16:0);
+  var NLH=TVM?46:36, noteH=noteSegs.length?noteSegs.length*NLH+6:0, bandH=showBands?112:0;
+  var gBottom=H-(TVM?112:110)-noteH-bandH-(noteSegs.length?16:0)-(showBands?16:0);
   var rh=(gBottom-gy)/weeks.length;
   /* 칸 내용 만들기 */
   var CELLS=[];
@@ -2403,7 +2515,8 @@ function drawCalendar(no){
   });
   /* [R7.0] 칸 글자 크기 — 일정 알약(TF)·수련 내용(BF)을 «칸 폭 안에서 낱말이 잘리지 않는 가장 큰 크기»로 통일.
      유난히 긴 낱말 한두 개 때문에 전체가 작아지지 않도록 그 줄만 15%까지 줄인다. 세로로 넘치면 함께 줄인다. */
-  var PADC=6, inner=cw-PADC*2, NUMF=27, TOPH=NUMF+9;
+  var PADC=6, inner=cw-PADC*2, NUMF=27, TOPH=NUMF+9, CX0=PADC;
+  if(TVM){ NUMF=40; CX0=70; TOPH=10; inner=cw-CX0-8; }   /* TV: 날짜 숫자 오른쪽에 내용을 둔다 */
   function tokW(font, txt){ mc.font=font; var w=0; String(txt).split(/\s+/).forEach(function(tk){ w=Math.max(w, mc.measureText(tk).width); }); return w; }
   function lineFont(l, BF){   /* 이 줄에 쓸 크기: 낱말이 폭을 넘으면 85%까지만 줄임 */
     var s2=BF; while(s2>Math.ceil(BF*0.85) && tokW("700 "+s2+"px 'Noto Sans KR'", l)>inner) s2--; return s2;
@@ -2431,7 +2544,7 @@ function drawCalendar(no){
     }
     return true;
   }
-  var TF=21, BF=24;
+  var TF=TVM?30:21, BF=TVM?34:24;
   while(TF>13 && !allFit(TF, 13)) TF--;        /* 알약: 낱말이 잘리지 않는 최대 */
   while(BF>13 && !allFit(TF, BF)){ BF--; if(BF<TF-1 && TF>13) TF--; }
   var GTF=TF, GBF=BF;
@@ -2446,29 +2559,29 @@ function drawCalendar(no){
     if(C.nextStart){ x2.save(); x2.strokeStyle=TR_C.brown; x2.lineWidth=3; x2.setLineDash([6,5]); x2.beginPath(); x2.moveTo(C.x+1,C.y); x2.lineTo(C.x+1,C.y+rh); x2.stroke(); x2.restore(); }
     x2.textAlign="left"; x2.textBaseline="top";
     x2.font="900 "+NUMF+"px 'Noto Sans KR'"; x2.fillStyle=C.closed?"#b5121b":(C.col===5?"#1f5fbf":TR_C.ink);
-    x2.fillText(String(C.d), C.x+PADC+2, C.y+6);
+    x2.fillText(String(C.d), C.x+(TVM?12:(PADC+2)), C.y+(TVM?10:6));
     var yy=C.y+TOPH;
     if(C.nextStart){
       var nb=CW.nextM+"월 1주 →"; var nf=Math.max(15,TF-2); x2.font="900 "+nf+"px 'Noto Sans KR'";
       while(nf>13 && x2.measureText(nb).width+14>inner){ nf--; x2.font="900 "+nf+"px 'Noto Sans KR'"; }
       var nw2=Math.min(inner, x2.measureText(nb).width+14), nh=TF+10;
-      x2.fillStyle="#fff"; x2.strokeStyle=TR_C.brown; x2.lineWidth=2; rrect(x2,C.x+PADC,yy,nw2,nh,nh/2); x2.fill(); x2.stroke();
-      x2.fillStyle=TR_C.brown; x2.textAlign="center"; x2.textBaseline="middle"; x2.fillText(nb, C.x+PADC+nw2/2, yy+nh/2+1);
+      x2.fillStyle="#fff"; x2.strokeStyle=TR_C.brown; x2.lineWidth=2; rrect(x2,C.x+CX0,yy,nw2,nh,nh/2); x2.fill(); x2.stroke();
+      x2.fillStyle=TR_C.brown; x2.textAlign="center"; x2.textBaseline="middle"; x2.fillText(nb, C.x+CX0+nw2/2, yy+nh/2+1);
       x2.textAlign="left"; x2.textBaseline="top"; yy+=nh+5;
     }
     C.tags.forEach(function(tg,ti){
       x2.font="900 "+TF+"px 'Noto Sans KR'";
       var ls=P.tags[ti], tw=0; ls.forEach(function(l){ tw=Math.max(tw,x2.measureText(l).width); });
       var pw=Math.min(inner, tw+10), ph=ls.length*(TF+4)+8;
-      x2.fillStyle=tagColorOf(tg); rrect(x2,C.x+PADC,yy,pw,ph,5); x2.fill();
+      x2.fillStyle=tagColorOf(tg); rrect(x2,C.x+CX0,yy,pw,ph,5); x2.fill();
       x2.fillStyle="#fff"; x2.textAlign="center"; x2.textBaseline="middle";
-      ls.forEach(function(l,li){ x2.fillText(l, C.x+PADC+pw/2, yy+4+li*(TF+4)+(TF+4)/2+1); });
+      ls.forEach(function(l,li){ x2.fillText(l, C.x+CX0+pw/2, yy+4+li*(TF+4)+(TF+4)/2+1); });
       x2.textAlign="left"; x2.textBaseline="top"; yy+=ph+5;
     });
     var np=C.plain.length;
     P.rows.forEach(function(R,ri){
       x2.font="700 "+R.fs+"px 'Noto Sans KR'"; x2.fillStyle=(ri<np)?TR_C.ink:(C.bodyColor||"#2e7d44");
-      R.ls.forEach(function(w){ x2.fillText(w, C.x+PADC, yy); yy+=Math.round(R.fs*1.24); }); yy+=3;
+      R.ls.forEach(function(w){ x2.fillText(w, C.x+CX0, yy); yy+=Math.round(R.fs*1.24); }); yy+=3;
     });
   });
   /* [R6.5] 왼쪽 주차 열 */
@@ -2476,6 +2589,17 @@ function drawCalendar(no){
     var bx=MX, by=gy+rh*r+6, bh=rh-12, ex=(o.kind==="exam");
     x2.fillStyle=ex?"#fdecec":TR_C.box; rrect(x2,bx,by,WK,bh,14); x2.fill();
     x2.textAlign="center"; x2.textBaseline="middle";
+    if(TVM){   /* [R7.1] TV: 주차 + 기간 + 집중 과목을 한 칸에 */
+      var ri=rowInfo[r]||{}, parts=[{t:o.label, f:42, w:"900", c:ex?"#b5121b":TR_C.brown}];
+      if(ri.rng) parts.push({t:ri.rng, f:24, w:"700", c:TR_C.lab});
+      if(ri.focus) parts.push({t:ri.focus, f:32, w:"900", c:TR_C.ink});
+      if(ex && o.small) parts.push({t:o.small, f:24, w:"700", c:"#b5121b"});
+      else if(!ri.rng && o.small) parts.push({t:o.small, f:24, w:"700", c:TR_C.lab});
+      var th=0; parts.forEach(function(p){ x2.font=p.w+" "+p.f+"px 'Noto Sans KR'"; while(p.f>15 && x2.measureText(p.t).width>WK-14){ p.f--; x2.font=p.w+" "+p.f+"px 'Noto Sans KR'"; } p.h=Math.round(p.f*1.22); th+=p.h; });
+      var sc=Math.min(1, (bh-8)/th), py=by+bh/2-th*sc/2;
+      parts.forEach(function(p){ var pf=Math.max(13,Math.floor(p.f*sc)), ph=p.h*sc; x2.font=p.w+" "+pf+"px 'Noto Sans KR'"; x2.fillStyle=p.c; x2.fillText(p.t, bx+WK/2, py+ph/2); py+=ph; });
+      return;
+    }
     var lf=ex?32:30; x2.font="900 "+lf+"px 'Noto Sans KR'"; while(lf>13 && x2.measureText(o.label).width>WK-10){ lf--; x2.font="900 "+lf+"px 'Noto Sans KR'"; }
     x2.fillStyle=ex?"#b5121b":TR_C.brown;
     var SMF=19; x2.font="700 "+SMF+"px 'Noto Sans KR'";
@@ -2505,7 +2629,7 @@ function drawCalendar(no){
     yb+=16;
     noteSegs.forEach(function(segs,i){
       /* [R7.0] 한 줄에 들어가는 가장 큰 글자(27→20px) */
-      var nf=27, lines=richWrap(mc, segs, W-MX*2-24, nf);
+      var nf=TVM?34:27, lines=richWrap(mc, segs, W-MX*2-24, nf);
       while(nf>20 && lines.length>1){ nf--; lines=richWrap(mc, segs, W-MX*2-24, nf); }
       var lw=0; lines[0].forEach(function(sg){ lw+=sg.w; });
       richDraw(x2, [lines[0]], W/2-lw/2, yb+i*NLH, nf, NLH);
@@ -2518,8 +2642,9 @@ function drawCalendar(no){
 /* [R4.2] 인원 격자 — 열 수를 늘려 가며 한 페이지에 들어가는 배치를 찾는다 */
 function fitGrid(n, availW, availH, baseCell, minCell, capH){
   /* [R5.6] 4명이면 2×2, 6명이면 3×2처럼 네모난 격자부터 시도(3+1 같은 어정쩡한 배치 방지) */
-  var c0=(n<=3)?n:Math.ceil(Math.sqrt(n));
-  for(var cols=c0; cols<=6; cols++){
+  var c0=(n<=3)?n:Math.ceil(Math.sqrt(n)), cMax=6;
+  if(TVM){ c0=Math.min(n, Math.max(3, Math.ceil(Math.sqrt(n*2.6)))); cMax=10; }   /* 가로 화면: 옆으로 넓게 */
+  for(var cols=c0; cols<=cMax; cols++){
     if(cols>n) break;
     var gap=Math.min(56, Math.max(18, Math.round(availW*0.05)));
     var cw=Math.min(baseCell, (availW-(cols-1)*gap)/cols);
@@ -2527,7 +2652,7 @@ function fitGrid(n, availW, availH, baseCell, minCell, capH){
     /* 넘치면 셀을 줄여서라도 이 열 수로 맞춰 본다 — [R5.6] 종전엔 처음부터 맞을 때만 줄여서
        4명이 2×2 대신 한 줄 4칸(작은 사진)으로 밀리던 문제 */
     while(rows*capH(cw)>availH && cw>minCell) cw-=6;
-    if(rows*capH(cw)<=availH || cols===6) return {cols:cols, cw:cw, gap:gap, rows:rows};
+    if(rows*capH(cw)<=availH || cols===cMax) return {cols:cols, cw:cw, gap:gap, rows:rows};
   }
   return null;
 }
@@ -2675,7 +2800,7 @@ var TR_C={ brown:"#8a5219", orange:"#f28c1e", navy:"#1e2b5c", ink:"#3a2a14", sub
 var BELT_HEX2={"흰띠":"#ffffff","노란띠":"#f5d90a","주황띠":"#f28c1e","초록띠":"#2e9e4f","파란띠":"#1f5fbf","보라띠":"#7b3fa0","밤띠":"#6b3e26","빨간띠":"#d62828"};
 function dashLine(x2,x0,x1,y,col){ x2.save(); x2.strokeStyle=col||TR_C.dash; x2.lineWidth=2; x2.setLineDash([3,7]); x2.beginPath(); x2.moveTo(x0,y); x2.lineTo(x1,y); x2.stroke(); x2.restore(); }
 /* 반 표식 배너: [반 이름 배지] + [띠색 칩] — class_badge 규격 */
-function drawClassBanner(x2, cy, cls, belts, k){
+function drawClassBanner(x2, cy, cls, belts, k, cx){
   k=k||1;
   var cb=(monthlyData()&&monthlyData().class_badge&&monthlyData().class_badge.badge)||{};
   var bd=cb[cls]||{bg:"#f1eee7",text:"#1e2b5c"};
@@ -2683,7 +2808,7 @@ function drawClassBanner(x2, cy, cls, belts, k){
   var chips=belts.map(function(b){ return { w:Math.round(((b.color==="poom1"||b.color==="poom2")?181:86)*k), b:b }; });
   var cw=0; chips.forEach(function(c){ cw+=c.w; }); cw+=(chips.length-1)*GAP;
   var totalW=PADI+BW+Math.round(20*k)+cw+PADI, totalH=BH+PADI*2;
-  var x0=Math.round(W/2-totalW/2), y0=Math.round(cy-totalH/2);
+  var x0=Math.round((cx||W/2)-totalW/2), y0=Math.round(cy-totalH/2);
   x2.fillStyle="#fff"; x2.strokeStyle=TR_C.navy; x2.lineWidth=3; rrect(x2,x0,y0,totalW,totalH,Math.round(20*k)); x2.fill(); x2.stroke();
   x2.fillStyle=bd.bg; rrect(x2,x0+PADI,y0+PADI,BW,BH,Math.round(14*k)); x2.fill();
   x2.fillStyle=bd.text; x2.font="900 "+Math.round(37*k)+"px 'Noto Sans KR'"; x2.textAlign="center"; x2.textBaseline="middle";
@@ -2713,29 +2838,33 @@ function trainingCards(tr){
 }
 function drawTrainingPages(no, clsList, sub){
   var pages=[], H=pageH(), t=theme(), sq=(S.ratio==="11");
-  var hy=sq?150:190, PAD=96, bottom=panelBottom(H)-24;
+  var hy=TVM?124:(sq?150:190), PAD=96, bottom=panelBottom(H)-24;
   var mc=document.createElement("canvas").getContext("2d");
   clsList.forEach(function(cls, ci){
     var tr=trainingFor(S.year,S.month,cls); if(!tr) return;
     var c=pageBase(3), x2=c.getContext("2d");
     badge(x2,150,hy,sub?(no+"-"+(ci+1)):no,t);
-    titleTwo(x2, S.month+"월", " 수련 안내", W/2+30, hy, sq?70:76, t.title, TR_C.orange);
-    var y=drawClassBanner(x2, hy+Math.round(sq?86:100), cls, tr.belts||[], 1);
+    titleTwo(x2, S.month+"월", " 수련 안내", W/2+30, hy, TVM?86:(sq?70:76), t.title, TR_C.orange);
+    /* [R7.1] TV: 반 표식(왼쪽)과 정보 상자 2개(오른쪽)를 한 줄에 */
+    var BK=TVM?1.4:1, BNH=Math.round(62*BK)+Math.round(9*BK)*2;
+    var y=TVM ? drawClassBanner(x2, hy+62+BNH/2, cls, tr.belts||[], BK, PAD+(W/2-PAD-20)/2)
+              : drawClassBanner(x2, hy+Math.round(sq?86:100), cls, tr.belts||[], 1);
     /* 세로로 다 들어가는 배율 찾기 */
     var cards=trainingCards(tr), weeks=tr.weeks||[];
     function layout(sf, bs){
       var f=function(v){ return Math.round(v*sf); }, g=function(v){ return Math.round(v*sf*bs); };
       var L={ sf:sf, bs:bs, items:[], h:0 };
       var yy=y+f(20);
-      L.cardY=yy; L.cardH=f(100); yy+=L.cardH+f(18);
+      if(TVM){ L.cardY=y-BNH; L.cardH=BNH; yy=y+Math.round(22*Math.min(1.3,sf)); }
+      else { L.cardY=yy; L.cardH=f(100); yy+=L.cardH+f(18); }
       var yyStart=yy;
       /* [R7.0] 왼쪽(품새)·오른쪽(기술) 열 나눔을 내용에 맞춰 고른다 — 전체 높이가 가장 낮은 나눔 */
       var best=null;
-      [494, 450, 410].forEach(function(c2){ var R=rowsFor(c2); if(!best || R.score<best.score-2) best=R; });   /* 품새 이름이 두 줄로 갈라지는 나눔은 뒤로 */
+      (TVM?[Math.round((W-PAD*2)*0.34), Math.round((W-PAD*2)*0.40), Math.round((W-PAD*2)*0.29)]:[494, 450, 410]).forEach(function(c2){ var R=rowsFor(c2); if(!best || R.score<best.score-2) best=R; });   /* 품새 이름이 두 줄로 갈라지는 나눔은 뒤로 */
       L.rows=best.rows; yy=best.yy; L.HF=best.HF;
       function rowsFor(c2){
       var yy=best?best.y0:yyStart, y0=yy;
-      var col1x=PAD+f(80), col2x=PAD+Math.round(c2*Math.min(1,sf)), col1w=col2x-col1x-f(22), col2w=W-PAD-col2x;
+      var col1x=PAD+f(80), col2x=PAD+Math.round(c2*(TVM?1:Math.min(1,sf))), col1w=col2x-col1x-f(22), col2w=W-PAD-col2x;
       var HF=Math.max(f(26), g(21)+3), rows=[], pen=0;
       weeks.forEach(function(wk){
         var name=(wk.poomsae||[]).map(function(p){ return p.name; }).join(" · ");
@@ -2751,14 +2880,26 @@ function drawTrainingPages(no, clsList, sub){
       return { rows:rows, yy:yy, h:yy-y0, score:yy-y0+pen, y0:y0, HF:HF };
       }
       L.noteY=yy+f(14); L.h=L.noteY+g(22)*2+f(10);
+      if(TVM){ L.noteY=yy+14; L.h=L.noteY+40; }
       return L;
     }
-    var L=bestScale(layout, bottom, 1.12, 0.72, 1.4, 0.86);
+    var L=bestScale(layout, bottom, TVM?1.9:1.12, 0.72, TVM?1.7:1.4, 0.86);
     var f=function(v){ return Math.round(v*L.sf); }, g=function(v){ return Math.round(v*L.sf*L.bs); };
     /* 정보 상자 2개 */
     var bw=(W-PAD*2-f(16))/2;
+    if(TVM) bw=(W/2-20-PAD-18)/2;
     cards.forEach(function(cd,i){
       var bx=PAD+i*(bw+f(16));
+      if(TVM){
+        bx=W/2+20+i*(bw+18);
+        x2.fillStyle=TR_C.box; rrect(x2,bx,L.cardY,bw,L.cardH,20); x2.fill();
+        x2.textAlign="center"; x2.textBaseline="middle";
+        x2.font="700 26px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab; spacedText(x2, cd.label, bx+bw/2, L.cardY+L.cardH*0.30, 3);
+        var vf2=38; x2.font="900 "+vf2+"px 'Noto Sans KR'";
+        while(vf2>18 && x2.measureText(cd.value).width>bw-28){ vf2--; x2.font="900 "+vf2+"px 'Noto Sans KR'"; }
+        x2.fillStyle=TR_C.ink; x2.fillText(cd.value, bx+bw/2, L.cardY+L.cardH*0.68);
+        return;
+      }
       x2.fillStyle=TR_C.box; rrect(x2,bx,L.cardY,bw,L.cardH,f(17)); x2.fill();
       x2.textAlign="center"; x2.textBaseline="middle";
       x2.font="700 "+f(22)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab; spacedText(x2, cd.label, bx+bw/2, L.cardY+f(30), 3);
@@ -2789,7 +2930,8 @@ function drawTrainingPages(no, clsList, sub){
     x2.textAlign="center"; x2.textBaseline="top"; x2.fillStyle=TR_C.sub;
     var st1=week1Start();
     ["품새는 매주, 기술 과목은 주마다 하나씩 · 품새 한 장은 3개월에 걸쳐 (기본동작 → 1길~6길 → 심화)",
-     "주차는 심사 다음 수업일부터 셉니다"+(st1?(" ("+S.month+"월 1주차 = "+fmtMD(st1)+"~)"):"")].forEach(function(nt,ni){
+     "주차는 심사 다음 수업일부터 셉니다"+(st1?(" ("+S.month+"월 1주차 = "+fmtMD(st1)+"~)"):"")].forEach(function(nt,ni,arr){
+      if(TVM){ if(ni>0) return; nt=arr.join("  ·  "); var tf2=28; x2.font="500 "+tf2+"px 'Noto Sans KR'"; while(tf2>18 && x2.measureText(nt).width>W-PAD*2){ tf2--; x2.font="500 "+tf2+"px 'Noto Sans KR'"; } x2.fillText(nt, W/2, L.noteY); return; }
       var nf=g(20); x2.font="500 "+nf+"px 'Noto Sans KR'"; while(nf>15 && x2.measureText(nt).width>W-PAD*2+24){ nf--; x2.font="500 "+nf+"px 'Noto Sans KR'"; }
       x2.fillText(nt, W/2, L.noteY+ni*g(22)*1.25);
     });
@@ -2801,11 +2943,11 @@ function drawTrainingPages(no, clsList, sub){
 function drawExamInfoPage(no){
   var ex=examFor(S.year,S.month); if(!ex) return null;
   var H=pageH(), t=theme(), sq=(S.ratio==="11");
-  var hy=sq?150:190, PAD=96, bottom=panelBottom(H)-24;
+  var hy=TVM?124:(sq?150:190), PAD=96, bottom=panelBottom(H)-24;
   var c=pageBase(3), x2=c.getContext("2d");
   var mc=document.createElement("canvas").getContext("2d");
   badge(x2,150,hy,no,t);
-  titleTwo(x2, S.month+"월", " 승급심사 안내", W/2+30, hy, sq?70:76, t.title, TR_C.orange);
+  titleTwo(x2, S.month+"월", " 승급심사 안내", W/2+30, hy, TVM?86:(sq?70:76), t.title, TR_C.orange);
   /* 일정 알약 */
   /* [R6.7] 이달 날짜로: 운영표 application_dates > 심사일 계산 > 입력한 일정 한 줄 */
   var ad=(ex.notice||{}).application_dates||null, D0=examDateDefault();
@@ -2822,12 +2964,14 @@ function drawExamInfoPage(no){
     pill=exTxt+(timeM?(" "+timeM[0]):"")+"  |  신청서·심사비 납부 "+mdw(t7)+"까지";
     noteApp="심사 신청서는 "+mdw(t14)+"·"+mdw(t13)+" 개별 톡으로 보내드립니다 · "+mdw(t7)+"까지 신청서 제출 + 심사비 납부";
   } else pill=String(S.recSub||"").trim()||String((ex.notice||{}).exam_days||"");
-  var py=hy+Math.round(sq?70:86), pf=31; x2.font="700 "+pf+"px 'Noto Sans KR'";
+  var py=hy+Math.round(TVM?66:(sq?70:86)), pf=TVM?42:31, PH=TVM?80:64; x2.font="700 "+pf+"px 'Noto Sans KR'";
   while(pf>16 && x2.measureText(pill).width>W-PAD*2-60){ pf--; x2.font="700 "+pf+"px 'Noto Sans KR'"; }
-  var pw=Math.min(W-PAD*2, x2.measureText(pill).width+64);
-  x2.fillStyle="#fff"; x2.strokeStyle=TR_C.navy; x2.lineWidth=3; rrect(x2,W/2-pw/2,py,pw,64,16); x2.fill(); x2.stroke();
-  x2.fillStyle=TR_C.navy; x2.textAlign="center"; x2.textBaseline="middle"; x2.fillText(pill, W/2, py+33);
-  var y0=py+64+26;
+  var pw=Math.min(W-PAD*2, x2.measureText(pill).width+(TVM?90:64));
+  x2.fillStyle="#fff"; x2.strokeStyle=TR_C.navy; x2.lineWidth=3; rrect(x2,W/2-pw/2,py,pw,PH,16); x2.fill(); x2.stroke();
+  x2.fillStyle=TR_C.navy; x2.textAlign="center"; x2.textBaseline="middle"; x2.fillText(pill, W/2, py+PH/2+1);
+  var y0=py+PH+(TVM?20:26);
+  /* [R7.1] TV: 급별 표(왼쪽 60%) · 상급반 상자+안내(오른쪽) */
+  var TBW=TVM?Math.round((W-PAD*2)*0.60):(W-PAD*2), BXX=TVM?(PAD+TBW+60):PAD, BXW=TVM?(W-PAD-BXX):(W-PAD*2);
   var yug=ex.yugeup||[], sg=ex.sanggeup||{};
   var groups=[{n:"초급반", rows:yug.filter(function(r){ return /^[6789]급/.test(r.grade); })},{n:"중급반", rows:yug.filter(function(r){ return /^[2345]급/.test(r.grade); })}];
   var boxRows=[["품새",sg.poomsae],["차기",sg.kick],["격파",sg.break],["겨루기딛기",sg.step]].filter(function(r){ return r[1]; });
@@ -2842,7 +2986,7 @@ function drawExamInfoPage(no){
     function mx(key, font){ mc.font=font; var w=0; all.forEach(function(r){ w=Math.max(w, mc.measureText(String(r[key]||"")).width); }); return Math.ceil(w); }
     var wG=6+f(24)+mx("grade","900 "+g(22)+"px 'Noto Sans KR'")+f(22);
     var wK=mx("kick","500 "+g(21)+"px 'Noto Sans KR'")+26, wB=mx("break","500 "+g(21)+"px 'Noto Sans KR'")+26, wP=mx("poomsae","900 "+g(21)+"px 'Noto Sans KR'")+8;
-    var tot=W-PAD*2-wG, need=wK+wB+wP;
+    var tot=TBW-wG, need=wK+wB+wP;
     if(need<=tot){ var ex=tot-need; wK+=Math.round(ex*0.5); wB+=Math.round(ex*0.5); }
     else { var kk=(tot-wP)/(wK+wB); wK=Math.floor(wK*kk); wB=tot-wP-wK; }   /* 품새 열은 한 줄 유지, 차기·격파만 낱말 단위로 줄바꿈 */
     L.colW=[wG,wK,wB,wP]; L.colX=[PAD, PAD+wG, PAD+wG+wK, PAD+wG+wK+wB];
@@ -2859,16 +3003,22 @@ function drawExamInfoPage(no){
       });
       L.groups.push(G);
     });
+    var tableBottom=yy;
     yy+=f(16); L.boxY=yy;
+    if(TVM){ L.boxY=y0+f(6); yy=L.boxY; }
     mc.font="900 "+g(21)+"px 'Noto Sans KR'"; var lw=0; boxRows.forEach(function(br){ lw=Math.max(lw, mc.measureText(br[0]).width); });
     lw=Math.round(lw)+f(22); L.lw=lw;
-    var vw=W-PAD*2-f(44)-lw; L.boxLines=[];
+    var vw=BXW-f(44)-lw; L.boxLines=[];
     boxRows.forEach(function(br){ mc.font="500 "+g(21)+"px 'Noto Sans KR'"; var vl=wrapLines(mc,String(br[1]),vw); L.boxLines.push({k:br[0], vl:vl}); });
     var bh=f(16)+f(32)+f(6); L.boxLines.forEach(function(bx){ bh+=bx.vl.length*g(30); }); bh+=f(14);
     L.boxH=bh; yy+=bh+f(16); L.noteY=yy;
     L.noteLines=[]; mc.font="500 "+g(20)+"px 'Noto Sans KR'";
-    notes.forEach(function(nt){ breakDot(mc, nt, W-PAD*2+16).forEach(function(l){ L.noteLines.push(l); }); });
+    notes.forEach(function(nt){
+      if(TVM){ var parts=[]; breakDot(mc, nt, BXW).forEach(function(l){ wrapLines(mc, l, BXW).forEach(function(l2){ parts.push(l2); }); }); parts.forEach(function(l){ L.noteLines.push(l); }); }
+      else breakDot(mc, nt, W-PAD*2+16).forEach(function(l){ L.noteLines.push(l); });
+    });
     L.h=yy+L.noteLines.length*g(27)+f(6);
+    if(TVM) L.h=Math.max(L.h, tableBottom+f(6));
     /* 줄바꿈이 늘어난 만큼 「덜 좋은」 배치로 친다 → bestScale 은 h 만 보므로 여기서 걸러 준다 */
     return L;
   }
@@ -2880,12 +3030,12 @@ function drawExamInfoPage(no){
     if(cur) out.push(cur);
     return out;
   }
-  var L=bestScale(layout, bottom+14, 1.08, 0.7, 1.35, 0.8);
+  var L=bestScale(layout, bottom+14, TVM?1.9:1.08, 0.7, TVM?1.8:1.35, 0.8);
   var f=function(v){ return Math.round(v*L.sf); }, g=function(v){ return Math.round(v*L.sf*L.bs); };
   /* 표 머리 */
   x2.textAlign="left"; x2.textBaseline="middle"; x2.font="700 "+g(20)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab;
   ["급","차기","격파","품새"].forEach(function(h,i){ x2.fillText(h, L.colX[i]+6, L.headY+f(17)); });
-  x2.strokeStyle=TR_C.dash; x2.lineWidth=2; x2.beginPath(); x2.moveTo(PAD,L.headY+f(34)); x2.lineTo(W-PAD,L.headY+f(34)); x2.stroke();
+  x2.strokeStyle=TR_C.dash; x2.lineWidth=2; x2.beginPath(); x2.moveTo(PAD,L.headY+f(34)); x2.lineTo(PAD+TBW,L.headY+f(34)); x2.stroke();
   L.groups.forEach(function(G,gi){
     x2.font="900 "+g(20)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.orange; x2.textAlign="left";
     spacedText(x2, groups[gi].n, PAD+6+g(46), G.y+f(20), 4);
@@ -2898,22 +3048,22 @@ function drawExamInfoPage(no){
       x2.fillText(r.grade, L.colX[0]+6+f(24), cy+1);
       function col2(lines, x, bold, colr){ x2.font=(bold?"900 ":"500 ")+g(21)+"px 'Noto Sans KR'"; x2.fillStyle=colr; var yy=cy-((lines.length-1)*g(27))/2; lines.forEach(function(l){ x2.fillText(l, x, yy); yy+=g(27); }); }
       col2(row.kl, L.colX[1]+6, false, TR_C.ink); col2(row.bl, L.colX[2]+6, false, TR_C.ink); col2(row.pl, L.colX[3]+2, true, TR_C.navy);
-      dashLine(x2, PAD, W-PAD, row.y+row.h);
+      dashLine(x2, PAD, PAD+TBW, row.y+row.h);
     });
   });
   /* 상급반 상자 */
-  x2.fillStyle=TR_C.box; rrect(x2,PAD,L.boxY,W-PAD*2,L.boxH,f(17)); x2.fill();
+  x2.fillStyle=TR_C.box; rrect(x2,BXX,L.boxY,BXW,L.boxH,f(17)); x2.fill();
   x2.textAlign="left"; x2.textBaseline="middle";
-  x2.font="900 "+g(22)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.brown; x2.fillText("상급반 (1품 · 2품)", PAD+f(22), L.boxY+f(16)+f(16));
+  x2.font="900 "+g(22)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.brown; x2.fillText("상급반 (1품 · 2품)", BXX+f(22), L.boxY+f(16)+f(16));
   var by=L.boxY+f(16)+f(32)+f(6);
   L.boxLines.forEach(function(b){
-    x2.font="900 "+g(21)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab; x2.fillText(b.k, PAD+f(22), by+g(15));
+    x2.font="900 "+g(21)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.lab; x2.fillText(b.k, BXX+f(22), by+g(15));
     x2.font="500 "+g(21)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.ink;
-    b.vl.forEach(function(l){ x2.fillText(l, PAD+f(22)+L.lw, by+g(15)); by+=g(30); });
+    b.vl.forEach(function(l){ x2.fillText(l, BXX+f(22)+L.lw, by+g(15)); by+=g(30); });
   });
   /* 안내 */
   x2.textAlign="center"; x2.textBaseline="top"; x2.font="500 "+g(20)+"px 'Noto Sans KR'"; x2.fillStyle=TR_C.sub;
-  L.noteLines.forEach(function(n,i){ var nf=g(20); x2.font="500 "+nf+"px 'Noto Sans KR'"; while(nf>13 && x2.measureText(n).width>W-PAD*2+16){ nf--; x2.font="500 "+nf+"px 'Noto Sans KR'"; } x2.fillText(n, W/2, L.noteY+i*g(27)); });
+  L.noteLines.forEach(function(n,i){ var nf=g(20); x2.font="500 "+nf+"px 'Noto Sans KR'"; while(nf>13 && x2.measureText(n).width>BXW+16){ nf--; x2.font="500 "+nf+"px 'Noto Sans KR'"; } x2.fillText(n, BXX+BXW/2, L.noteY+i*g(27)); });
   footer(x2,H);
   return c;
 }
@@ -2987,18 +3137,24 @@ function recNoteBox(mc, innerW, k){
 function drawRecPages(no, list, forceSub){
   var t=theme(), pages=[], H=pageH(), R=S.ratio, sq=(R==="11");
   var hy=sq?150:190, sy0=sq?226:292;
+  if(TVM){ hy=124; sy0=196; }
   var blocks=recBlocks(list);
   if(!blocks.length) return pages;
-  var PAD=96, IND=24, COLGAP=40;
+  var PAD=96, IND=24, COLGAP=TVM?56:40;
   var COLW=Math.floor((W-PAD*2-IND-COLGAP)/2);          /* [R5.9] 두 단 */
+  /* [R7.1] TV: 세 단 격자 — 첫 장은 왼쪽 한 단에 안내 상자, 나머지 두 단에 명단 / 다음 장부터는 세 단 모두 명단 */
+  if(TVM) COLW=Math.floor((W-PAD*2-IND-COLGAP*2)/3);
+  function colX(ci){ return PAD+IND+ci*(COLW+COLGAP); }
+  function colsOf(pi){ return TVM?(pi===0?[1,2]:[0,1,2]):[0,1]; }
   var mc=document.createElement("canvas").getContext("2d");
   var F_CAT=34, F_NEED, F_GRADE, F_NAME=33, LH_NAME=44;
   var H_CAT=70, H_NEED, H_GRADE, GAP_CAT=34, GAP_UNIT=16;
   var cats, NB, noteH, top1, topN, bottom, plan=[], pg=null, y=0, breakCat2=false;
-  var sub=String(S.recSub||"").trim(), subH=sub?86:0;
+  var SH=TVM?78:68, sub=String(S.recSub||"").trim(), subH=sub?(SH+18):0;
   /* [R7.0] 안내 상자·소제목 글자를 키운 안(k)으로 먼저 짜 보고, 장수가 늘면 종전 크기로 되돌린다 */
   function setup(k, big){
   F_NEED=big?29:26; F_GRADE=big?29:26; H_NEED=big?50:48; H_GRADE=big?42:40;
+  if(TVM){ var tp=[[42,56,34,50,58],[38,51,31,46,54],[34,46,28,42,50]][TVP||0]; F_NAME=tp[0]; LH_NAME=tp[1]; F_GRADE=tp[2]; F_NEED=tp[2]; H_GRADE=tp[3]; H_NEED=tp[4]; F_CAT=42; H_CAT=80; }
   /* 묶음(unit) = [보강 N회 필요]? + 소제목 + 이름들 — 같은 단에 함께 놓는다 */
   cats=[]; var curCat=null, pend=[];
   blocks.forEach(function(bk){
@@ -3011,8 +3167,9 @@ function drawRecPages(no, list, forceSub){
     u.h+=GAP_UNIT;
     curCat.units.push(u); pend=[];
   });
-  NB=recNoteBox(mc, W-PAD*2, k); noteH=NB.h;
+  NB=recNoteBox(mc, TVM?(COLW+IND-6):(W-PAD*2), k); noteH=NB.h;
   top1=sy0+subH+(sub?14:0)+noteH+30; topN=sy0+subH+(sub?18:4);
+  if(TVM) top1=topN;
   bottom=Math.min(panelBottom(H), H-150);
   }
   /* ── 배치 계산: 장마다 {y, items:[{kind:'cat'|'unit', x, y, ...}]} ── */
@@ -3025,24 +3182,30 @@ function drawRecPages(no, list, forceSub){
     while(ui<cat.units.length || (!cont && ui===0 && !cat.units.length)){
       if(pg.items.length && y+GAP_CAT+H_CAT+(cat.units[ui]?cat.units[ui].h:0)>bottom){ newPage(); }
       if(pg.items.length) y+=GAP_CAT;
-      pg.items.push({ kind:"cat", bk:cat.head, y:y, cont:cont });
+      var CI=colsOf(plan.length-1), NCc=CI.length;
+      pg.items.push({ kind:"cat", bk:cat.head, y:y, cont:cont, x0:colX(CI[0])-IND });
       y+=H_CAT;
-      /* 신문처럼: 이 장에 들어갈 묶음들을 모아 왼쪽 단을 위→아래로 채운 뒤 오른쪽 단으로 */
+      /* 신문처럼: 이 장에 들어갈 묶음들을 모아 왼쪽 단을 위→아래로 채운 뒤 오른쪽 단으로 (단 수 NCc) */
       var Hav=bottom-y, take=[], tot=0;
-      for(var k=ui;k<cat.units.length;k++){ if(tot+cat.units[k].h>2*Hav && take.length) break; take.push(cat.units[k]); tot+=cat.units[k].h; }
-      var col0=[], col1=[], h0=0, h1=0;
+      for(var k=ui;k<cat.units.length;k++){ if(tot+cat.units[k].h>NCc*Hav && take.length) break; take.push(cat.units[k]); tot+=cat.units[k].h; }
+      var colA=[], hs=[], q;
+      for(q=0;q<NCc;q++){ colA.push([]); hs.push(0); }
       take.forEach(function(u){
-        if(h0<tot/2 && (h0+u.h<=Hav || !col0.length)){ col0.push(u); h0+=u.h; }
-        else { col1.push(u); h1+=u.h; }
+        var put=NCc-1;
+        for(var q2=0;q2<NCc-1;q2++){ if(hs[q2]<tot/NCc && (hs[q2]+u.h<=Hav || !colA[q2].length)){ put=q2; break; } }
+        colA[put].push(u); hs[put]+=u.h;
       });
-      while(h1>Hav && col1.length){ h1-=col1.pop().h; }     /* 오른쪽 단이 넘치면 다음 장으로 */
-      var cy0=y, cy1=y;
-      col0.forEach(function(u){ pg.items.push({ kind:"unit", u:u, x:PAD+IND, y:cy0 }); cy0+=u.h; });
-      col1.forEach(function(u){ pg.items.push({ kind:"unit", u:u, x:PAD+IND+COLW+COLGAP, y:cy1 }); cy1+=u.h; });
-      /* [R6.1] 두 단 사이 세로 구분선 */
-      if(col0.length && col1.length) pg.items.push({ kind:"vline", x:PAD+IND+COLW+COLGAP/2, y0:y+4, y1:Math.max(cy0,cy1)-GAP_UNIT-4 });
-      ui+=col0.length+col1.length;
-      y=Math.max(cy0,cy1);
+      while(hs[NCc-1]>Hav && colA[NCc-1].length){ hs[NCc-1]-=colA[NCc-1].pop().h; }     /* 마지막 단이 넘치면 다음 장으로 */
+      var yMax=y, placed=0, y0c=y;
+      colA.forEach(function(arr, q3){
+        var cyq=y0c;
+        arr.forEach(function(u){ pg.items.push({ kind:"unit", u:u, x:colX(CI[q3]), y:cyq }); cyq+=u.h; placed++; });
+        yMax=Math.max(yMax, cyq);
+      });
+      /* [R6.1] 단 사이 세로 구분선 */
+      for(q=1;q<NCc;q++){ if(colA[q].length && colA[q-1].length) pg.items.push({ kind:"vline", x:colX(CI[q])-COLGAP/2, y0:y+4, y1:yMax-GAP_UNIT-4 }); }
+      ui+=placed;
+      y=yMax;
       if(ui<cat.units.length){ newPage(); cont=true; }
       if(!cat.units.length) break;
     }
@@ -3050,35 +3213,43 @@ function drawRecPages(no, list, forceSub){
   }
   function planFor(k, big){ setup(k, big); breakCat2=false; buildPlan(); if(plan.length>1 && cats.length>1){ breakCat2=true; buildPlan(); } return plan.length; }
   /* 장수가 종전과 같을 때만 키운다 */
+  var TVP=0;
+  if(TVM){   /* TV: 안내 상자가 왼쪽 단 높이에 들어가는 가장 큰 글자 + 장수가 가장 적은 명단 글자 크기 */
+    var tk=1.6; for(; tk>1; tk-=0.05){ planFor(tk,true); if(NB.h<=bottom-topN-6) break; }
+    var cnt=[]; for(TVP=0; TVP<3; TVP++) cnt.push(planFor(tk,true));
+    var mn=Math.min.apply(null,cnt); for(TVP=0; TVP<3; TVP++){ if(cnt[TVP]===mn) break; }
+    planFor(tk,true);
+  } else {
   var nOld=planFor(1,false), tries=[[1.18,true],[1.12,true],[1.12,false],[1.06,false]], done=false;
   for(var ti=0; ti<tries.length && !done; ti++){ if(planFor(tries[ti][0],tries[ti][1])===nOld) done=true; }
   if(!done) planFor(1,false);
+  }
   /* ── 그리기 ── */
   plan.forEach(function(page, pi){
     var c=recPageBase(), x2=c.getContext("2d");
     recBadge(x2,152,hy,(plan.length>1||forceSub)?(no+"-"+(pi+1)):no);
-    titleTwo(x2, S.month+"월", " 승급심사 추천자", W/2+34, hy, sq?66:74, REC_GOLD, "#FFFFFF", "");
+    titleTwo(x2, S.month+"월", " 승급심사 추천자", W/2+34, hy, TVM?86:(sq?66:74), REC_GOLD, "#FFFFFF", "");
     var yy=sy0;
     if(sub){
-      x2.font="700 34px 'Noto Sans KR'";
-      var f=34; while(f>22 && x2.measureText(sub).width>W-PAD*2-56){ f-=1; x2.font="700 "+f+"px 'Noto Sans KR'"; }
+      var f=TVM?42:34; x2.font="700 "+f+"px 'Noto Sans KR'";
+      while(f>22 && x2.measureText(sub).width>W-PAD*2-56){ f-=1; x2.font="700 "+f+"px 'Noto Sans KR'"; }
       x2.fillStyle="rgba(255,255,255,0.10)"; x2.strokeStyle=REC_GOLD; x2.lineWidth=2.5;
-      rrect(x2,PAD,yy,W-PAD*2,68,16); x2.fill(); x2.stroke();
+      rrect(x2,PAD,yy,W-PAD*2,SH,16); x2.fill(); x2.stroke();
       x2.fillStyle="#FFFFFF"; x2.textAlign="center"; x2.textBaseline="middle";
-      x2.fillText(sub, W/2, yy+34);
-      yy+=86;
+      x2.fillText(sub, W/2, yy+SH/2);
+      yy+=SH+18;
     }
-    if(pi===0){ yy+=(sub?14:0); NB.draw(x2, PAD, yy); }
+    if(pi===0){ if(TVM) NB.draw(x2, PAD, topN+6); else { yy+=(sub?14:0); NB.draw(x2, PAD, yy); } }
     page.items.forEach(function(it){
       if(it.kind==="cat"){
-        var bk=it.bk, cy=it.y+30;
-        x2.fillStyle=bk.c; x2.beginPath(); x2.arc(PAD+10, cy, 10, 0, 6.3); x2.fill();
+        var bk=it.bk, cy=it.y+Math.round(H_CAT*0.43), CX=(it.x0!=null)?it.x0:PAD;
+        x2.fillStyle=bk.c; x2.beginPath(); x2.arc(CX+10, cy, 10, 0, 6.3); x2.fill();
         x2.textAlign="left"; x2.textBaseline="middle";
         x2.font="700 "+F_CAT+"px 'Noto Sans KR'"; x2.fillStyle="#FFFFFF";
         var ttl=bk.text;   /* [R6.1] (이어서)·인원수 표기 없이 */
-        x2.fillText(ttl, PAD+32, cy);
+        x2.fillText(ttl, CX+32, cy);
         var tw=x2.measureText(ttl).width;
-        var lx0=PAD+32+tw+18, lx1=W-PAD;
+        var lx0=CX+32+tw+18, lx1=W-PAD;
         if(lx1>lx0+20){ x2.strokeStyle="rgba(242,193,78,0.45)"; x2.lineWidth=2;
           x2.beginPath(); x2.moveTo(lx0,cy+1); x2.lineTo(lx1,cy+1); x2.stroke(); }
         return;
@@ -3101,7 +3272,7 @@ function drawRecPages(no, list, forceSub){
           x2.font="700 "+F_GRADE+"px 'Noto Sans KR'"; x2.fillStyle="#F6D98A";
           var gl="〈 "+p.text+" 〉", gf=F_GRADE;
           while(gf>18 && x2.measureText(gl).width>COLW){ gf--; x2.font="700 "+gf+"px 'Noto Sans KR'"; }
-          x2.fillText(gl, ux, uy+20);
+          x2.fillText(gl, ux, uy+Math.round(H_GRADE/2));
           uy+=H_GRADE;
         } else {
           x2.font="700 "+F_NAME+"px 'Noto Sans KR'"; x2.fillStyle="#FFFFFF";
@@ -3135,14 +3306,15 @@ function drawKkwPages(no, list){
 function _drawKkwGroup(no, list, subText, pageOff, forceSub){
   var t=theme(), pages=[], H=pageH(), R=S.ratio;
   var hy=(R==="11")?150:190, sy0=(R==="11")?230:300;
+  if(TVM){ hy=124; sy0=198; }
   var chunks=balancedChunks(list, 15);   /* [R4.2] 15명까지는 한 페이지에 */
   chunks.forEach(function(chunk,pi){
     var c=pageBase(4+pi), x2=c.getContext("2d");
     badge(x2,150,hy,(chunks.length>1||forceSub)?(no+"-"+(pageOff+pi+1)):no,t);
-    titleText(x2,"국기원 승품(단) 응시예정자", W/2+30, hy, R==="11"?60:66, t);
+    titleText(x2,"국기원 승품(단) 응시예정자", W/2+30, hy, TVM?78:(R==="11"?60:66), t);
     var subB=sy0;
     if(subText){
-      x2.font="500 36px 'Gowun Dodum'";
+      x2.font="500 "+(TVM?44:36)+"px 'Gowun Dodum'";
       var sw=x2.measureText(subText).width+80;
       var sx=W/2-sw/2, sy=sy0;
       x2.fillStyle="#EDF1F8"; x2.strokeStyle=NAVY; x2.lineWidth=3;
@@ -3152,13 +3324,13 @@ function _drawKkwGroup(no, list, subText, pageOff, forceSub){
       subB=sy0+76;
     }
     /* [R6.7] 안내 한 줄 */
-    x2.font="700 30px 'Noto Sans KR'"; x2.fillStyle="#6B6357"; x2.textAlign="center"; x2.textBaseline="middle";
+    x2.font="700 "+(TVM?34:30)+"px 'Noto Sans KR'"; x2.fillStyle="#6B6357"; x2.textAlign="center"; x2.textBaseline="middle";
     x2.fillText("응시 월은 수련 진도에 따라 개별 안내드립니다.", W/2, subB+34);
     subB+=52;
     var n=chunk.length, top=subB+30, bottom=panelBottom(H)-30;
-    var cF=function(cw){ return Math.max(36, Math.min(40, Math.round(cw*0.14))); };   /* [R6.2] 13pt(36px) 이상 */
+    var cF=function(cw){ return Math.max(36, Math.min(TVM?50:40, Math.round(cw*0.14))); };   /* [R6.2] 13pt(36px) 이상 */
     var cellHf=function(cw){ var f=cF(cw); return cw + 12 + Math.round(f*1.32) + rowGapOf(cw); };
-    var G=fitGrid(n, W-140, bottom-top, 300, 120, cellHf);
+    var G=fitGrid(n, W-(TVM?260:140), bottom-top, TVM?360:300, 120, cellHf);
     if(!G) G={cols:5, cw:150, gap:20, rows:Math.ceil(n/5)};
     var capF=cF(G.cw), cellH=cellHf(G.cw);
     var startY=top+Math.max(0,(bottom-top-(G.rows*cellH-rowGapOf(G.cw)))/2);
@@ -3186,30 +3358,31 @@ function _drawKkwGroup(no, list, subText, pageOff, forceSub){
 function drawBdayPages(no, list){
   var t=theme(), pages=[], H=pageH(), R=S.ratio;
   var tf, t1, t2, per0;
-  if(R==="11"){ tf=80; t1=142; t2=228; per0=9; }
+  if(TVM){ tf=92; t1=124; t2=124; per0=9; }
+  else if(R==="11"){ tf=80; t1=142; t2=228; per0=9; }
   else if(R==="45"){ tf=100; t1=190; t2=290; per0=9; }
   else { tf=120; t1=210; t2=330; per0=9; }
   var chunks=balancedChunks(list, 15);   /* [R4.2] 15명까지는 한 페이지에 */
   chunks.forEach(function(chunk,pi){
     var c=pageBase(6+pi), x2=c.getContext("2d");
-    badge(x2,150,t1+20,chunks.length>1?(no+"-"+(pi+1)):no,t);
+    badge(x2,150,TVM?t1:(t1+20),chunks.length>1?(no+"-"+(pi+1)):no,t);
     x2.save();
     x2.font=tf+"px 'Jua'"; x2.textAlign="center"; x2.textBaseline="middle";
     x2.lineJoin="round";
     x2.shadowColor="rgba(0,0,0,0.15)"; x2.shadowOffsetY=4;
     x2.strokeStyle="#fffdf4"; x2.lineWidth=Math.round(tf*0.15);
-    x2.strokeText("HAPPY",W/2,t1); x2.strokeText("BIRTHDAY",W/2,t2);
+    if(TVM) x2.strokeText("HAPPY BIRTHDAY",W/2+30,t1); else { x2.strokeText("HAPPY",W/2,t1); x2.strokeText("BIRTHDAY",W/2,t2); }
     x2.shadowColor="transparent";
     x2.fillStyle=t.title;
-    x2.fillText("HAPPY",W/2,t1); x2.fillText("BIRTHDAY",W/2,t2);
+    if(TVM) x2.fillText("HAPPY BIRTHDAY",W/2+30,t1); else { x2.fillText("HAPPY",W/2,t1); x2.fillText("BIRTHDAY",W/2,t2); }
     x2.restore();
     confetti(x2,t1,t2);
-    var n=chunk.length, top=t2+60, bottom=panelBottom(H)+((R==="11")?30:0)-24;
+    var n=chunk.length, top=t2+(TVM?84:60), bottom=panelBottom(H)+((R==="11"&&!TVM)?30:0)-24;
     /* [R4.7] 날짜(작게) 위 · 이름 아래 두 줄 */
-    var cF=function(cw){ return Math.max(38, Math.min(42, Math.round(cw*0.16))); };   /* [R6.2] 이름·날짜 13pt(36px) 이상 */
+    var cF=function(cw){ return Math.max(38, Math.min(TVM?50:42, Math.round(cw*0.16))); };   /* [R6.2] 이름·날짜 13pt(36px) 이상 */
     var dFf=function(f){ return Math.max(36, Math.round(f*0.9)); };
     var cellHf=function(cw){ var f=cF(cw); return cw + 10 + Math.round(dFf(f)*1.26) + Math.round(f*1.3) + rowGapOf(cw); };
-    var G=fitGrid(n, W-160, bottom-top, 280, 100, cellHf);
+    var G=fitGrid(n, W-160, bottom-top, TVM?330:280, 100, cellHf);
     if(!G) G={cols:5, cw:140, gap:20, rows:Math.ceil(n/5)};
     var capF=cF(G.cw), dF=dFf(capF), cellH=cellHf(G.cw), r0=G.cw/2;
     var startY=top+Math.max(0,(bottom-top-(G.rows*cellH-rowGapOf(G.cw)))/2);
@@ -3239,7 +3412,7 @@ function drawBdayPages(no, list){
 function drawChecklist(no){
   var c=pageBase(11), x2=c.getContext("2d"), H=c.height, t=theme();
   var sq=(S.ratio==="11");
-  var t1=sq?170:210, t2=t1+(sq?92:104);
+  var t1=TVM?124:(sq?170:210), t2=t1+(sq?92:104);
   badge(x2,150,t1,no,t);
   /* [R5.6] 한 줄에 들어가면 「'정의' 실천 체크리스트」 한 줄 제목(다른 장과 같은 크기) */
   var oneT="'"+(S.virtueName||"덕목")+"' 실천 체크리스트";
@@ -3250,7 +3423,7 @@ function drawChecklist(no){
   var items=(S.virtueItems||"").split("\n").map(function(s){return s.trim();}).filter(Boolean);
   var top=t2+80, bottom=panelBottom(H)-30;
   var GAPI=30;   /* 항목 사이 추가 여백(점선 위아래 균등) */
-  var itf=Math.round(44*fSc()), allLines=null, step=0;
+  var itf=Math.round((TVM?58:44)*fSc()), allLines=null, step=0;
   for(;itf>=Math.round(26*fSc());itf-=2){
     x2.font="700 "+itf+"px 'Gowun Dodum'";
     allLines=items.map(function(it){ return wrapLines(x2,it, W-378); });
@@ -3260,22 +3433,25 @@ function drawChecklist(no){
   }
   var blockH=allLines.reduce(function(a,b){return a+b.length;},0)*step + (items.length-1)*GAPI;
   var y=top+Math.max(0,(bottom-top-blockH)/2) + itf/2;
+  /* [R7.1] TV: 묶음을 화면 가운데로 옮긴다(XO 만큼) */
+  var XO=0;
+  if(TVM){ x2.font="700 "+itf+"px 'Gowun Dodum'"; var mxw=0; allLines.forEach(function(ls){ ls.forEach(function(l){ mxw=Math.max(mxw, x2.measureText(l).width); }); }); XO=Math.max(0, Math.round((W-(mxw+78))/2)-150); }
   items.forEach(function(it,i){
     /* 체크 아이콘 */
     var cy=y+ (allLines[i].length-1)*step/2;
-    x2.fillStyle="#EDEAE4"; x2.beginPath(); x2.arc(178, cy, 24, 0, 6.3); x2.fill();
+    x2.fillStyle="#EDEAE4"; x2.beginPath(); x2.arc(178+XO, cy, 24, 0, 6.3); x2.fill();
     x2.strokeStyle=t.title; x2.lineWidth=9; x2.lineCap="round"; x2.lineJoin="round";
-    x2.beginPath(); x2.moveTo(166,cy); x2.lineTo(176,cy+11); x2.lineTo(196,cy-16); x2.stroke();
+    x2.beginPath(); x2.moveTo(166+XO,cy); x2.lineTo(176+XO,cy+11); x2.lineTo(196+XO,cy-16); x2.stroke();
     /* 문장 */
     x2.font="700 "+itf+"px 'Gowun Dodum'"; x2.fillStyle="#3a3a3a";
     x2.textAlign="left"; x2.textBaseline="middle";
-    allLines[i].forEach(function(l,j){ x2.fillText(l, 228, y+j*step); });
+    allLines[i].forEach(function(l,j){ x2.fillText(l, 228+XO, y+j*step); });
     y+=allLines[i].length*step;
     /* 점선 구분 — 위아래 항목에서 같은 거리에 */
     if(i<items.length-1){
       var dashY=(y-step)+itf/2+22;
       x2.strokeStyle=t.accent; x2.lineWidth=3; x2.setLineDash([2,10]);
-      x2.beginPath(); x2.moveTo(150,dashY); x2.lineTo(W-150,dashY); x2.stroke();
+      x2.beginPath(); x2.moveTo(150+Math.max(0,XO-40),dashY); x2.lineTo(W-150-Math.max(0,XO-40),dashY); x2.stroke();
       x2.setLineDash([]);
       y=dashY+22+itf/2;
     }
@@ -3730,98 +3906,33 @@ function tvLabel(nm){
   if(nm.indexOf("보고_")===0) nm=nm.slice(3);
   return (TV_LABEL[nm]||nm)+part;
 }
-function tvGeo(){
-  var pw=W, ph=pageH(), style=S.tvStyle||"panel";
-  var gh=Math.round(TVH*(style==="center"?0.965:0.955));
-  var gw=Math.round(gh*pw/ph);
-  var maxW=(style==="center")?(TVW-64):Math.round(TVW*0.70);
-  if(gw>maxW){ gw=maxW; gh=Math.round(gw*ph/pw); }
-  var gx=(style==="center")?Math.round((TVW-gw)/2):(TVW-64-gw);
-  return { x:gx, y:Math.round((TVH-gh)/2), w:gw, h:gh, style:style };
-}
-function tvBg(x){
-  var t=theme();
-  var g=x.createLinearGradient(0,0,0,TVH);
-  g.addColorStop(0,t.sky); g.addColorStop(1,t.ground);
-  x.fillStyle=g; x.fillRect(0,0,TVW,TVH);
-  /* 은은한 장식 원 */
-  x.save(); x.globalAlpha=0.35; x.fillStyle=t.bush2||"#fff";
-  x.beginPath(); x.arc(-120, TVH+60, 420, 0, 6.3); x.fill();
-  x.beginPath(); x.arc(TVW+140, -100, 380, 0, 6.3); x.fill();
-  x.restore();
-}
-function tvPanel(x, label, no, total, alpha){
-  if((S.tvStyle||"panel")!=="panel") return;
-  var t=theme(), g=tvGeo();
-  var px=84, pw=g.x-84-70;
-  if(pw<300) return;
-  x.save(); x.globalAlpha=Math.max(0,Math.min(1,alpha));
-  x.textAlign="left"; x.textBaseline="alphabetic";
-  var y=Math.round(TVH*0.30);
-  /* 로고 */
-  if(IMGS.logo){
-    var lh=72, lw=IMGS.logo.width*(lh/IMGS.logo.height);
-    if(lw>pw){ lw=pw; lh=IMGS.logo.height*(lw/IMGS.logo.width); }
-    x.drawImage(IMGS.logo, px, y-lh-28, lw, lh);
-  }
-  x.fillStyle=NAVY; x.font="700 30px 'Noto Sans KR'";
-  x.fillText("나라차태권도 소식지", px, y);
-  x.fillStyle=t.title; x.font=Math.round(TVH*0.10)+"px 'Jua'";
-  x.fillText(S.year+"년 "+S.month+"월호", px, y+Math.round(TVH*0.11));
-  x.strokeStyle=t.leaf||NAVY; x.lineWidth=5; x.globalAlpha=Math.max(0,Math.min(1,alpha))*0.7;
-  x.beginPath(); x.moveTo(px, y+Math.round(TVH*0.155)); x.lineTo(px+Math.min(pw,320), y+Math.round(TVH*0.155)); x.stroke();
-  x.globalAlpha=Math.max(0,Math.min(1,alpha));
-  /* 현재 장면 이름 */
-  var f=56; x.font="700 "+f+"px 'Noto Sans KR'";
-  while(f>28 && x.measureText(label).width>pw){ f-=2; x.font="700 "+f+"px 'Noto Sans KR'"; }
-  x.fillStyle=NAVY; x.fillText(label, px, y+Math.round(TVH*0.245));
-  x.fillStyle="#6B7285"; x.font="500 32px 'Noto Sans KR'";
-  x.fillText(no+" / "+total, px, y+Math.round(TVH*0.305));
-  x.restore();
-}
-function tvSheet(x, img, g){
-  x.save();
-  x.shadowColor="rgba(0,0,0,0.30)"; x.shadowBlur=46; x.shadowOffsetY=16;
-  x.fillStyle="#ffffff"; x.fillRect(g.x, g.y, g.w, g.h);
-  x.restore();
-  x.drawImage(img, g.x, g.y, g.w, g.h);
-}
-/* 소식지 한 장을 크기·투명도를 바꿔 그린다 */
-function tvSheetS(x, img, g, sc, alpha, dark, dy){
-  var w=g.w*sc, h=g.h*sc;
-  var gx=g.x+(g.w-w)/2, gy=g.y+(g.h-h)/2+(dy||0);
-  x.save(); x.globalAlpha=alpha;
-  x.shadowColor="rgba(0,0,0,"+(0.32*alpha).toFixed(3)+")"; x.shadowBlur=46*sc; x.shadowOffsetY=16*sc;
-  x.fillStyle="#ffffff"; x.fillRect(gx,gy,w,h);
-  x.shadowColor="transparent";
-  x.drawImage(img, gx, gy, w, h);
-  if(dark>0){ x.fillStyle="rgba(18,22,34,"+dark.toFixed(3)+")"; x.fillRect(gx,gy,w,h); }
-  x.restore();
-}
-/* [R5.1] 카드 전환 — 앞 장을 살짝 앞으로 당겼다가 뒤로 밀어 넣으면 다음 장이 올라온다 */
-function tvCardSwap(x, fromImg, toImg, g, p){
-  var ez=(p<0.5)?(2*p*p):(1-Math.pow(-2*p+2,2)/2);
-  /* 뒤에서 기다리던 다음 장이 제자리로 */
-  tvSheetS(x, toImg, g, 0.90+0.10*ez, 1, (1-ez)*0.30, 0);
-  /* 앞 장: 0~0.42 당기기, 0.42~1 뒤로 */
-  var pull=Math.min(1, p/0.42), back=(p<=0.42)?0:((p-0.42)/0.58);
-  var lift=Math.sin(pull*Math.PI/2);
-  var room=Math.max(0, Math.min(0.055, (TVH-24)/g.h-1));   /* 화면을 벗어나지 않을 만큼만 당긴다 */
-  var sc=1+room*lift-0.30*back*back;
-  var al=1-back*back*back;
-  if(al>0.012 && sc>0.05) tvSheetS(x, fromImg, g, sc, al, 0, -Math.min(18, (TVH-g.h*sc)/2-6)*lift);
-}
+/* [R7.1] 16:9 화면을 그대로 송출. 전환 3종:
+   soft  = 부드럽게 넘김(기본) — 앞 장이 왼쪽으로 조금 물러나며 옅어진 뒤, 다음 장이 오른쪽에서 들어오며 또렷해진다
+   slide = 옆으로 밀기 — 앞 장이 왼쪽으로 나가고 다음 장이 따라 들어온다(사이에 그림자)
+   fade  = 제자리에서 겹침 */
+function tvEase(p){ return (p<0.5)?(4*p*p*p):(1-Math.pow(-2*p+2,3)/2); }
 function tvFrame(x, i, j, p){
-  tvBg(x);
-  var g=tvGeo();
-  if(p==null){
-    tvPanel(x, tvLabel(MADE[i].name), i+1, MADE.length, 1);
-    tvSheet(x, MADE[i].canvas, g);
+  var A=TVPAGES[i].canvas, t=theme();
+  if(p==null){ x.drawImage(A,0,0,TVW,TVH); return; }
+  var B=TVPAGES[j].canvas, e=tvEase(Math.max(0,Math.min(1,p))), st=S.tvStyle||"soft";
+  x.fillStyle=t.sky; x.fillRect(0,0,TVW,TVH);
+  if(st==="slide"){
+    var dx=Math.round(TVW*e);
+    x.drawImage(A,-dx,0,TVW,TVH);
+    x.drawImage(B,TVW-dx,0,TVW,TVH);
+    /* 두 장 사이 경계에 옅은 그림자 */
+    var sx=TVW-dx, gr=x.createLinearGradient(sx-70,0,sx,0);
+    gr.addColorStop(0,"rgba(0,0,0,0)"); gr.addColorStop(1,"rgba(0,0,0,0.16)");
+    x.fillStyle=gr; x.fillRect(sx-70,0,70,TVH);
     return;
   }
-  if(p<0.5) tvPanel(x, tvLabel(MADE[i].name), i+1, MADE.length, 1-p*2);
-  else      tvPanel(x, tvLabel(MADE[j].name), j+1, MADE.length, (p-0.5)*2);
-  tvCardSwap(x, MADE[i].canvas, MADE[j].canvas, g, p);
+  if(st==="fade"){ x.drawImage(A,0,0,TVW,TVH); x.save(); x.globalAlpha=e; x.drawImage(B,0,0,TVW,TVH); x.restore(); return; }
+  /* soft: 앞 장이 먼저 왼쪽으로 물러나며 옅어지고(0~60%), 다음 장이 오른쪽에서 들어오며 또렷해진다(35~100%).
+     두 장의 글자가 같은 진하기로 겹쳐 보이지 않도록 시간을 어긋나게 한다 */
+  var pc=Math.max(0,Math.min(1,p)), sh=Math.round(TVW*0.035);
+  var ea=tvEase(Math.min(1,pc/0.6)), eb=tvEase(Math.max(0,(pc-0.35)/0.65));
+  x.save(); x.globalAlpha=1-ea; x.drawImage(A, -sh*ea, 0, TVW, TVH); x.restore();
+  x.save(); x.globalAlpha=eb; x.drawImage(B, sh*(1-eb), 0, TVW, TVH); x.restore();
 }
 function tvMime(){
   if(!window.MediaRecorder) return "";
@@ -3834,8 +3945,11 @@ function makeTvVideo(){
   if(!MADE.length){ alert("먼저 [소식지 만들기]를 눌러 주세요."); return; }
   var mime=tvMime();
   if(!mime){ alert("이 브라우저는 영상 저장을 지원하지 않습니다. 크롬(Chrome)에서 열어 주세요."); return; }
+  readInputs();
+  try{ TVPAGES=buildTvPages(); }catch(e){ alert("TV 화면 만들기 실패: "+e.message); return; }
+  if(!TVPAGES.length){ alert("TV 화면으로 만들 장이 없습니다."); return; }
   var sec=Number(S.tvSec||5), turn=Number(S.tvTurn||0.9);
-  var totalSec=MADE.length*(sec+turn);
+  var totalSec=TVPAGES.length*(sec+turn);
   var cv=document.getElementById("tvCv"); cv.width=TVW; cv.height=TVH;
   var x=cv.getContext("2d");
   var modal=document.getElementById("tvModal"), prog=document.getElementById("tvProg");
@@ -3861,7 +3975,7 @@ function makeTvVideo(){
     document.body.appendChild(a); a.click();
     setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 4000);
     var mb=(blob.size/1048576).toFixed(1);
-    setStatus("TV용 영상을 저장했습니다 — "+MADE.length+"장 · "+Math.round(totalSec)+"초 · "+mb+"MB ("+ext.toUpperCase()+")","ok");
+    setStatus("TV용 영상을 저장했습니다 — "+TVPAGES.length+"장 · "+Math.round(totalSec)+"초 · "+mb+"MB ("+ext.toUpperCase()+")","ok");
   };
   rec.start(1000);
   var t0=performance.now();
@@ -3870,15 +3984,37 @@ function makeTvVideo(){
     var el=(performance.now()-t0)/1000;
     if(el>=totalSec){ if(rec.state!=="inactive") rec.stop(); return; }
     var unit=sec+turn, i=Math.floor(el/unit), q=el-i*unit;
-    if(i>=MADE.length) i=MADE.length-1;
+    if(i>=TVPAGES.length) i=TVPAGES.length-1;
     if(q<sec) tvFrame(x, i, null, null);
-    else tvFrame(x, i, (i+1)%MADE.length, (q-sec)/turn);
-    prog.textContent="영상 만드는 중… "+Math.min(100,Math.round(el/totalSec*100))+"%  ("+(i+1)+" / "+MADE.length+"장 · 전체 "+Math.round(totalSec)+"초)";
+    else tvFrame(x, i, (i+1)%TVPAGES.length, (q-sec)/turn);
+    prog.textContent="영상 만드는 중… "+Math.min(100,Math.round(el/totalSec*100))+"%  ("+(i+1)+" / "+TVPAGES.length+"장 · 전체 "+Math.round(totalSec)+"초)";
     requestAnimationFrame(step);
   }
   requestAnimationFrame(step);
 }
 
+/* [R7.1] TV 화면 미리보기 — 영상으로 만들기 전에 16:9 장면을 확인 */
+function tvPreview(){
+  if(!MADE.length){ alert("먼저 [소식지 만들기]를 눌러 주세요."); return; }
+  readInputs();
+  try{ TVPAGES=buildTvPages(); }catch(e){ alert("TV 화면 만들기 실패: "+e.message); return; }
+  var box=document.getElementById("tvPreviewArea");
+  box.innerHTML="";
+  var hd=document.createElement("div"); hd.className="hint"; hd.style.margin="14px 0 8px";
+  hd.innerHTML="<b>TV(16:9) 화면 "+TVPAGES.length+"장</b> — 영상에는 이 화면이 그대로 나옵니다. 내용을 고친 뒤에는 이 버튼을 다시 눌러 주세요.";
+  box.appendChild(hd);
+  TVPAGES.forEach(function(p,i){
+    var d=document.createElement("div"); d.className="pv"; d.style.width="460px";
+    p.canvas.style.width="100%"; p.canvas.style.height="auto";
+    d.appendChild(p.canvas);
+    var bar=document.createElement("div"); bar.className="pvBar";
+    var sp=document.createElement("span"); sp.textContent=(i+1)+". "+p.name;
+    var bt=document.createElement("button"); bt.className="sec min"; bt.textContent="PNG 저장";
+    bt.onclick=function(){ var a=document.createElement("a"); a.href=p.canvas.toDataURL("image/png"); a.download=fileBase()+"_TV_"+("0"+(i+1)).slice(-2)+"_"+p.name+".png"; document.body.appendChild(a); a.click(); a.remove(); };
+    bar.appendChild(sp); bar.appendChild(bt); d.appendChild(bar); box.appendChild(d);
+  });
+  box.scrollIntoView({behavior:"smooth"});
+}
 /* ============================================================
    [R6.2] 월간 운영표(수련 안내·승급심사 안내) — 관장님이 주는 JSON.
    내장본(MONTHLY_EMB)을 기본으로 쓰고, 새 JSON을 올리면 그것이 우선(이 기기 저장 + 호 보관에 포함).
@@ -3987,7 +4123,19 @@ function makeAll(){
     setStatus("⚠️ 얼굴 사진을 하나도 불러오지 못했습니다(사진 0장).\n생일·국기원 페이지에 사진 대신 로고가 들어갑니다. ⚙️ 설정에서 [데이터 불러오기]를 다시 눌러 주세요.","err");
   }
   Promise.all(fontJobs).then(function(){ return document.fonts.ready; }).then(function(){ return preloadAll(bs,ks,rs); }).then(function(){
-    MADE=[];
+    MADE=buildPages(bs,ks,rs);
+    renderPreview();
+    btn.disabled=false; btn.textContent="🖼️ 소식지 만들기 (미리보기)";
+    if(btnT){ btnT.disabled=false; btnT.textContent="🖼️ 미리보기 만들기"; }
+  }).catch(function(e){
+    btn.disabled=false; btn.textContent="🖼️ 소식지 만들기 (미리보기)";
+    if(btnT){ btnT.disabled=false; btnT.textContent="🖼️ 미리보기 만들기"; }
+    alert("만들기 실패: "+e.message);
+  });
+}
+/* [R7.1] 지금 설정(W·비율·TVM)으로 전체 장을 그려 돌려준다 — 소식지와 TV 화면이 같이 쓴다 */
+function buildPages(bs,ks,rs){
+    var MADE=[];
     /* 본문 페이지 번호 계산 (표지·목차 제외) */
     var no=0, entries=[];
     var plan=[];
@@ -4064,14 +4212,15 @@ function makeAll(){
     if(S.pages.cover) MADE.push({name:"표지", canvas:drawCover()});
     if(S.pages.toc) MADE=MADE.concat(drawTocPages(entries));
     MADE=MADE.concat(BODY);
-    renderPreview();
-    btn.disabled=false; btn.textContent="🖼️ 소식지 만들기 (미리보기)";
-    if(btnT){ btnT.disabled=false; btnT.textContent="🖼️ 미리보기 만들기"; }
-  }).catch(function(e){
-    btn.disabled=false; btn.textContent="🖼️ 소식지 만들기 (미리보기)";
-    if(btnT){ btnT.disabled=false; btnT.textContent="🖼️ 미리보기 만들기"; }
-    alert("만들기 실패: "+e.message);
-  });
+    return MADE;
+}
+/* [R7.1] TV(16:9) 전용 화면 — 같은 내용을 1920×1080 가로형 배치로 다시 그린다 */
+var TVPAGES=[];
+function buildTvPages(){
+  var w0=W, r0=S.ratio, out=[];
+  try{ TVM=true; W=1920; S.ratio="11"; out=buildPages(selectedBday(), selectedKkw(), selectedRec()); }
+  finally{ TVM=false; W=w0; S.ratio=r0; }
+  return out;
 }
 function fileBase(){ return String(S.year).slice(2)+("0"+S.month).slice(-2)+"_소식지"; }
 function renderPreview(){
@@ -4816,8 +4965,10 @@ function initInputs(){
   document.getElementById("inRecGoal").value=String(S.recGoal||24);
   document.getElementById("inRecNote").value=S.recNote||"";
   document.getElementById("inTvSec").value=String(S.tvSec||5);
-  document.getElementById("inTvTurn").value=String(S.tvTurn||0.9);
-  document.getElementById("inTvStyle").value=S.tvStyle||"panel";
+  if(S.tvStyle==="panel"||S.tvStyle==="center"||!S.tvStyle){ S.tvStyle="soft"; if(!S._tvV2){ S.tvTurn=1.2; } }   /* [R7.1] 옛 설정(제목 패널) → 새 전환 */
+  S._tvV2=1;
+  document.getElementById("inTvTurn").value=String(S.tvTurn||1.2);
+  document.getElementById("inTvStyle").value=S.tvStyle||"soft";
   document.getElementById("pgKkw").checked=!!S.pages.kkw;
   document.getElementById("pgBday").checked=!!S.pages.bday;
   document.getElementById("pgAlbum").checked=!!S.pages.album;
@@ -4848,6 +4999,7 @@ function initInputs(){
   };
   document.getElementById("btnVirtueAuto").onclick=function(){ autoVirtue(true); };
   document.getElementById("btnSaveTv").onclick=makeTvVideo;
+  document.getElementById("btnTvPreview").onclick=tvPreview;
   document.getElementById("tvCancel").onclick=function(){ TV.cancel=true; };
   ["inTvSec","inTvTurn","inTvStyle"].forEach(function(id){
     var el=document.getElementById(id);
