@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="doc-ver" content="v20261002.0001">
+<meta name="doc-ver" content="v20261002.0002">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차태권도 운영규정</title>
 <meta name="description" content="나라차태권도 분당도장 운영규정 — 제1장 총칙부터 부칙·부록까지 전문 수록 (반응형 웹 문서)">
@@ -141,6 +141,11 @@
      · '직계가족 동반 등록 시' 묶음을 '가족 할인' 초록 묶음으로, 8회 등록을 기본으로 강조
      · ④항 문구를 제11조 ⑤항과 같은 표현으로 통일
    v20260917.0004 — 제4조 ②항에 캐릭터 이름 '라차' 명기
+   v20261002.0002 — 부록1 수련 시간표를 설정에서 고칠 수 있게 함
+     · TT_DEFAULT(현재 시간표 그대로)를 자료로 두고 ttRender()가 표 두 개를 그린다
+     · 설정 → [📅 시간표 수정]에서 칸·줄 추가/삭제·기준일 수정, localStorage(naracha_rules_tt) 저장
+     · [배포용 시간표 복사]로 TT_DEFAULT 문구를 받아 파일에 반영하면 학부모님 기기까지 적용
+     · 시간표 내용 자체는 바꾸지 않았다(표시 결과 동일)
    v20261002.0001 — 평소 수련 복장 일러스트 교체(WEAR_TRAIN_B64)
      · 제22조·부록3 두 곳에 함께 반영 · 로고/띠 글자 확인 후 반영
    v20260828.0007 (R1.6) 제15조에 도장 배포용 '보강 제도 안내문' 이미지 수록(1200px PNG)
@@ -160,7 +165,7 @@
    맨 위에 둔 이유: 새 버전이 나왔는지 확인할 때 파일 앞부분만 조금 받아 보기 위함. */
 var RULES_VER = (function(){
   try{ return document.querySelector('meta[name="doc-ver"]').content; }
-  catch(e){ return "v20261002.0001"; }
+  catch(e){ return "v20261002.0002"; }
 })();
 /* 문서 날짜는 RULES_VER 의 날짜 부분에서 자동으로 뽑는다.
    → 규정을 고치고 RULES_VER 만 올리면 표지의 개정일과 부칙의 시행일이 함께 바뀐다.
@@ -224,6 +229,82 @@ var CFG_REV_KEYS = ['poom1','poom2','poom3','poom4','dan1','dan2','dan3','dan4',
   'dobokPum','dobokDan','dobokTop','dobokPants',
   'beltGrade','beltPoom4','beltPoom5',
   'teeShortS','teeShortL','teeLongS','teeLongL'];
+
+/* ══════════════════════════════════════════════════════════════
+   부록 1 수련 시간표 — 설정 화면에서 고칠 수 있는 자료
+     · 기본값(TT_DEFAULT)은 지금 문서에 실려 있는 시간표 그대로다.
+     · 관장님이 설정 → [시간표 수정]에서 고치면 이 기기(localStorage)에 저장된다.
+     · 학부모님 모두에게 반영하려면 [배포용 시간표 복사]로 받아 파일의
+       TT_DEFAULT 를 바꿔 다시 올린다(금액의 '배포용 값 복사'와 같은 방식).
+     · 칸 하나는 [큰 글씨, 작은 글씨] 두 조각이다. 큰 글씨 안의 줄바꿈은 그대로 줄이 바뀐다.
+   ══════════════════════════════════════════════════════════════ */
+var TT_KEY = 'naracha_rules_tt';
+var TT_DEFAULT = {
+  note: '2026년 1월 19일부터 적용',
+  days: ['월','화','수','목','금'],
+  week: [
+    {t:'12:00~2:00', all:'1:1 개인레슨 수시 접수'},
+    {t:'2:00~2:50', c:[['1:1 개인레슨',''],['초등주니어(초1)',''],['1:1 개인레슨',''],['초등주니어(초1)',''],['초등주니어(초1)','']]},
+    {t:'3:00~3:50', c:[['초등주니어\n초등시니어',''],['초등주니어\n초등시니어',''],['킨더(5·6세)',''],['초등주니어\n초등시니어',''],['킨더','']]},
+    {t:'4:00~4:50', c:[['킨더',''],['킨더\n초등주니어',''],['킨더',''],['킨더\n초등주니어',''],['킨더\n초등주니어','']]},
+    {t:'5:00~5:50', c:[['초등주니어\n초등시니어',''],['초등주니어\n초등시니어',''],['초등주니어\n초등시니어',''],['초등주니어\n초등시니어',''],['초등주니어\n초등시니어','']]},
+    {t:'6:00~6:50', c:[['중급·상급반','(마지막주 승급심사)'],['청소년·성인',''],['중급·상급반',''],['청소년·성인',''],['Sparring Class','(겨루기 중급과정)']]},
+    {t:'7:00~7:50', c:[['나라차시범단(초등)',''],['나라차시범단(초등)',''],['나라차시범단(초등)',''],['나라차시범단(초등)',''],['Sparring Class','(겨루기 상급과정)']]},
+    {t:'8:00~8:50', c:[['청소년·성인',''],['청소년',''],['청소년·성인',''],['청소년',''],['청소년','']]},
+    {t:'9:00~9:50', c:[['청소년·성인',''],['청소년',''],['청소년·성인','청소년시범단 기술연습\n(21:00~21:30)'],['청소년',''],['청소년','']]}
+  ],
+  sat: [
+    {t:'9:00~9:50',   l:'1:1 개인레슨', s:''},
+    {t:'10:00~10:50', l:'초등부 전체', s:''},
+    {t:'11:00~11:50', l:'중급·상급반', s:''},
+    {t:'12:00~13:30', l:'나라차시범단 Special Training (월 2회)', s:''},
+    {t:'13:40~15:10', l:'익스트림 태권도 Class', s:''}
+  ]
+};
+var TT = JSON.parse(JSON.stringify(TT_DEFAULT));
+function ttEsc(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function ttCell(main, small){
+  var h = ttEsc(main).replace(/\n/g,'<br>');
+  if(small && String(small).trim()) h += (h?'<br>':'') + '<small>' + ttEsc(small).replace(/\n/g,'<br>') + '</small>';
+  return h;
+}
+function ttLoad(){
+  try{
+    var raw = localStorage.getItem(TT_KEY);
+    if(!raw) return;
+    var o = JSON.parse(raw);
+    if(o && o.week && o.sat) TT = o;
+  }catch(e){}
+}
+function ttRender(){
+  var days = (TT.days && TT.days.length) ? TT.days : TT_DEFAULT.days;
+  var h = '<table class="t"><tr><th>시간</th>' + days.map(function(d){ return '<th>' + ttEsc(d) + '</th>'; }).join('') + '</tr>';
+  (TT.week||[]).forEach(function(r){
+    h += '<tr><td class="hd">' + ttEsc(r.t) + '</td>';
+    if(r.all != null && String(r.all).trim()){
+      h += '<td colspan="' + days.length + '">' + ttCell(r.all,'') + '</td>';
+    } else {
+      for(var i=0;i<days.length;i++){
+        var c = (r.c && r.c[i]) || ['',''];
+        h += '<td>' + ttCell(c[0], c[1]) + '</td>';
+      }
+    }
+    h += '</tr>';
+  });
+  h += '</table>';
+  var el = document.getElementById('ttWeek'); if(el) el.innerHTML = h;
+
+  var h2 = '<table class="t"><tr><th>시간</th><th>수업</th></tr>';
+  (TT.sat||[]).forEach(function(r){
+    h2 += '<tr><td class="hd">' + ttEsc(r.t) + '</td><td>' + ttCell(r.l, r.s) + '</td></tr>';
+  });
+  h2 += '</table>';
+  var el2 = document.getElementById('ttSat'); if(el2) el2.innerHTML = h2;
+
+  var nt = document.getElementById('ttNote');
+  if(nt) nt.textContent = (TT.note || TT_DEFAULT.note) + ' · 표를 옆으로 밀어서 보실 수 있습니다.';
+}
+ttLoad();
 
 var CFG_KEY = 'naracha_rules_cfg';
 var REG_KEY = 'naracha_regguide';           /* 메인 프로그램이 쓰는 수련비 키 */
@@ -477,6 +558,21 @@ figure.sample figcaption{font-size:.8em;color:var(--ink2);text-align:center;marg
 .cfggrp.sync h5{color:var(--navy);border-left-color:var(--navy)}
 .cfggrp h5{font-size:.88em;color:var(--navy-dark);margin-bottom:8px;padding-left:9px;border-left:4px solid var(--red)}
 .cfgrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px}
+.ttbox{max-width:min(1180px,96vw)}
+#tt_note{text-align:left}
+.tted{width:100%;border-collapse:collapse;font-size:12.5px}
+.tted th{background:var(--navy);color:#fff;padding:6px 4px;font-weight:700;white-space:nowrap;position:sticky;top:0;z-index:1}
+.tted td{border:1px solid var(--line);padding:4px;vertical-align:top}
+.tted input{width:100%;border:1px solid var(--line);border-radius:5px;padding:4px 5px;font:inherit;font-size:12.5px;background:var(--card);color:var(--ink)}
+.tted textarea{width:100%;min-height:40px;border:1px solid var(--line);border-radius:5px;padding:4px 5px;font:inherit;font-size:12.5px;line-height:1.4;resize:vertical;background:var(--card);color:var(--ink)}
+.tted .sm input{font-size:11.5px;color:var(--sub,#6b6b6b);margin-top:3px}
+.tted td.tm{width:92px;background:#faf8f2}
+.tted td.op{width:34px;text-align:center}
+.ttdel{border:1px solid var(--line);background:transparent;color:#a33;border-radius:5px;padding:2px 6px;cursor:pointer;font-size:12px}
+.ttscroll{overflow:auto;max-height:52vh;border:1px solid var(--line);border-radius:8px}
+.ttsub{font-weight:800;margin:14px 0 6px;font-size:13.5px}
+.ttadd{border:1px dashed var(--line);background:transparent;color:var(--navy);border-radius:7px;padding:5px 12px;cursor:pointer;font:inherit;font-size:12.5px;margin-top:6px}
+.ttmerge{font-size:11.5px;color:var(--sub,#6b6b6b);display:flex;gap:4px;align-items:center;white-space:nowrap}
 .cfgfld label{display:block;font-size:.78em;color:var(--ink2);font-weight:700;margin-bottom:3px}
 .cfgfld input{width:100%;padding:8px 10px;border:1.5px solid var(--line);border-radius:9px;font-size:.98em;font-family:inherit;text-align:right}
 .cfgfld input:focus{outline:none;border-color:var(--navy)}
@@ -1496,28 +1592,10 @@ mark{background:#ffe082;border-radius:2px}
       <h3>부록 1 — 수련 시간표</h3>
       <article class="jo" id="joB1">
         <div class="jo-body">
-          <p class="note">2026년 1월 19일부터 적용 · 표를 옆으로 밀어서 보실 수 있습니다.</p>
-          <div class="tblwrap"><table class="t">
-            <tr><th>시간</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th></tr>
-            <tr><td class="hd">12:00~2:00</td><td colspan="5">1:1 개인레슨 수시 접수</td></tr>
-            <tr><td class="hd">2:00~2:50</td><td>1:1 개인레슨</td><td>초등주니어(초1)</td><td>1:1 개인레슨</td><td>초등주니어(초1)</td><td>초등주니어(초1)</td></tr>
-            <tr><td class="hd">3:00~3:50</td><td>초등주니어<br>초등시니어</td><td>초등주니어<br>초등시니어</td><td>킨더(5·6세)</td><td>초등주니어<br>초등시니어</td><td>킨더</td></tr>
-            <tr><td class="hd">4:00~4:50</td><td>킨더</td><td>킨더<br>초등주니어</td><td>킨더</td><td>킨더<br>초등주니어</td><td>킨더<br>초등주니어</td></tr>
-            <tr><td class="hd">5:00~5:50</td><td>초등주니어<br>초등시니어</td><td>초등주니어<br>초등시니어</td><td>초등주니어<br>초등시니어</td><td>초등주니어<br>초등시니어</td><td>초등주니어<br>초등시니어</td></tr>
-            <tr><td class="hd">6:00~6:50</td><td>중급·상급반<br><small>(마지막주 승급심사)</small></td><td>청소년·성인</td><td>중급·상급반</td><td>청소년·성인</td><td>Sparring Class<br><small>(겨루기 중급과정)</small></td></tr>
-            <tr><td class="hd">7:00~7:50</td><td>나라차시범단(초등)</td><td>나라차시범단(초등)</td><td>나라차시범단(초등)</td><td>나라차시범단(초등)</td><td>Sparring Class<br><small>(겨루기 상급과정)</small></td></tr>
-            <tr><td class="hd">8:00~8:50</td><td>청소년·성인</td><td>청소년</td><td>청소년·성인</td><td>청소년</td><td>청소년</td></tr>
-            <tr><td class="hd">9:00~9:50</td><td>청소년·성인</td><td>청소년</td><td>청소년·성인<br><small>청소년시범단 기술연습<br>(21:00~21:30)</small></td><td>청소년</td><td>청소년</td></tr>
-          </table></div>
+          <p class="note" id="ttNote">2026년 1월 19일부터 적용 · 표를 옆으로 밀어서 보실 수 있습니다.</p>
+          <div class="tblwrap" id="ttWeek"></div>
           <p><b>토요일</b></p>
-          <div class="tblwrap"><table class="t">
-            <tr><th>시간</th><th>수업</th></tr>
-            <tr><td class="hd">9:00~9:50</td><td>1:1 개인레슨</td></tr>
-            <tr><td class="hd">10:00~10:50</td><td>초등부 전체</td></tr>
-            <tr><td class="hd">11:00~11:50</td><td>중급·상급반</td></tr>
-            <tr><td class="hd">12:00~13:30</td><td>나라차시범단 Special Training (월 2회)</td></tr>
-            <tr><td class="hd">13:40~15:10</td><td>익스트림 태권도 Class</td></tr>
-          </table></div>
+          <div class="tblwrap" id="ttSat"></div>
           <div class="callout blue">
             <b>연령 구분</b> — 킨더: 미취학 아동 5세~7세 · 초등주니어: 초등학교 1,2,3학년 · 초등시니어: 초등학교 4,5,6학년 · 청소년: 중·고등학교 1,2,3학년 · 성인: 만 19세 이상
           </div>
@@ -1810,8 +1888,28 @@ mark{background:#ffe082;border-radius:2px}
     <div class="cfgfoot">
       <button class="cfgbtn ghost" id="cfgReset">처음 값으로</button>
       <button class="cfgbtn ghost" id="cfgCopy">배포용 값 복사</button>
+      <button class="cfgbtn ghost" id="cfgTt">📅 시간표 수정</button>
       <button class="cfgbtn ghost" id="cfgPw">비밀번호 변경</button>
       <button class="cfgbtn go" id="cfgSave">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="cfgwrap" id="ttWrap">
+  <div class="cfgbox ttbox">
+    <div class="cfghead">
+      <b>부록 1 — 수련 시간표 수정</b>
+      <button class="cfgx" id="ttClose" aria-label="닫기">✕</button>
+    </div>
+    <div class="cfgnote">
+      칸마다 <b>위 칸은 큰 글씨</b>, <b>아래 칸은 작은 글씨</b>입니다. 작은 글씨는 비워 두셔도 됩니다.<br>
+      큰 글씨 안에서 <b>줄을 바꾸면</b> 표에서도 줄이 바뀝니다. 비워 둔 칸은 빈칸으로 나옵니다.
+    </div>
+    <div class="cfgbody" id="ttBody"></div>
+    <div class="cfgfoot">
+      <button class="cfgbtn ghost" id="ttReset">처음 값으로</button>
+      <button class="cfgbtn ghost" id="ttCopy">배포용 시간표 복사</button>
+      <button class="cfgbtn go" id="ttSaveBtn">저장</button>
     </div>
   </div>
 </div>
@@ -1837,6 +1935,7 @@ mark{background:#ffe082;border-radius:2px}
   document.querySelectorAll('img[data-wear]').forEach(function(img){
     img.src = WEAR_SRC[img.getAttribute('data-wear')] || '';
   });
+  ttRender();                                   /* 부록1 시간표 */
   document.getElementById('revLabel').textContent = '개정일 ' + REVISED_DATE;
   document.getElementById('verLabel').textContent = '문서버전 ' + RULES_VER;
   document.querySelectorAll('.revTxt').forEach(function(el){ el.textContent = REVISED_DATE; });
@@ -2171,6 +2270,132 @@ mark{background:#ffe082;border-radius:2px}
         close();
       });
     };
+
+  /* ══════════ 부록 1 시간표 편집 ══════════ */
+  var ttDraft = null;
+
+  function ttClone(o){ return JSON.parse(JSON.stringify(o)); }
+
+  function ttBuild(){
+    var d = ttDraft, days = d.days;
+    var h = '<div class="cfgrow"><div class="cfgfld" style="grid-column:1/-1">' +
+            '<label>적용 기준일 안내</label><input id="tt_note" type="text" value="' + ttEsc(d.note) + '"></div></div>';
+
+    h += '<div class="ttsub">평일 (월~금)</div><div class="ttscroll"><table class="tted"><tr><th>시간</th>' +
+         days.map(function(x){ return '<th>' + ttEsc(x) + '</th>'; }).join('') + '<th></th></tr>';
+    d.week.forEach(function(r, ri){
+      var merged = (r.all != null);
+      h += '<tr><td class="tm"><input data-k="wt" data-i="' + ri + '" value="' + ttEsc(r.t) + '">' +
+           '<label class="ttmerge" style="margin-top:4px"><input type="checkbox" data-k="wm" data-i="' + ri + '"' +
+           (merged ? ' checked' : '') + ' style="width:auto">한 줄로 합치기</label></td>';
+      if(merged){
+        h += '<td colspan="' + days.length + '"><textarea data-k="wall" data-i="' + ri + '">' + ttEsc(r.all) + '</textarea></td>';
+      } else {
+        for(var i=0;i<days.length;i++){
+          var c = (r.c && r.c[i]) || ['',''];
+          h += '<td><textarea data-k="wc" data-i="' + ri + '" data-j="' + i + '">' + ttEsc(c[0]) + '</textarea>' +
+               '<span class="sm"><input data-k="ws" data-i="' + ri + '" data-j="' + i + '" placeholder="작은 글씨" value="' + ttEsc(c[1]) + '"></span></td>';
+        }
+      }
+      h += '<td class="op"><button class="ttdel" data-k="wdel" data-i="' + ri + '" title="이 줄 지우기">✕</button></td></tr>';
+    });
+    h += '</table></div><button class="ttadd" id="ttAddW">+ 평일 시간 한 줄 더하기</button>';
+
+    h += '<div class="ttsub">토요일</div><div class="ttscroll"><table class="tted"><tr><th>시간</th><th>수업</th><th></th></tr>';
+    d.sat.forEach(function(r, ri){
+      h += '<tr><td class="tm"><input data-k="st" data-i="' + ri + '" value="' + ttEsc(r.t) + '"></td>' +
+           '<td><textarea data-k="sl" data-i="' + ri + '">' + ttEsc(r.l) + '</textarea>' +
+           '<span class="sm"><input data-k="ss" data-i="' + ri + '" placeholder="작은 글씨" value="' + ttEsc(r.s) + '"></span></td>' +
+           '<td class="op"><button class="ttdel" data-k="sdel" data-i="' + ri + '" title="이 줄 지우기">✕</button></td></tr>';
+    });
+    h += '</table></div><button class="ttadd" id="ttAddS">+ 토요일 시간 한 줄 더하기</button>';
+
+    document.getElementById('ttBody').innerHTML = h;
+    ttWire();
+  }
+
+  function ttWire(){
+    var box = document.getElementById('ttBody');
+    box.querySelectorAll('[data-k]').forEach(function(el){
+      var k = el.getAttribute('data-k'), i = +el.getAttribute('data-i'), j = +el.getAttribute('data-j');
+      if(k === 'wdel' || k === 'sdel'){
+        el.onclick = function(){
+          var arr = (k === 'wdel') ? ttDraft.week : ttDraft.sat;
+          if(arr.length <= 1){ alert('마지막 한 줄은 지울 수 없습니다.'); return; }
+          arr.splice(i,1); ttBuild();
+        };
+        return;
+      }
+      if(k === 'wm'){
+        el.onchange = function(){
+          var r = ttDraft.week[i];
+          if(el.checked){
+            r.all = (r.c && r.c[0] && r.c[0][0]) || '';
+            delete r.c;
+          } else {
+            r.c = []; for(var q=0;q<ttDraft.days.length;q++) r.c.push([q===0 ? (r.all||'') : '', '']);
+            delete r.all;
+          }
+          ttBuild();
+        };
+        return;
+      }
+      el.oninput = function(){
+        var v = el.value;
+        if(k === 'wt')        ttDraft.week[i].t = v;
+        else if(k === 'wall') ttDraft.week[i].all = v;
+        else if(k === 'wc'){  ttDraft.week[i].c[j] = ttDraft.week[i].c[j] || ['','']; ttDraft.week[i].c[j][0] = v; }
+        else if(k === 'ws'){  ttDraft.week[i].c[j] = ttDraft.week[i].c[j] || ['','']; ttDraft.week[i].c[j][1] = v; }
+        else if(k === 'st')   ttDraft.sat[i].t = v;
+        else if(k === 'sl')   ttDraft.sat[i].l = v;
+        else if(k === 'ss')   ttDraft.sat[i].s = v;
+      };
+    });
+    document.getElementById('ttAddW').onclick = function(){
+      var c = []; for(var q=0;q<ttDraft.days.length;q++) c.push(['','']);
+      ttDraft.week.push({t:'', c:c}); ttBuild();
+    };
+    document.getElementById('ttAddS').onclick = function(){
+      ttDraft.sat.push({t:'', l:'', s:''}); ttBuild();
+    };
+  }
+
+  (function(){
+    var w = document.getElementById('ttWrap');
+    function ttOpen(){ ttDraft = ttClone(TT); ttBuild(); w.classList.add('on'); document.body.style.overflow='hidden'; }
+    function ttCloseP(){ w.classList.remove('on'); document.body.style.overflow=''; }
+    document.getElementById('cfgTt').onclick = ttOpen;
+    document.getElementById('ttClose').onclick = ttCloseP;
+    w.onclick = function(e){ if(e.target === w) ttCloseP(); };
+
+    document.getElementById('ttSaveBtn').onclick = function(){
+      var nt = document.getElementById('tt_note');
+      if(nt) ttDraft.note = nt.value;
+      TT = ttClone(ttDraft);
+      try{ localStorage.setItem(TT_KEY, JSON.stringify(TT)); }catch(e){}
+      ttRender();
+      alert('시간표를 저장했습니다.\n· 이 문서(이 기기)에 바로 반영되었습니다.\n\n학부모님 폰까지 반영하려면 [배포용 시간표 복사]를 눌러\n받은 내용을 개발 담당에게 전달해 주세요.');
+      ttCloseP();
+    };
+    document.getElementById('ttReset').onclick = function(){
+      if(!confirm('시간표를 문서에 실린 처음 값으로 되돌릴까요?')) return;
+      try{ localStorage.removeItem(TT_KEY); }catch(e){}
+      TT = ttClone(TT_DEFAULT); ttDraft = ttClone(TT_DEFAULT);
+      ttBuild(); ttRender();
+    };
+    document.getElementById('ttCopy').onclick = function(){
+      var nt = document.getElementById('tt_note');
+      if(nt) ttDraft.note = nt.value;
+      var txt = 'var TT_DEFAULT = ' + JSON.stringify(ttDraft, null, 2) + ';';
+      var ta = document.createElement('textarea');
+      ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta);
+      alert(ok ? '배포용 시간표를 복사했습니다.\n개발 담당에게 붙여넣어 전달해 주세요.' : '복사하지 못했습니다.');
+    };
+  })();
+
     document.getElementById('cfgSheetToggle').onclick = function(){
       var body = document.getElementById('cfgSheetBody');
       var open = body.hidden;
