@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="doc-ver" content="v20261013.0001">
+<meta name="doc-ver" content="v20261013.0002">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차태권도 운영규정</title>
 <meta name="description" content="나라차태권도 분당도장 운영규정 — 제1장 총칙부터 부칙·부록까지 전문 수록 (반응형 웹 문서)">
@@ -141,6 +141,11 @@
      · '직계가족 동반 등록 시' 묶음을 '가족 할인' 초록 묶음으로, 8회 등록을 기본으로 강조
      · ④항 문구를 제11조 ⑤항과 같은 표현으로 통일
    v20260917.0004 — 제4조 ②항에 캐릭터 이름 '라차' 명기
+   v20261013.0002 — 직계가족 할인을 심화·프리패스까지 확대 + 표 구조 개편
+     · CFG 4개 신설 fam2w3/fam3w3/fam2fp/fam3fp (회당 2,500·5,000원 할인 기준)
+     · 제11조·제12조 본표에서 가족 열 2개를 빼 7칸 → 5칸으로 줄이고,
+       가족 할인은 '등록 종류 × 인원' 세로형 전용 표로 분리(폰 가독성)
+     · 제12조 ⑥ 신설 — 연간 가족 등록 = 가족 할인 월 수련비 × 개월 × 연간 할인율
    v20261013.0001 — 프리패스는 횟수·보강 규칙에서 제외
      · 제10조 ⑦ 3호 신설 — 본항은 기준 횟수가 정해진 등록(월 4·8·12회)에만 적용
      · 제11조 ③ 보완 — 보강이 없는 이유(기준 횟수 없음)와 1회당 단가가 낮아지는 구조를 명시
@@ -179,7 +184,7 @@
    맨 위에 둔 이유: 새 버전이 나왔는지 확인할 때 파일 앞부분만 조금 받아 보기 위함. */
 var RULES_VER = (function(){
   try{ return document.querySelector('meta[name="doc-ver"]').content; }
-  catch(e){ return "v20261013.0001"; }
+  catch(e){ return "v20261013.0002"; }
 })();
 /* 문서 날짜는 RULES_VER 의 날짜 부분에서 자동으로 뽑는다.
    → 규정을 고치고 RULES_VER 만 올리면 표지의 개정일과 부칙의 시행일이 함께 바뀐다.
@@ -204,6 +209,7 @@ var PREV_REVISED = "2026.10.12";  // 종전 규정 개정일(이력 보존용)
 var CFG_DEFAULT = {
   /* 월 수련비 */
   w1:100000, w2:180000, w3:240000, fp:300000, fam2:160000, fam3:140000,
+  fam2w3:210000, fam3w3:180000, fam2fp:270000, fam3fp:240000,   /* 가족 할인 — 심화·프리패스 */
   /* 일 수련비 */
   d1:25000, d2:22500, d3:20000, dfam2:20000, dfam3:17500,
   /* 연회원 할인율(%) */
@@ -491,6 +497,21 @@ table.t th.famhd{background:#1f7d70 !important;color:#fff}
 table.t td.fam{background:#eef7f5 !important}
 table.t .famL{border-left:3px solid #1f7d70}
 table.t th.famhd small{display:block;font-weight:500;font-size:11px;color:#c7e6e0;margin-top:2px}
+/* 가족 할인 전용 표 — 칸이 4개뿐이라 폰에서도 가로 스크롤 없이 들어가게 한다 */
+table.t.famtbl{width:100%;min-width:0;table-layout:fixed}
+table.t.famtbl th{white-space:normal;padding:7px 5px;line-height:1.35}
+table.t.famtbl td{padding:8px 5px;white-space:normal;word-break:keep-all}
+table.t.famtbl td.hd{text-align:left}
+table.t.famtbl td.hd small{display:block;font-weight:500;font-size:11px;color:#6f6a60;margin-top:1px}
+table.t.famtbl th small{display:block;font-weight:500;font-size:10.5px;opacity:.85;margin-top:1px}
+@media (max-width:560px){
+  table.t.famtbl{font-size:12.5px}
+  table.t.famtbl th{font-size:12px;padding:6px 3px}
+  table.t.famtbl td{padding:7px 3px}
+  table.t.famtbl td.hd{font-size:12.5px}
+  table.t.famtbl td.hd small{font-size:10px}
+}
+p.ttsubh{margin:18px 0 7px;font-size:14.5px}
 table.t th small{display:block;font-weight:500;font-size:11px;opacity:.85;margin-top:2px}
 .callout.green{background:#eef7f5;border-left-color:#1f7d70}
 table.t td.lft{white-space:normal;text-align:left}
@@ -927,13 +948,20 @@ mark{background:#ffe082;border-radius:2px}
         <div class="jo-body">
           <p class="note">2025년 9월 기준 / 단위: 원 — 나라차태권도의 기본 월 수련 횟수는 8회입니다.</p>
           <div class="tblwrap"><table class="t">
-            <tr><th rowspan="2">구분</th><th colspan="4">개인 등록</th><th colspan="2" class="famhd famL">가족 할인<small>기본 수련(월 8회) 이상만</small></th></tr>
-            <tr><th>약식수련</th><th class="colhi">기본 수련</th><th>심화 수련</th><th>프리패스</th><th class="famhd famL">직계 2인</th><th class="famhd">직계 3인↑</th></tr>
-            <tr><td class="hd">월 수련일</td><td>4회</td><td class="colhi">8회</td><td>12회</td><td>월 무제한</td><td class="fam famL">8회 이상</td><td class="fam">8회 이상</td></tr>
-            <tr><td class="hd">일 수련비</td><td data-cfg="c.d1">25,000</td><td class="colhi" data-cfg="c.d2">22,500</td><td data-cfg="c.d3">20,000</td><td>-</td><td class="fam famL" data-cfg="c.dfam2">20,000</td><td class="fam" data-cfg="c.dfam3">17,500</td></tr>
-            <tr><td class="hd">한달 수련비</td><td data-cfg="c.w1">100,000</td><td class="colhi" data-cfg="c.w2">180,000</td><td data-cfg="c.w3">240,000</td><td data-cfg="c.fp">300,000</td><td class="fam famL" data-cfg="c.fam2">160,000</td><td class="fam" data-cfg="c.fam3">140,000</td></tr>
-            <tr><td class="hd">두달 수련비</td><td class="em" data-cfg="c.w1*2">200,000</td><td class="em colhi" data-cfg="c.w2*2">360,000</td><td class="em" data-cfg="c.w3*2">480,000</td><td class="em" data-cfg="c.fp*2">600,000</td><td class="em fam famL" data-cfg="c.fam2*2">320,000</td><td class="em fam" data-cfg="c.fam3*2">280,000</td></tr>
+            <tr><th>구분</th><th>약식수련</th><th class="colhi">기본 수련</th><th>심화 수련</th><th>프리패스</th></tr>
+            <tr><td class="hd">월 수련일</td><td>4회</td><td class="colhi">8회</td><td>12회</td><td>월 무제한</td></tr>
+            <tr><td class="hd">일 수련비</td><td data-cfg="c.d1">25,000</td><td class="colhi" data-cfg="c.d2">22,500</td><td data-cfg="c.d3">20,000</td><td>-</td></tr>
+            <tr><td class="hd">한달 수련비</td><td data-cfg="c.w1">100,000</td><td class="colhi" data-cfg="c.w2">180,000</td><td data-cfg="c.w3">240,000</td><td data-cfg="c.fp">300,000</td></tr>
+            <tr><td class="hd">두달 수련비</td><td class="em" data-cfg="c.w1*2">200,000</td><td class="em colhi" data-cfg="c.w2*2">360,000</td><td class="em" data-cfg="c.w3*2">480,000</td><td class="em" data-cfg="c.fp*2">600,000</td></tr>
           </table></div>
+          <p class="ttsubh"><b>직계가족 할인 — 등록 종류별 월 수련비</b></p>
+          <div class="tblwrap"><table class="t famtbl">
+            <tr><th>등록 종류</th><th>1인<small>정가</small></th><th class="famhd famL">직계<small>2인</small></th><th class="famhd">직계<small>3인↑</small></th></tr>
+            <tr><td class="hd">기본수련 <small>월 8회</small></td><td data-cfg="c.w2">180,000</td><td class="fam famL em" data-cfg="c.fam2">160,000</td><td class="fam em" data-cfg="c.fam3">140,000</td></tr>
+            <tr><td class="hd">심화수련 <small>월 12회</small></td><td data-cfg="c.w3">240,000</td><td class="fam famL em" data-cfg="c.fam2w3">210,000</td><td class="fam em" data-cfg="c.fam3w3">180,000</td></tr>
+            <tr><td class="hd">프리패스 <small>월 무제한</small></td><td data-cfg="c.fp">300,000</td><td class="fam famL em" data-cfg="c.fam2fp">270,000</td><td class="fam em" data-cfg="c.fam3fp">240,000</td></tr>
+          </table></div>
+          <p class="note">※ 1회당 수련비에서 <b>직계 2인은 2,500원</b>, <b>3인째부터는 5,000원</b>을 덜어 낸 금액입니다. 프리패스는 횟수가 정해져 있지 않아 심화수련과 같은 금액을 덜어 냅니다. 약식수련(월 4회)에는 적용되지 않습니다.</p>
           <div class="dg">
             <div class="dg-t">가족 할인, 이렇게 적용됩니다</div>
             <div class="flow">
@@ -941,8 +969,7 @@ mark{background:#ffe082;border-radius:2px}
               <div class="ar">›</div>
               <div class="step"><span class="k">범위</span><div class="h">직계가족</div><div class="d">주민등록등본 또는 건강보험증에<br>함께 명기된 경우(제10조 ⑤)</div></div>
               <div class="ar">›</div>
-              <div class="step good"><span class="k">적용</span><div class="h">2인 등록 → 1명<br>3인 등록 → 2명</div><div class="d">1인당 <span data-cfg="c.fam2" data-suffix="원">160,000원</span> ·
-                3인째부터 <span data-cfg="c.fam3" data-suffix="원">140,000원</span></div></div>
+              <div class="step good"><span class="k">적용</span><div class="h">2인 등록 → 1명<br>3인 등록 → 2명</div><div class="d">금액은 등록 종류마다 다릅니다<br>(위 표 참고)</div></div>
             </div>
             <p class="dg-n">표에서 <b style="color:#1f7d70">초록으로 묶인 두 칸</b>이 가족 할인입니다. 성인 수련생의 가족 할인도 같은 기준입니다(제13조 ④).</p>
           </div>
@@ -963,27 +990,37 @@ mark{background:#ffe082;border-radius:2px}
           <p class="note">2025년 9월 기준 / 단위: 원</p>
           <p><b>① 12개월 등록 — 10% 할인</b></p>
           <div class="tblwrap"><table class="t">
-            <tr><th rowspan="2">구분</th><th colspan="4">개인 등록</th><th colspan="2" class="famhd famL">가족 할인<small>기본 수련(월 8회) 이상만</small></th></tr>
-            <tr><th>주1회<br><small>월4회</small></th><th class="colhi">주2회<br><small>월8회</small></th><th>주3회<br><small>월12회</small></th><th>프리패스</th><th class="famhd famL">직계2인</th><th class="famhd">직계3인↑</th></tr>
-            <tr><td class="hd">월수련비</td><td data-cfg="c.w1">-</td><td class="colhi" data-cfg="c.w2">-</td><td data-cfg="c.w3">-</td><td data-cfg="c.fp">-</td><td class="fam famL" data-cfg="c.fam2">-</td><td class="fam" data-cfg="c.fam3">-</td></tr>
-            <tr><td class="hd">12개월</td><td data-cfg="c.w1*12">-</td><td class="colhi" data-cfg="c.w2*12">-</td><td data-cfg="c.w3*12">-</td><td data-cfg="c.fp*12">-</td><td class="fam famL" data-cfg="c.fam2*12">-</td><td class="fam" data-cfg="c.fam3*12">-</td></tr>
-            <tr><td class="hd">할인(<span data-cfg="c.disc12" data-suffix="%">10%</span>)</td><td data-cfg="-(c.w1*12*c.disc12/100)">-</td><td class="colhi" data-cfg="-(c.w2*12*c.disc12/100)">-</td><td data-cfg="-(c.w3*12*c.disc12/100)">-</td><td data-cfg="-(c.fp*12*c.disc12/100)">-</td><td class="fam famL" data-cfg="-(c.fam2*12*c.disc12/100)">-</td><td class="fam" data-cfg="-(c.fam3*12*c.disc12/100)">-</td></tr>
-            <tr><td class="hd">납부금액</td><td class="em" data-cfg="c.w1*12*(100-c.disc12)/100">-</td><td class="em colhi" data-cfg="c.w2*12*(100-c.disc12)/100">-</td><td class="em" data-cfg="c.w3*12*(100-c.disc12)/100">-</td><td class="em" data-cfg="c.fp*12*(100-c.disc12)/100">-</td><td class="em fam famL" data-cfg="c.fam2*12*(100-c.disc12)/100">-</td><td class="em fam" data-cfg="c.fam3*12*(100-c.disc12)/100">-</td></tr>
+            <tr><th>구분</th><th>주1회<br><small>월4회</small></th><th class="colhi">주2회<br><small>월8회</small></th><th>주3회<br><small>월12회</small></th><th>프리패스</th></tr>
+            <tr><td class="hd">월수련비</td><td data-cfg="c.w1">-</td><td class="colhi" data-cfg="c.w2">-</td><td data-cfg="c.w3">-</td><td data-cfg="c.fp">-</td></tr>
+            <tr><td class="hd">12개월</td><td data-cfg="c.w1*12">-</td><td class="colhi" data-cfg="c.w2*12">-</td><td data-cfg="c.w3*12">-</td><td data-cfg="c.fp*12">-</td></tr>
+            <tr><td class="hd">할인(<span data-cfg="c.disc12" data-suffix="%">10%</span>)</td><td data-cfg="-(c.w1*12*c.disc12/100)">-</td><td class="colhi" data-cfg="-(c.w2*12*c.disc12/100)">-</td><td data-cfg="-(c.w3*12*c.disc12/100)">-</td><td data-cfg="-(c.fp*12*c.disc12/100)">-</td></tr>
+            <tr><td class="hd">납부금액</td><td class="em" data-cfg="c.w1*12*(100-c.disc12)/100">-</td><td class="em colhi" data-cfg="c.w2*12*(100-c.disc12)/100">-</td><td class="em" data-cfg="c.w3*12*(100-c.disc12)/100">-</td><td class="em" data-cfg="c.fp*12*(100-c.disc12)/100">-</td></tr>
           </table></div>
           <p><b>② 6개월 등록 — 5% 할인</b></p>
           <div class="tblwrap"><table class="t">
-            <tr><th rowspan="2">구분</th><th colspan="4">개인 등록</th><th colspan="2" class="famhd famL">가족 할인<small>기본 수련(월 8회) 이상만</small></th></tr>
-            <tr><th>주1회<br><small>월4회</small></th><th class="colhi">주2회<br><small>월8회</small></th><th>주3회<br><small>월12회</small></th><th>프리패스</th><th class="famhd famL">직계2인</th><th class="famhd">직계3인↑</th></tr>
-            <tr><td class="hd">월수련비</td><td data-cfg="c.w1">-</td><td class="colhi" data-cfg="c.w2">-</td><td data-cfg="c.w3">-</td><td data-cfg="c.fp">-</td><td class="fam famL" data-cfg="c.fam2">-</td><td class="fam" data-cfg="c.fam3">-</td></tr>
-            <tr><td class="hd">6개월</td><td data-cfg="c.w1*6">-</td><td class="colhi" data-cfg="c.w2*6">-</td><td data-cfg="c.w3*6">-</td><td data-cfg="c.fp*6">-</td><td class="fam famL" data-cfg="c.fam2*6">-</td><td class="fam" data-cfg="c.fam3*6">-</td></tr>
-            <tr><td class="hd">할인(<span data-cfg="c.disc6" data-suffix="%">5%</span>)</td><td data-cfg="-(c.w1*6*c.disc6/100)">-</td><td class="colhi" data-cfg="-(c.w2*6*c.disc6/100)">-</td><td data-cfg="-(c.w3*6*c.disc6/100)">-</td><td data-cfg="-(c.fp*6*c.disc6/100)">-</td><td class="fam famL" data-cfg="-(c.fam2*6*c.disc6/100)">-</td><td class="fam" data-cfg="-(c.fam3*6*c.disc6/100)">-</td></tr>
-            <tr><td class="hd">납부금액</td><td class="em" data-cfg="c.w1*6*(100-c.disc6)/100">-</td><td class="em colhi" data-cfg="c.w2*6*(100-c.disc6)/100">-</td><td class="em" data-cfg="c.w3*6*(100-c.disc6)/100">-</td><td class="em" data-cfg="c.fp*6*(100-c.disc6)/100">-</td><td class="em fam famL" data-cfg="c.fam2*6*(100-c.disc6)/100">-</td><td class="em fam" data-cfg="c.fam3*6*(100-c.disc6)/100">-</td></tr>
+            <tr><th>구분</th><th>주1회<br><small>월4회</small></th><th class="colhi">주2회<br><small>월8회</small></th><th>주3회<br><small>월12회</small></th><th>프리패스</th></tr>
+            <tr><td class="hd">월수련비</td><td data-cfg="c.w1">-</td><td class="colhi" data-cfg="c.w2">-</td><td data-cfg="c.w3">-</td><td data-cfg="c.fp">-</td></tr>
+            <tr><td class="hd">6개월</td><td data-cfg="c.w1*6">-</td><td class="colhi" data-cfg="c.w2*6">-</td><td data-cfg="c.w3*6">-</td><td data-cfg="c.fp*6">-</td></tr>
+            <tr><td class="hd">할인(<span data-cfg="c.disc6" data-suffix="%">5%</span>)</td><td data-cfg="-(c.w1*6*c.disc6/100)">-</td><td class="colhi" data-cfg="-(c.w2*6*c.disc6/100)">-</td><td data-cfg="-(c.w3*6*c.disc6/100)">-</td><td data-cfg="-(c.fp*6*c.disc6/100)">-</td></tr>
+            <tr><td class="hd">납부금액</td><td class="em" data-cfg="c.w1*6*(100-c.disc6)/100">-</td><td class="em colhi" data-cfg="c.w2*6*(100-c.disc6)/100">-</td><td class="em" data-cfg="c.w3*6*(100-c.disc6)/100">-</td><td class="em" data-cfg="c.fp*6*(100-c.disc6)/100">-</td></tr>
           </table></div>
+          <p class="ttsubh"><b>직계가족이 연간 등록하실 때 — 납부금액</b></p>
+          <div class="tblwrap"><table class="t famtbl">
+            <tr><th>등록 종류</th><th class="famhd famL">인원</th><th>6개월 <small>5% 할인</small></th><th>12개월 <small>10% 할인</small></th></tr>
+            <tr><td class="hd" rowspan="2">기본수련 <small>월 8회</small></td><td class="fam famL">직계 2인</td><td class="em" data-cfg="c.fam2*6*(100-c.disc6)/100">912,000</td><td class="em" data-cfg="c.fam2*12*(100-c.disc12)/100">1,728,000</td></tr>
+            <tr><td class="fam famL">직계 3인↑</td><td class="em" data-cfg="c.fam3*6*(100-c.disc6)/100">798,000</td><td class="em" data-cfg="c.fam3*12*(100-c.disc12)/100">1,512,000</td></tr>
+            <tr><td class="hd" rowspan="2">심화수련 <small>월 12회</small></td><td class="fam famL">직계 2인</td><td class="em" data-cfg="c.fam2w3*6*(100-c.disc6)/100">1,197,000</td><td class="em" data-cfg="c.fam2w3*12*(100-c.disc12)/100">2,268,000</td></tr>
+            <tr><td class="fam famL">직계 3인↑</td><td class="em" data-cfg="c.fam3w3*6*(100-c.disc6)/100">1,026,000</td><td class="em" data-cfg="c.fam3w3*12*(100-c.disc12)/100">1,944,000</td></tr>
+            <tr><td class="hd" rowspan="2">프리패스 <small>월 무제한</small></td><td class="fam famL">직계 2인</td><td class="em" data-cfg="c.fam2fp*6*(100-c.disc6)/100">1,539,000</td><td class="em" data-cfg="c.fam2fp*12*(100-c.disc12)/100">2,916,000</td></tr>
+            <tr><td class="fam famL">직계 3인↑</td><td class="em" data-cfg="c.fam3fp*6*(100-c.disc6)/100">1,368,000</td><td class="em" data-cfg="c.fam3fp*12*(100-c.disc12)/100">2,592,000</td></tr>
+          </table></div>
+          <p class="note">※ <b>가족 할인을 적용한 월 수련비</b>(제11조)에 연간 할인율을 곱한 금액입니다. 두 할인은 함께 적용됩니다.</p>
           <div class="callout green"><b>직계가족 할인은 기본 수련(월 8회) 이상</b>으로 등록하시는 경우에만 적용됩니다. 주1회(월 4회) 등록에는 적용되지 않습니다(제11조 ⑤). 표에서 <b>초록으로 묶인 두 칸</b>이 가족 할인입니다.</div>
           <ol class="hang">
             <li><span class="hno">③</span>연간회원의 중도 해지와 환불은 <b>제17조</b>에 따르며, 위약금은 <b>실제 납부하신 금액의 10%</b>입니다.</li>
             <li><span class="hno">④</span>경과 기간에 해당하는 금액은 실제 납부하신 금액을 <b>계약 개월 수로 나눈 월평균액</b>을 기준으로 일할 계산합니다.</li>
-            <li><span class="hno">⑤</span>연간회원으로 등록하시는 경우에도 <b>직계가족 할인은 기본 수련(월 8회) 이상</b>일 때에만 적용됩니다(제10조 ⑤, 제11조 ⑤). 연간 할인과 직계가족 할인은 <b>함께 적용</b>되며, 위 표의 직계2인·직계3인 금액이 두 할인을 모두 반영한 금액입니다.</li>
+            <li><span class="hno">⑤</span>연간회원으로 등록하시는 경우에도 <b>직계가족 할인은 기본 수련(월 8회) 이상</b>일 때에만 적용됩니다(제10조 ⑤, 제11조 ⑤). 연간 할인과 직계가족 할인은 <b>함께 적용</b>됩니다.</li>
+            <li><span class="hno">⑥</span>직계가족이 연간 등록하시는 경우의 납부금액은 <b>가족 할인을 적용한 월 수련비</b>(제11조의 등록 종류별 가족 할인표)에 <b>연간 할인율</b>(6개월 5% · 12개월 10%)을 곱하여 산정합니다. 심화수련과 프리패스도 같은 방법으로 계산합니다.</li>
           </ol>
           <div class="callout blue"><b>계산 예시</b> — 6개월 기본 수련으로 <span data-cfg="c.w2*6*(100-c.disc6)/100" data-suffix="원">1,026,000원</span>을 납부하신 경우, 경과분은 월 <span data-cfg="c.w2*(100-c.disc6)/100" data-suffix="원">171,000원</span>을 기준으로 일할 계산합니다. 정가(<span data-cfg="c.w2" data-suffix="원">180,000원</span>)가 아니라 <b>실제로 내신 금액</b>이 기준입니다.</div>
         </div>
@@ -2211,6 +2248,7 @@ mark{background:#ffe082;border-radius:2px}
   var CFG_GROUPS = [
     ['월 수련비  ⟷ 메인 프로그램과 함께 바뀝니다', [['w1','약식수련(월4회)'],['w2','기본수련(월8회)'],['w3','심화수련(월12회)'],
                   ['fp','프리패스'],['fam2','직계 2인'],['fam3','직계 3인 이상']], 'sync'],
+    ['가족 할인 — 심화·프리패스 (월)', [['fam2w3','심화 직계 2인'],['fam3w3','심화 직계 3인 이상'],['fam2fp','프리패스 직계 2인'],['fam3fp','프리패스 직계 3인 이상']]],
     ['일 수련비', [['d1','약식수련'],['d2','기본수련'],['d3','심화수련'],['dfam2','직계 2인'],['dfam3','직계 3인 이상']]],
     ['연회원 할인율(%)', [['disc12','12개월'],['disc6','6개월']]],
     ['등록 시 필수비용', [['entry','입회비'],['dobok','도복비']]],
