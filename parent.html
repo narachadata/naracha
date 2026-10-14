@@ -17,6 +17,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="나라차 학부모">
+<meta name="theme-color" content="#0B1D3A">
+<link rel="apple-touch-icon" sizes="180x180" href="parent-icon.png">
 <style>
 :root{ --navy:#0B1D3A; --blue:#2B5FB8; --gold:#C9A24B; --red:#D0332A; --green:#1E7B3C;
   --ink:#1A2233; --sub:#6B7480; --line:#E5E8EF; --bg:#F4F6FA; }
@@ -41,9 +43,9 @@ input.code{ width:100%; border:1.5px solid var(--line); border-radius:12px; padd
 <body>
 <div id="app"></div>
 <script>
-var APP_VER="p1.1";
+var APP_VER="p1.2";   /* p1.2: 학부모 전용 키(parent 읽기·popen만) · iOS 홈 아이콘 · 발행 시점 안내 */
 var GSHEET_URL="https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
-var KEY="NARACHA-1CW40KHJ";
+var KEY="NARACHA-P-LS25WAT2";   /* 학부모 전용 키 — 서버 v7에서 parent(읽기)·popen(오픈 기록)만 허용 */
 var LS="naracha_parent_v1";
 
 /* ══ PWA manifest 주입 (앱 고유번호 naracha-parent, scope는 이 파일 하나) ══ */
@@ -332,7 +334,10 @@ function vHome(){
     '<div class="card">'+attCal(k.att)+'</div>'+
     '<div class="sec">🏅 승급 이력</div>'+
     '<div class="card">'+tl+'</div>'+
-    '<div class="msg" style="color:var(--sub);text-align:center;margin:14px 0 6px">'+(f.pubD?esc(f.pubD)+' 기준 · ':'')+'매일 자동 갱신 · 문의는 도장으로 ☎</div>'+
+    (function(){ var ago=null; try{ if(f.pubT) ago=Math.floor((Date.now()-f.pubT)/86400000); }catch(e){}
+      var txt=(f.pubD?esc(f.pubD)+' 기준':'')+(ago!=null?(ago<=0?' · 오늘 갱신':' · '+ago+'일 전 갱신'):'');
+      var warn=(ago!=null&&ago>=3);
+      return '<div class="msg" style="color:'+(warn?'#B45309':'var(--sub)')+';text-align:center;margin:14px 0 6px">'+txt+(warn?'<br>최근 기록이 아직 반영되지 않았을 수 있어요. 도장에 문의해 주세요 ☎':' · 매일 자동 갱신 · 문의는 도장으로 ☎')+'</div>'; })()+
     '<div style="text-align:center"><button onclick="doLogout()" style="background:none;border:none;color:#B8BFC9;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline">로그아웃</button>'+
     '<span style="font-size:10.5px;color:#C9CFDA;margin-left:8px">'+APP_VER+'</span></div>'+
     '</div>';
