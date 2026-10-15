@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFF6E8">
 <title>나라차 학부모</title>
 <meta name="robots" content="noindex">
 <meta property="og:type" content="website">
@@ -10,425 +11,518 @@
 <meta property="og:title" content="나라차 학부모 앱">
 <meta property="og:description" content="우리 아이 출석·수련·승급 기록을 언제든 확인하세요">
 <meta property="og:url" content="https://narachadata.github.io/naracha/parent.html">
-<meta property="og:image" content="https://narachadata.github.io/naracha/parent-og.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="https://narachadata.github.io/naracha/parent-icon.png">
+<meta name="twitter:card" content="summary">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="나라차 학부모">
-<meta name="theme-color" content="#0B1D3A">
 <link rel="apple-touch-icon" sizes="180x180" href="parent-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{ --navy:#0B1D3A; --blue:#2B5FB8; --gold:#C9A24B; --red:#D0332A; --green:#1E7B3C;
-  --ink:#1A2233; --sub:#6B7480; --line:#E5E8EF; --bg:#F4F6FA; }
-*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html,body{ margin:0; padding:0; background:var(--bg); color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",sans-serif; }
-body{ padding-bottom:34px; }
-.wrap{ max-width:520px; margin:0 auto; padding:0 14px; }
-.hd{ background:linear-gradient(135deg,#0B1D3A,#16325C); color:#fff; padding:calc(env(safe-area-inset-top,0px) + 16px) 0 14px; }
-.card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin:10px 0; box-shadow:0 1px 4px rgba(15,23,42,.05); }
-.btn{ display:block; width:100%; border:none; border-radius:12px; padding:14px; font-size:15.5px; font-weight:800; cursor:pointer; font-family:inherit; }
-.btn.p{ background:var(--navy); color:#fff; }
-.btn.g{ background:#fff; color:var(--navy); border:1.5px solid var(--line); }
-.chipT{ display:inline-flex; align-items:center; gap:6px; border-radius:12px; padding:8px 14px; font-size:14px; font-weight:800; border:1.5px solid var(--line); background:#fff; cursor:pointer; }
-.chipT.on{ background:var(--navy); color:#fff; border-color:var(--navy); }
-input.code{ width:100%; border:1.5px solid var(--line); border-radius:12px; padding:13px; font-size:17px; font-weight:800; letter-spacing:2px; text-align:center; font-family:monospace; text-transform:uppercase; }
-.sec{ font-size:12px; font-weight:900; color:var(--sub); letter-spacing:.4px; margin:16px 2px 6px; }
-.dot{ width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:#fff; }
-.msg{ font-size:13px; line-height:1.65; }
+/* ══ 나라차태권도 학부모앱 p2.0 — 디자인 B안 "친근 성장형" (토큰은 :root만 고치면 전체가 바뀜) ══ */
+:root{
+  --bg-1:#FFF6E8; --bg-2:#FDF3F6; --bg-3:#F1F7FF; --card:#FFFFFF;
+  --ink:#3C3350; --ink-2:#7A6E86; --ink-3:#A79BB4;
+  --point:#FF9F43; --point-soft:#FFF1C9;
+  --ok:#2E9E4F; --warn:#C8342A; --kakao:#FAE100; --info:#2B5FB8;
+  --b9:#F2F4F8; --b8:#F7D308; --b7:#F08A24; --b6:#2E9E4F; --b5:#2B5FB8; --b4:#7A4CA8; --b3:#6B4226; --b2:#C8342A; --b1:#111111; --bp:#111111;
+  --r-lg:24px; --r-md:20px; --r-sm:14px;
+  --sh:0 6px 20px rgba(150,110,70,.13); --sh-sm:0 4px 14px rgba(150,110,70,.10);
+  --line:#F0E6DA;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:linear-gradient(180deg,var(--bg-1) 0%,var(--bg-2) 42%,var(--bg-3) 100%);background-attachment:fixed;color:var(--ink);
+  font-family:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;font-size:14px;line-height:1.6;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;min-height:100svh}
+h1,h2,h3,h4,.jua{font-family:"Jua",sans-serif;font-weight:400;letter-spacing:0}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+img{max-width:100%}
+#app{max-width:430px;margin:0 auto;position:relative;min-height:100svh;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+header{position:sticky;top:0;z-index:30;padding-top:env(safe-area-inset-top,0px);background:linear-gradient(180deg,rgba(255,246,232,.97),rgba(255,246,232,.82));backdrop-filter:saturate(1.3) blur(8px)}
+.hbar{display:flex;align-items:center;gap:9px;padding:13px 16px 9px}
+.hbar b{font-family:"Jua",sans-serif;font-size:16px}
+.hbar .sub{font-size:10.5px;color:var(--ink-2)}
+.hbtn{margin-left:auto;height:32px;border-radius:99px;background:#fff;box-shadow:var(--sh-sm);display:inline-flex;align-items:center;gap:5px;padding:0 12px;font-size:12px;font-weight:600;color:var(--ink-2)}
+.kids{display:flex;gap:7px;padding:0 16px 8px;overflow-x:auto}
+.kids button{flex:0 0 auto;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:600;background:#fff;box-shadow:var(--sh-sm);color:var(--ink-2)}
+.kids button.on{background:var(--point);color:#fff}
+main{padding:4px 16px 108px;display:none}
+main.on{display:block}
+.card{background:var(--card);border-radius:var(--r-lg);padding:16px;box-shadow:var(--sh);margin-bottom:13px}
+.card.sm{border-radius:var(--r-md);padding:14px;box-shadow:var(--sh-sm)}
+.sec{display:flex;align-items:baseline;gap:7px;margin:18px 4px 9px}
+.sec h2{margin:0;font-size:16px}
+.sec span{font-size:11px;color:var(--ink-3)}
+.tiny{font-size:11px;color:var(--ink-2)}
+.cta{display:block;width:100%;background:var(--point);color:#fff;border-radius:18px;padding:13px;font-family:"Jua",sans-serif;font-size:15px;box-shadow:0 6px 16px rgba(255,159,67,.36)}
+.cta.ghost{background:#fff;color:var(--point);box-shadow:var(--sh-sm)}
+.cta.kakao{background:var(--kakao);color:#3C1E1E;box-shadow:0 5px 14px rgba(180,150,0,.26)}
+.cta.navy{background:var(--ink);color:#fff;box-shadow:var(--sh-sm)}
+/* 로그인 */
+.login{padding:28px 20px 40px;max-width:430px;margin:0 auto}
+.login .logo{width:66px;height:66px;border-radius:20px;margin:18px auto 10px;display:grid;place-items:center;font-family:"Jua",sans-serif;font-size:30px;color:#fff;background:linear-gradient(150deg,#FF9F43,#FFC93C);box-shadow:0 6px 16px rgba(255,159,67,.36)}
+.login h1{text-align:center;margin:0;font-size:22px}
+.login .msg{font-size:13px;line-height:1.65;color:var(--ink-2)}
+input.code{width:100%;border:1.5px solid var(--line);border-radius:14px;padding:13px;font-size:17px;font-weight:700;letter-spacing:2px;text-align:center;font-family:"IBM Plex Sans KR",monospace;text-transform:uppercase;background:#fff}
+.errt{font-size:13px;color:var(--warn);line-height:1.6;margin:8px 0}
+/* 히어로 */
+.hero{position:relative;overflow:hidden;text-align:center}
+.hero::before{content:"";position:absolute;top:-44px;right:-34px;width:118px;height:118px;border-radius:50%;background:var(--point-soft)}
+.hero > *{position:relative;z-index:1}
+.av{width:78px;height:78px;border-radius:50%;margin:0 auto;display:grid;place-items:center;font-size:34px;background:linear-gradient(150deg,#FFE9A8,#FFD166);box-shadow:0 4px 14px rgba(255,180,60,.3);overflow:hidden;font-family:"Jua",sans-serif;color:#7A5A10}
+.hero h1{margin:10px 0 0;font-size:22px}
+.beads{display:flex;justify-content:center;gap:5px;margin-top:9px;flex-wrap:wrap}
+.beads i{width:13px;height:13px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.beads i.now{transform:scale(1.35);box-shadow:0 0 0 3px var(--point-soft)}
+.hero .lb{font-size:12px;color:var(--ink-2);margin-top:10px}
+.hero .lb b{color:var(--ink)}
+/* 수련 현황 박스 */
+.pbox{border:1.5px solid var(--point)}
+.pbox .big{font-family:"Jua",sans-serif;font-size:28px;line-height:1}
+.prow{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px dashed var(--line);font-size:13px}
+.prow b.m{width:34px;font-family:"Jua",sans-serif;font-size:14px}
+.tag{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.tag.ok{background:#E4F6EA;color:#19692F}.tag.go{background:#E7F0FF;color:#1F4FA8}.tag.no{background:#FFE7E4;color:#A42C23}.tag.gray{background:#F0EDF5;color:#6B6180}
+.bar{height:10px;background:#F4EEF7;border-radius:99px;overflow:hidden;margin:8px 0 6px}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--point),#FFC93C)}
+.note{background:#F4FAF5;border-radius:var(--r-sm);padding:9px 12px;font-size:12px;color:var(--ink-2);margin-top:8px;line-height:1.6}
+.note b{color:var(--ink)}
+/* D-day */
+.ring{display:flex;align-items:center;gap:14px}
+.ring svg{flex:0 0 auto}
+.ring h3{margin:0;font-size:17px}
+.ring p{margin:3px 0 0;font-size:11.5px;color:var(--ink-2)}
+.pill{display:inline-block;margin-top:7px;background:var(--point-soft);color:#8A6416;border-radius:99px;padding:3px 10px;font-size:11px;font-weight:600}
+/* 오늘 2칸 */
+.st{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px}
+.st > div{background:#fff;border-radius:var(--r-md);padding:13px;box-shadow:var(--sh-sm);text-align:center}
+.st .em{font-size:22px;line-height:1.2}
+.st b{display:block;font-family:"Jua",sans-serif;font-size:14px;margin-top:3px}
+.st small{font-size:10.5px;color:var(--ink-2)}
+/* 목록 */
+.listbox{background:#fff;border-radius:var(--r-md);padding:4px 15px;box-shadow:var(--sh-sm);margin-bottom:13px}
+.item{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px dashed var(--line)}
+.item:last-child{border-bottom:0}
+.item .ic{width:30px;height:30px;border-radius:50%;background:#EAF3FF;display:grid;place-items:center;font-size:15px;flex:0 0 auto}
+.item b{display:block;font-size:13px;font-weight:600}
+.item p{margin:2px 0 0;font-size:11.5px;color:var(--ink-2)}
+.item .dt{font-size:10px;color:var(--ink-3);margin-top:3px}
+.paybar{display:flex;align-items:center;gap:11px;background:#FFF0E2;border-radius:var(--r-md);padding:13px 14px;box-shadow:var(--sh-sm);margin-bottom:13px;color:#8A4F12}
+.paybar .ic{width:30px;height:30px;border-radius:50%;background:var(--point);color:#fff;display:grid;place-items:center;font-size:14px;flex:0 0 auto}
+.paybar b{display:block;font-size:13px}
+.paybar small{font-size:10.5px;opacity:.9}
+/* 성장 */
+.road{display:flex;align-items:flex-end;gap:5px;justify-content:space-between}
+.road > div{text-align:center;flex:1;min-width:0}
+.road i{display:block;border-radius:8px 8px 4px 4px;margin:0 auto 5px;width:72%;border:1.5px solid rgba(0,0,0,.1)}
+.road small{font-size:9.5px;color:var(--ink-2);line-height:1.25;display:block}
+.road .me small{color:var(--ink);font-weight:600}
+.certwrap{perspective:1200px;margin-bottom:13px}
+.cert{position:relative;width:100%;min-height:270px;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.2,.7,.3,1)}
+.cert.flip{transform:rotateY(180deg)}
+@media (prefers-reduced-motion:reduce){.cert{transition:none}}
+.cface{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh)}
+.cf{background:linear-gradient(150deg,#FFE9A8,#FFD166);color:#5A4209;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.cf .em{font-size:40px}
+.cf b{display:block;font-family:"Jua",sans-serif;font-size:21px;margin-top:6px}
+.cf small{font-size:11.5px;display:block;margin-top:2px}
+.cf .no{font-size:10.5px;opacity:.75;margin-top:9px}
+.cf .hint{font-size:10.5px;opacity:.7;margin-top:12px}
+.cb{background:#fff;transform:rotateY(180deg);overflow:auto}
+.cb h4{margin:0 0 2px;font-size:16px}
+.bars{display:grid;gap:8px;margin-top:11px}
+.bars .r{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-2);margin-bottom:3px}
+.bars .t{height:8px;border-radius:99px;background:#F4EEF7;overflow:hidden}
+.bars .t i{display:block;height:100%;border-radius:99px}
+.mbox{display:flex;gap:6px;flex-wrap:wrap}
+.mbox > div{flex:1;min-width:58px;background:#F7F4FA;border-radius:12px;padding:8px 4px;text-align:center}
+.mbox b{display:block;font-family:"Jua",sans-serif;font-size:16px}
+.mbox small{font-size:10px;color:var(--ink-2)}
+.quote{background:#F4FAF5;border-radius:var(--r-md);padding:13px 15px;font-size:12.5px;color:var(--ink-2);box-shadow:var(--sh-sm);margin-bottom:13px}
+.quote b{color:var(--ink)}
+.qa{padding:8px 0;border-top:1px dashed var(--line);font-size:12.5px}
+.qa:first-child{border-top:0}
+.qa .q{color:#0F766E;font-weight:600;font-size:11.5px}
+.qa .a{color:var(--ink);margin-top:2px;white-space:pre-wrap}
+/* 소식 */
+.ev{display:flex;gap:12px}
+.evd{width:54px;flex:0 0 auto;text-align:center;border-radius:16px;background:var(--point-soft);color:#8A6416;padding:8px 0}
+.evd small{display:block;font-size:10.5px;font-weight:600}
+.evd b{display:block;font-family:"Jua",sans-serif;font-size:20px;line-height:1.1}
+.ev h4{margin:0;font-size:15px}
+.ev p{margin:3px 0 0;font-size:11.5px;color:var(--ink-2)}
+.calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.calhead b{font-family:"Jua",sans-serif;font-size:16px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.cal .wd{font-size:10px;color:var(--ink-3);padding-bottom:3px;font-weight:600}
+.cal .d{aspect-ratio:1;border-radius:11px;display:grid;place-items:center;font-size:12px;color:var(--ink-2)}
+.cal .d.att{background:#E4F6EA;color:#19692F;font-weight:600}
+.cal .d.mk{background:#E7F0FF;color:#1F4FA8;font-weight:600}
+.cal .d.ab{background:#FFE7E4;color:#A42C23;font-weight:600}
+.cal .d.today{outline:2px solid var(--point);outline-offset:-2px;color:var(--point);font-weight:700}
+.callg{display:flex;gap:12px;margin-top:11px;font-size:10.5px;color:var(--ink-3);flex-wrap:wrap}
+.callg i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+/* 내정보 */
+.kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.kv:last-child{border-bottom:0}
+.kv span{color:var(--ink-2);flex:0 0 auto}
+.kv b{font-weight:600;text-align:right}
+.badge{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:99px;margin-left:5px}
+.bg-ok{background:#E4F6EA;color:#19692F}.bg-no{background:#FFE7E4;color:#A42C23}.bg-wait{background:#F0EDF5;color:#6B6180}
+.sw{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px dashed var(--line)}
+.sw:last-child{border-bottom:0}
+.sw b{display:block;font-size:13.5px;font-weight:600}
+.sw small{font-size:10.5px;color:var(--ink-3)}
+.tog{margin-left:auto;width:46px;height:27px;border-radius:99px;background:#E8E2EE;position:relative;transition:background .18s;flex:0 0 auto}
+.tog::after{content:"";position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s}
+.tog[aria-pressed="true"]{background:var(--ok)}
+.tog[aria-pressed="true"]::after{transform:translateX(19px)}
+.guard{font-size:11.5px;color:var(--ink-2);background:#fff;border-radius:var(--r-md);padding:13px 15px;box-shadow:var(--sh-sm);line-height:1.65}
+.guard b{color:var(--ink)}
+.ver{text-align:center;font-size:10.5px;color:var(--ink-3);margin-top:14px}
+.linkbtn{background:none;border:none;color:var(--ink-3);font-size:11.5px;text-decoration:underline}
+/* 설치 안내 */
+.inst{background:#FFFBEF;border:1.5px solid #F0D9A8;border-radius:var(--r-md);padding:12px 14px;margin-bottom:13px;font-size:12.5px;line-height:1.65}
+.inst b{display:block;font-size:13.5px;margin-bottom:3px}
+/* 탭바 */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:40;max-width:430px;margin:0 auto;padding:0 14px calc(12px + env(safe-area-inset-bottom,0px));pointer-events:none}
+nav .inner{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-radius:22px;box-shadow:0 8px 22px rgba(120,90,60,.2);padding:7px 0 8px;pointer-events:auto}
+nav button{text-align:center;font-size:9.5px;color:var(--ink-3);font-weight:600;padding:0}
+nav button .gi{display:block;font-size:18px;line-height:1.25}
+nav button[aria-current="true"]{color:var(--point)}
+.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#3C3350;color:#fff;font-size:12.5px;padding:10px 16px;border-radius:99px;box-shadow:0 8px 20px rgba(60,51,80,.3);z-index:60;max-width:330px;text-align:center}
+.toast[hidden]{display:none}
+.confirmbox{background:#FFF0E2;border-radius:var(--r-md);padding:12px 14px;margin:10px 0;font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.confirmbox button{border-radius:12px;padding:7px 12px;font-weight:700;background:#fff;box-shadow:var(--sh-sm)}
+.confirmbox button.yes{background:var(--warn);color:#fff}
 </style>
 </head>
 <body>
-<div id="app"></div>
+<div id="root"></div>
+<div class="toast" id="toast" hidden></div>
 <script>
-var APP_VER="p1.4";   /* p1.4: 상단 등록 기간 수련 현황 박스(기준·실제·달성/미달·이월 보강·보강 예약) + 수련 정보·결석 예정·측정 기록 · */ var _OLD_VER="p1.3";   /* p1.3: "코드는 맞는데 데이터 없음"(NODATA) 안내 분리 · p1.2: 학부모 전용 키(parent 읽기·popen만) · iOS 홈 아이콘 · 발행 시점 안내 */
+/* ══ 1. 버전·상수 ══ */
+var APP_VER="p2.0";   /* p2.0: 디자인 B안(친근 성장형)·하단 4탭(홈·성장·소식·내정보) · 발행 데이터 v3 · 가족 코드 로그인/암호화/설치 안내/오픈 기록은 p1.x 그대로 */
+var PARENT_VER=APP_VER;
 var GSHEET_URL="https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
-var KEY="NARACHA-P-LS25WAT2";   /* 학부모 전용 키 — 서버 v7에서 parent(읽기)·popen(오픈 기록)만 허용 */
+var KEY="NARACHA-P-LS25WAT2";   /* 학부모 전용 키 — 서버 v7+에서 parent(읽기)·popen(오픈 기록)만 허용 */
 var LS="naracha_parent_v1";
+var EXAM_NEED=24;
 
-/* ══ PWA manifest 주입 (앱 고유번호 naracha-parent, scope는 이 파일 하나) ══ */
+/* ══ PWA manifest — id는 다른 앱과 안 겹치게, scope는 이 파일 하나로 좁게(R4.55 교훈) ══ */
 (function(){
   try{
     var base=location.origin+location.pathname;
-    var icon=function(sz){
-      var c=document.createElement('canvas'); c.width=c.height=sz;
-      var x=c.getContext('2d');
-      var g=x.createLinearGradient(0,0,sz,sz); g.addColorStop(0,'#0B1D3A'); g.addColorStop(1,'#2B5FB8');
-      x.fillStyle=g; x.beginPath();
-      if(x.roundRect) x.roundRect(0,0,sz,sz,sz*0.22); else x.rect(0,0,sz,sz);
-      x.fill();
-      x.fillStyle='#C9A24B'; x.font='900 '+(sz*0.46)+'px sans-serif'; x.textAlign='center'; x.textBaseline='middle';
-      x.fillText('나',sz/2,sz*0.40);
-      x.fillStyle='#fff'; x.font='800 '+(sz*0.16)+'px sans-serif';
-      x.fillText('학부모',sz/2,sz*0.74);
-      return c.toDataURL('image/png');
-    };
-    var man={ id:'naracha-parent', name:'나라차 학부모', short_name:'나라차 학부모',
-      start_url:base, scope:base, display:'standalone',
-      background_color:'#0B1D3A', theme_color:'#0B1D3A',
+    var icon=function(sz){ var c=document.createElement('canvas'); c.width=c.height=sz; var x=c.getContext('2d');
+      var g=x.createLinearGradient(0,0,sz,sz); g.addColorStop(0,'#FF9F43'); g.addColorStop(1,'#FFC93C'); x.fillStyle=g; x.beginPath();
+      if(x.roundRect) x.roundRect(0,0,sz,sz,sz*0.22); else x.rect(0,0,sz,sz); x.fill();
+      x.fillStyle='#fff'; x.font='900 '+(sz*0.46)+'px sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('나',sz/2,sz*0.40);
+      x.font='800 '+(sz*0.16)+'px sans-serif'; x.fillText('학부모',sz/2,sz*0.74); return c.toDataURL('image/png'); };
+    var man={ id:'naracha-parent', name:'나라차 학부모', short_name:'나라차 학부모', start_url:base, scope:base, display:'standalone', background_color:'#FFF6E8', theme_color:'#FFF6E8',
       icons:[{src:icon(192),sizes:'192x192',type:'image/png'},{src:icon(512),sizes:'512x512',type:'image/png'}] };
-    var l=document.createElement('link'); l.rel='manifest';
-    l.href='data:application/manifest+json;charset=utf-8,'+encodeURIComponent(JSON.stringify(man));
-    document.head.appendChild(l);
+    var l=document.createElement('link'); l.rel='manifest'; l.href='data:application/manifest+json;charset=utf-8,'+encodeURIComponent(JSON.stringify(man)); document.head.appendChild(l);
   }catch(e){}
 })();
 
-/* ══ 환경 감지 ══ */
+/* ══ 2. 환경·저장·코드·암호(p1.x 그대로) ══ */
 function isStandalone(){ try{ return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; } }
 function isInApp(){ var u=navigator.userAgent||''; return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(u); }
 function isIOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent||''); }
 var deferredPrompt=null;
 window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferredPrompt=e; render(); });
-
-/* ══ 저장 ══ */
 function saved(){ try{ return JSON.parse(localStorage.getItem(LS)||'null'); }catch(e){ return null; } }
 function saveLS(o){ try{ localStorage.setItem(LS, JSON.stringify(o)); }catch(e){} }
-
-/* ══ 코드 (링크 # 뒤 — 서버로 전송되지 않음) ══ */
 function codeFromUrl(){
-  try{
-    var v=String(location.hash||'').replace(/^#/,'');
-    if(!v){ var m=String(location.search||'').match(/[?&]code=([^&]+)/i); v=m?decodeURIComponent(m[1]):''; }
-    v=v.toUpperCase().replace(/[^A-Z0-9]/g,'');
-    return v.length>=6?v:'';
-  }catch(e){ return ''; }
+  try{ var v=String(location.hash||'').replace(/^#/,''); if(!v){ var m=String(location.search||'').match(/[?&]code=([^&]+)/i); v=m?decodeURIComponent(m[1]):''; }
+    v=v.toUpperCase().replace(/[^A-Z0-9]/g,''); return v.length>=6?v:''; }catch(e){ return ''; }
 }
-var __linkCode=codeFromUrl();   /* 주소의 코드를 먼저 붙잡은 뒤 지운다 (화면·공유에 코드가 안 남게) */
+var __linkCode=codeFromUrl();
 try{ if(location.hash) history.replaceState(null,'',location.pathname+location.search); }catch(e){}
-
-/* ══ 암호화 규격 (관리 앱과 동일) ══ */
 function enc(){ return new TextEncoder(); }
-async function pKey(code){
-  var base=await crypto.subtle.importKey('raw', enc().encode(String(code)), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey({name:'PBKDF2', salt:enc().encode('naracha-parent-v1'), iterations:60000, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['decrypt']);
-}
-async function pHash(code){
-  var d=await crypto.subtle.digest('SHA-256', enc().encode('nrc|'+String(code)));
-  return Array.prototype.map.call(new Uint8Array(d), function(b){ return ('0'+b.toString(16)).slice(-2); }).join('').slice(0,24);
-}
+async function pKey(code){ var base=await crypto.subtle.importKey('raw', enc().encode(String(code)), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt:enc().encode('naracha-parent-v1'), iterations:60000, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['decrypt']); }
+async function pHash(code){ var d=await crypto.subtle.digest('SHA-256', enc().encode('nrc|'+String(code))); return Array.prototype.map.call(new Uint8Array(d), function(b){ return ('0'+b.toString(16)).slice(-2); }).join('').slice(0,24); }
 function abFromB64(b){ var s=atob(b), u=new Uint8Array(s.length); for(var i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; }
 
-/* ══ 상태 ══ */
-var ST={ view:'boot', code:'', fam:null, kid:0, err:'', pend:null, needBy:false };
-
-/* ══ 데이터 조회 ══ */
+/* ══ 3. 상태·데이터(fail-closed) ══ */
+var ST={ view:'boot', code:'', fam:null, kid:0, tab:'home', err:'', pend:null, codeInput:'', ask:'' };
 function fetchStore(){
   return fetch(GSHEET_URL+'?key='+encodeURIComponent(KEY)+'&store=parent&t='+Date.now())
     .then(function(r){ if(!r.ok) throw new Error('HTTP'); return r.json(); })
-    .then(function(rows){
-      if(!Array.isArray(rows)) throw new Error('BAD');
-      var txt='';
+    .then(function(rows){ if(!Array.isArray(rows)) throw new Error('BAD'); var txt='';
       for(var i=0;i<rows.length;i++){ if(rows[i][0]==='JSON'){ for(var j=i+1;j<rows.length;j++) txt+=(rows[j][0]!=null?String(rows[j][0]):''); break; } }
-      if(!txt) throw new Error('EMPTY');
-      var d=JSON.parse(txt);
-      if(!d || !d.parentV || !d.fams) throw new Error('SCHEMA');
-      return d;
-    });
+      if(!txt) throw new Error('EMPTY'); var d=JSON.parse(txt); if(!d || !d.parentV || !d.fams) throw new Error('SCHEMA'); return d; });
 }
 async function loadFam(code){
-  var d=await fetchStore();
-  var h=await pHash(code);
-  var blob=d.fams[h];
-  if(!blob) throw new Error((d.codes&&d.codes[h])?'NODATA':'NOCODE');   /* p1.3: 코드는 발급돼 있는데 가족 데이터만 없음 → 따로 안내 */
-  var key=await pKey(code);
-  var pt=await crypto.subtle.decrypt({name:'AES-GCM', iv:abFromB64(blob.iv)}, key, abFromB64(blob.ct));
-  var fam=JSON.parse(new TextDecoder().decode(pt));
-  fam.pubT=blob.t||0;
-  return fam;
+  var d=await fetchStore(); var h=await pHash(code); var blob=d.fams[h];
+  if(!blob) throw new Error((d.codes&&d.codes[h])?'NODATA':'NOCODE');
+  var key=await pKey(code); var pt=await crypto.subtle.decrypt({name:'AES-GCM', iv:abFromB64(blob.iv)}, key, abFromB64(blob.ct));
+  var fam=JSON.parse(new TextDecoder().decode(pt)); if(!fam || !fam.kids) throw new Error('SCHEMA'); fam.pubT=blob.t||0; return fam;
 }
-
-/* ══ 로그인 흐름 ══ */
 async function tryLogin(code, isNewDevice){
   ST.err=''; ST.view='loading'; render();
-  try{
-    var fam=await loadFam(code);
-    if(isNewDevice){ ST.pend={code:code, fam:fam}; ST.needBy=true; ST.view='verify'; render(); return; }
-    ST.code=code; ST.fam=fam; ST.kid=0; ST.view='home';
-    saveLS({code:code, ok:1});
-    render(); reportOpen();
-  }catch(e){
-    var m=String(e&&e.message||e);
+  try{ var fam=await loadFam(code);
+    if(isNewDevice){ ST.pend={code:code, fam:fam}; ST.view='verify'; render(); return; }
+    ST.code=code; ST.fam=fam; ST.kid=Math.min(ST.kid||0, (fam.kids||[]).length-1); ST.view='home'; saveLS({code:code, ok:1}); render(); reportOpen();
+  }catch(e){ var m=String(e&&e.message||e);
     ST.err = m==='NODATA' ? '코드는 확인됐지만 아이 정보가 아직 연결되지 않았습니다.<br>도장에 말씀해 주시면 바로 연결해 드립니다 ☎'
       : m==='NOCODE' ? '등록되지 않았거나 폐기된 코드입니다.<br>도장에서 받은 <b>최신 링크</b>로 다시 열어 주세요.'
       : m==='EMPTY'||m==='SCHEMA' ? '아직 데이터가 준비되지 않았습니다.<br>도장에 문의해 주세요.'
       : '연결이 원활하지 않습니다. 잠시 후 다시 시도해 주세요.';
-    ST.view='login'; ST.codeInput=code; render();
-  }
+    ST.view='login'; ST.codeInput=code; render(); }
 }
 window.verifyBy=function(){
-  var v=(document.getElementById('byIn')||{}).value||'';
-  var d=String(v).replace(/\D/g,'');
+  var v=(document.getElementById('byIn')||{}).value||''; var d=String(v).replace(/\D/g,'');
   if(d.length===6) d=(Number(d.slice(0,2))>=30?'19':'20')+d;
   if(d.length!==8){ ST.err='생년월일 8자리(예: 20190228)를 입력해 주세요.'; render(); return; }
   var norm=d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);
   var hit=(ST.pend.fam.kids||[]).some(function(k){ return String(k.by||'').slice(0,10)===norm; });
   if(!hit){ ST.err='자녀 생년월일과 일치하지 않습니다.<br>다시 확인해 주세요.'; render(); return; }
-  ST.code=ST.pend.code; ST.fam=ST.pend.fam; ST.pend=null; ST.needBy=false; ST.kid=0; ST.view='home';
-  saveLS({code:ST.code, ok:1});
-  render(); reportOpen();
+  ST.code=ST.pend.code; ST.fam=ST.pend.fam; ST.pend=null; ST.kid=0; ST.view='home'; saveLS({code:ST.code, ok:1}); render(); reportOpen();
 };
-window.doLoginInput=function(){
-  var v=((document.getElementById('codeIn')||{}).value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
-  if(v.length<6){ ST.err='도장에서 받은 코드를 입력해 주세요.'; render(); return; }
-  tryLogin(v, true);
-};
-window.doLogout=function(){ if(!confirm('로그아웃할까요?\n다시 보려면 도장에서 받은 링크가 필요합니다.')) return; try{ localStorage.removeItem(LS); }catch(e){} location.reload(); };
-window.doRefresh=function(){ if(ST.code) tryLogin(ST.code, false); };
+window.doLoginInput=function(){ var v=((document.getElementById('codeIn')||{}).value||'').toUpperCase().replace(/[^A-Z0-9]/g,''); if(v.length<6){ ST.err='도장에서 받은 코드를 입력해 주세요.'; render(); return; } tryLogin(v, true); };
+window.askLogout=function(){ ST.ask='logout'; render(); };
+window.cancelAsk=function(){ ST.ask=''; render(); };
+window.doLogout=function(){ try{ localStorage.removeItem(LS); }catch(e){} location.reload(); };
+window.doRefresh=function(){ if(ST.code){ say('최신 정보를 불러옵니다…'); tryLogin(ST.code, false); } };
 window.pickKid=function(i){ ST.kid=i; render(); };
+window.goTab=function(t){ ST.tab=t; render(); window.scrollTo(0,0); };
 window.doInstall=function(){ if(deferredPrompt){ deferredPrompt.prompt(); } };
-window.openChrome=function(){
-  var u='intent://'+location.host+location.pathname+(ST.code?('#'+ST.code):'')+'#Intent;scheme=https;package=com.android.chrome;end';
-  location.href=u;
-};
+window.openChrome=function(){ location.href='intent://'+location.host+location.pathname+(ST.code?('#'+ST.code):'')+'#Intent;scheme=https;package=com.android.chrome;end'; };
 
-/* ══ 오픈 기록 (도장에서 전달 현황 확인용 — 하루 1회, 개인정보 없음: 코드 해시만) ══ */
+/* ══ 오픈 기록(기기당 하루 1회, 코드 해시만) ══ */
 function reportOpen(){
-  try{
-    var k='naracha_parent_open', tdy=new Date().toDateString();
-    if(localStorage.getItem(k)===tdy || !ST.code) return;
+  try{ var k='naracha_parent_open', tdy=new Date().toDateString(); if(localStorage.getItem(k)===tdy || !ST.code) return;
     pHash(ST.code).then(function(h){
-      return fetch(GSHEET_URL+'?key='+encodeURIComponent(KEY)+'&store=popen&v=2&t='+Date.now())
-        .then(function(r){ return r.json(); })
-        .then(function(d){
-          var rev=(d&&typeof d.rev==='number')?d.rev:null;
-          var payload={popenV:1, opens:{}};
-          try{
-            var rows=d&&d.rows, txt='';
-            if(Array.isArray(rows)){ for(var i=0;i<rows.length;i++){ if(rows[i][0]==='JSON'){ for(var j=i+1;j<rows.length;j++) txt+=(rows[j][0]!=null?String(rows[j][0]):''); break; } } }
-            if(txt){ var old=JSON.parse(txt); if(old&&old.opens) payload.opens=old.opens; }
-          }catch(e){}
-          var ds=new Date(), today=ds.getFullYear()+'-'+('0'+(ds.getMonth()+1)).slice(-2)+'-'+('0'+ds.getDate()).slice(-2);
-          var e2=payload.opens[h]||{}; if(!e2.f) e2.f=today; e2.l=today; e2.n=(e2.n||0)+1; payload.opens[h]=e2;
-          var s2=JSON.stringify(payload), rows2=[["JSON"]];
-          for(var i2=0;i2<s2.length;i2+=45000) rows2.push([s2.slice(i2,i2+45000)]);
-          var body={key:KEY, store:'popen', rows:rows2}; if(rev!=null) body.baseRev=rev;
-          return fetch(GSHEET_URL,{method:'POST', body:JSON.stringify(body)}).then(function(r){ return r.text(); });
-        })
-        .then(function(t){ if(/^OK/.test(String(t))) localStorage.setItem(k,tdy); })
-        .catch(function(){});
+      return fetch(GSHEET_URL+'?key='+encodeURIComponent(KEY)+'&store=popen&v=2&t='+Date.now()).then(function(r){ return r.json(); }).then(function(d){
+        var rev=(d&&typeof d.rev==='number')?d.rev:null; var payload={popenV:1, opens:{}};
+        try{ var rows=d&&d.rows, txt=''; if(Array.isArray(rows)){ for(var i=0;i<rows.length;i++){ if(rows[i][0]==='JSON'){ for(var j=i+1;j<rows.length;j++) txt+=(rows[j][0]!=null?String(rows[j][0]):''); break; } } } if(txt){ var old=JSON.parse(txt); if(old&&old.opens) payload.opens=old.opens; } }catch(e){}
+        var ds=new Date(), today=ds.getFullYear()+'-'+('0'+(ds.getMonth()+1)).slice(-2)+'-'+('0'+ds.getDate()).slice(-2);
+        var e2=payload.opens[h]||{}; if(!e2.f) e2.f=today; e2.l=today; e2.n=(e2.n||0)+1; payload.opens[h]=e2;
+        var s2=JSON.stringify(payload), rows2=[["JSON"]]; for(var i2=0;i2<s2.length;i2+=45000) rows2.push([s2.slice(i2,i2+45000)]);
+        var body={key:KEY, store:'popen', rows:rows2}; if(rev!=null) body.baseRev=rev;
+        return fetch(GSHEET_URL,{method:'POST', body:JSON.stringify(body)}).then(function(r){ return r.text(); });
+      }).then(function(t){ if(/^OK/.test(String(t))) localStorage.setItem(k,tdy); }).catch(function(){});
     }).catch(function(){});
   }catch(e){}
 }
-/* ══ 화면 ══ */
-function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function beltColor(g){
-  g=String(g||'');
-  if(/품|단/.test(g)) return ['#111','#fff','검정'];
-  var m=g.match(/(\d+)급/); var n=m?Number(m[1]):0;
-  if(n>=9) return ['#FFFFFF','#333','흰'];
-  if(n===8) return ['#F6C344','#4a3200','노란'];
-  if(n===7) return ['#F0A030','#4a2a00','주황'];
-  if(n===6) return ['#3FA34D','#fff','초록'];
-  if(n===5) return ['#7C3AED','#fff','보라'];
-  if(n===4) return ['#2B5FB8','#fff','파란'];
-  if(n===3) return ['#8B4513','#fff','밤'];
-  if(n===2) return ['#D0332A','#fff','빨간'];
-  if(n===1) return ['#D0332A','#fff','빨간'];
-  return ['#94A3B8','#fff',''];
+
+/* ══ 4. 도구 ══ */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function won(n){ return Number(n||0).toLocaleString('ko-KR')+'원'; }
+function md(ds){ var m=String(ds||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m?(Number(m[2])+'월 '+Number(m[3])+'일'):(ds||''); }
+function dot(ds){ var m=String(ds||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m?(m[1]+'. '+m[2]+'. '+m[3]):(ds||''); }
+function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+function dayDiff(a,b){ return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000); }
+var toastTimer=null;
+function say(msg){ var t=document.getElementById('toast'); if(!t) return; t.textContent=msg; t.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(function(){ t.hidden=true; }, 2300); }
+/* 띠 체계(도장 급수체계 문서 기준) — 유급 9~1급 · 유품/유단은 검정 계열 */
+var BELT={ 9:{name:'흰띠',color:'var(--b9)',virtue:'예의'}, 8:{name:'노란띠',color:'var(--b8)',virtue:'예의'}, 7:{name:'주황띠',color:'var(--b7)',virtue:'정직'}, 6:{name:'초록띠',color:'var(--b6)',virtue:'책임감'},
+  5:{name:'파란띠',color:'var(--b5)',virtue:'배려'}, 4:{name:'보라띠',color:'var(--b4)',virtue:'우정'}, 3:{name:'밤띠',color:'var(--b3)',virtue:'성실'}, 2:{name:'빨간띠',color:'var(--b2)',virtue:'절약정신'}, 1:{name:'국기원보띠',color:'var(--b1)',virtue:'자신감'} };
+function beltOf(grade){
+  var g=String(grade||'').trim();
+  var m=g.match(/^(\d+)급$/); if(m){ var n=Math.max(1,Math.min(9,Number(m[1]))); var b=BELT[n]; return {gup:n, name:b.name, color:b.color, virtue:b.virtue, label:n+'급 '+b.name, poom:false}; }
+  var pm=g.match(/^(\d+)(품|단)(?:\s*(\d+)급)?/); if(pm) return {gup:0, name:'검정띠', color:'var(--bp)', virtue:'자신감', label:g+' · 검정띠', poom:true};
+  return {gup:0, name:'', color:'#DDD', virtue:'', label:(g||'급수 준비 중'), poom:false};
 }
-function header(inner){
-  return '<div class="hd"><div class="wrap" style="display:flex;align-items:center;gap:10px">'+
-    '<div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#C9A24B,#E8C878);display:flex;align-items:center;justify-content:center;font-weight:900;color:#0B1D3A;font-size:17px">나</div>'+
-    '<div><div style="font-size:16.5px;font-weight:900">나라차태권도</div><div style="font-size:11px;opacity:.75">학부모 앱</div></div>'+
-    '<span style="flex:1"></span>'+(inner||'')+'</div></div>';
+
+/* ══ 5. 화면 ══ */
+function kid(){ var ks=(ST.fam&&ST.fam.kids)||[]; return ks[Math.min(ST.kid,ks.length-1)]||{}; }
+function header(){
+  var ks=(ST.fam&&ST.fam.kids)||[]; var chips='';
+  if(ks.length>1) chips='<div class="kids">'+ks.map(function(k,i){ return '<button class="'+(i===ST.kid?'on':'')+'" onclick="pickKid('+i+')">'+esc(k.n)+'</button>'; }).join('')+'</div>';
+  return '<header><div class="hbar"><div><b>나라차 학부모앱</b><div class="sub">나라차태권도'+(ST.fam&&ST.fam.pubD?' · '+esc(dot(ST.fam.pubD))+' 기준':'')+'</div></div>'+
+    '<button class="hbtn" onclick="doRefresh()" title="새로고침">↻ 새로고침</button></div>'+chips+'</header>';
 }
 function installGuide(){
   if(isStandalone()) return '';
-  if(isInApp()){
-    return '<div class="card" style="border-color:#C9A24B;background:#FFFBEF">'+
-      '<b style="font-size:14.5px">📲 홈 화면에 설치하면 다음부터 앱처럼 열려요</b>'+
-      (isIOS()
-        ? '<div class="msg" style="margin-top:6px">① 오른쪽 아래 <b>⋯ (점 세 개)</b> → <b>다른 브라우저로 열기(Safari)</b><br>② Safari에서 <b>공유 <span style="font-size:15px">⎋</span></b> → <b>홈 화면에 추가</b></div>'
-        : '<div class="msg" style="margin-top:6px">아래 버튼으로 Chrome에서 연 뒤, 안내에 따라 설치를 눌러 주세요.</div><button class="btn p" style="margin-top:8px" onclick="openChrome()">Chrome으로 열기</button>')+
-      '</div>';
-  }
-  if(deferredPrompt){
-    return '<div class="card" style="border-color:#C9A24B;background:#FFFBEF"><b style="font-size:14.5px">📲 홈 화면에 설치</b>'+
-      '<div class="msg" style="margin-top:4px">설치하면 아이콘으로 언제든 바로 열 수 있어요.</div>'+
-      '<button class="btn p" style="margin-top:8px" onclick="doInstall()">앱 설치하기</button></div>';
-  }
-  if(isIOS()){
-    return '<div class="card" style="border-color:#C9A24B;background:#FFFBEF"><b style="font-size:14.5px">📲 홈 화면에 설치</b>'+
-      '<div class="msg" style="margin-top:6px">Safari 아래 <b>공유 <span style="font-size:15px">⎋</span></b> 버튼 → <b>홈 화면에 추가</b>를 눌러 주세요.</div></div>';
-  }
+  if(isInApp()) return '<div class="inst"><b>📲 홈 화면에 설치하면 다음부터 앱처럼 열려요</b>'+(isIOS()
+      ? '① 오른쪽 아래 <b style="display:inline">⋯</b> → 다른 브라우저로 열기(Safari)<br>② Safari에서 공유 ⎋ → 홈 화면에 추가'
+      : '아래 버튼으로 Chrome에서 연 뒤, 안내에 따라 설치를 눌러 주세요.<button class="cta navy" style="margin-top:8px" onclick="openChrome()">Chrome으로 열기</button>')+'</div>';
+  if(deferredPrompt) return '<div class="inst"><b>📲 홈 화면에 설치</b>설치하면 아이콘으로 언제든 바로 열 수 있어요.<button class="cta" style="margin-top:8px" onclick="doInstall()">앱 설치하기</button></div>';
+  if(isIOS()) return '<div class="inst"><b>📲 홈 화면에 설치</b>Safari 아래 <b style="display:inline">공유 ⎋</b> 버튼 → <b style="display:inline">홈 화면에 추가</b>를 눌러 주세요.</div>';
   return '';
 }
 function vLogin(){
-  return header()+'<div class="wrap">'+installGuide()+
-    '<div class="card"><b style="font-size:15.5px">우리 아이 수련 기록 보기</b>'+
-    '<div class="msg" style="color:var(--sub);margin:6px 0 10px">도장에서 카톡으로 보내드린 <b>링크</b>를 누르면 자동으로 열립니다.<br>코드를 직접 넣으실 수도 있어요.</div>'+
-    (ST.err?'<div class="msg" style="color:var(--red);margin-bottom:8px">'+ST.err+'</div>':'')+
-    '<input id="codeIn" class="code" maxlength="12" placeholder="코드 입력" value="'+esc(ST.codeInput||'')+'">'+
-    '<button class="btn p" style="margin-top:10px" onclick="doLoginInput()">확인</button>'+
-    '<div class="msg" style="color:var(--sub);margin-top:10px">코드가 없거나 잊으셨다면 도장으로 연락 주세요 ☎</div></div></div>';
+  return '<div class="login"><div class="logo">나</div><h1>나라차 학부모앱</h1>'+
+    '<div class="card" style="margin-top:16px"><div class="msg">도장에서 카톡으로 보내드린 <b>링크</b>를 누르면 자동으로 열립니다.<br>코드를 직접 넣으실 수도 있어요.</div>'+
+    (ST.err?'<div class="errt">'+ST.err+'</div>':'')+
+    '<input id="codeIn" class="code" maxlength="12" placeholder="코드 입력" value="'+esc(ST.codeInput||'')+'" style="margin-top:10px">'+
+    '<button class="cta" style="margin-top:10px" onclick="doLoginInput()">확인</button>'+
+    '<div class="msg" style="margin-top:10px">코드가 없거나 잊으셨다면 도장으로 연락 주세요 ☎</div></div>'+installGuide()+'</div>';
 }
 function vVerify(){
-  return header()+'<div class="wrap"><div class="card"><b style="font-size:15.5px">🔒 처음 연결하는 기기입니다</b>'+
-    '<div class="msg" style="color:var(--sub);margin:6px 0 10px">보안을 위해 <b>자녀 생년월일</b>을 한 번만 확인합니다.<br>(형제 중 아무나 한 명)</div>'+
-    (ST.err?'<div class="msg" style="color:var(--red);margin-bottom:8px">'+ST.err+'</div>':'')+
-    '<input id="byIn" class="code" inputmode="numeric" maxlength="10" placeholder="예: 20190228">'+
-    '<button class="btn p" style="margin-top:10px" onclick="verifyBy()">확인</button></div></div>';
+  return '<div class="login"><div class="logo">🔒</div><h1>처음 연결하는 기기입니다</h1>'+
+    '<div class="card" style="margin-top:16px"><div class="msg">보안을 위해 <b>자녀 생년월일</b>을 한 번만 확인합니다. (형제 중 아무나 한 명)</div>'+
+    (ST.err?'<div class="errt">'+ST.err+'</div>':'')+
+    '<input id="byIn" class="code" inputmode="numeric" maxlength="10" placeholder="예: 20190228" style="margin-top:10px">'+
+    '<button class="cta" style="margin-top:10px" onclick="verifyBy()">확인</button></div></div>';
 }
-function vLoading(){ return header()+'<div class="wrap"><div class="card" style="text-align:center;color:var(--sub);padding:34px 0">불러오는 중…</div></div>'; }
-function attCal(att){
-  var days=Object.keys(att||{}).sort();
-  if(!days.length) return '<div class="msg" style="color:var(--sub)">최근 출석 기록이 없습니다.</div>';
-  /* 최근 8주 월~토 격자 */
-  var today=new Date(); var end=new Date(today);
-  var day=end.getDay(); end.setDate(end.getDate()+(6-day));
-  var rows=[], WD=['월','화','수','목','금','토'];
-  for(var w=7;w>=0;w--){
-    var cells=[], label='';
-    for(var i=1;i<=6;i++){
-      var d=new Date(end); d.setDate(end.getDate()-w*7-(6-i));
-      var ds=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
-      if(i===1) label=(d.getMonth()+1)+'/'+d.getDate();
-      var v=(att||{})[ds];
-      var bg=v==='출석'?'#1E7B3C':(v==='결석'?'#E5A0A0':(v?'#2B5FB8':'#EFF1F5'));
-      var tx=v?'#fff':'#B8BFC9';
-      var lb=v==='출석'?'●':(v==='결석'?'✕':(v?String(v).slice(0,2):''));
-      cells.push('<div class="dot" title="'+ds+(v?' '+v:'')+'" style="background:'+bg+';color:'+tx+'">'+lb+'</div>');
-    }
-    rows.push('<div style="display:flex;align-items:center;gap:5px;margin:4px 0"><span style="width:38px;font-size:10.5px;color:var(--sub);font-weight:700">'+label+'</span>'+cells.join('')+'</div>');
-  }
-  return '<div style="display:flex;gap:5px;margin:0 0 4px 43px">'+WD.map(function(w){return '<span style="width:26px;text-align:center;font-size:10px;color:var(--sub);font-weight:800">'+w+'</span>';}).join('')+'</div>'+rows.join('')+
-    '<div class="msg" style="color:var(--sub);margin-top:6px">● 출석 · ✕ 결석 · 파란 칸은 보강 등 특별 수련</div>';
-}
+function vLoading(){ return '<div class="login"><div class="logo">나</div><div class="card" style="text-align:center;color:var(--ink-2);padding:34px 0;margin-top:16px">불러오는 중…</div></div>'; }
+
+/* ── 홈 ── */
 function periodBox(k){
   var P=k.period; if(!P||!P.months||!P.months.length) return '';
-  var md=function(d){ return String(d||'').slice(5).replace('-','/'); };
-  var done=P.realSum>=P.baseSum, remain=Math.max(0,P.baseSum-P.realSum);
-  var headCol=done?'var(--green)':(P.cur?'var(--blue)':'#B45309');
-  var rows=P.months.map(function(m){ var ok=m.real>=m.base; var curM=(m.ym===new Date().toISOString().slice(0,7)); 
-    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)">'+
-      '<b style="width:34px;font-size:13.5px">'+Number(m.ym.slice(5,7))+'월</b>'+
-      '<span style="font-size:14px"><b>'+m.real+'</b><span style="color:var(--sub)"> / '+m.base+'회</span></span>'+
-      (m.fut?'<span style="font-size:11px;color:var(--sub)">(월말 배치 '+m.fut+'회 포함)</span>':'')+
-      '<span style="flex:1"></span>'+
-      (ok?'<span style="font-size:11.5px;font-weight:800;color:var(--green);background:#EEF7F0;border-radius:7px;padding:2px 8px">✓ 달성</span>'
-        : (curM?'<span style="font-size:11.5px;font-weight:800;color:var(--blue);background:#EEF3FB;border-radius:7px;padding:2px 8px">진행 중 · '+(m.base-m.real)+'회 남음</span>'
-               :'<span style="font-size:11.5px;font-weight:800;color:#B45309;background:#FFF7E8;border-radius:7px;padding:2px 8px">미달 '+(m.base-m.real)+'회</span>'))+
-    '</div>'; }).join('');
+  var ym=todayStr().slice(0,7); var done=P.realSum>=P.baseSum, remain=Math.max(0,P.baseSum-P.realSum);
+  var rows=P.months.map(function(m){ var ok=m.real>=m.base, cur=(m.ym===ym);
+    return '<div class="prow"><b class="m">'+Number(m.ym.slice(5,7))+'월</b><span><b>'+m.real+'</b> <span class="tiny">/ '+m.base+'회</span></span>'+(m.fut?'<span class="tiny">(월말 배치 '+m.fut+'회 포함)</span>':'')+'<span style="flex:1"></span>'+
+      (ok?'<span class="tag ok">✓ 달성</span>':(cur?'<span class="tag go">진행 중 · '+(m.base-m.real)+'회 남음</span>':'<span class="tag no">미달 '+(m.base-m.real)+'회</span>'))+'</div>'; }).join('');
   var mk=(k.makeups||[]);
-  return '<div class="sec">🥋 이번 등록 기간 수련 현황 <span style="font-weight:600;color:var(--sub)">('+esc(P.label)+')</span></div>'+
-    '<div class="card" style="border:1.5px solid '+headCol+'">'+
-      '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><b style="font-size:26px;color:'+headCol+'">'+P.realSum+'</b><span style="font-size:13px;color:var(--sub)">/ '+P.baseSum+'회 수련</span><span style="flex:1"></span>'+
-        '<b style="font-size:13.5px;color:'+headCol+'">'+(done?'기준 달성 🎉':(P.cur?remain+'회 남음 (진행 중)':'미달 '+remain+'회'))+'</b></div>'+
-      '<div style="height:10px;background:#EFF1F5;border-radius:9999px;margin:8px 0 6px;overflow:hidden"><div style="height:100%;width:'+Math.min(100,Math.round(P.baseSum?P.realSum/P.baseSum*100:0))+'%;background:'+headCol+';border-radius:9999px"></div></div>'+
-      rows+
-      '<div style="margin-top:8px;padding:8px 10px;background:#F4F6FA;border-radius:10px">'+
-        '<div style="font-size:13px;font-weight:800;color:var(--ink)">🔁 이월 보강 '+(P.carry||0)+'회'+(P.carry?' <span style="font-weight:600;color:var(--sub)">— 지난 기간 못 채운 횟수, 이번 기간 안에 사용 가능 (미사용 시 소멸)</span>':' <span style="font-weight:600;color:var(--sub)">— 지난 기간은 기준을 모두 채웠어요</span>')+'</div>'+
-        (!P.cur&&P.short?'<div style="font-size:12.5px;color:#B45309;margin-top:4px">이번 기간 부족 '+P.short+'회 → 다음 등록 기간에 보강으로 사용할 수 있어요 (미사용 시 소멸)</div>':'')+
-        (P.waived?'<div style="font-size:12px;color:var(--sub);margin-top:4px">이번 기간은 보강 없음으로 처리되었습니다</div>':'')+
-        (mk.length?'<div style="font-size:12.5px;color:var(--ink);margin-top:6px">📅 보강 예약: '+mk.map(function(e){ return md(e.date)+(e.h?' '+e.h+'시':''); }).join(' · ')+'</div>':'')+
-      '</div>'+
-      '<div class="msg" style="color:var(--sub);margin-top:6px">기준 횟수는 등록하신 주당 수련 횟수 기준이며, 진행 중인 달은 월말까지의 수업 배치를 포함해 계산합니다.</div>'+
-    '</div>';
+  return '<div class="sec"><h2>이번 등록 기간 수련</h2><span>'+esc(P.label)+'</span></div>'+
+    '<div class="card pbox"><div style="display:flex;align-items:baseline;gap:8px"><span class="big" style="color:'+(done?'var(--ok)':'var(--point)')+'">'+P.realSum+'</span><span class="tiny">/ '+P.baseSum+'회 수련</span><span style="flex:1"></span>'+
+      '<span class="tag '+(done?'ok':(P.cur?'go':'no'))+'">'+(done?'기준 달성 🎉':(P.cur?remain+'회 남음 · 진행 중':'미달 '+remain+'회'))+'</span></div>'+
+      '<div class="bar"><i style="width:'+Math.min(100,Math.round(P.baseSum?P.realSum/P.baseSum*100:0))+'%"></i></div>'+rows+
+      '<div class="note"><b>🔁 이월 보강 '+(P.carry||0)+'회</b>'+(P.carry?' — 지난 기간 못 채운 횟수, 이번 기간 안에 사용 가능 (미사용 시 소멸)':' — 지난 기간은 기준을 모두 채웠어요')+
+      (!P.cur&&P.short?'<br>이번 기간 부족 '+P.short+'회 → 다음 등록 기간에 보강으로 사용할 수 있어요':'')+(P.waived?'<br>이번 기간은 보강 없음으로 처리되었습니다':'')+
+      (mk.length?'<br>📅 보강 예약: '+mk.map(function(e){ return md(e.date)+(e.h?' '+e.h+'시':''); }).join(' · '):'')+'</div>'+
+      '<div class="tiny" style="margin-top:6px">기준 횟수는 등록하신 주당 수련 횟수 기준이며, 진행 중인 달은 월말까지의 수업 배치를 포함해 계산합니다.</div></div>';
 }
-function infoBox(k){
-  var md=function(d){ return String(d||'').slice(5).replace('-','/'); };
-  var items=[];
-  if(k.b) items.push(['반', String(k.b).replace(/^\d/,'')]);
-  if(k.slots&&k.slots.length) items.push(['정규 수련', k.slots.join(' · ')]);
-  if(k.joinDate){ var mo=Math.max(0,Math.floor((Date.now()-new Date(k.joinDate+'T00:00:00').getTime())/2592000000)); items.push(['등록일', k.joinDate.replace(/-/g,'.')+(mo?' ('+(mo>=12?Math.floor(mo/12)+'년 '+(mo%12?mo%12+'개월':''):mo+'개월')+' 수련)':'')]); }
-  if(k.expiry) items.push(['등록 기간', '~ '+Number(k.expiry.slice(5,7))+'월']);
-  if(k.exam&&k.exam.next) items.push(['다음 급수', k.exam.next]);
-  if(k.exam&&(k.exam.conf||k.exam.rec)) items.push(['심사', k.exam.conf?'✅ 이번 심사 확정':'🥋 심사 추천 대상']);
-  if(k.bus) items.push(['차량', (k.bus.dir==='등'?'등원 편도':k.bus.dir==='하'?'하원 편도':'왕복')+(k.bus.days&&k.bus.days.length?' ('+k.bus.days.join('·')+')':'')]);
-  var holds=(k.holds||[]);
-  if(!items.length && !holds.length) return '';
-  return '<div class="sec">📌 수련 정보</div><div class="card">'+
-    items.map(function(it,i){ return '<div style="display:flex;gap:10px;padding:6px 0;border-top:'+(i?'1px solid var(--line)':'none')+'"><span style="width:68px;font-size:12.5px;color:var(--sub);font-weight:700;flex:none">'+esc(it[0])+'</span><span style="font-size:13.5px;font-weight:700;color:var(--ink)">'+esc(it[1])+'</span></div>'; }).join('')+
-    (holds.length?'<div style="margin-top:8px;padding:8px 10px;background:#FFF7E8;border-radius:10px;font-size:12.5px;color:#9A3412"><b>🗓 결석 예정</b> '+holds.map(function(h){ return md(h.from)+'~'+(h.open?'미정':md(h.to))+(h.reason?' ('+esc(h.reason)+')':''); }).join(' · ')+'</div>':'')+
-  '</div>';
+function homeTab(){
+  var k=kid(), f=ST.fam||{}, b=beltOf(k.grade), ks=f.kids||[];
+  var beads=''; for(var g=9; g>=1; g--){ beads+='<i class="'+(g===b.gup?'now':'')+'" style="background:'+BELT[g].color+'" title="'+g+'급 '+BELT[g].name+'"></i>'; }
+  if(b.poom) beads+='<i class="now" style="background:var(--bp)" title="검정띠"></i>';
+  var nx=(k.exam&&k.exam.next)?k.exam.next:'';
+  var hero='<div class="card hero"><div class="av">'+esc(String(k.n||'').slice(-2))+'</div><h1>'+esc(k.n)+'</h1><div class="beads">'+beads+'</div>'+
+    '<div class="lb"><b>'+esc(b.label)+'</b>'+(b.virtue?' · 덕목 「'+esc(b.virtue)+'」':'')+(nx?'<br>다음은 '+esc(nx)+'!':'')+'</div></div>';
+  /* D-day 고리: 심사 예정일(있으면) + 누적 수련/24 */
+  var acc=Number(k.acc)||0, rate=Math.max(0,Math.min(1,acc/EXAM_NEED)), C=2*Math.PI*36, off=C*(1-rate), left=Math.max(0,EXAM_NEED-acc);
+  var ed=f.examDate||'', dd=ed?dayDiff(todayStr(),ed):null;
+  var ring='<div class="card ring"><svg width="88" height="88" viewBox="0 0 88 88"><circle cx="44" cy="44" r="36" fill="none" stroke="#FFEFD0" stroke-width="10"></circle>'+
+    '<circle cx="44" cy="44" r="36" fill="none" stroke="#FF9F43" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 44 44)"></circle>'+
+    '<text x="44" y="'+(ed?41:49)+'" text-anchor="middle" font-family="Jua" font-size="'+(ed?19:17)+'" fill="#3C3350">'+(ed?('D-'+Math.max(0,dd)):(acc+'회'))+'</text>'+(ed?'<text x="44" y="56" text-anchor="middle" font-size="9" fill="#7A6E86">'+esc(md(ed))+' 심사</text>':'')+'</svg>'+
+    '<div><h3>'+(k.examConf?'🥋 이번 심사 대상이에요!':(acc>=EXAM_NEED?'심사 요건 충족! 🎉':(nx?esc(nx)+'까지 '+left+'회!':'승급심사 준비 중')))+'</h3>'+
+    '<p>지난 심사 이후 수련 '+acc+'회 / 기준 '+EXAM_NEED+'회'+(k.lastExam?' · 마지막 심사 '+esc(md(k.lastExam)):'')+'</p><div class="pill">🔥 '+Math.round(rate*100)+'% 달성</div></div></div>';
+  /* 오늘 */
+  var ta=k.todayAtt, tdS=todayStr();
+  var today='<div class="st">'+
+    (ta&&ta.att?'<div><div class="em">✅</div><b>오늘 등원</b><small>'+ta.h+'시 수련 출석</small></div>'
+     : (ta&&ta.abs?'<div><div class="em">😢</div><b>오늘 결석</b><small>'+ta.h+'시 수련</small></div>'
+     : (ta?'<div><div class="em">⏰</div><b>등원 전</b><small>'+ta.h+'시 수련 예정</small></div>':'<div><div class="em">🗓</div><b>오늘 수련 없음</b><small>'+esc(md(tdS))+'</small></div>')))+
+    (k.bus?'<div><div class="em">🚌</div><b>차량 이용</b><small>'+(k.bus.dir==='등'?'등원 편도':k.bus.dir==='하'?'하원 편도':'왕복')+(k.bus.days&&k.bus.days.length?' · '+esc(k.bus.days.join('·')):'')+'</small></div>':'<div><div class="em">🚶</div><b>도보 등·하원</b><small>차량 이용 안 함</small></div>')+'</div>';
+  /* 수납 배너 */
+  var due=(k.billing||[]).filter(function(x){ return x.status==='unpaid'; }); var pay='';
+  if(due.length){ var x=due[0]; pay='<div class="paybar" onclick="goTab(\'me\')"><div class="ic">₩</div><div><b>'+esc(x.title)+' 미납</b><small>'+won(x.amount)+' · 내정보에서 자세히</small></div></div>'; }
+  /* 소식 2건 */
+  var evs=(f.events||[]).slice(0,2);
+  var news='<div class="sec"><h2>도장 소식</h2><span>'+((f.events||[]).length)+'건</span></div><div class="listbox">'+
+    (evs.length?evs.map(function(e){ return '<div class="item"><div class="ic">📣</div><div><b>'+esc(e.title)+'</b><p>'+esc([md(e.date)+(e.end&&e.end!==e.date?'~'+md(e.end):''), e.time, e.place].filter(Boolean).join(' · '))+'</p></div></div>'; }).join('')
+     :'<div class="item"><div class="ic">📣</div><div><b>새 소식이 없습니다</b><p>행사·공지가 등록되면 여기에 보여요.</p></div></div>')+'</div>';
+  return hero+periodBox(k)+ring+today+pay+installGuide()+news+'<button class="cta" onclick="goTab(\'grow\')">우리 아이 성장 보러 가기</button>';
 }
-function measBox(k){
-  var M=k.meas; if(!M) return '';
-  var box=function(l,v){ return '<div style="flex:1;min-width:58px;background:#F4F6FA;border-radius:9px;padding:7px 4px;text-align:center"><div style="font-size:15px;font-weight:900;color:var(--ink)">'+esc(v)+'</div><div style="font-size:10.5px;color:var(--sub);font-weight:700">'+esc(l)+'</div></div>'; };
-  var h='';
-  if(M.fit){ h+='<div style="font-size:11.5px;color:var(--sub);font-weight:700;margin-bottom:5px">체력·체격'+(M.fit.title?' · '+esc(M.fit.title):'')+(M.fit.date?' ('+esc(M.fit.date)+')':'')+'</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+
-    box('키',M.fit.h?M.fit.h+'㎝':'-')+box('몸무게',M.fit.w?M.fit.w+'㎏':'-')+(M.fit.grade?box('종합등급',M.fit.grade):'')+(M.fit.score?box('종합점수',M.fit.score):'')+'</div>'; }
-  if(M.jump&&M.jump.recs&&M.jump.recs.length){ h+='<div style="font-size:11.5px;color:var(--sub);font-weight:700;margin:2px 0 5px">줄넘기'+(M.jump.title?' · '+esc(M.jump.title):'')+'</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+M.jump.recs.map(function(r){ return box(r[0], r[1]); }).join('')+'</div>'; }
-  if(!h) return '';
-  return '<div class="sec">📏 최근 측정 기록</div><div class="card">'+h+'</div>';
+/* ── 성장 ── */
+function growTab(){
+  var k=kid(), f=ST.fam||{}, b=beltOf(k.grade), cur=b.gup;
+  var road='';
+  if(cur){ var list=[]; for(var g=Math.min(9,cur+2); g>=Math.max(1,cur-2); g--) list.push(g); var hmin=22, hstep=13;
+    road=list.map(function(g,i){ var bb=BELT[g], done=g>=cur, op=g===cur?1:(done?.95:Math.max(.16,.45-(cur-g)*.12)), hgt=hmin+(list.length-1-i)*hstep;
+      return '<div class="'+(g===cur?'me':'')+'"><i style="height:'+hgt+'px;background:'+bb.color+';opacity:'+op+'"></i><small>'+g+'급<br>'+esc(bb.name.replace('띠',''))+'</small></div>'; }).join('');
+  } else road='<div class="tiny">'+esc(b.label)+' — 유품·유단자는 급수 체계에 따라 2급씩 올라갑니다'+(k.exam&&k.exam.next?' · 다음 '+esc(k.exam.next):'')+'</div>';
+  /* 승급증: 마지막 승급 + 심사 점수(있을 때) */
+  var promos=(k.promos||[]), last=promos.length?promos[promos.length-1]:null, le=k.lastExamDetail||null;
+  var cert='';
+  if(last){ var cb=beltOf(last.g);
+    var back = le ? ('<h4>'+esc(md(le.date))+' 심사 결과</h4><div class="tiny">'+(le.attitude!=null?'수련 태도 <b>'+le.attitude+'/20</b> · ':'')+(le.skill!=null?'기술 평가 <b>'+le.skill+'/80</b> · ':'')+(le.total!=null?'종합 <b style="color:var(--ok)">'+le.total+'점</b>':'')+(le.grade?' · '+esc(le.grade):'')+(le.pass===true?' · <b style="color:var(--ok)">합격</b>':'')+'</div>'+
+        '<div class="bars">'+(le.attitude!=null?'<div><div class="r"><span>수련 태도</span><span>'+le.attitude+' / 20</span></div><div class="t"><i style="width:'+Math.round(le.attitude/20*100)+'%;background:#FF9F43"></i></div></div>':'')+(le.skill!=null?'<div><div class="r"><span>기술 평가</span><span>'+le.skill+' / 80</span></div><div class="t"><i style="width:'+Math.round(le.skill/80*100)+'%;background:#6FA8E8"></i></div></div>':'')+'</div>'+
+        '<div class="tiny" style="margin-top:8px">합격 기준 60점 (수련 태도 20 + 기술 80)</div>')
+      : '<h4>승급 이력</h4>'+promos.slice().reverse().map(function(p){ return '<div class="kv"><span>'+esc(p.g)+'</span><b>'+esc(dot(p.d))+'</b></div>'; }).join('')+'<div class="tiny" style="margin-top:8px">심사 점수 상세는 심사 후 반영됩니다.</div>';
+    cert='<div class="certwrap"><div class="cert" id="gCert" onclick="this.classList.toggle(\'flip\')"><div class="cface cf"><div class="em">🏅</div><b>'+esc(cb.label)+' 합격!</b><small>'+esc(dot(last.d))+' · 나라차태권도</small><div class="no">'+esc(k.n)+'</div><div class="hint">👆 눌러서 '+(le?'평가 보기':'이력 보기')+'</div></div><div class="cface cb">'+back+'</div></div></div>'+
+      '<button class="cta kakao" onclick="shareCert()">카톡으로 자랑하기</button>';
+  } else cert='<div class="card" style="text-align:center;color:var(--ink-2)">승급 기록이 아직 없습니다. 첫 심사를 응원해 주세요! 🥋</div>';
+  /* 리포트: 측정 */
+  var M=k.meas, rep='';
+  if(M&&M.fit){ rep+='<div class="card sm"><b style="font-size:13px">📈 체력·체격'+(M.fit.title?' · '+esc(M.fit.title):'')+'</b><div class="tiny">'+esc(M.fit.date||'')+'</div><div class="mbox" style="margin-top:8px">'+
+    '<div><b>'+esc(M.fit.h||'-')+'</b><small>키 ㎝</small></div><div><b>'+esc(M.fit.w||'-')+'</b><small>몸무게 ㎏</small></div>'+(M.fit.grade?'<div><b>'+esc(M.fit.grade)+'</b><small>종합등급</small></div>':'')+(M.fit.score?'<div><b>'+esc(M.fit.score)+'</b><small>종합점수</small></div>':'')+'</div></div>'; }
+  if(M&&M.jump&&M.jump.recs&&M.jump.recs.length){ rep+='<div class="card sm"><b style="font-size:13px">🪢 줄넘기'+(M.jump.title?' · '+esc(M.jump.title):'')+'</b><div class="mbox" style="margin-top:8px">'+M.jump.recs.map(function(r){ return '<div><b>'+esc(r[1])+'</b><small>'+esc(r[0])+'</small></div>'; }).join('')+'</div></div>'; }
+  if(!rep) rep='<div class="card sm tiny">측정 기록이 아직 없습니다. 측정 주간 후에 보여요.</div>';
+  /* 이번 주 질문 */
+  var S=k.sig||null, qa='';
+  if(S&&(S.q||S.a||(S.hist&&S.hist.length))){
+    qa='<div class="quote">'+(S.q?'<div class="qa"><div class="q">Q. '+esc(S.q)+'</div><div class="a">'+(S.a?esc(S.a):'<span class="tiny">아직 대답을 안 했어요</span>')+'</div></div>':'<div class="tiny">이번 주 질문은 준비 중이에요.</div>')+
+      ((S.hist||[]).filter(function(e){ return e.a && !(S.q===e.q && S.a===e.a); }).slice(0,4).map(function(e){ return '<div class="qa"><div class="q">'+esc(md(e.wk))+' 주 · Q. '+esc(e.q||'')+'</div><div class="a">'+esc(e.a)+'</div></div>'; }).join(''))+'</div>';
+  } else qa='<div class="quote tiny">사범님이 매주 아이에게 묻는 한 가지 질문과 아이의 대답이 쌓여요.</div>';
+  return '<div class="sec"><h2>띠 올라온 길</h2><span>지금까지와 앞으로</span></div><div class="card"><div class="road">'+road+'</div></div>'+
+    '<div class="sec"><h2>전자 승급증</h2><span>카드를 누르면 뒷면</span></div>'+cert+
+    '<div class="sec"><h2>리포트</h2><span>측정 기록</span></div>'+rep+
+    '<div class="sec"><h2>💬 이번 주 질문과 대답</h2></div>'+qa;
 }
+window.shareCert=function(){
+  var k=kid(), promos=(k.promos||[]), last=promos.length?promos[promos.length-1]:null; if(!last) return;
+  var txt=k.n+' · '+beltOf(last.g).label+' 합격! ('+dot(last.d)+' · 나라차태권도)';
+  if(navigator.share){ navigator.share({title:'승급 축하', text:txt}).catch(function(){}); }
+  else if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(function(){ say('문구를 복사했습니다. 카톡에 붙여 넣어 주세요.'); }).catch(function(){ say('공유는 휴대폰에서 눌러 주세요.'); }); }
+  else say('공유는 휴대폰에서 눌러 주세요.');
+};
+/* ── 소식 ── */
+function newsTab(){
+  var k=kid(), f=ST.fam||{}, evs=f.events||[];
+  var ev=evs.length?evs.map(function(e){ var m=String(e.date||'').match(/^(\d{4})-(\d{2})-(\d{2})/);
+      return '<div class="card"><div class="ev"><div class="evd"><small>'+(m?Number(m[2])+'월':'')+'</small><b>'+(m?Number(m[3]):'-')+'</b></div>'+
+        '<div><h4>'+esc(e.title)+'</h4><p>'+esc([e.type, e.time, e.place].filter(Boolean).join(' · '))+'</p>'+(e.desc?'<p>'+esc(e.desc)+'</p>':'')+'</div></div>'+
+        '<button class="cta ghost" style="margin-top:12px" onclick="applyEvent(\''+esc(e.id)+'\')">📋 참여 신청 문구 복사 (카톡으로 보내기)</button></div>'; }).join('')
+    : '<div class="card tiny" style="text-align:center">예정된 행사가 없습니다.</div>';
+  /* 이번 달 출석 달력 */
+  var att=k.att||{}, ym=todayStr().slice(0,7), Y=Number(ym.slice(0,4)), M=Number(ym.slice(5,7))-1;
+  var first=new Date(Y,M,1).getDay(), last=new Date(Y,M+1,0).getDate(), tdd=Number(todayStr().slice(8,10));
+  var cal=['일','월','화','수','목','금','토'].map(function(w){ return '<div class="wd">'+w+'</div>'; }).join(''); for(var i=0;i<first;i++) cal+='<div></div>';
+  var pr=0, mk=0, ab=0;
+  for(var dd=1; dd<=last; dd++){ var ds=ym+'-'+(dd<10?'0':'')+dd, v=att[ds], cls='d';
+    if(v==='출석'){ cls+=' att'; pr++; } else if(v==='결석'){ cls+=' ab'; ab++; } else if(v){ cls+=' mk'; mk++; }
+    if(dd===tdd) cls+=' today'; cal+='<div class="'+cls+'" title="'+esc(v||'')+'">'+dd+'</div>'; }
+  return '<div class="sec"><h2>행사 · 공지</h2><span>전체 공개</span></div>'+ev+
+    '<div class="sec"><h2>이번 달 출석</h2><span>'+Y+'년 '+(M+1)+'월</span></div><div class="card"><div class="calhead"><b>'+(M+1)+'월</b><span class="tiny">출석 '+(pr+mk)+'회 · 결석 '+ab+'회</span></div><div class="cal">'+cal+'</div>'+
+    '<div class="callg"><span><i style="background:#9BDCAF"></i>출석</span><span><i style="background:#A7C4F2"></i>보강 등</span><span><i style="background:#F5B3AC"></i>결석</span><span><i style="background:transparent;border:2px solid var(--point)"></i>오늘</span></div></div>';
+}
+window.applyEvent=function(id){
+  var f=ST.fam||{}, e=(f.events||[]).filter(function(x){ return x.id===id; })[0], k=kid(); if(!e) return;
+  var txt='[행사 참여 신청] '+k.n+' — '+e.title+' ('+md(e.date)+(e.time?' '+e.time:'')+')\n참여를 신청합니다. 확인 부탁드려요 🙏';
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(function(){ say('신청 문구를 복사했어요. 도장 카톡에 붙여 넣어 보내 주세요.'); }).catch(function(){ say('복사가 안 되면 도장 카톡으로 직접 보내 주세요.'); }); }
+  else say('도장 카톡으로 "'+e.title+' 참여 신청"이라고 보내 주세요.');
+};
+/* ── 내정보 ── */
+function kv(k,v){ return '<div class="kv"><span>'+esc(k)+'</span><b>'+esc(v||'-')+'</b></div>'; }
+function meTab(){
+  var k=kid(), b=beltOf(k.grade), md2=function(d){ return String(d||'').slice(5).replace('-','/'); };
+  var mo=null; if(k.joinDate){ mo=Math.max(0,Math.floor((Date.now()-new Date(k.joinDate+'T00:00:00').getTime())/2592000000)); }
+  var prof=kv('이름',k.n)+kv('수련반',k.b||'')+kv('현재 급수',b.label)+(b.virtue?kv('덕목','「'+b.virtue+'」'):'')+
+    (k.slots&&k.slots.length?kv('정규 수련',k.slots.join(' · ')):'')+(k.joinDate?kv('등록일',dot(k.joinDate)+(mo!=null?' ('+(mo>=12?Math.floor(mo/12)+'년 '+(mo%12?mo%12+'개월':''):mo+'개월')+' 수련)':'')):'')+
+    (k.expiry?kv('등록 기간','~ '+Number(k.expiry.slice(5,7))+'월'):'')+(k.exam&&k.exam.next?kv('다음 급수',k.exam.next):'')+(k.examConf?kv('심사','✅ 이번 심사 확정'):(k.exam&&k.exam.rec?kv('심사','🥋 심사 추천 대상'):''))+
+    kv('차량', k.bus?((k.bus.dir==='등'?'등원 편도':k.bus.dir==='하'?'하원 편도':'왕복')+(k.bus.days&&k.bus.days.length?' ('+k.bus.days.join('·')+')':'')):'이용 안 함');
+  var holds=(k.holds||[]); var hold=holds.length?'<div class="note" style="background:#FFF7E8;color:#9A3412"><b>🗓 결석 예정</b> '+holds.map(function(h){ return md2(h.from)+'~'+(h.open?'미정':md2(h.to))+(h.reason?' ('+esc(h.reason)+')':''); }).join(' · ')+'</div>':'';
+  var LB={paid:['납부','bg-ok'], unpaid:['미납','bg-no'], planned:['청구 예정','bg-wait']};
+  var bill=(k.billing&&k.billing.length)?k.billing.map(function(x){ var t=LB[x.status]||['-','bg-wait']; return '<div class="kv"><span>'+esc(x.title)+(x.date?' <span class="tiny">'+esc(md2(x.date))+'</span>':'')+'</span><b>'+won(x.amount)+'<span class="badge '+t[1]+'">'+t[0]+'</span></b></div>'; }).join('')
+    : '<div class="kv"><span class="tiny">청구·납부 내역은 관리자 기기에서 발행될 때 표시됩니다.</span><b>—</b></div>';
+  var NT=[['attend','출결 알림','등·하원, 결석'],['growth','성장 알림','승급, 측정, 칭찬 기록'],['notice','공지 · 행사','도장 소식'],['pay','수납 안내','청구 · 납부']];
+  var nf={}; try{ nf=JSON.parse(localStorage.getItem('naracha_parent_notify')||'{}'); }catch(e){}
+  var notify=NT.map(function(n){ var on=(nf[n[0]]!==false); return '<div class="sw"><div><b>'+n[1]+'</b><small>'+n[2]+'</small></div><button class="tog" aria-pressed="'+on+'" aria-label="'+n[1]+'" onclick="togNotify(\''+n[0]+'\')"></button></div>'; }).join('');
+  return '<div class="sec"><h2>학적부</h2></div><div class="card">'+prof+hold+'</div>'+
+    '<div class="sec"><h2>등록 · 청구 내역</h2><span>내 아이 기록만</span></div><div class="card">'+bill+'</div>'+
+    '<div class="sec"><h2>알림 설정</h2><span>카테고리별 · 알림톡 연동 준비 중</span></div><div class="card">'+notify+'</div>'+
+    '<div class="sec"><h2>개인정보 안내</h2></div><p class="guard">이 앱은 <b>내 아이의 정보만</b> 보여 줍니다. 전화번호·주소·상담 기록과 다른 수련생의 정보는 담기지 않습니다. 데이터는 가족 코드로 암호화되어 이 코드로만 열립니다.<br>접속 링크는 개별 카카오톡으로만 보내 드리며, 링크가 다른 사람에게 전달된 것 같으면 도장에 알려 주세요. 즉시 새 링크로 바꿔 드립니다.</p>'+
+    (ST.ask==='logout'?'<div class="confirmbox">로그아웃할까요? 다시 보려면 도장에서 받은 링크가 필요합니다.<span style="flex:1"></span><button onclick="cancelAsk()">취소</button><button class="yes" onclick="doLogout()">로그아웃</button></div>':'')+
+    '<div class="ver">학부모앱 '+APP_VER+' · 나라차태권도'+(ST.fam&&ST.fam.pubD?' · '+esc(dot(ST.fam.pubD))+' 발행':'')+(function(){ try{ var ago=ST.fam&&ST.fam.pubT?Math.floor((Date.now()-ST.fam.pubT)/86400000):null; return ago!=null?(ago<=0?' · 오늘 갱신':' · '+ago+'일 전 갱신'):''; }catch(e){ return ''; } })()+'<br><button class="linkbtn" onclick="askLogout()">로그아웃</button></div>';
+}
+window.togNotify=function(k){ var nf={}; try{ nf=JSON.parse(localStorage.getItem('naracha_parent_notify')||'{}'); }catch(e){} nf[k]=(nf[k]===false); try{ localStorage.setItem('naracha_parent_notify', JSON.stringify(nf)); }catch(e){} render(); say(nf[k]===false?'알림을 껐습니다':'알림을 켰습니다'); };
 function vHome(){
-  var f=ST.fam||{kids:[]};
-  var kids=f.kids||[];
-  var k=kids[Math.min(ST.kid,kids.length-1)]||{};
-  var bc=beltColor(k.grade);
-  var acc=Number(k.acc)||0, goal=24, pct=Math.min(100,Math.round(acc/goal*100));
-  var tabs=kids.length>1
-    ? '<div style="display:flex;gap:7px;margin:12px 0 2px;flex-wrap:wrap">'+kids.map(function(kk,i){ return '<span class="chipT'+(i===ST.kid?' on':'')+'" onclick="pickKid('+i+')">'+esc(kk.n)+'</span>'; }).join('')+'</div>'
-    : '';
-  var promos=(k.promos||[]);
-  var tl=promos.length
-    ? promos.slice().reverse().map(function(p,i){
-        var b2=beltColor(p.g);
-        return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-top:'+(i?'1px solid var(--line)':'none')+'">'+
-          '<span style="width:16px;height:16px;border-radius:50%;background:'+b2[0]+';border:2px solid #fff;box-shadow:0 0 0 1.5px var(--line)"></span>'+
-          '<b style="font-size:14px">'+esc(p.g)+'</b><span style="flex:1"></span>'+
-          '<span style="font-size:12px;color:var(--sub)">'+esc(p.d)+'</span></div>';
-      }).join('')
-    : '<div class="msg" style="color:var(--sub)">승급 기록이 아직 없습니다. 첫 심사를 응원해 주세요! 🥋</div>';
-  return header('<button onclick="doRefresh()" title="새로고침" style="background:rgba(255,255,255,.14);border:none;color:#fff;border-radius:10px;padding:7px 12px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit">↻ 새로고침</button>')+
-    '<div class="wrap">'+
-    tabs+
-    '<div class="card" style="display:flex;align-items:center;gap:14px">'+
-      '<div style="width:56px;height:56px;border-radius:16px;background:'+bc[0]+';display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.08)">🥋</div>'+
-      '<div style="flex:1"><div style="font-size:18px;font-weight:900">'+esc(k.n)+'</div>'+
-      '<div style="font-size:12.5px;color:var(--sub);margin-top:2px">'+esc(k.grade||'급수 준비 중')+(k.b?' · '+esc(String(k.b).replace(/^\d/,'')):'')+'</div></div>'+
-    '</div>'+
-    installGuide()+
-    periodBox(k)+
-    '<div class="sec">🥋 다음 심사까지</div>'+
-    '<div class="card">'+
-      '<div style="display:flex;align-items:baseline;gap:8px"><b style="font-size:24px">'+acc+'</b><span style="font-size:13px;color:var(--sub)">/ '+goal+'회 수련</span>'+
-      '<span style="flex:1"></span><b style="color:'+(acc>=goal?'var(--green)':'var(--blue)')+';font-size:13.5px">'+(acc>=goal?'심사 요건 충족! 🎉':(goal-acc)+'회 남음')+'</b></div>'+
-      '<div style="height:12px;background:#EFF1F5;border-radius:9999px;margin-top:9px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,#2B5FB8,#C9A24B);border-radius:9999px"></div></div>'+
-      (k.lastExam?'<div class="msg" style="color:var(--sub);margin-top:7px">마지막 심사: '+esc(k.lastExam)+'</div>':'')+
-    '</div>'+
-    '<div class="sec">📅 최근 출석 (8주)</div>'+
-    '<div class="card">'+attCal(k.att)+'</div>'+
-    '<div class="sec">🏅 승급 이력</div>'+
-    '<div class="card">'+tl+'</div>'+
-    infoBox(k)+
-    measBox(k)+
-    (function(){ var ago=null; try{ if(f.pubT) ago=Math.floor((Date.now()-f.pubT)/86400000); }catch(e){}
-      var txt=(f.pubD?esc(f.pubD)+' 기준':'')+(ago!=null?(ago<=0?' · 오늘 갱신':' · '+ago+'일 전 갱신'):'');
-      var warn=(ago!=null&&ago>=3);
-      return '<div class="msg" style="color:'+(warn?'#B45309':'var(--sub)')+';text-align:center;margin:14px 0 6px">'+txt+(warn?'<br>최근 기록이 아직 반영되지 않았을 수 있어요. 도장에 문의해 주세요 ☎':' · 매일 자동 갱신 · 문의는 도장으로 ☎')+'</div>'; })()+
-    '<div style="text-align:center"><button onclick="doLogout()" style="background:none;border:none;color:#B8BFC9;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline">로그아웃</button>'+
-    '<span style="font-size:10.5px;color:#C9CFDA;margin-left:8px">'+APP_VER+'</span></div>'+
-    '</div>';
+  var tabs=[['home','🏠','홈'],['grow','🌱','성장'],['news','📣','소식'],['me','👤','내정보']];
+  var body = ST.tab==='grow'?growTab() : ST.tab==='news'?newsTab() : ST.tab==='me'?meTab() : homeTab();
+  var stale=''; try{ var ago=ST.fam&&ST.fam.pubT?Math.floor((Date.now()-ST.fam.pubT)/86400000):null; if(ago!=null&&ago>=3) stale='<div class="inst" style="background:#FFF7E8;border-color:#F0C36D">⏳ 최근 기록이 아직 반영되지 않았을 수 있어요 ('+ago+'일 전 갱신). 도장에 문의해 주세요 ☎</div>'; }catch(e){}
+  return header()+'<div id="app"><main class="on">'+stale+body+'</main>'+
+    '<nav><div class="inner">'+tabs.map(function(t){ return '<button aria-current="'+(ST.tab===t[0]?'true':'false')+'" onclick="goTab(\''+t[0]+'\')"><span class="gi">'+t[1]+'</span>'+t[2]+'</button>'; }).join('')+'</div></nav></div>';
 }
 function render(){
-  var el=document.getElementById('app'); if(!el) return;
+  var el=document.getElementById('root'); if(!el) return;
   el.innerHTML = ST.view==='home'?vHome() : ST.view==='verify'?vVerify() : ST.view==='loading'?vLoading() : vLogin();
 }
-
-/* ══ 시작 ══ */
-(function boot(){
-  var link=__linkCode, sv=saved();
+/* ══ 6. 시작 ══ */
+(function boot(){ var link=__linkCode, sv=saved();
   if(link){ tryLogin(link, !(sv&&sv.ok&&sv.code===link)); return; }
   if(sv&&sv.ok&&sv.code){ tryLogin(sv.code, false); return; }
-  ST.view='login'; render();
-})();
-
-/* ══ 새 버전 자동 갱신 (하루 1회 확인) ══ */
-(function(){
-  try{
-    var k='naracha_parent_verchk';
-    if(localStorage.getItem(k)===new Date().toDateString()) return;
-    fetch(location.pathname+'?chk='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){
-      localStorage.setItem(k,new Date().toDateString());
-      var m=t.match(/APP_VER\s*=\s*"([^"]+)"/);
-      if(m && m[1]!==APP_VER){ location.reload(); }
-    }).catch(function(){});
-  }catch(e){}
-})();
+  ST.view='login'; render(); })();
+/* ══ 새 버전 자동 갱신(하루 1회) ══ */
+(function(){ try{ var k='naracha_parent_verchk'; if(localStorage.getItem(k)===new Date().toDateString()) return;
+  fetch(location.pathname+'?chk='+Date.now(),{cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){ localStorage.setItem(k,new Date().toDateString()); var m=t.match(/APP_VER\s*=\s*"([^"]+)"/); if(m && m[1]!==APP_VER){ setTimeout(function(){ location.reload(); }, 1500); } }).catch(function(){}); }catch(e){} })();
 </script>
 </body>
 </html>
