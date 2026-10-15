@@ -43,7 +43,7 @@ input.code{ width:100%; border:1.5px solid var(--line); border-radius:12px; padd
 <body>
 <div id="app"></div>
 <script>
-var APP_VER="p1.3";   /* p1.3: "코드는 맞는데 데이터 없음"(NODATA) 안내 분리 · p1.2: 학부모 전용 키(parent 읽기·popen만) · iOS 홈 아이콘 · 발행 시점 안내 */
+var APP_VER="p1.4";   /* p1.4: 상단 등록 기간 수련 현황 박스(기준·실제·달성/미달·이월 보강·보강 예약) + 수련 정보·결석 예정·측정 기록 · */ var _OLD_VER="p1.3";   /* p1.3: "코드는 맞는데 데이터 없음"(NODATA) 안내 분리 · p1.2: 학부모 전용 키(parent 읽기·popen만) · iOS 홈 아이콘 · 발행 시점 안내 */
 var GSHEET_URL="https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
 var KEY="NARACHA-P-LS25WAT2";   /* 학부모 전용 키 — 서버 v7에서 parent(읽기)·popen(오픈 기록)만 허용 */
 var LS="naracha_parent_v1";
@@ -296,6 +296,64 @@ function attCal(att){
   return '<div style="display:flex;gap:5px;margin:0 0 4px 43px">'+WD.map(function(w){return '<span style="width:26px;text-align:center;font-size:10px;color:var(--sub);font-weight:800">'+w+'</span>';}).join('')+'</div>'+rows.join('')+
     '<div class="msg" style="color:var(--sub);margin-top:6px">● 출석 · ✕ 결석 · 파란 칸은 보강 등 특별 수련</div>';
 }
+function periodBox(k){
+  var P=k.period; if(!P||!P.months||!P.months.length) return '';
+  var md=function(d){ return String(d||'').slice(5).replace('-','/'); };
+  var done=P.realSum>=P.baseSum, remain=Math.max(0,P.baseSum-P.realSum);
+  var headCol=done?'var(--green)':(P.cur?'var(--blue)':'#B45309');
+  var rows=P.months.map(function(m){ var ok=m.real>=m.base; var curM=(m.ym===new Date().toISOString().slice(0,7)); 
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)">'+
+      '<b style="width:34px;font-size:13.5px">'+Number(m.ym.slice(5,7))+'월</b>'+
+      '<span style="font-size:14px"><b>'+m.real+'</b><span style="color:var(--sub)"> / '+m.base+'회</span></span>'+
+      (m.fut?'<span style="font-size:11px;color:var(--sub)">(월말 배치 '+m.fut+'회 포함)</span>':'')+
+      '<span style="flex:1"></span>'+
+      (ok?'<span style="font-size:11.5px;font-weight:800;color:var(--green);background:#EEF7F0;border-radius:7px;padding:2px 8px">✓ 달성</span>'
+        : (curM?'<span style="font-size:11.5px;font-weight:800;color:var(--blue);background:#EEF3FB;border-radius:7px;padding:2px 8px">진행 중 · '+(m.base-m.real)+'회 남음</span>'
+               :'<span style="font-size:11.5px;font-weight:800;color:#B45309;background:#FFF7E8;border-radius:7px;padding:2px 8px">미달 '+(m.base-m.real)+'회</span>'))+
+    '</div>'; }).join('');
+  var mk=(k.makeups||[]);
+  return '<div class="sec">🥋 이번 등록 기간 수련 현황 <span style="font-weight:600;color:var(--sub)">('+esc(P.label)+')</span></div>'+
+    '<div class="card" style="border:1.5px solid '+headCol+'">'+
+      '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><b style="font-size:26px;color:'+headCol+'">'+P.realSum+'</b><span style="font-size:13px;color:var(--sub)">/ '+P.baseSum+'회 수련</span><span style="flex:1"></span>'+
+        '<b style="font-size:13.5px;color:'+headCol+'">'+(done?'기준 달성 🎉':(P.cur?remain+'회 남음 (진행 중)':'미달 '+remain+'회'))+'</b></div>'+
+      '<div style="height:10px;background:#EFF1F5;border-radius:9999px;margin:8px 0 6px;overflow:hidden"><div style="height:100%;width:'+Math.min(100,Math.round(P.baseSum?P.realSum/P.baseSum*100:0))+'%;background:'+headCol+';border-radius:9999px"></div></div>'+
+      rows+
+      '<div style="margin-top:8px;padding:8px 10px;background:#F4F6FA;border-radius:10px">'+
+        '<div style="font-size:13px;font-weight:800;color:var(--ink)">🔁 이월 보강 '+(P.carry||0)+'회'+(P.carry?' <span style="font-weight:600;color:var(--sub)">— 지난 기간 못 채운 횟수, 이번 기간 안에 사용 가능 (미사용 시 소멸)</span>':' <span style="font-weight:600;color:var(--sub)">— 지난 기간은 기준을 모두 채웠어요</span>')+'</div>'+
+        (!P.cur&&P.short?'<div style="font-size:12.5px;color:#B45309;margin-top:4px">이번 기간 부족 '+P.short+'회 → 다음 등록 기간에 보강으로 사용할 수 있어요 (미사용 시 소멸)</div>':'')+
+        (P.waived?'<div style="font-size:12px;color:var(--sub);margin-top:4px">이번 기간은 보강 없음으로 처리되었습니다</div>':'')+
+        (mk.length?'<div style="font-size:12.5px;color:var(--ink);margin-top:6px">📅 보강 예약: '+mk.map(function(e){ return md(e.date)+(e.h?' '+e.h+'시':''); }).join(' · ')+'</div>':'')+
+      '</div>'+
+      '<div class="msg" style="color:var(--sub);margin-top:6px">기준 횟수는 등록하신 주당 수련 횟수 기준이며, 진행 중인 달은 월말까지의 수업 배치를 포함해 계산합니다.</div>'+
+    '</div>';
+}
+function infoBox(k){
+  var md=function(d){ return String(d||'').slice(5).replace('-','/'); };
+  var items=[];
+  if(k.b) items.push(['반', String(k.b).replace(/^\d/,'')]);
+  if(k.slots&&k.slots.length) items.push(['정규 수련', k.slots.join(' · ')]);
+  if(k.joinDate){ var mo=Math.max(0,Math.floor((Date.now()-new Date(k.joinDate+'T00:00:00').getTime())/2592000000)); items.push(['등록일', k.joinDate.replace(/-/g,'.')+(mo?' ('+(mo>=12?Math.floor(mo/12)+'년 '+(mo%12?mo%12+'개월':''):mo+'개월')+' 수련)':'')]); }
+  if(k.expiry) items.push(['등록 기간', '~ '+Number(k.expiry.slice(5,7))+'월']);
+  if(k.exam&&k.exam.next) items.push(['다음 급수', k.exam.next]);
+  if(k.exam&&(k.exam.conf||k.exam.rec)) items.push(['심사', k.exam.conf?'✅ 이번 심사 확정':'🥋 심사 추천 대상']);
+  if(k.bus) items.push(['차량', (k.bus.dir==='등'?'등원 편도':k.bus.dir==='하'?'하원 편도':'왕복')+(k.bus.days&&k.bus.days.length?' ('+k.bus.days.join('·')+')':'')]);
+  var holds=(k.holds||[]);
+  if(!items.length && !holds.length) return '';
+  return '<div class="sec">📌 수련 정보</div><div class="card">'+
+    items.map(function(it,i){ return '<div style="display:flex;gap:10px;padding:6px 0;border-top:'+(i?'1px solid var(--line)':'none')+'"><span style="width:68px;font-size:12.5px;color:var(--sub);font-weight:700;flex:none">'+esc(it[0])+'</span><span style="font-size:13.5px;font-weight:700;color:var(--ink)">'+esc(it[1])+'</span></div>'; }).join('')+
+    (holds.length?'<div style="margin-top:8px;padding:8px 10px;background:#FFF7E8;border-radius:10px;font-size:12.5px;color:#9A3412"><b>🗓 결석 예정</b> '+holds.map(function(h){ return md(h.from)+'~'+(h.open?'미정':md(h.to))+(h.reason?' ('+esc(h.reason)+')':''); }).join(' · ')+'</div>':'')+
+  '</div>';
+}
+function measBox(k){
+  var M=k.meas; if(!M) return '';
+  var box=function(l,v){ return '<div style="flex:1;min-width:58px;background:#F4F6FA;border-radius:9px;padding:7px 4px;text-align:center"><div style="font-size:15px;font-weight:900;color:var(--ink)">'+esc(v)+'</div><div style="font-size:10.5px;color:var(--sub);font-weight:700">'+esc(l)+'</div></div>'; };
+  var h='';
+  if(M.fit){ h+='<div style="font-size:11.5px;color:var(--sub);font-weight:700;margin-bottom:5px">체력·체격'+(M.fit.title?' · '+esc(M.fit.title):'')+(M.fit.date?' ('+esc(M.fit.date)+')':'')+'</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+
+    box('키',M.fit.h?M.fit.h+'㎝':'-')+box('몸무게',M.fit.w?M.fit.w+'㎏':'-')+(M.fit.grade?box('종합등급',M.fit.grade):'')+(M.fit.score?box('종합점수',M.fit.score):'')+'</div>'; }
+  if(M.jump&&M.jump.recs&&M.jump.recs.length){ h+='<div style="font-size:11.5px;color:var(--sub);font-weight:700;margin:2px 0 5px">줄넘기'+(M.jump.title?' · '+esc(M.jump.title):'')+'</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+M.jump.recs.map(function(r){ return box(r[0], r[1]); }).join('')+'</div>'; }
+  if(!h) return '';
+  return '<div class="sec">📏 최근 측정 기록</div><div class="card">'+h+'</div>';
+}
 function vHome(){
   var f=ST.fam||{kids:[]};
   var kids=f.kids||[];
@@ -324,6 +382,7 @@ function vHome(){
       '<div style="font-size:12.5px;color:var(--sub);margin-top:2px">'+esc(k.grade||'급수 준비 중')+(k.b?' · '+esc(String(k.b).replace(/^\d/,'')):'')+'</div></div>'+
     '</div>'+
     installGuide()+
+    periodBox(k)+
     '<div class="sec">🥋 다음 심사까지</div>'+
     '<div class="card">'+
       '<div style="display:flex;align-items:baseline;gap:8px"><b style="font-size:24px">'+acc+'</b><span style="font-size:13px;color:var(--sub)">/ '+goal+'회 수련</span>'+
@@ -335,6 +394,8 @@ function vHome(){
     '<div class="card">'+attCal(k.att)+'</div>'+
     '<div class="sec">🏅 승급 이력</div>'+
     '<div class="card">'+tl+'</div>'+
+    infoBox(k)+
+    measBox(k)+
     (function(){ var ago=null; try{ if(f.pubT) ago=Math.floor((Date.now()-f.pubT)/86400000); }catch(e){}
       var txt=(f.pubD?esc(f.pubD)+' 기준':'')+(ago!=null?(ago<=0?' · 오늘 갱신':' · '+ago+'일 전 갱신'):'');
       var warn=(ago!=null&&ago>=3);
