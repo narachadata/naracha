@@ -162,6 +162,9 @@ input.code{width:100%;border:1.5px solid var(--line);border-radius:14px;padding:
 .cal .d.mk{background:#E7F0FF;color:#1F4FA8;font-weight:600}
 .cal .d.ab{background:#FFE7E4;color:#A42C23;font-weight:600}
 .cal .d.today{outline:2px solid var(--point);outline-offset:-2px;color:var(--point);font-weight:700}
+.cal .d.off{background:repeating-linear-gradient(135deg,#F3EEF4 0 4px,#FAF7FB 4px 8px);color:var(--ink-3);grid-template-rows:auto auto;align-content:center;row-gap:0;line-height:1.05}
+.cal .d.off em{font-style:normal;font-size:8px;font-weight:700;color:#B59AA6;letter-spacing:.02em}
+.cal .d.off.today{color:var(--point)}
 .callg{display:flex;gap:12px;margin-top:11px;font-size:10.5px;color:var(--ink-3);flex-wrap:wrap}
 .callg i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:-1px}
 /* 내정보 */
@@ -204,7 +207,7 @@ nav button[aria-current="true"]{color:var(--point)}
 <div class="toast" id="toast" hidden></div>
 <script>
 /* ══ 1. 버전·상수 ══ */
-var APP_VER="p2.0";   /* p2.0: 디자인 B안(친근 성장형)·하단 4탭(홈·성장·소식·내정보) · 발행 데이터 v3 · 가족 코드 로그인/암호화/설치 안내/오픈 기록은 p1.x 그대로 */
+var APP_VER="p2.1";   /* p2.1: 이번 달 출석 달력에 휴관일 표시(빗금 칸 + "휴관" 글자, 범례·건수)·오늘 휴관이면 홈 오늘 칸에 안내 (발행 offDays, 관리앱 v13.452) · p2.0: 디자인 B안(친근 성장형)·하단 4탭(홈·성장·소식·내정보) · 발행 데이터 v3 · 가족 코드 로그인/암호화/설치 안내/오픈 기록은 p1.x 그대로 */
 var PARENT_VER=APP_VER;
 var GSHEET_URL="https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
 var KEY="NARACHA-P-LS25WAT2";   /* 학부모 전용 키 — 서버 v7+에서 parent(읽기)·popen(오픈 기록)만 허용 */
@@ -395,11 +398,12 @@ function homeTab(){
     '<div><h3>'+(k.examConf?'🥋 이번 심사 대상이에요!':(acc>=EXAM_NEED?'심사 요건 충족! 🎉':(nx?esc(nx)+'까지 '+left+'회!':'승급심사 준비 중')))+'</h3>'+
     '<p>지난 심사 이후 수련 '+acc+'회 / 기준 '+EXAM_NEED+'회'+(k.lastExam?' · 마지막 심사 '+esc(md(k.lastExam)):'')+'</p><div class="pill">🔥 '+Math.round(rate*100)+'% 달성</div></div></div>';
   /* 오늘 */
-  var ta=k.todayAtt, tdS=todayStr();
+  var ta=k.todayAtt, tdS=todayStr(), isOffToday=(f.offDays||[]).indexOf(tdS)>-1;
   var today='<div class="st">'+
+    ((isOffToday&&!(ta&&ta.att))?'<div><div class="em">🏠</div><b>오늘 휴관</b><small>'+esc(md(tdS))+' · 수업 없음</small></div>':
     (ta&&ta.att?'<div><div class="em">✅</div><b>오늘 등원</b><small>'+ta.h+'시 수련 출석</small></div>'
      : (ta&&ta.abs?'<div><div class="em">😢</div><b>오늘 결석</b><small>'+ta.h+'시 수련</small></div>'
-     : (ta?'<div><div class="em">⏰</div><b>등원 전</b><small>'+ta.h+'시 수련 예정</small></div>':'<div><div class="em">🗓</div><b>오늘 수련 없음</b><small>'+esc(md(tdS))+'</small></div>')))+
+     : (ta?'<div><div class="em">⏰</div><b>등원 전</b><small>'+ta.h+'시 수련 예정</small></div>':'<div><div class="em">🗓</div><b>오늘 수련 없음</b><small>'+esc(md(tdS))+'</small></div>'))))+
     (k.bus?'<div><div class="em">🚌</div><b>차량 이용</b><small>'+(k.bus.dir==='등'?'등원 편도':k.bus.dir==='하'?'하원 편도':'왕복')+(k.bus.days&&k.bus.days.length?' · '+esc(k.bus.days.join('·')):'')+'</small></div>':'<div><div class="em">🚶</div><b>도보 등·하원</b><small>차량 이용 안 함</small></div>')+'</div>';
   /* 수납 배너 */
   var due=(k.billing||[]).filter(function(x){ return x.status==='unpaid'; }); var pay='';
@@ -466,13 +470,13 @@ function newsTab(){
   var att=k.att||{}, ym=todayStr().slice(0,7), Y=Number(ym.slice(0,4)), M=Number(ym.slice(5,7))-1;
   var first=new Date(Y,M,1).getDay(), last=new Date(Y,M+1,0).getDate(), tdd=Number(todayStr().slice(8,10));
   var cal=['일','월','화','수','목','금','토'].map(function(w){ return '<div class="wd">'+w+'</div>'; }).join(''); for(var i=0;i<first;i++) cal+='<div></div>';
-  var pr=0, mk=0, ab=0;
-  for(var dd=1; dd<=last; dd++){ var ds=ym+'-'+(dd<10?'0':'')+dd, v=att[ds], cls='d';
-    if(v==='출석'){ cls+=' att'; pr++; } else if(v==='결석'){ cls+=' ab'; ab++; } else if(v){ cls+=' mk'; mk++; }
-    if(dd===tdd) cls+=' today'; cal+='<div class="'+cls+'" title="'+esc(v||'')+'">'+dd+'</div>'; }
+  var pr=0, mk=0, ab=0, offN=0, offSet={}; (f.offDays||[]).forEach(function(d){ offSet[d]=1; });
+  for(var dd=1; dd<=last; dd++){ var ds=ym+'-'+(dd<10?'0':'')+dd, v=att[ds], cls='d', isOff=!!offSet[ds]&&!v;
+    if(v==='출석'){ cls+=' att'; pr++; } else if(v==='결석'){ cls+=' ab'; ab++; } else if(v){ cls+=' mk'; mk++; } else if(isOff){ cls+=' off'; offN++; }
+    if(dd===tdd) cls+=' today'; cal+='<div class="'+cls+'" title="'+esc(v||(isOff?'휴관':''))+'">'+dd+(isOff?'<em>휴관</em>':'')+'</div>'; }
   return '<div class="sec"><h2>행사 · 공지</h2><span>전체 공개</span></div>'+ev+
-    '<div class="sec"><h2>이번 달 출석</h2><span>'+Y+'년 '+(M+1)+'월</span></div><div class="card"><div class="calhead"><b>'+(M+1)+'월</b><span class="tiny">출석 '+(pr+mk)+'회 · 결석 '+ab+'회</span></div><div class="cal">'+cal+'</div>'+
-    '<div class="callg"><span><i style="background:#9BDCAF"></i>출석</span><span><i style="background:#A7C4F2"></i>보강 등</span><span><i style="background:#F5B3AC"></i>결석</span><span><i style="background:transparent;border:2px solid var(--point)"></i>오늘</span></div></div>';
+    '<div class="sec"><h2>이번 달 출석</h2><span>'+Y+'년 '+(M+1)+'월</span></div><div class="card"><div class="calhead"><b>'+(M+1)+'월</b><span class="tiny">출석 '+(pr+mk)+'회 · 결석 '+ab+'회'+(offN?' · 휴관 '+offN+'일':'')+'</span></div><div class="cal">'+cal+'</div>'+
+    '<div class="callg"><span><i style="background:#9BDCAF"></i>출석</span><span><i style="background:#A7C4F2"></i>보강 등</span><span><i style="background:#F5B3AC"></i>결석</span><span><i style="background:repeating-linear-gradient(135deg,#E6DCE8 0 2px,#FAF7FB 2px 4px);border:1px solid #E6DCE8"></i>휴관</span><span><i style="background:transparent;border:2px solid var(--point)"></i>오늘</span></div></div>';
 }
 window.applyEvent=function(id){
   var f=ST.fam||{}, e=(f.events||[]).filter(function(x){ return x.id===id; })[0], k=kid(); if(!e) return;
