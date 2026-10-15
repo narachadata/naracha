@@ -43,7 +43,7 @@ input.code{ width:100%; border:1.5px solid var(--line); border-radius:12px; padd
 <body>
 <div id="app"></div>
 <script>
-var APP_VER="p1.2";   /* p1.2: 학부모 전용 키(parent 읽기·popen만) · iOS 홈 아이콘 · 발행 시점 안내 */
+var APP_VER="p1.3";   /* p1.3: "코드는 맞는데 데이터 없음"(NODATA) 안내 분리 · p1.2: 학부모 전용 키(parent 읽기·popen만) · iOS 홈 아이콘 · 발행 시점 안내 */
 var GSHEET_URL="https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
 var KEY="NARACHA-P-LS25WAT2";   /* 학부모 전용 키 — 서버 v7에서 parent(읽기)·popen(오픈 기록)만 허용 */
 var LS="naracha_parent_v1";
@@ -131,7 +131,7 @@ async function loadFam(code){
   var d=await fetchStore();
   var h=await pHash(code);
   var blob=d.fams[h];
-  if(!blob) throw new Error('NOCODE');
+  if(!blob) throw new Error((d.codes&&d.codes[h])?'NODATA':'NOCODE');   /* p1.3: 코드는 발급돼 있는데 가족 데이터만 없음 → 따로 안내 */
   var key=await pKey(code);
   var pt=await crypto.subtle.decrypt({name:'AES-GCM', iv:abFromB64(blob.iv)}, key, abFromB64(blob.ct));
   var fam=JSON.parse(new TextDecoder().decode(pt));
@@ -150,7 +150,8 @@ async function tryLogin(code, isNewDevice){
     render(); reportOpen();
   }catch(e){
     var m=String(e&&e.message||e);
-    ST.err = m==='NOCODE' ? '등록되지 않았거나 폐기된 코드입니다.<br>도장에서 받은 <b>최신 링크</b>로 다시 열어 주세요.'
+    ST.err = m==='NODATA' ? '코드는 확인됐지만 아이 정보가 아직 연결되지 않았습니다.<br>도장에 말씀해 주시면 바로 연결해 드립니다 ☎'
+      : m==='NOCODE' ? '등록되지 않았거나 폐기된 코드입니다.<br>도장에서 받은 <b>최신 링크</b>로 다시 열어 주세요.'
       : m==='EMPTY'||m==='SCHEMA' ? '아직 데이터가 준비되지 않았습니다.<br>도장에 문의해 주세요.'
       : '연결이 원활하지 않습니다. 잠시 후 다시 시도해 주세요.';
     ST.view='login'; ST.codeInput=code; render();
