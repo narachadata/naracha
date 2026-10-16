@@ -186,6 +186,12 @@ input.code{width:100%;border:1.5px solid var(--line);border-radius:14px;padding:
 .scal .sd.sun .dn{color:#C8342A}.scal .sd.sat .dn{color:#2B5FB8}
 .scal .pillv{display:block;margin:1px 1px 0;border-radius:6px;font-size:8.5px;font-weight:800;line-height:1.35;padding:1px 2px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .scal .pillv.off2{background:#C8342A}.scal .pillv.exam{background:#1F2E5C}.scal .pillv.comp{background:#F08A24}.scal .pillv.ev{background:#2E9E4F}.scal .pillv.nl{background:#2B5FB8}
+.dpop{position:fixed;inset:0;background:rgba(60,51,80,.45);z-index:70;display:flex;align-items:flex-end;justify-content:center}
+.dpop .sheet{background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:430px;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgba(60,51,80,.25)}
+.dpop h3{margin:0 0 10px;font-size:19px}
+.dpop .row{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-top:1px dashed var(--line);font-size:15.5px;line-height:1.5}
+.dpop .row:first-of-type{border-top:0}
+.dpop .cdot{flex:0 0 auto;width:12px;height:12px;border-radius:4px;margin-top:5px}
 .calnav{display:flex;align-items:center;gap:8px;margin-bottom:9px}
 .calnav b{font-family:"Jua",sans-serif;font-size:19px}
 .calnav button{width:30px;height:30px;border-radius:10px;background:#F4F0FA;font-size:14px;font-weight:800;color:var(--ink-2)}
@@ -236,7 +242,7 @@ nav button[aria-current="true"]{background:var(--point);color:#fff;box-shadow:0 
 <div class="toast" id="toast" hidden></div>
 <script>
 /* ══ 1. 버전·상수 ══ */
-var APP_VER="p2.12";   /* p2.12: 홈 심사 카드 「지난 심사(8월 28일) 이후 …」처럼 지난 심사 날짜를 괄호로 표시(기록 없으면 종전처럼 「지난 심사 이후」), 뒤쪽 중복 「마지막 심사」 표기는 정리 · p2.11: 홈 심사 카드 기준 명확화(관장님 지시) — 「이번 심사 대상이에요!」·심사일 D-day는 도장 [심사확정]일 때만, 횟수 충족은 「심사 준비 횟수 충족」+확정 안내 문구(횟수는 참고) · p2.10: 소식 탭 맨 위에 「나라차 일정 캘린더」 — 행사·소식지 일정·휴관일을 소식지 달력 색 규칙(휴관 빨강·심사 남색·대회 주황·행사 초록)으로 월 달력에 표시, ◀▶ 달 이동 · p2.9: 시범단 배지를 수련생관리 프로그램의 배지 이미지(DEMO_BADGE)로 교체(사진 옆·학적부 이름 앞) · p2.8: 첫 화면 개편(관장님 17건+시범단 배지) — ①형제 칩을 제목 오른쪽 한 줄로 ②베타 안내 박스 삭제(머리글 소제목 유지) ③아바타에 수련생 사진(발행 ph, 없으면 이름) ④덕목 표기 삭제 ⑤띠 이름 옆 띠 색 패치 ⑥「수련 등록 현황」 제목/「N/M회 수련 등록」 표기 ⑦등록일 이전 달은 「수련 전」(미달 아님) ⑧신규 등록(등록일이 이번 기간 내)은 이월 보강 0 표기 ⑨기준 횟수 설명문 삭제 ⑩급수 미입력=9급 흰띠 ⑪운영규정 [크게 보기]를 상단 소제목 줄 알약으로 ⑫홈 도장 소식 → 이번 달 출석 달력(소식 탭에서 이동) ⑬하단 탭: 운영규정 맨 오른쪽 ⑭탭바 시인성(테두리·진한 글자·선택 탭 주황 알약) ⑮시범단 배지(사진 옆·학적부 이름 앞, 발행 demo) ⑯카톡 썸네일·앱 아이콘 Na로 ⑰성인 수련생 본인 계정(반 성인1·2 또는 만19세↑ 전원)은 「나라차 수련생앱」 — 남색 톤 테마·문구(나의 성장/나의 등록 정보/내 기록만) 차별화 · p2.7: 심사 기준 표기 "기준 24회 이상"으로(관장님 지침) · p2.6: 머리글에 BETA 배지·"베타테스트 중 · 버전", 홈 맨 위에 베타 안내 + 문의는 도장 카톡으로 · p2.5: 하단 탭 이름 "내정보" → "📋 학적부"(내용에 맞게) · p2.4: 글자 크기 전체 확대(본문 16px, 작은 글자 13px 이상 — 노안 배려) · 띠 올라온 길에 승급 기록의 취득 연.월 표기 · 소식 탭: 다가오는 행사 날짜순(D-n)·지난 행사 숨김·소식지 일정 표시 · 하단 탭에 [📜 운영규정](rules.html) 추가 · p2.3: 카톡 안에서 바로 보기 — 설치·Chrome 전환 안내 제거, 새 기기 생년월일 확인 제거(링크가 열쇠), 휴대폰 푸시 보류(인앱 브라우저 미지원), 주소의 #코드 유지(새로고침 안전) · p2.2: 휴대폰 푸시 알림(서비스워커 parent-sw.js · [알림 받기] 한 번 → 도장이 보내는 등원/하원·공지/행사·측정·수납 알림 수신, 카테고리 켜고 끄기 없음) · 소식 탭에 도장 게시판(board 창고) 공지·행사 표시 · p2.1: 이번 달 출석 달력에 휴관일 표시(빗금 칸 + "휴관" 글자, 범례·건수)·오늘 휴관이면 홈 오늘 칸에 안내 (발행 offDays, 관리앱 v13.452) · p2.0: 디자인 B안(친근 성장형)·하단 4탭(홈·성장·소식·내정보) · 발행 데이터 v3 · 가족 코드 로그인/암호화/설치 안내/오픈 기록은 p1.x 그대로 */
+var APP_VER="p2.13";   /* p2.13: 일정 캘린더 날짜 칸을 누르면 그날 일정 전체를 바텀시트로(긴 일정명이 잘려도 손가락 탭으로 확인 — 모바일 우선), 마우스 올리면 말풍선(title)도 유지 · p2.12: 홈 심사 카드 「지난 심사(8월 28일) 이후 …」처럼 지난 심사 날짜를 괄호로 표시(기록 없으면 종전처럼 「지난 심사 이후」), 뒤쪽 중복 「마지막 심사」 표기는 정리 · p2.11: 홈 심사 카드 기준 명확화(관장님 지시) — 「이번 심사 대상이에요!」·심사일 D-day는 도장 [심사확정]일 때만, 횟수 충족은 「심사 준비 횟수 충족」+확정 안내 문구(횟수는 참고) · p2.10: 소식 탭 맨 위에 「나라차 일정 캘린더」 — 행사·소식지 일정·휴관일을 소식지 달력 색 규칙(휴관 빨강·심사 남색·대회 주황·행사 초록)으로 월 달력에 표시, ◀▶ 달 이동 · p2.9: 시범단 배지를 수련생관리 프로그램의 배지 이미지(DEMO_BADGE)로 교체(사진 옆·학적부 이름 앞) · p2.8: 첫 화면 개편(관장님 17건+시범단 배지) — ①형제 칩을 제목 오른쪽 한 줄로 ②베타 안내 박스 삭제(머리글 소제목 유지) ③아바타에 수련생 사진(발행 ph, 없으면 이름) ④덕목 표기 삭제 ⑤띠 이름 옆 띠 색 패치 ⑥「수련 등록 현황」 제목/「N/M회 수련 등록」 표기 ⑦등록일 이전 달은 「수련 전」(미달 아님) ⑧신규 등록(등록일이 이번 기간 내)은 이월 보강 0 표기 ⑨기준 횟수 설명문 삭제 ⑩급수 미입력=9급 흰띠 ⑪운영규정 [크게 보기]를 상단 소제목 줄 알약으로 ⑫홈 도장 소식 → 이번 달 출석 달력(소식 탭에서 이동) ⑬하단 탭: 운영규정 맨 오른쪽 ⑭탭바 시인성(테두리·진한 글자·선택 탭 주황 알약) ⑮시범단 배지(사진 옆·학적부 이름 앞, 발행 demo) ⑯카톡 썸네일·앱 아이콘 Na로 ⑰성인 수련생 본인 계정(반 성인1·2 또는 만19세↑ 전원)은 「나라차 수련생앱」 — 남색 톤 테마·문구(나의 성장/나의 등록 정보/내 기록만) 차별화 · p2.7: 심사 기준 표기 "기준 24회 이상"으로(관장님 지침) · p2.6: 머리글에 BETA 배지·"베타테스트 중 · 버전", 홈 맨 위에 베타 안내 + 문의는 도장 카톡으로 · p2.5: 하단 탭 이름 "내정보" → "📋 학적부"(내용에 맞게) · p2.4: 글자 크기 전체 확대(본문 16px, 작은 글자 13px 이상 — 노안 배려) · 띠 올라온 길에 승급 기록의 취득 연.월 표기 · 소식 탭: 다가오는 행사 날짜순(D-n)·지난 행사 숨김·소식지 일정 표시 · 하단 탭에 [📜 운영규정](rules.html) 추가 · p2.3: 카톡 안에서 바로 보기 — 설치·Chrome 전환 안내 제거, 새 기기 생년월일 확인 제거(링크가 열쇠), 휴대폰 푸시 보류(인앱 브라우저 미지원), 주소의 #코드 유지(새로고침 안전) · p2.2: 휴대폰 푸시 알림(서비스워커 parent-sw.js · [알림 받기] 한 번 → 도장이 보내는 등원/하원·공지/행사·측정·수납 알림 수신, 카테고리 켜고 끄기 없음) · 소식 탭에 도장 게시판(board 창고) 공지·행사 표시 · p2.1: 이번 달 출석 달력에 휴관일 표시(빗금 칸 + "휴관" 글자, 범례·건수)·오늘 휴관이면 홈 오늘 칸에 안내 (발행 offDays, 관리앱 v13.452) · p2.0: 디자인 B안(친근 성장형)·하단 4탭(홈·성장·소식·내정보) · 발행 데이터 v3 · 가족 코드 로그인/암호화/설치 안내/오픈 기록은 p1.x 그대로 */
 var PARENT_VER=APP_VER;
 var GSHEET_URL="https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
 var KEY="NARACHA-P-LS25WAT2";   /* 학부모 전용 키 — 서버 v7+에서 parent(읽기)·popen(오픈 기록)만 허용 */
@@ -515,6 +521,18 @@ window.shareCert=function(){
 };
 /* ── 소식 ── */
 /* 나라차 일정 캘린더 — 행사(발행 events)·소식지 일정(board)·휴관일을 한 달력에 (소식지 달력 색 규칙: 휴관 빨강·심사 남색·대회 주황·행사 초록) */
+/* 날짜 칸을 누르면 그날 일정 전체를 바텀시트로 — 알약 글자가 잘려도 손가락 탭으로 전부 확인 (모바일 우선) */
+var CAL_C={off2:'#C8342A', exam:'#1F2E5C', comp:'#F08A24', ev:'#2E9E4F', nl:'#2B5FB8'};
+window.calDayPop=function(ds){
+  var items=(window.__calDay||{})[ds]||[]; if(!items.length) return;
+  var old=document.getElementById('dpop'); if(old) old.remove();
+  var ov=document.createElement('div'); ov.className='dpop'; ov.id='dpop';
+  ov.innerHTML='<div class="sheet"><h3>'+esc(md(ds))+' 일정</h3>'+
+    items.map(function(x){ return '<div class="row"><span class="cdot" style="background:'+(CAL_C[x.c]||'#A79BB4')+'"></span><span>'+esc(x.t)+'</span></div>'; }).join('')+
+    '<button class="cta ghost" style="margin-top:12px" onclick="document.getElementById(\'dpop\').remove()">닫기</button></div>';
+  ov.addEventListener('click', function(ev){ if(ev.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+};
 window.calMove=function(d){ var ym=ST.calYm||todayStr().slice(0,7); var y=Number(ym.slice(0,4)), m=Number(ym.slice(5,7))-1+d; var t=y*12+m; ST.calYm=Math.floor(t/12)+'-'+((t%12+1)<10?'0':'')+(t%12+1); render(); };
 function schedCalBox(){
   var f=ST.fam||{};
@@ -530,6 +548,7 @@ function schedCalBox(){
       if(ds.slice(0,7)!==ym) continue;
       var key=ds+'|'+title; if(seen[key]) continue; seen[key]=1;
       (byDay[ds]=byDay[ds]||[]).push({t:title, c:cls});
+      void 0;
     }
   }
   (f.events||[]).forEach(function(e){ addRange(e.date, e.end, e.title, clsOf((e.type||'')+' '+(e.title||''))); });
@@ -540,8 +559,9 @@ function schedCalBox(){
   for(var dd=1; dd<=lastD; dd++){
     var ds=ym+'-'+(dd<10?'0':'')+dd, items=byDay[ds]||[], wd=new Date(Y,M,dd).getDay();
     var cls='sd'+(wd===0?' sun':wd===6?' sat':'')+(items.some(function(x){return x.c==='off2';})?' off':'')+(ds===td?' today':'');
-    h+='<div class="'+cls+'"><span class="dn">'+dd+'</span>'+items.slice(0,2).map(function(x){ return '<span class="pillv '+x.c+'" title="'+esc(x.t)+'">'+esc(x.t)+'</span>'; }).join('')+(items.length>2?'<span class="pillv" style="background:#A79BB4">+'+(items.length-2)+'</span>':'')+'</div>';
+    h+='<div class="'+cls+'"'+(items.length?' onclick="calDayPop(\''+ds+'\')" style="cursor:pointer"':'')+'><span class="dn">'+dd+'</span>'+items.slice(0,2).map(function(x){ return '<span class="pillv '+x.c+'" title="'+esc(x.t)+'">'+esc(x.t)+'</span>'; }).join('')+(items.length>2?'<span class="pillv" style="background:#A79BB4">+'+(items.length-2)+'</span>':'')+'</div>';
   }
+  window.__calDay=byDay;
   return '<div class="sec"><h2>나라차 일정 캘린더</h2><span>행사 · 심사 · 휴관</span></div>'+
     '<div class="card"><div class="calnav"><button onclick="calMove(-1)" aria-label="이전 달">◀</button><b>'+Y+'년 '+(M+1)+'월</b><button onclick="calMove(1)" aria-label="다음 달">▶</button><span style="flex:1"></span>'+(ym!==todayStr().slice(0,7)?'<button style="width:auto;padding:0 10px;font-size:12px" onclick="ST.calYm=todayStr().slice(0,7);render()">이번 달</button>':'')+'</div>'+
     '<div class="scal">'+h+'</div>'+
