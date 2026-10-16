@@ -44,6 +44,9 @@ header{position:sticky;top:0;z-index:30;padding-top:env(safe-area-inset-top,0px)
 .hbar{display:flex;align-items:center;gap:9px;padding:13px 16px 9px}
 .hbar b{font-family:"Jua",sans-serif;font-size:19px}
 .hbar .sub{font-size:13px;color:var(--ink-2)}
+.beta{display:inline-block;vertical-align:2px;margin-left:4px;font-family:"IBM Plex Sans KR",sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:#8A4F12;background:#FFF0E2;border:1px solid #F5C9A3;border-radius:99px;padding:1px 7px}
+.betabox{background:#FFF8EC;border:1.5px solid #F2D7AE;border-radius:var(--r-md);padding:12px 14px;margin-bottom:13px;font-size:14.5px;line-height:1.6;color:#6B4A12}
+.betabox b{color:#3C3350}
 .hbtn{margin-left:auto;height:32px;border-radius:99px;background:#fff;box-shadow:var(--sh-sm);display:inline-flex;align-items:center;gap:5px;padding:0 12px;font-size:13.5px;font-weight:600;color:var(--ink-2)}
 .kids{display:flex;gap:7px;padding:0 16px 8px;overflow-x:auto}
 .kids button{flex:0 0 auto;border-radius:99px;padding:7px 16px;font-size:15.5px;font-weight:600;background:#fff;box-shadow:var(--sh-sm);color:var(--ink-2)}
@@ -208,7 +211,7 @@ nav button[aria-current="true"]{color:var(--point)}
 <div class="toast" id="toast" hidden></div>
 <script>
 /* ══ 1. 버전·상수 ══ */
-var APP_VER="p2.5";   /* p2.5: 하단 탭 이름 "내정보" → "📋 학적부"(내용에 맞게) · p2.4: 글자 크기 전체 확대(본문 16px, 작은 글자 13px 이상 — 노안 배려) · 띠 올라온 길에 승급 기록의 취득 연.월 표기 · 소식 탭: 다가오는 행사 날짜순(D-n)·지난 행사 숨김·소식지 일정 표시 · 하단 탭에 [📜 운영규정](rules.html) 추가 · p2.3: 카톡 안에서 바로 보기 — 설치·Chrome 전환 안내 제거, 새 기기 생년월일 확인 제거(링크가 열쇠), 휴대폰 푸시 보류(인앱 브라우저 미지원), 주소의 #코드 유지(새로고침 안전) · p2.2: 휴대폰 푸시 알림(서비스워커 parent-sw.js · [알림 받기] 한 번 → 도장이 보내는 등원/하원·공지/행사·측정·수납 알림 수신, 카테고리 켜고 끄기 없음) · 소식 탭에 도장 게시판(board 창고) 공지·행사 표시 · p2.1: 이번 달 출석 달력에 휴관일 표시(빗금 칸 + "휴관" 글자, 범례·건수)·오늘 휴관이면 홈 오늘 칸에 안내 (발행 offDays, 관리앱 v13.452) · p2.0: 디자인 B안(친근 성장형)·하단 4탭(홈·성장·소식·내정보) · 발행 데이터 v3 · 가족 코드 로그인/암호화/설치 안내/오픈 기록은 p1.x 그대로 */
+var APP_VER="p2.6";   /* p2.6: 머리글에 BETA 배지·"베타테스트 중 · 버전", 홈 맨 위에 베타 안내 + 문의는 도장 카톡으로 · p2.5: 하단 탭 이름 "내정보" → "📋 학적부"(내용에 맞게) · p2.4: 글자 크기 전체 확대(본문 16px, 작은 글자 13px 이상 — 노안 배려) · 띠 올라온 길에 승급 기록의 취득 연.월 표기 · 소식 탭: 다가오는 행사 날짜순(D-n)·지난 행사 숨김·소식지 일정 표시 · 하단 탭에 [📜 운영규정](rules.html) 추가 · p2.3: 카톡 안에서 바로 보기 — 설치·Chrome 전환 안내 제거, 새 기기 생년월일 확인 제거(링크가 열쇠), 휴대폰 푸시 보류(인앱 브라우저 미지원), 주소의 #코드 유지(새로고침 안전) · p2.2: 휴대폰 푸시 알림(서비스워커 parent-sw.js · [알림 받기] 한 번 → 도장이 보내는 등원/하원·공지/행사·측정·수납 알림 수신, 카테고리 켜고 끄기 없음) · 소식 탭에 도장 게시판(board 창고) 공지·행사 표시 · p2.1: 이번 달 출석 달력에 휴관일 표시(빗금 칸 + "휴관" 글자, 범례·건수)·오늘 휴관이면 홈 오늘 칸에 안내 (발행 offDays, 관리앱 v13.452) · p2.0: 디자인 B안(친근 성장형)·하단 4탭(홈·성장·소식·내정보) · 발행 데이터 v3 · 가족 코드 로그인/암호화/설치 안내/오픈 기록은 p1.x 그대로 */
 var PARENT_VER=APP_VER;
 var GSHEET_URL="https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
 var KEY="NARACHA-P-LS25WAT2";   /* 학부모 전용 키 — 서버 v7+에서 parent(읽기)·popen(오픈 기록)만 허용 */
@@ -348,7 +351,7 @@ function kid(){ var ks=(ST.fam&&ST.fam.kids)||[]; return ks[Math.min(ST.kid,ks.l
 function header(){
   var ks=(ST.fam&&ST.fam.kids)||[]; var chips='';
   if(ks.length>1) chips='<div class="kids">'+ks.map(function(k,i){ return '<button class="'+(i===ST.kid?'on':'')+'" onclick="pickKid('+i+')">'+esc(k.n)+'</button>'; }).join('')+'</div>';
-  return '<header><div class="hbar"><div><b>나라차 학부모앱</b><div class="sub">나라차태권도'+(ST.fam&&ST.fam.pubD?' · '+esc(dot(ST.fam.pubD))+' 기준':'')+'</div></div>'+
+  return '<header><div class="hbar"><div><b>나라차 학부모앱 <span class="beta">BETA</span></b><div class="sub">베타테스트 중 · '+APP_VER+(ST.fam&&ST.fam.pubD?' · '+esc(dot(ST.fam.pubD))+' 기준':'')+'</div></div>'+
     '<button class="hbtn" onclick="doRefresh()" title="새로고침">↻ 새로고침</button></div>'+chips+'</header>';
 }
 function installGuide(){ return ''; }   /* p2.3: 설치·Chrome 전환 안내 없음 — 카톡 안에서 바로 본다(관장님 방침) */
@@ -418,7 +421,8 @@ function homeTab(){
     (posts.length?posts.map(function(p){ return '<div class="item" onclick="goTab(\'news\')"><div class="ic">'+(p.kind==='event'?'📣':'📢')+'</div><div><b>'+esc(p.title)+'</b><p>'+esc(p.kind==='event'&&p.date?md(p.date)+' · ':'')+esc(String(p.body||'').slice(0,60))+'</p></div></div>'; }).join(''):'')+
     (evs.length?evs.map(function(e){ return '<div class="item"><div class="ic">🗓</div><div><b>'+esc(e.title)+'</b><p>'+esc([md(e.date)+(e.end&&e.end!==e.date?'~'+md(e.end):''), e.time, e.place].filter(Boolean).join(' · '))+'</p></div></div>'; }).join(''):'')+
     (!posts.length&&!evs.length?'<div class="item"><div class="ic">📣</div><div><b>'+(ST.boardErr?'소식을 불러오지 못했어요':'새 소식이 없습니다')+'</b><p>'+(ST.boardErr?'잠시 후 새로고침해 주세요.':'공지·행사가 올라오면 여기에 보여요.')+'</p></div></div>':'')+'</div>';
-  return hero+periodBox(k)+ring+today+pay+news+'<button class="cta" onclick="goTab(\'grow\')">우리 아이 성장 보러 가기</button>';
+  var beta='<div class="betabox"><b>🧪 베타테스트 중인 학부모앱입니다 ('+APP_VER+')</b><br>아직 다듬는 중이라 표시가 어색하거나 궁금한 점이 있으면 <b>도장 카톡</b>으로 편하게 문의해 주세요. 소중한 의견은 바로 반영하겠습니다.</div>';
+  return beta+hero+periodBox(k)+ring+today+pay+news+'<button class="cta" onclick="goTab(\'grow\')">우리 아이 성장 보러 가기</button>';
 }
 /* ── 성장 ── */
 function growTab(){
