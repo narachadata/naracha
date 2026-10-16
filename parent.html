@@ -207,12 +207,12 @@ nav button[aria-current="true"]{color:var(--point)}
 <div class="toast" id="toast" hidden></div>
 <script>
 /* ══ 1. 버전·상수 ══ */
-var APP_VER="p2.2";   /* p2.2: 휴대폰 푸시 알림(서비스워커 parent-sw.js · [알림 받기] 한 번 → 도장이 보내는 등원/하원·공지/행사·측정·수납 알림 수신, 카테고리 켜고 끄기 없음) · 소식 탭에 도장 게시판(board 창고) 공지·행사 표시 · p2.1: 이번 달 출석 달력에 휴관일 표시(빗금 칸 + "휴관" 글자, 범례·건수)·오늘 휴관이면 홈 오늘 칸에 안내 (발행 offDays, 관리앱 v13.452) · p2.0: 디자인 B안(친근 성장형)·하단 4탭(홈·성장·소식·내정보) · 발행 데이터 v3 · 가족 코드 로그인/암호화/설치 안내/오픈 기록은 p1.x 그대로 */
+var APP_VER="p2.3";   /* p2.3: 카톡 안에서 바로 보기 — 설치·Chrome 전환 안내 제거, 새 기기 생년월일 확인 제거(링크가 열쇠), 휴대폰 푸시 보류(인앱 브라우저 미지원), 주소의 #코드 유지(새로고침 안전) · p2.2: 휴대폰 푸시 알림(서비스워커 parent-sw.js · [알림 받기] 한 번 → 도장이 보내는 등원/하원·공지/행사·측정·수납 알림 수신, 카테고리 켜고 끄기 없음) · 소식 탭에 도장 게시판(board 창고) 공지·행사 표시 · p2.1: 이번 달 출석 달력에 휴관일 표시(빗금 칸 + "휴관" 글자, 범례·건수)·오늘 휴관이면 홈 오늘 칸에 안내 (발행 offDays, 관리앱 v13.452) · p2.0: 디자인 B안(친근 성장형)·하단 4탭(홈·성장·소식·내정보) · 발행 데이터 v3 · 가족 코드 로그인/암호화/설치 안내/오픈 기록은 p1.x 그대로 */
 var PARENT_VER=APP_VER;
 var GSHEET_URL="https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
 var KEY="NARACHA-P-LS25WAT2";   /* 학부모 전용 키 — 서버 v7+에서 parent(읽기)·popen(오픈 기록)만 허용 */
 var LS="naracha_parent_v1";
-var VAPID_PUB="BIKzvYtbQRaKeDCeqq1P2VB2BAwvFoEwqwnTdcDKFYB--iirNQ-bcx56_z0qbALYYNQjQBeO2ecrkkduTMthQsk";   /* 휴대폰 푸시 서명 공개키(서버 v9와 짝) */
+var _VAPID_PUB_UNUSED="BIKzvYtbQRaKeDCeqq1P2VB2BAwvFoEwqwnTdcDKFYB--iirNQ-bcx56_z0qbALYYNQjQBeO2ecrkkduTMthQsk";   /* 휴대폰 푸시 서명 공개키(서버 v9와 짝) */
 var PUSH_LS="naracha_parent_push";
 var EXAM_NEED=24;
 
@@ -235,8 +235,6 @@ var EXAM_NEED=24;
 function isStandalone(){ try{ return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; } }
 function isInApp(){ var u=navigator.userAgent||''; return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(u); }
 function isIOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent||''); }
-var deferredPrompt=null;
-window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferredPrompt=e; render(); });
 function saved(){ try{ return JSON.parse(localStorage.getItem(LS)||'null'); }catch(e){ return null; } }
 function saveLS(o){ try{ localStorage.setItem(LS, JSON.stringify(o)); }catch(e){} }
 function codeFromUrl(){
@@ -244,7 +242,7 @@ function codeFromUrl(){
     v=v.toUpperCase().replace(/[^A-Z0-9]/g,''); return v.length>=6?v:''; }catch(e){ return ''; }
 }
 var __linkCode=codeFromUrl();
-try{ if(location.hash) history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+/* p2.3: 주소의 #코드는 그대로 둔다 — 카톡 안에서 새로고침·다시 열기 해도 바로 열리도록 */
 function enc(){ return new TextEncoder(); }
 async function pKey(code){ var base=await crypto.subtle.importKey('raw', enc().encode(String(code)), 'PBKDF2', false, ['deriveKey']);
   return crypto.subtle.deriveKey({name:'PBKDF2', salt:enc().encode('naracha-parent-v1'), iterations:60000, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['decrypt']); }
@@ -280,8 +278,8 @@ async function loadFam(code){
 async function tryLogin(code, isNewDevice){
   ST.err=''; ST.view='loading'; render();
   try{ var fam=await loadFam(code);
-    if(isNewDevice){ ST.pend={code:code, fam:fam}; ST.view='verify'; render(); return; }
-    ST.code=code; ST.fam=fam; ST.kid=Math.min(ST.kid||0, (fam.kids||[]).length-1); ST.view='home'; saveLS({code:code, ok:1}); render(); reportOpen(); loadBoard(); pushRefresh();
+    void isNewDevice;   /* p2.3: 생년월일 확인 단계 없음 — 링크(가족 코드)가 곧 열쇠. 카톡에서 누르면 바로 아이 정보 */
+    ST.code=code; ST.fam=fam; ST.kid=Math.min(ST.kid||0, (fam.kids||[]).length-1); ST.view='home'; saveLS({code:code, ok:1}); render(); reportOpen(); loadBoard();
   }catch(e){ var m=String(e&&e.message||e);
     ST.err = m==='NODATA' ? '코드는 확인됐지만 아이 정보가 아직 연결되지 않았습니다.<br>도장에 말씀해 주시면 바로 연결해 드립니다 ☎'
       : m==='NOCODE' ? '등록되지 않았거나 폐기된 코드입니다.<br>도장에서 받은 <b>최신 링크</b>로 다시 열어 주세요.'
@@ -296,7 +294,7 @@ window.verifyBy=function(){
   var norm=d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);
   var hit=(ST.pend.fam.kids||[]).some(function(k){ return String(k.by||'').slice(0,10)===norm; });
   if(!hit){ ST.err='자녀 생년월일과 일치하지 않습니다.<br>다시 확인해 주세요.'; render(); return; }
-  ST.code=ST.pend.code; ST.fam=ST.pend.fam; ST.pend=null; ST.kid=0; ST.view='home'; saveLS({code:ST.code, ok:1}); render(); reportOpen(); loadBoard(); pushRefresh();
+  ST.code=ST.pend.code; ST.fam=ST.pend.fam; ST.pend=null; ST.kid=0; ST.view='home'; saveLS({code:ST.code, ok:1}); render(); reportOpen(); loadBoard();
 };
 window.doLoginInput=function(){ var v=((document.getElementById('codeIn')||{}).value||'').toUpperCase().replace(/[^A-Z0-9]/g,''); if(v.length<6){ ST.err='도장에서 받은 코드를 입력해 주세요.'; render(); return; } tryLogin(v, true); };
 window.askLogout=function(){ ST.ask='logout'; render(); };
@@ -305,50 +303,8 @@ window.doLogout=function(){ try{ localStorage.removeItem(LS); }catch(e){} locati
 window.doRefresh=function(){ if(ST.code){ say('최신 정보를 불러옵니다…'); ST.board=null; tryLogin(ST.code, false); } };
 window.pickKid=function(i){ ST.kid=i; render(); };
 window.goTab=function(t){ ST.tab=t; render(); window.scrollTo(0,0); };
-window.doInstall=function(){ if(deferredPrompt){ deferredPrompt.prompt(); } };
-window.openChrome=function(){ location.href='intent://'+location.host+location.pathname+(ST.code?('#'+ST.code):'')+'#Intent;scheme=https;package=com.android.chrome;end'; };
 
-/* ══ 휴대폰 푸시 알림(p2.2) — 켜는 것만 학부모가, 무엇을 보낼지는 도장이 정한다 ══ */
-function pushSupported(){ return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window); }
-function pushSaved(){ try{ return JSON.parse(localStorage.getItem(PUSH_LS)||'null'); }catch(e){ return null; } }
-function u8FromB64u(s){ s=String(s).replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; var b=atob(s), u=new Uint8Array(b.length); for(var i=0;i<b.length;i++) u[i]=b.charCodeAt(i); return u; }
-function swReg(){ return navigator.serviceWorker.register('parent-sw.js', {scope: location.pathname}); }   /* 범위를 이 파일 하나로 — 같은 폴더의 다른 앱에 영향 없음 */
-async function pushSend(sub){ var h=await pHash(ST.code); var kids=((ST.fam&&ST.fam.kids)||[]).map(function(k){ return k.n; });
-  var r=await fetch(GSHEET_URL,{method:'POST', body:JSON.stringify({key:KEY, action:'push_sub', sub:sub.toJSON(), fam:h, kids:kids, ua:(navigator.userAgent||'').slice(0,80)})}); var tx=await r.text();
-  if(!/^OK:/.test(tx)) throw new Error(tx.slice(0,40)); try{ localStorage.setItem(PUSH_LS, JSON.stringify({id:tx.slice(3), ep:sub.endpoint, d:todayStr()})); }catch(e){} return tx.slice(3); }
-window.enablePush=async function(){
-  if(!pushSupported()){ say(isIOS()?'아이폰은 홈 화면에 추가한 앱에서만 알림을 켤 수 있어요':'이 브라우저는 알림을 지원하지 않아요'); return; }
-  if(isIOS() && !isStandalone()){ say('먼저 홈 화면에 추가한 뒤, 그 앱에서 알림을 켜 주세요'); return; }
-  try{ ST.push='busy'; render();
-    var perm=await Notification.requestPermission(); if(perm!=='granted'){ ST.push=''; render(); say('알림이 허용되지 않았어요. 휴대폰 설정에서 허용해 주세요'); return; }
-    var reg=await swReg(); await navigator.serviceWorker.ready;
-    var sub=await reg.pushManager.getSubscription(); if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:u8FromB64u(VAPID_PUB)});
-    await pushSend(sub); ST.push=''; render(); say('✅ 알림을 켰어요. 등원·공지 등을 휴대폰으로 받아요');
-  }catch(e){ ST.push=''; render(); say('알림 설정에 실패했어요: '+String(e&&e.message||e).slice(0,40)); }
-};
-window.disablePush=async function(){
-  try{ var sv=pushSaved(); var reg=await navigator.serviceWorker.getRegistration(location.pathname); var sub=reg&&await reg.pushManager.getSubscription();
-    if(sv&&sv.id) fetch(GSHEET_URL,{method:'POST', body:JSON.stringify({key:KEY, action:'push_unsub', id:sv.id})}).catch(function(){});
-    if(sub) await sub.unsubscribe(); }catch(e){}
-  try{ localStorage.removeItem(PUSH_LS); }catch(e){} ST.ask=''; render(); say('이 기기의 알림을 껐어요');
-};
-window.testPush=async function(){ try{ var reg=await swReg(); await navigator.serviceWorker.ready; await reg.showNotification('나라차태권도 알림 테스트', {body:'이렇게 알림이 와요 🥋', icon:'parent-icon.png', tag:'nrc-test'}); say('테스트 알림을 보냈어요'); }catch(e){ say('테스트 실패: '+String(e&&e.message||e).slice(0,40)); } };
-/* 앱을 열 때마다(하루 1회) 구독·아이 이름을 서버에 다시 맞춘다(기기 교체·형제 추가 대비) */
-function pushRefresh(){ try{ var sv=pushSaved(); if(!sv||!sv.id||!pushSupported()||sv.d===todayStr()) return;
-  swReg().then(function(reg){ return reg.pushManager.getSubscription(); }).then(function(sub){ if(sub) return pushSend(sub); }).catch(function(){}); }catch(e){} }
-function pushStatusHtml(){
-  var sv=pushSaved(), on=!!(sv&&sv.id) && (!('Notification' in window) || Notification.permission==='granted');
-  var head='<div style="display:flex;align-items:center;gap:10px"><div style="font-size:26px">'+(on?'🔔':'🔕')+'</div><div style="flex:1"><b style="font-size:13.5px">휴대폰 알림 '+(on?'켜짐':'꺼짐')+'</b><div class="tiny">'+(on?'등원·하원, 공지·행사, 측정 결과, 수납 안내를 이 기기로 받아요':'켜 두면 도장에서 보내는 알림을 바로 받아요')+'</div></div></div>';
-  var body='';
-  if(on) body='<div style="display:flex;gap:8px;margin-top:10px"><button class="cta ghost" style="flex:1;padding:10px" onclick="testPush()">🔔 테스트 알림</button><button class="cta ghost" style="flex:0 0 auto;padding:10px 14px;color:var(--ink-3)" onclick="ST.ask=\'push\';render()">끄기</button></div>'+
-    (ST.ask==='push'?'<div class="confirmbox">이 기기의 알림을 끌까요?<span style="flex:1"></span><button onclick="cancelAsk()">취소</button><button class="yes" onclick="disablePush()">끄기</button></div>':'');
-  else if(ST.push==='busy') body='<div class="tiny" style="margin-top:10px;text-align:center">설정 중…</div>';
-  else if(isInApp()) body='<div class="note" style="margin-top:10px">카카오톡 안에서는 알림을 켤 수 없어요. 위 안내대로 '+(isIOS()?'Safari':'Chrome')+'로 연 뒤 홈 화면에 추가해 주세요.</div>';
-  else if(isIOS() && !isStandalone()) body='<div class="note" style="margin-top:10px">아이폰은 <b>홈 화면에 추가</b>한 앱에서만 알림을 받을 수 있어요. Safari 아래 공유 ⎋ → 홈 화면에 추가 → 추가된 앱을 열어 [알림 받기]를 눌러 주세요.</div>';
-  else if(!pushSupported()) body='<div class="note" style="margin-top:10px">이 브라우저는 알림을 지원하지 않아요. Chrome(안드로이드) 또는 홈 화면 추가(아이폰)로 열어 주세요.</div>';
-  else body='<button class="cta" style="margin-top:10px" onclick="enablePush()">📲 알림 받기</button>';
-  return head+body;
-}
+/* p2.3: 휴대폰 푸시 알림은 보류 — 카톡 안(인앱 브라우저)에서는 웹 푸시가 동작하지 않는다. 알림은 도장 카톡으로 보낸다. */
 /* ══ 오픈 기록(기기당 하루 1회, 코드 해시만) ══ */
 function reportOpen(){
   try{ var k='naracha_parent_open', tdy=new Date().toDateString(); if(localStorage.getItem(k)===tdy || !ST.code) return;
@@ -393,15 +349,7 @@ function header(){
   return '<header><div class="hbar"><div><b>나라차 학부모앱</b><div class="sub">나라차태권도'+(ST.fam&&ST.fam.pubD?' · '+esc(dot(ST.fam.pubD))+' 기준':'')+'</div></div>'+
     '<button class="hbtn" onclick="doRefresh()" title="새로고침">↻ 새로고침</button></div>'+chips+'</header>';
 }
-function installGuide(){
-  if(isStandalone()) return '';
-  if(isInApp()) return '<div class="inst"><b>📲 홈 화면에 설치하면 다음부터 앱처럼 열려요</b>'+(isIOS()
-      ? '① 오른쪽 아래 <b style="display:inline">⋯</b> → 다른 브라우저로 열기(Safari)<br>② Safari에서 공유 ⎋ → 홈 화면에 추가'
-      : '아래 버튼으로 Chrome에서 연 뒤, 안내에 따라 설치를 눌러 주세요.<button class="cta navy" style="margin-top:8px" onclick="openChrome()">Chrome으로 열기</button>')+'</div>';
-  if(deferredPrompt) return '<div class="inst"><b>📲 홈 화면에 설치</b>설치하면 아이콘으로 언제든 바로 열 수 있어요.<button class="cta" style="margin-top:8px" onclick="doInstall()">앱 설치하기</button></div>';
-  if(isIOS()) return '<div class="inst"><b>📲 홈 화면에 설치</b>Safari 아래 <b style="display:inline">공유 ⎋</b> 버튼 → <b style="display:inline">홈 화면에 추가</b>를 눌러 주세요.</div>';
-  return '';
-}
+function installGuide(){ return ''; }   /* p2.3: 설치·Chrome 전환 안내 없음 — 카톡 안에서 바로 본다(관장님 방침) */
 function vLogin(){
   return '<div class="login"><div class="logo">나</div><h1>나라차 학부모앱</h1>'+
     '<div class="card" style="margin-top:16px"><div class="msg">도장에서 카톡으로 보내드린 <b>링크</b>를 누르면 자동으로 열립니다.<br>코드를 직접 넣으실 수도 있어요.</div>'+
@@ -468,8 +416,7 @@ function homeTab(){
     (posts.length?posts.map(function(p){ return '<div class="item" onclick="goTab(\'news\')"><div class="ic">'+(p.kind==='event'?'📣':'📢')+'</div><div><b>'+esc(p.title)+'</b><p>'+esc(p.kind==='event'&&p.date?md(p.date)+' · ':'')+esc(String(p.body||'').slice(0,60))+'</p></div></div>'; }).join(''):'')+
     (evs.length?evs.map(function(e){ return '<div class="item"><div class="ic">🗓</div><div><b>'+esc(e.title)+'</b><p>'+esc([md(e.date)+(e.end&&e.end!==e.date?'~'+md(e.end):''), e.time, e.place].filter(Boolean).join(' · '))+'</p></div></div>'; }).join(''):'')+
     (!posts.length&&!evs.length?'<div class="item"><div class="ic">📣</div><div><b>'+(ST.boardErr?'소식을 불러오지 못했어요':'새 소식이 없습니다')+'</b><p>'+(ST.boardErr?'잠시 후 새로고침해 주세요.':'공지·행사가 올라오면 여기에 보여요.')+'</p></div></div>':'')+'</div>';
-  var pushHint=(!pushSaved()&&pushSupported()&&!isInApp()&&!(isIOS()&&!isStandalone()))?'<div class="inst" style="background:#F1F7FF;border-color:#C7DBF5"><b>🔔 휴대폰 알림을 켜 보세요</b>등원·하원, 공지, 측정 결과, 수납 안내를 바로 받아요.<button class="cta" style="margin-top:8px" onclick="enablePush()">📲 알림 받기</button></div>':'';
-  return hero+periodBox(k)+ring+today+pay+installGuide()+pushHint+news+'<button class="cta" onclick="goTab(\'grow\')">우리 아이 성장 보러 가기</button>';
+  return hero+periodBox(k)+ring+today+pay+news+'<button class="cta" onclick="goTab(\'grow\')">우리 아이 성장 보러 가기</button>';
 }
 /* ── 성장 ── */
 function growTab(){
@@ -559,10 +506,9 @@ function meTab(){
   var LB={paid:['납부','bg-ok'], unpaid:['미납','bg-no'], planned:['청구 예정','bg-wait']};
   var bill=(k.billing&&k.billing.length)?k.billing.map(function(x){ var t=LB[x.status]||['-','bg-wait']; return '<div class="kv"><span>'+esc(x.title)+(x.date?' <span class="tiny">'+esc(md2(x.date))+'</span>':'')+'</span><b>'+won(x.amount)+'<span class="badge '+t[1]+'">'+t[0]+'</span></b></div>'; }).join('')
     : '<div class="kv"><span class="tiny">청구·납부 내역은 관리자 기기에서 발행될 때 표시됩니다.</span><b>—</b></div>';
-  var notify=pushStatusHtml();
   return '<div class="sec"><h2>학적부</h2></div><div class="card">'+prof+hold+'</div>'+
     '<div class="sec"><h2>등록 · 청구 내역</h2><span>내 아이 기록만</span></div><div class="card">'+bill+'</div>'+
-    '<div class="sec"><h2>휴대폰 알림</h2><span>등원 · 공지 · 측정 · 수납</span></div><div class="card">'+notify+'</div>'+
+    '<div class="sec"><h2>다시 보는 방법</h2></div><div class="card" style="font-size:12.5px;line-height:1.65;color:var(--ink-2)">도장에서 보내드린 <b>카카오톡 링크</b>를 누르면 언제든 이 화면이 열려요. 대화방에 링크를 보관해 두세요.<br>휴대폰을 바꾸셔도 같은 링크로 열립니다. 링크를 잃어버리셨으면 도장에 말씀해 주세요 ☎</div>'+
     '<div class="sec"><h2>개인정보 안내</h2></div><p class="guard">이 앱은 <b>내 아이의 정보만</b> 보여 줍니다. 전화번호·주소·상담 기록과 다른 수련생의 정보는 담기지 않습니다. 데이터는 가족 코드로 암호화되어 이 코드로만 열립니다.<br>접속 링크는 개별 카카오톡으로만 보내 드리며, 링크가 다른 사람에게 전달된 것 같으면 도장에 알려 주세요. 즉시 새 링크로 바꿔 드립니다.</p>'+
     (ST.ask==='logout'?'<div class="confirmbox">로그아웃할까요? 다시 보려면 도장에서 받은 링크가 필요합니다.<span style="flex:1"></span><button onclick="cancelAsk()">취소</button><button class="yes" onclick="doLogout()">로그아웃</button></div>':'')+
     '<div class="ver">학부모앱 '+APP_VER+' · 나라차태권도'+(ST.fam&&ST.fam.pubD?' · '+esc(dot(ST.fam.pubD))+' 발행':'')+(function(){ try{ var ago=ST.fam&&ST.fam.pubT?Math.floor((Date.now()-ST.fam.pubT)/86400000):null; return ago!=null?(ago<=0?' · 오늘 갱신':' · '+ago+'일 전 갱신'):''; }catch(e){ return ''; } })()+'<br><button class="linkbtn" onclick="askLogout()">로그아웃</button></div>';

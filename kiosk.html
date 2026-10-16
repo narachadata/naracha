@@ -207,7 +207,6 @@ function unlockOrientation(){
 
 <script>
 var GSHEET_URL="https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
-var KIOSK_VER="k2.0";   /* k2.0 (2026-10-15, R4.453): 출석 확정 시 학부모 휴대폰 등원 알림 + 🏠 하원 화면(오늘 출석한 아이 → 누르면 하원 알림). 서버 v9 notify */
 var DAY_CODE=["sun","mon","tue","wed","thu","fri","sat"];
 var DAY_IDX={mon:0,tue:1,wed:2,thu:3,fri:4,sat:5};
 var DAY_KO={mon:"월",tue:"화",wed:"수",thu:"목",fri:"금",sat:"토",sun:"일"};
@@ -219,39 +218,8 @@ var S={
   matches:null, chosen:null, curSlot:null, curClassLabel:"", err:"",
   attState:null, pushTimer:null,
   mode:"grid",           /* [사진출석] grid=사진 모드(기본) · pad=번호 모드 */
-  pending:null, undoTimer:null,
-  outMap:{}, pendingOut:null   /* [k2.0] 하원 처리한 아이(오늘) · 하원 되돌리기 대기 */
+  pending:null, undoTimer:null
 };
-/* ── [k2.0] 학부모 휴대폰 알림(서버 v9) — 실패해도 출석 처리에는 영향 없음 ── */
-function kioskNotify(items){ try{ if(!S.key||!items||!items.length) return; fetch(GSHEET_URL,{method:"POST",body:JSON.stringify({key:S.key,action:"notify",items:items})}).catch(function(){}); }catch(e){} }
-function nowKo(){ var d=new Date(); return d.getHours()+"시 "+p2(d.getMinutes())+"분"; }
-try{ var _om=JSON.parse(localStorage.getItem("naracha-kiosk-out")||"{}"); if(_om.d===todayStr()) S.outMap=_om.m||{}; }catch(e){}
-function saveOutMap(){ try{ localStorage.setItem("naracha-kiosk-out", JSON.stringify({d:todayStr(), m:S.outMap})); }catch(e){} }
-/* 오늘 출석(어느 수업이든)했고 아직 하원 처리 안 한 아이 */
-function todayAttended(){
-  var wk=curWeek(), w=S.weeks[wk]; if(!w||!w.cells) return [];
-  var dc=DAY_CODE[new Date().getDay()], seen={}, out=[];
-  Object.keys(w.cells).forEach(function(key){ if(key.split("-")[0]!==dc) return; var mk=w.cells[key].marks||{};
-    Object.keys(mk).forEach(function(nm){ if(mk[nm]&&mk[nm].s==="출석"&&!seen[nm]&&!S.outMap[nm]){ seen[nm]=1; out.push(nm); } }); });
-  return out.sort(function(a,b){ return a.localeCompare(b,"ko"); });
-}
-window.openLeave=function(){ clearUndoTimer(); S.pendingOut=null; S.screen="leave"; render(); };
-window.tapLeave=function(name){ S.pendingOut=name; S.chosen=name; S.screen="leavePending"; render(); playDone(); startLeaveCountdown(); };
-function startLeaveCountdown(){
-  clearUndoTimer(); var left=UNDO_SEC*10;
-  S.undoTimer=setInterval(function(){ left--; var bar=document.getElementById("cdBar"), txt=document.getElementById("cdTxt");
-    if(bar) bar.style.width=Math.max(0,left/(UNDO_SEC*10)*100)+"%"; if(txt) txt.textContent=Math.max(0,Math.ceil(left/10))+"초 뒤 부모님께 알림이 가요";
-    if(left<=0){ clearUndoTimer(); commitLeave(); } }, 100);
-}
-function commitLeave(){
-  clearUndoTimer(); var nm=S.pendingOut; S.pendingOut=null; if(!nm){ goHome(); return; }
-  S.outMap[nm]=nowKo(); saveOutMap();
-  kioskNotify([{kind:"leave", names:[nm], title:"🏠 하원 알림", body:nm+" 수련생이 "+nowKo()+"에 나라차태권도장에서 수련 후 하원했습니다."}]);
-  S.chosen=nm; S.screen="leaveDone"; render();
-  clearTimeout(window.__t); window.__t=setTimeout(function(){ S.screen="leave"; render(); }, 2500);
-}
-window.confirmLeaveNow=function(){ commitLeave(); };
-window.undoLeave=function(){ clearUndoTimer(); S.pendingOut=null; S.chosen=null; S.screen="leave"; render(); };
 
 /* ── 날짜 유틸 ── */
 function p2(n){ return String(n).padStart(2,"0"); }
@@ -611,8 +579,7 @@ function commitPending(){
   clearUndoTimer();
   var nm=S.pending; S.pending=null;
   if(!nm){ goHome(); return; }
-  var cnt=markAttendance(nm);        /* 내부에서 schedulePush() 호출 */
-  if(cnt>0) kioskNotify([{kind:"attend", names:[nm], title:"✅ 등원 알림", body:nm+" 수련생이 "+nowKo()+"에 나라차태권도장에 도착했습니다."}]);   /* [k2.0] 학부모 휴대폰 등원 알림 */
+  markAttendance(nm);        /* 내부에서 schedulePush() 호출 */
   goHome();
 }
 window.confirmNow = function(){ commitPending(); };
@@ -669,30 +636,7 @@ function render(){
       }).join('')+'</div>';
     }
     h+='<button class="altbtn" onclick="setMode(\'pad\')">내 사진이 없어요 · 번호로 출석하기</button>';
-    h+='<button class="altbtn" style="background:#1E2D50;color:#fff;border-color:#1E2D50;margin-top:8px" onclick="openLeave()">🏠 수련 끝 · 하원하기</button>';
     p.innerHTML=h;
-  }
-  else if(S.screen==="leave"){   /* [k2.0] 하원 — 오늘 출석한 아이 얼굴을 누르면 부모님께 하원 알림 */
-    var lst=todayAttended();
-    var hl='<div class="glead"><h1>🏠 집에 가요 · 본인 사진을 눌러주세요</h1><p>누르면 <b>부모님 휴대폰</b>으로 하원 알림이 가요</p></div>';
-    if(!lst.length) hl+='<div class="gempty">오늘 출석한 뒤 아직 하원하지 않은 친구가 없어요</div>';
-    else hl+='<div class="grid">'+lst.map(function(nm){ var ph=getPhoto(nm), gr=gradeOf(nm), bc=beltColorOf(gr);
-      return '<div class="stu" onclick="tapLeave(\''+nm.replace(/'/g,"\\'")+'\')"><span class="bdot" style="background:'+bc+'"></span>'+(ph?'<img src="'+ph+'" alt="">':'<div class="noimg">'+firstChar(nm)+'</div>')+'<div class="nm">'+nm+'</div><div class="gr">'+(gr||'&nbsp;')+'</div></div>'; }).join('')+'</div>';
-    hl+='<button class="altbtn" onclick="goHome()">← 출석 화면으로</button>';
-    p.innerHTML=hl;
-  }
-  else if(S.screen==="leavePending"){
-    var nmL=S.pendingOut||S.chosen||"", phL=getPhoto(nmL);
-    p.innerHTML='<div class="done">'+(phL?'<img class="photo-big" src="'+phL+'">':'<div class="photo-big">'+firstChar(nmL)+'</div>')+
-      '<div class="badge" style="background:#E8EEFB;color:#1E2D50">🏠 하원</div><h1>'+nmL+'</h1><p>오늘도 수고했어요! 조심히 가요 👋</p>'+
-      '<button class="undoBtn" onclick="undoLeave()">↩ 내가 아니에요 · 취소</button>'+
-      '<div class="cdWrap"><div class="cdBar" id="cdBar"></div></div><div class="cdTxt" id="cdTxt">'+UNDO_SEC+'초 뒤 부모님께 알림이 가요</div>'+
-      '<button class="backbtn" onclick="confirmLeaveNow()">다음 사람 →</button></div>';
-  }
-  else if(S.screen==="leaveDone"){
-    var nmD=S.chosen||"", phD=getPhoto(nmD);
-    p.innerHTML='<div class="done">'+(phD?'<img class="photo-big" src="'+phD+'">':'<div class="photo-big">👤</div>')+
-      '<div class="badge" style="background:#E8EEFB;color:#1E2D50">✓ 하원 완료 · '+(S.outMap[nmD]||nowKo())+'</div><h1>'+nmD+'</h1><p>부모님께 하원 알림을 보냈어요 📲</p></div>';
   }
   else if(S.screen==="pending"){
     var nmP=S.pending||S.chosen||"";
