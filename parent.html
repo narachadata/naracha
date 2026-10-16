@@ -211,7 +211,7 @@ nav button[aria-current="true"]{color:var(--point)}
 <div class="toast" id="toast" hidden></div>
 <script>
 /* ══ 1. 버전·상수 ══ */
-var APP_VER="p2.6";   /* p2.6: 머리글에 BETA 배지·"베타테스트 중 · 버전", 홈 맨 위에 베타 안내 + 문의는 도장 카톡으로 · p2.5: 하단 탭 이름 "내정보" → "📋 학적부"(내용에 맞게) · p2.4: 글자 크기 전체 확대(본문 16px, 작은 글자 13px 이상 — 노안 배려) · 띠 올라온 길에 승급 기록의 취득 연.월 표기 · 소식 탭: 다가오는 행사 날짜순(D-n)·지난 행사 숨김·소식지 일정 표시 · 하단 탭에 [📜 운영규정](rules.html) 추가 · p2.3: 카톡 안에서 바로 보기 — 설치·Chrome 전환 안내 제거, 새 기기 생년월일 확인 제거(링크가 열쇠), 휴대폰 푸시 보류(인앱 브라우저 미지원), 주소의 #코드 유지(새로고침 안전) · p2.2: 휴대폰 푸시 알림(서비스워커 parent-sw.js · [알림 받기] 한 번 → 도장이 보내는 등원/하원·공지/행사·측정·수납 알림 수신, 카테고리 켜고 끄기 없음) · 소식 탭에 도장 게시판(board 창고) 공지·행사 표시 · p2.1: 이번 달 출석 달력에 휴관일 표시(빗금 칸 + "휴관" 글자, 범례·건수)·오늘 휴관이면 홈 오늘 칸에 안내 (발행 offDays, 관리앱 v13.452) · p2.0: 디자인 B안(친근 성장형)·하단 4탭(홈·성장·소식·내정보) · 발행 데이터 v3 · 가족 코드 로그인/암호화/설치 안내/오픈 기록은 p1.x 그대로 */
+var APP_VER="p2.7";   /* p2.7: 심사 기준 표기 "기준 24회 이상"으로(관장님 지침) · p2.6: 머리글에 BETA 배지·"베타테스트 중 · 버전", 홈 맨 위에 베타 안내 + 문의는 도장 카톡으로 · p2.5: 하단 탭 이름 "내정보" → "📋 학적부"(내용에 맞게) · p2.4: 글자 크기 전체 확대(본문 16px, 작은 글자 13px 이상 — 노안 배려) · 띠 올라온 길에 승급 기록의 취득 연.월 표기 · 소식 탭: 다가오는 행사 날짜순(D-n)·지난 행사 숨김·소식지 일정 표시 · 하단 탭에 [📜 운영규정](rules.html) 추가 · p2.3: 카톡 안에서 바로 보기 — 설치·Chrome 전환 안내 제거, 새 기기 생년월일 확인 제거(링크가 열쇠), 휴대폰 푸시 보류(인앱 브라우저 미지원), 주소의 #코드 유지(새로고침 안전) · p2.2: 휴대폰 푸시 알림(서비스워커 parent-sw.js · [알림 받기] 한 번 → 도장이 보내는 등원/하원·공지/행사·측정·수납 알림 수신, 카테고리 켜고 끄기 없음) · 소식 탭에 도장 게시판(board 창고) 공지·행사 표시 · p2.1: 이번 달 출석 달력에 휴관일 표시(빗금 칸 + "휴관" 글자, 범례·건수)·오늘 휴관이면 홈 오늘 칸에 안내 (발행 offDays, 관리앱 v13.452) · p2.0: 디자인 B안(친근 성장형)·하단 4탭(홈·성장·소식·내정보) · 발행 데이터 v3 · 가족 코드 로그인/암호화/설치 안내/오픈 기록은 p1.x 그대로 */
 var PARENT_VER=APP_VER;
 var GSHEET_URL="https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
 var KEY="NARACHA-P-LS25WAT2";   /* 학부모 전용 키 — 서버 v7+에서 parent(읽기)·popen(오픈 기록)만 허용 */
@@ -403,7 +403,7 @@ function homeTab(){
     '<circle cx="44" cy="44" r="36" fill="none" stroke="#FF9F43" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 44 44)"></circle>'+
     '<text x="44" y="'+(ed?41:49)+'" text-anchor="middle" font-family="Jua" font-size="'+(ed?19:17)+'" fill="#3C3350">'+(ed?('D-'+Math.max(0,dd)):(acc+'회'))+'</text>'+(ed?'<text x="44" y="56" text-anchor="middle" font-size="9" fill="#7A6E86">'+esc(md(ed))+' 심사</text>':'')+'</svg>'+
     '<div><h3>'+(k.examConf?'🥋 이번 심사 대상이에요!':(acc>=EXAM_NEED?'심사 요건 충족! 🎉':(nx?esc(nx)+'까지 '+left+'회!':'승급심사 준비 중')))+'</h3>'+
-    '<p>지난 심사 이후 수련 '+acc+'회 / 기준 '+EXAM_NEED+'회'+(k.lastExam?' · 마지막 심사 '+esc(md(k.lastExam)):'')+'</p><div class="pill">🔥 '+Math.round(rate*100)+'% 달성</div></div></div>';
+    '<p>지난 심사 이후 수련 '+acc+'회 / 기준 '+EXAM_NEED+'회 이상'+(k.lastExam?' · 마지막 심사 '+esc(md(k.lastExam)):'')+'</p><div class="pill">🔥 '+Math.round(rate*100)+'% 달성</div></div></div>';
   /* 오늘 */
   var ta=k.todayAtt, tdS=todayStr(), isOffToday=(f.offDays||[]).indexOf(tdS)>-1;
   var today='<div class="st">'+
