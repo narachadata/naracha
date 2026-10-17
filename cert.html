@@ -397,7 +397,7 @@ function certDrawBack(cv,D){
   ctx.fillStyle=pg; ctx.fill(); ctx.strokeStyle='rgba(255,255,255,0.14)'; ctx.lineWidth=1; ctx.stroke();
   ctx.textAlign='center'; ctx.fillStyle='#C9B26B'; ctx.font='800 '+(W*0.03)+'px '+F;
   ctx.fillText('심사 점수 결과', W/2, pY+H*0.045);
-  var axes=D.axes.length?D.axes:[{name:'점수',v:0}];
+  var axes=D.axes.length?D.axes:[];   /* 점수 미전달 시 가짜 축 라벨 없이 격자만 */
   var n=Math.max(3,axes.length);
   var cx=W/2, cy=pY+pH*0.55, R=Math.min(pW,pH)*0.33;
   function pt(i,r){ var a=-Math.PI/2+i*2*Math.PI/n; return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; }
@@ -426,13 +426,23 @@ function certDrawBack(cv,D){
     ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.textAlign='center';
     ctx.fillText(a.name+' '+gLetter(a.v), p[0], p[1]+W*0.008);
   });
+  if(!axes.length){ ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font='700 '+(W*0.026)+'px '+F; ctx.textAlign='center'; ctx.fillText('세부 평가는 심사 기록이 연결되면 표시됩니다', cx, cy+R*1.28); }
   /* 점수 요약 */
   var sy=pY+pH+H*0.052;
   ctx.textAlign='center';
-  ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='700 '+(W*0.028)+'px '+F;
-  ctx.fillText('1차 예비평가  '+D.s1+'/50      2차 심사당일  '+D.s2+'/50', W/2, sy);
-  ctx.fillStyle='#E4D3A1'; ctx.font='900 '+(W*0.06)+'px '+F;
-  ctx.fillText('합계 '+D.tot+'점'+(D.pass?'  ·  합격':''), W/2, sy+H*0.052);
+  var _hasS=(D.s1!=null)||(D.s2!=null)||(D.tot!=null);
+  if(_hasS){
+    /* 신채점(v9.0+): 수련 태도 20 + 기술 80. 옛 공유 링크(구채점 50+50 값)는 범위로 감지해 눈금 없이 표기 */
+    var _legacy=(D.s1!=null&&D.s1>20)||(D.s2!=null&&D.s2>80);
+    ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='700 '+(W*0.028)+'px '+F;
+    if(_legacy) ctx.fillText('평가 점수  '+(D.s1==null?'—':D.s1)+'  ·  '+(D.s2==null?'—':D.s2), W/2, sy);
+    else ctx.fillText('수련 태도  '+(D.s1==null?'—':D.s1)+'/20      기술 평가  '+(D.s2==null?'—':D.s2)+'/80', W/2, sy);
+    ctx.fillStyle='#E4D3A1'; ctx.font='900 '+(W*0.06)+'px '+F;
+    ctx.fillText((D.tot==null?'':'합계 '+D.tot+'점')+(D.pass?'  ·  합격':''), W/2, sy+H*0.052);
+  }else{
+    ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font='700 '+(W*0.03)+'px '+F;
+    ctx.fillText('점수 상세는 심사 기록이 연결되면 표시됩니다', W/2, sy+H*0.02);
+  }
   /* 지도자 정보 */
   function irow(lbl,val,y){
     ctx.textAlign='left'; ctx.fillStyle='#8FA6C8'; ctx.font='700 '+(W*0.026)+'px '+F;
@@ -468,7 +478,8 @@ function _renderP(p){
   wrap.style.display='flex'; err.style.display='none';
   var D={ name:p.n, gradeLabel:p.g||'', certGradeLabel:p.cg||p.g||'', acqDate:p.a||'', issueDate:p.i||'',
     examiner:p.e||'', gender:p.ge||'', poomType:!!p.pt, isDan:!!p.d, _B:p.B||null,
-    photo:p.ph||'', s1:p.s1||0, s2:p.s2||0, tot:p.t||0, pass:(p.t||0)>=60,
+    photo:p.ph||'', s1:(p.s1===''||p.s1==null)?null:+p.s1, s2:(p.s2===''||p.s2==null)?null:+p.s2,
+    tot:(p.t===''||p.t==null)?null:+p.t, pass:(p.t!==''&&p.t!=null&&+p.t>=60),
     axes:p.ax||[], poomsae:p.ps||'', kick:p.k||'', breaking:p.br||'',
     s:{ id:p.id||'000000' }, belt:null };
   _D=D;
