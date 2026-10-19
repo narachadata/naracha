@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="doc-ver" content="v20261019.0001">
+<meta name="doc-ver" content="v20261019.0002">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차태권도 운영규정</title>
 <meta name="description" content="나라차태권도 분당도장 운영규정 — 제1장 총칙부터 부칙·부록까지 전문 수록 (반응형 웹 문서)">
@@ -23,6 +23,14 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20261019.0002 — 모바일 보기 방식(관장님 지시: 학부모앱·폰에서 반응형 사이트처럼, PC는 그대로)
+     · 900px 이하: ☰ 차례 버튼 → 좌측 차례(#toc)가 서랍으로 열림(현재 위치 강조·탭하면 닫힘)
+     · 본문 글씨 15.2 → 16px, 표 글씨 소폭 확대, 문서 카드 여백 축소(본문 폭 확보), 표지 축소, 인쇄 버튼 숨김
+     · 학부모앱 iframe 안(html.embed): 표지를 제목·개정일만 남긴 얇은 띠로
+     · 차례 서랍 맨 아래 [PC 화면으로 보기] — viewport 1100px 로 PC 배치, 왼쪽 아래 [📱 모바일 화면으로]로 복귀(기기에 기억)
+     · [버그 수정] 비율 막대 도표(제10조 기준 횟수·제26조 배점)의 왼쪽 라벨(span.lb)이 확대보기 창 CSS(.lb)와
+       이름이 겹쳐 숨겨져 있던 것을 바로잡음 — 확대보기 규칙을 #lb 로 한정
+     · 규정 내용 변경 없음(같은 날이라 개정일 2026.10.19 유지)
    v20261019.0001 — 작업지시서(2026-10-16) 4건 반영
      ① 단계 박스(.flow .step) 배지와 제목을 한 줄로 — 공통 CSS 한 곳만 수정
         (.step 을 flex-wrap 으로, .d 는 100% 폭으로 아래 줄). 배지·박스 모양은 그대로.
@@ -647,14 +655,14 @@ figure.sample figcaption{font-size:.8em;color:var(--ink2);text-align:center;marg
 @media (max-width:520px){ .upd{font-size:.84em;padding:10px 12px;gap:8px} .upd button{padding:8px 12px} }
 /* 확대 보기: 그림을 화면 높이에 맞춰 키우고, 가로가 길면 옆으로 밀어 볼 수 있게 한다
    (폰에서 안내문 글씨가 작아 읽기 어려운 것을 막기 위함) */
-.lb{position:fixed;inset:0;background:rgba(12,12,16,.92);z-index:200;display:none;overflow:auto;padding:52px 14px 46px;-webkit-overflow-scrolling:touch}
-.lb.on{display:block}
+#lb{position:fixed;inset:0;background:rgba(12,12,16,.92);z-index:200;display:none;overflow:auto;padding:52px 14px 46px;-webkit-overflow-scrolling:touch}
+#lb.on{display:block}
 /* justify-content:center 를 쓰면 그림이 화면보다 넓을 때 왼쪽이 잘려 스크롤로 못 본다.
    margin:auto 로 가운데를 맞춰야 넘치는 쪽도 끝까지 밀어 볼 수 있다. */
-.lb .stage{min-height:100%;display:flex;align-items:center}
-.lb img{width:auto;max-width:none;max-height:86vh;margin:auto;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.5);background:#fff}
-.lb .cap{position:fixed;bottom:12px;left:0;right:0;text-align:center;color:#e8e6e0;font-size:.8em;font-weight:700;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.8)}
-.lb .x{position:fixed;top:10px;right:12px;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.16);color:#fff;font-size:1.2em;cursor:pointer;z-index:2}
+#lb .stage{min-height:100%;display:flex;align-items:center}
+#lb img{width:auto;max-width:none;max-height:86vh;margin:auto;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.5);background:#fff}
+#lb .cap{position:fixed;bottom:12px;left:0;right:0;text-align:center;color:#e8e6e0;font-size:.8em;font-weight:700;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+#lb .x{position:fixed;top:10px;right:12px;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.16);color:#fff;font-size:1.2em;cursor:pointer;z-index:2}
 
 /* 계산기 */
 .calc{background:#fbfaf6;border:1.5px solid #d9d5ca;border-radius:12px;padding:16px;margin:12px 0}
@@ -680,13 +688,52 @@ figure.sample figcaption{font-size:.8em;color:var(--ink2);text-align:center;marg
 .noresult{display:none;text-align:center;color:#999;padding:26px 0}
 mark{background:#ffe082;border-radius:2px}
 
+/* ── 모바일 보기(폭 900px 이하) — 차례 서랍 · 큰 글씨 · 넓은 본문 · 얇은 표지
+   PC(901px 이상)는 종전 그대로. 아래 요소들은 모바일에서만 나타난다. ── */
+.tbtn.nav,.tocx,.navbg,.viewpill,.tocview{display:none}
 @media (max-width:900px){
-  .layout{display:block;padding:14px 10px 90px}
-  aside.toc{display:none}
-  .cover h1{font-size:1.6em}
+  .layout{display:block;padding:10px 8px 90px}
+  .cover{padding:34px 16px 36px}
+  .cover .logobadge{width:96px;height:82px;margin-bottom:14px}
+  .cover .logobadge img{width:72px}
+  .cover h1{font-size:1.55em}
+  .cover .meta{margin-top:16px}
+  .topbar .in{padding:8px 10px;gap:6px}
+  .tbtn.nav{display:inline-block;padding:7px 10px;font-weight:800;color:var(--navy);border-color:#c9cde0;background:#f3f5fb}
+  .tbtn.print{display:none}
+  .doc{padding:18px 14px 26px;border-radius:12px}
+  .doc .preface{padding-bottom:18px;margin-bottom:22px}
+  .jo-body{font-size:1em;padding-left:10px}
+  .jang{margin-top:30px}
+  table.t{font-size:.93em}
+  /* 차례 — 왼쪽에서 밀려 나오는 서랍(☰ 차례 버튼) */
+  aside.toc{display:block;position:fixed;top:0;left:0;bottom:0;width:min(82vw,320px);max-height:none;border:none;border-radius:0 16px 16px 0;
+    box-shadow:0 0 40px rgba(0,0,0,.3);z-index:130;transform:translateX(-105%);transition:transform .25s ease;
+    padding:14px 10px 28px 14px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  body.nav-open aside.toc{transform:none}
+  .tocx{display:flex;position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;border:none;background:#f1efe8;color:var(--ink2);font-size:1.05em;cursor:pointer;align-items:center;justify-content:center}
+  aside.toc a{font-size:.95em;padding:7px 8px}
+  aside.toc a.lv2{font-size:.9em}
+  .navbg{position:fixed;inset:0;background:rgba(14,14,18,.45);z-index:120}
+  body.nav-open .navbg{display:block}
+  body.nav-open{overflow:hidden}
+  .tocview{display:block;margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+  .tocview button{width:100%;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:9px;font-family:inherit;font-weight:800;font-size:.9em;color:var(--ink2);cursor:pointer}
+  .tocview small{display:block;text-align:center;font-size:.76em;color:#8a8577;margin-top:5px}
+  html.embed .tocview{display:none}  /* 앱 안(iframe)에서는 PC 전환이 듣지 않으므로 숨김 */
 }
+/* 학부모앱 안(iframe)에서 열렸을 때 — 앱에 제목 줄이 이미 있으므로 표지를 얇게 */
+html.embed .cover{padding:16px 14px 18px}
+html.embed .cover .logobadge,html.embed .cover .brand{display:none}
+html.embed .cover h1{font-size:1.25em}
+html.embed .cover .sub{margin-top:4px;font-size:.88em}
+html.embed .cover .meta{margin-top:10px;gap:6px}
+html.embed .cover .meta span{padding:3px 11px;font-size:.76em}
+/* 폰에서 [PC 화면으로 보기]를 고른 동안 — 돌아가는 알약 */
+html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-index:70;background:var(--navy);color:#fff;border:none;border-radius:99px;
+  padding:10px 16px;font-weight:800;font-size:.9em;box-shadow:0 4px 12px rgba(0,0,0,.25);cursor:pointer;font-family:inherit}
 @media print{
-  .topbar,.fab,aside.toc,.calc button.go,.lb{display:none !important}
+  .topbar,.fab,aside.toc,.calc button.go,#lb{display:none !important}
   .layout{display:block;padding:0}
   body{background:#fff}
   .doc{border:none;box-shadow:none;padding:10px}
@@ -711,19 +758,23 @@ mark{background:#ffe082;border-radius:2px}
 
 <div class="topbar">
   <div class="in">
+    <button class="tbtn nav" id="navOpen" aria-label="차례 열기">☰ 차례</button>
     <div class="search">
       <span aria-hidden="true">🔍</span>
       <input id="q" type="search" placeholder="규정 검색 (예: 환불, 보강, 심사비, 차량)" autocomplete="off">
       <button class="clear" id="qClear" aria-label="검색 지우기">×</button>
     </div>
-    <button class="tbtn" onclick="window.print()">인쇄</button>
+    <button class="tbtn print" onclick="window.print()">인쇄</button>
     <button class="tbtn" id="cfgOpen" title="금액·횟수 설정 (비밀번호 필요)">⚙</button>
   </div>
   <div class="chipwrap"><div class="chips" id="chips"></div></div>
 </div>
 
+<div class="navbg" id="navBg"></div>
+<button class="viewpill" id="viewMobile" type="button">📱 모바일 화면으로</button>
+
 <div class="layout">
-  <aside class="toc" id="toc"><img class="toclogo" data-logo alt="나라차태권도 엠블럼"><h3>차 례</h3></aside>
+  <aside class="toc" id="toc"><button class="tocx" id="navClose" aria-label="차례 닫기">✕</button><img class="toclogo" data-logo alt="나라차태권도 엠블럼"><h3>차 례</h3></aside>
 
   <div class="doc" id="doc">
     <div class="preface">
@@ -2097,6 +2148,42 @@ mark{background:#ffe082;border-radius:2px}
     }, {rootMargin:'-25% 0px -65% 0px'});
     jangs.forEach(function(s){ io.observe(s); });
   }
+
+  /* ── 모바일 차례 서랍 + 보기 방식 (v20261019.0002) ──
+     · 900px 이하에서는 좌측 차례가 숨겨져 있었으므로 ☰ 버튼으로 서랍처럼 꺼내 본다(같은 #toc 요소).
+     · 학부모앱 안(iframe)이면 html.embed — 표지를 얇게.
+     · [PC 화면으로 보기]는 viewport 를 1100px 로 바꿔 폰에서도 PC 배치로 보여 준다(기기에 기억). */
+  (function(){
+    var vp = document.querySelector('meta[name="viewport"]');
+    var VP_M = 'width=device-width, initial-scale=1.0, viewport-fit=cover';
+    var VP_PC = 'width=1100, viewport-fit=cover';
+    var embed = false; try{ embed = (window.self !== window.top); }catch(e){ embed = true; }
+    if(embed) document.documentElement.classList.add('embed');
+    function closeNav(){ document.body.classList.remove('nav-open'); }
+    function openNav(){
+      document.body.classList.add('nav-open');
+      var cur = toc.querySelector('a.cur');
+      if(cur && cur.scrollIntoView) cur.scrollIntoView({block:'center'});
+    }
+    function setView(v){
+      var pc = (v === 'pc');
+      document.documentElement.classList.toggle('forcepc', pc);
+      if(vp) vp.setAttribute('content', pc ? VP_PC : VP_M);
+      try{ localStorage.setItem('naracha_rules_view', pc ? 'pc' : 'm'); }catch(e){}
+      closeNav();
+    }
+    document.getElementById('navOpen').addEventListener('click', openNav);
+    document.getElementById('navClose').addEventListener('click', closeNav);
+    document.getElementById('navBg').addEventListener('click', closeNav);
+    toc.addEventListener('click', function(e){ if(e.target && e.target.tagName === 'A') closeNav(); });
+    var tv = document.createElement('div'); tv.className = 'tocview';
+    tv.innerHTML = '<button type="button" id="viewPc">🖥 PC 화면으로 보기</button><small>표가 많은 조문을 넓게 보실 때</small>';
+    toc.appendChild(tv);
+    document.getElementById('viewPc').addEventListener('click', function(){ setView('pc'); });
+    document.getElementById('viewMobile').addEventListener('click', function(){ setView('m'); });
+    var saved = null; try{ saved = localStorage.getItem('naracha_rules_view'); }catch(e){}
+    if(saved === 'pc' && !embed && window.innerWidth <= 900) setView('pc');
+  })();
 
   /* ── 검색 ── */
   var q = document.getElementById('q');
