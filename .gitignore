@@ -3,3 +3,6 @@
 *AppsScript*
 *.gs
 Code.gs
+
+# 맥 잡파일
+.DS_Store
