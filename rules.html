@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="doc-ver" content="v20261019.0002">
+<meta name="doc-ver" content="v20261020.0001">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차태권도 운영규정</title>
 <meta name="description" content="나라차태권도 분당도장 운영규정 — 제1장 총칙부터 부칙·부록까지 전문 수록 (반응형 웹 문서)">
@@ -23,6 +23,11 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20261020.0001 — 제33조(차량) 보완(관장님 지시)
+     · ② 신설: 셔틀 차량은 평일(월~금)에만 운행, 토·일·공휴일 운행 없음
+     · ④ 신설: 형제·자매가 같은 장소에서 함께 승·하차하면 1명은 이용료 50% 할인
+       (이용료 표에 '형제 할인' 열 추가 — c.busBoth/2 · c.busOne/2 로 설정값 연동)
+     · 종전 ②③ → ③⑤ 로 순연 · 차량 이용 도표 2·4단계 문구 보완 · 개정일 2026.10.20
    v20261019.0002 — 모바일 보기 방식(관장님 지시: 학부모앱·폰에서 반응형 사이트처럼, PC는 그대로)
      · 900px 이하: ☰ 차례 버튼 → 좌측 차례(#toc)가 서랍으로 열림(현재 위치 강조·탭하면 닫힘)
      · 본문 글씨 15.2 → 16px, 표 글씨 소폭 확대, 문서 카드 여백 축소(본문 폭 확보), 표지 축소, 인쇄 버튼 숨김
@@ -211,7 +216,7 @@ function docDate(){
   return m ? (m[1] + '.' + m[2] + '.' + m[3]) : '';
 }
 var REVISED_DATE = docDate();     // 최종 수정일 = 시행일
-var PREV_REVISED = "2026.10.13";  // 종전 규정 개정일(이력 보존용)
+var PREV_REVISED = "2026.10.19";  // 종전 규정 개정일(이력 보존용)
 
 /* ══════════════════════════════════════════════════════════════
    금액·횟수 설정 (설정 화면에서 바꿀 수 있는 값)
@@ -1589,24 +1594,27 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
         <div class="jo-body">
           <ol class="hang">
             <li><span class="hno">①</span>차량 운행은 <b>꼭 필요한 수련생에 한해서만</b> 운행됩니다. (신청하신 경우에만 이용하실 수 있습니다.)</li>
-            <li><span class="hno">②</span>셔틀 차량은 <b>별도의 이용료를 납부하신 후</b> 수련하실 때 이용하실 수 있습니다. (이용료를 납부하시면 월별 이용 횟수와 관계없이 이용하실 수 있습니다.)</li>
-            <li><span class="hno">③</span>탑승 인원은 수련 시간별 <span class="pill"><span data-cfg="c.busCap">9</span>명까지</span>이며 <b>선착순으로 마감</b>됩니다.</li>
+            <li><span class="hno">②</span>셔틀 차량은 <b>평일(월~금)에만 운행</b>합니다. 토요일·일요일과 공휴일에는 운행하지 않습니다.</li>
+            <li><span class="hno">③</span>셔틀 차량은 <b>별도의 이용료를 납부하신 후</b> 수련하실 때 이용하실 수 있습니다. (이용료를 납부하시면 월별 이용 횟수와 관계없이 이용하실 수 있습니다.)</li>
+            <li><span class="hno">④</span>형제·자매가 <b>같은 장소에서 함께 승·하차</b>하는 경우, 그중 <b>1명은 이용료의 50%를 할인</b>합니다. (예: 두 명이 등·하원 모두 이용하면 한 명은 월 <span data-cfg="c.busBoth" data-suffix="원">20,000원</span>, 다른 한 명은 월 <span data-cfg="c.busBoth/2" data-suffix="원">10,000원</span>)</li>
+            <li><span class="hno">⑤</span>탑승 인원은 수련 시간별 <span class="pill"><span data-cfg="c.busCap">9</span>명까지</span>이며 <b>선착순으로 마감</b>됩니다.</li>
           </ol>
           <div class="tblwrap"><table class="t">
-            <tr><th>이용 구분</th><th>이용료</th></tr>
-            <tr><td class="hd">등·하원 모두 이용</td><td class="em">월 <span data-cfg="c.busBoth" data-suffix="원">20,000원</span></td></tr>
-            <tr><td class="hd">등원 또는 하원만 이용</td><td class="em">월 <span data-cfg="c.busOne" data-suffix="원">10,000원</span></td></tr>
+            <tr><th>이용 구분</th><th>이용료</th><th>형제 할인 (같은 장소 승·하차, 1명)</th></tr>
+            <tr><td class="hd">등·하원 모두 이용</td><td class="em">월 <span data-cfg="c.busBoth" data-suffix="원">20,000원</span></td><td>월 <span data-cfg="c.busBoth/2" data-suffix="원">10,000원</span></td></tr>
+            <tr><td class="hd">등원 또는 하원만 이용</td><td class="em">월 <span data-cfg="c.busOne" data-suffix="원">10,000원</span></td><td>월 <span data-cfg="c.busOne/2" data-suffix="원">5,000원</span></td></tr>
           </table></div>
+          <p class="note">※ 형제 할인은 같은 장소에서 함께 타고 내리는 경우에만 적용되며, 한 명에게만 적용됩니다.</p>
           <div class="dg">
             <div class="dg-t">차량을 이용하시려면</div>
             <div class="flow">
               <div class="step"><span class="k">1</span><div class="h">신청</div><div class="d">신청하신 경우에만 이용하실 수 있습니다.</div></div>
               <div class="ar">›</div>
-              <div class="step"><span class="k">2</span><div class="h">이용료 납부</div><div class="d">등·하원 모두 월 2만원<br>한쪽만 월 1만원</div></div>
+              <div class="step"><span class="k">2</span><div class="h">이용료 납부</div><div class="d">등·하원 모두 월 2만원<br>한쪽만 월 1만원<br>형제 같은 장소 승·하차 시 1명 50% 할인</div></div>
               <div class="ar">›</div>
               <div class="step warn"><span class="k">3</span><div class="h">좌석 배정</div><div class="d">시간대별 <b>9명까지</b> · 선착순 마감</div></div>
               <div class="ar">›</div>
-              <div class="step good"><span class="k">4</span><div class="h">이용</div><div class="d">납부하시면 월 이용 횟수와 관계없이 타실 수 있습니다.</div></div>
+              <div class="step good"><span class="k">4</span><div class="h">이용</div><div class="d">평일(월~금)에만 운행하며, 납부하시면 월 이용 횟수와 관계없이 타실 수 있습니다.</div></div>
             </div>
             <p class="dg-n">차량은 <b>지정된 시각이 지나면 바로 출발</b>합니다(제34조). 조금 일찍 나와 기다려 주시면 뒤에 타는 친구들이 기다리지 않습니다.</p>
           </div>
