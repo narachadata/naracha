@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="doc-ver" content="v20261020.0002">
+<meta name="doc-ver" content="v20261023.0001">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차태권도 운영규정</title>
 <meta name="description" content="나라차태권도 분당도장 운영규정 — 제1장 총칙부터 부칙·부록까지 전문 수록 (반응형 웹 문서)">
@@ -23,6 +23,14 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20261023.0001 — 부록 5(나라차시범단 운영지침)를 2027년 시범단 문서(선발전 안내·합격 안내·단칙)에 맞춤(작업지시서 2026-10-23)
+     · 머리 안내에 적용 시점(2027년 선발전부터) · 2. 수련 시간: 6시반/7시반 반 편성 + 필수 횟수 표
+     · 4. 선발: 8회 이상 참석·도복 선물·합숙 참석 조건·오디션 참가비·연중 전입자 예비단원
+     · 5. 연회비: 오디션 참가비 감면 안내(CFG demoAudition 40,000 신설 — 설정 패널 '오디션 참가비' 항목 추가,
+       감면 후 금액은 c.demoYear-c.demoAudition / c.demoSplit-c.demoAudition 으로 자동 계산)
+     · 6. 용품비 도복 비고 · 9. 단원 직제: 초등 시범단(훈련→준→정→선임 정→리더단)+청소년 시범단 표, ①~⑦
+     · 10. 명예 정단원 요건 · 11. 단칙 ③④⑤ 인쇄본과 일치 · 13. 정산 ④ 보완·⑤ 오디션 참가비 환불 신설
+     · 개정일 2026.10.23
    v20261020.0002 — 제33조 이용료 표를 폰 맞춤(famtbl)으로 — 3열이 가로 스크롤 없이 보이게
    v20261020.0001 — 제33조(차량) 보완(관장님 지시)
      · ② 신설: 셔틀 차량은 평일(월~금)에만 운행, 토·일·공휴일 운행 없음
@@ -217,7 +225,7 @@ function docDate(){
   return m ? (m[1] + '.' + m[2] + '.' + m[3]) : '';
 }
 var REVISED_DATE = docDate();     // 최종 수정일 = 시행일
-var PREV_REVISED = "2026.10.19";  // 종전 규정 개정일(이력 보존용)
+var PREV_REVISED = "2026.10.20";  // 종전 규정 개정일(이력 보존용)
 
 /* ══════════════════════════════════════════════════════════════
    금액·횟수 설정 (설정 화면에서 바꿀 수 있는 값)
@@ -259,7 +267,7 @@ var CFG_DEFAULT = {
   /* 티셔츠 (치수별) */
   teeShortS:12000, teeShortL:13000, teeLongS:16800, teeLongL:17800,
   /* 나라차시범단 */
-  demoYear:432000, demoSplit:160000, demoDobok:50000, demoUniform:90000,
+  demoYear:432000, demoSplit:160000, demoDobok:50000, demoUniform:90000, demoAudition:40000,
   /* 월 기준 수련 횟수 */
   cnt2:8, cnt3:12, cnt4:16
 };
@@ -1875,19 +1883,24 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
       <h3>부록 5 — 나라차시범단 운영지침</h3>
       <article class="jo" id="joB5">
         <div class="jo-body">
-          <p class="note">제11조 ⑥에 따른 나라차시범단의 세부 운영지침입니다.</p>
+          <p class="note">제11조 ⑥에 따른 나라차시범단의 세부 운영지침입니다. 이 지침은 2027년 선발전(2026년 12월 신청)부터 적용합니다.</p>
 
           <p><b>1. 활동 기간</b></p>
           <p>매년 1월부터 차기 시범단 선발 시까지(약 12개월)입니다.</p>
 
           <p><b>2. 수련 시간</b></p>
           <div class="tblwrap"><table class="t">
-            <tr><th>구분</th><th>정규 수련</th><th>시범단 훈련</th></tr>
-            <tr><td class="hd">초등부</td><td>—</td><td class="lft">매일 오후 7시~8시 중 <b>주 3회 이상</b> (필수)</td></tr>
-            <tr><td class="hd">청소년부</td><td class="lft">청소년반 주 2회 이상 (필수)</td><td class="lft">수요일 오후 9시~9시 30분 기술연습 (필수)</td></tr>
-            <tr><td class="hd">공통</td><td>—</td><td class="lft">토요일 정규훈련 월 2회, 12시~13시 30분 (필수)</td></tr>
+            <tr><th>반</th><th>시간</th><th>대상</th></tr>
+            <tr><td class="hd">6시반</td><td>오후 6시~7시</td><td class="lft">초2~4 전체, 초5·6 훈련단원</td></tr>
+            <tr><td class="hd">7시반</td><td>오후 7시~8시</td><td class="lft">초5·6 준단원 이상, 중학생 이상</td></tr>
           </table></div>
-          <p>대회 및 시범이 있을 경우 평일·주말 특별훈련이 진행됩니다.</p>
+          <div class="tblwrap"><table class="t">
+            <tr><th>구분</th><th>필수 수련</th></tr>
+            <tr><td class="hd">초등 단원</td><td class="lft"><b>주 3회 이상</b> (필수)</td></tr>
+            <tr><td class="hd">중학생 이상 단원</td><td class="lft">청소년반 <b>주 2회 이상</b> + 수요일 오후 9시~9시 30분 기술연습 (필수)</td></tr>
+            <tr><td class="hd">공통</td><td class="lft">토요일 정규훈련 <b>월 2회</b>, 12시~13시 30분 (필수)</td></tr>
+          </table></div>
+          <p>반 편성은 해마다 단원 구성에 맞춰 지도진이 정하며, 기본기 보완이 필요한 준단원은 6시반에서 수련할 수 있습니다. 대회 및 시범이 있을 경우 평일·주말 특별훈련이 진행됩니다.</p>
 
           <p><b>3. 지원 자격</b></p>
           <ol class="ho">
@@ -1897,7 +1910,13 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
           </ol>
 
           <p><b>4. 선발</b></p>
-          <p>연 1회 선발전으로 하며, 기존 단원도 매년 선발전에 응시합니다. <b>1차 가정생활평가 → 2차 체력·수련태도평가 → 3차 태권도기술평가</b> 순으로 진행합니다.</p>
+          <p>연 1회 선발전으로 하며, 기존 단원도 매년 선발전에 응시합니다. <b>1차 가정생활평가 → 2차 체력·수련태도평가 → 3차 태권도기술평가</b> 순으로 진행하며, 평가 결과는 합격 여부와 함께 응시자 모두에게 개별로 안내드립니다. 선발 일정과 인원은 해마다 선발 안내문으로 공지합니다.</p>
+          <ol class="ho">
+            <li><span class="hono">1.</span>선발 수련 기간 중 평가일을 포함하여 <b>8회 이상</b> 훈련에 참석해야 합니다. <b>선발 전 일정에 참석한 합격자에게는 시범단 도복을 선물</b>로 드립니다.</li>
+            <li><span class="hono">2.</span>2차·3차 평가일과 동계 합숙 훈련에 참석할 수 있는 수련생만 응시할 수 있습니다. 합숙 장소·참가비는 신청 마감 전에 안내드리며, 질병 등 부득이한 사유는 미리 지도진과 상의해 주세요.</li>
+            <li><span class="hono">3.</span><b>오디션 참가비는 <span data-cfg="c.demoAudition" data-suffix="원">40,000원</span></b>이며, 신입·기존 단원 모두 평가표를 제출할 때 납부합니다. 합격하면 연회비에서 <span data-cfg="c.demoAudition" data-suffix="원">40,000원</span>을 감면해 드립니다(제5항). 환불은 제13항 ⑤에 따릅니다.</li>
+            <li><span class="hono">4.</span>연중에 전입한 수련생은 다음 선발전까지 예비단원으로 지내며, 다음 선발전에 응시합니다.</li>
+          </ol>
 
           <p><b>5. 연회비</b></p>
           <div class="tblwrap"><table class="t">
@@ -1905,11 +1924,12 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
             <tr><td class="hd">일시납 (10% 할인)</td><td class="em"><span data-cfg="c.demoYear" data-suffix="원">432,000원</span></td></tr>
             <tr><td class="hd">3회 분할납 (1월·2월·3월)</td><td>각 <span data-cfg="c.demoSplit" data-suffix="원">160,000원</span> (계 <span data-cfg="c.demoSplit*3" data-suffix="원">480,000원</span>)</td></tr>
           </table></div>
+          <p>오디션 참가비(<span data-cfg="c.demoAudition" data-suffix="원">40,000원</span>)를 낸 합격자는 연회비에서 <span data-cfg="c.demoAudition" data-suffix="원">40,000원</span>을 감면합니다. 감면 후 금액은 <b>일시납 <span data-cfg="c.demoYear-c.demoAudition" data-suffix="원">392,000원</span></b>, 분할납은 <b>1월 <span data-cfg="c.demoSplit-c.demoAudition" data-suffix="원">120,000원</span></b>(2월·3월 각 <span data-cfg="c.demoSplit" data-suffix="원">160,000원</span>)입니다.</p>
 
           <p><b>6. 용품비</b></p>
           <div class="tblwrap"><table class="t">
             <tr><th>품목</th><th>금액</th><th>비고</th></tr>
-            <tr><td class="hd">시범단 도복 1벌</td><td class="em"><span data-cfg="c.demoDobok" data-suffix="원">50,000원</span></td><td class="lft">매년 선발전 이후 연회비 등록 시 20% 할인 구입 가능</td></tr>
+            <tr><td class="hd">시범단 도복 1벌</td><td class="em"><span data-cfg="c.demoDobok" data-suffix="원">50,000원</span></td><td class="lft">매년 선발전 이후 연회비 등록 시 20% 할인 구입 가능 · 선발 전 일정 참석 합격자에게 1벌 선물</td></tr>
             <tr><td class="hd">단체복</td><td class="em"><span data-cfg="c.demoUniform" data-suffix="원">90,000원</span></td><td></td></tr>
           </table></div>
           <p>기존 보유자는 필요한 수량만 주문하시면 되며, 납부 계좌는 별도로 안내드립니다.</p>
@@ -1927,40 +1947,59 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
 
           <p><b>9. 단원 직제</b></p>
           <div class="dg">
-            <div class="dg-t">단원이 성장하는 단계</div>
+            <div class="dg-t">초등 시범단 — 한 해에 한 칸씩 (초2 입단 기준)</div>
             <div class="flow">
-              <div class="step"><span class="k">1</span><div class="h">예비단원</div><div class="d">시범단 희망자</div></div>
+              <div class="step"><span class="k">1</span><div class="h">훈련단원</div><div class="d">초2 · 입단 첫해</div></div>
               <div class="ar">›</div>
-              <div class="step"><span class="k">2</span><div class="h">훈련단원</div><div class="d">활동 6개월 미만</div></div>
+              <div class="step"><span class="k">2</span><div class="h">준단원</div><div class="d">초3 · 대회·시범 3회 이상</div></div>
               <div class="ar">›</div>
-              <div class="step"><span class="k">3</span><div class="h">준단원</div><div class="d">6개월 이상<br>대회·시범 3회 이상</div></div>
+              <div class="step"><span class="k">3</span><div class="h">정단원</div><div class="d">초4 · 5회 이상</div></div>
               <div class="ar">›</div>
-              <div class="step good"><span class="k">4</span><div class="h">정단원</div><div class="d">1년 이상<br>대회·시범 5회 이상</div></div>
+              <div class="step good"><span class="k">4</span><div class="h">선임 정단원</div><div class="d">초5 · 5회 이상</div></div>
               <div class="ar">›</div>
-              <div class="step good"><span class="k">5</span><div class="h">부주장 · 주장</div></div>
+              <div class="step good"><span class="k">5</span><div class="h">리더단</div><div class="d">초6 · 주장·부주장</div></div>
             </div>
-            <p class="dg-n">대회와 시범 참석은 <b>정단원 순으로 우선권</b>이 있습니다.</p>
+            <p class="dg-n">중학생이 되면 <b>청소년 시범단</b>으로 이어지고, 활동을 마치면 <b>명예 정단원</b>이 됩니다.</p>
           </div>
+
           <div class="tblwrap"><table class="t">
-            <tr><th>직제</th><th>기준</th></tr>
-            <tr><td class="hd">예비단원</td><td class="lft">시범단 희망자</td></tr>
-            <tr><td class="hd">훈련단원</td><td class="lft">활동 만 6개월 미만, 또는 준단원 요건 미충족자</td></tr>
-            <tr><td class="hd">준단원</td><td class="lft">활동 만 6개월 이상, 당해년도 대회·시범 3회 이상 참석</td></tr>
-            <tr><td class="hd">정단원</td><td class="lft">활동 만 1년 이상, 당해년도 대회·시범 5회 이상 참석</td></tr>
+            <tr><th>직제</th><th>학년 · 연차</th><th>기준</th></tr>
+            <tr><td class="hd">리더단</td><td>초6 · 5년차</td><td class="lft">정단원 이상이면서 나라차 시범단 활동 1년 이상인 6학년 전원 · 주장 1명, 부주장은 훈련 / 생활·인성 / 후배 멘토로 담당을 나눔</td></tr>
+            <tr><td class="hd">선임 정단원</td><td>초5 · 4년차</td><td class="lft">정단원으로 지난 1년 대회·시범 5회 이상 참석</td></tr>
+            <tr><td class="hd">정단원</td><td>초4 · 3년차</td><td class="lft">준단원으로 지난 1년 대회·시범 5회 이상 참석</td></tr>
+            <tr><td class="hd">준단원</td><td>초3 · 2년차</td><td class="lft">훈련단원으로 지난 1년 대회·시범 3회 이상 참석</td></tr>
+            <tr><td class="hd">훈련단원</td><td>초2 · 1년차</td><td class="lft">선발전에 합격한 입단 첫해(12개월)</td></tr>
+            <tr><td class="hd">예비단원</td><td>—</td><td class="lft">시범단 활동을 희망하는 상급반 이상 수련생(연중에 전입한 타 도장 시범단 경력자 포함)</td></tr>
           </table></div>
-          <p>대회 및 시범 참석은 정단원 순으로 우선권이 있습니다.</p>
+
+          <div class="tblwrap"><table class="t">
+            <tr><th>청소년 시범단</th><th>학년</th><th>기준</th></tr>
+            <tr><td class="hd">청소년 리더단</td><td>중3</td><td class="lft">청소년 정단원인 중3 전원 · 주장 1명, 부주장은 담당을 나눔</td></tr>
+            <tr><td class="hd">청소년 정단원</td><td>중학생 이상</td><td class="lft">초등 시범단에서 정단원 이상을 마친 단원, 또는 청소년 훈련단원으로 지난 1년 대회·시범 5회 이상 참석</td></tr>
+            <tr><td class="hd">청소년 훈련단원</td><td>중학생 이상</td><td class="lft">중학생이 된 뒤 새로 입단한 단원의 첫해, 또는 초등 시범단에서 정단원이 되지 못하고 올라온 단원</td></tr>
+          </table></div>
+
+          <ol class="hang">
+            <li><span class="hno">①</span>직제는 <b>매년 1월 선발전 때 지난 1년의 대회·시범 참석 횟수</b>로 정하며, 한 해에 한 칸씩 올라갑니다. 조건을 채우지 못하면 한 해 더 같은 직제로 활동합니다.</li>
+            <li><span class="hno">②</span>학년은 2학년에 입단한 경우의 기준입니다. 늦게 입단한 단원도 훈련단원부터 한 칸씩 올라가며, 정단원이 되지 않은 6학년은 자기 직제로 활동하며 리더단을 돕습니다.</li>
+            <li><span class="hno">③</span>반 편성과 리더(주장·부주장) 임명은 그해 단원 구성에 맞춰 지도진이 정합니다.</li>
+            <li><span class="hno">④</span>활동 기간은 연속으로 합격한 기간을 이어서 셉니다.</li>
+            <li><span class="hno">⑤</span>대회와 시범 참석은 직제가 높은 순으로 우선권이 있습니다.</li>
+            <li><span class="hno">⑥</span><b>타 도장 시범단 경력자</b>는 6학년(진학 예정 포함)에 한해 대회·시범 3회 이상 참가를 증빙서류(대회 상장·참가확인서, 시범 공문·사진, 이전 도장 확인서 등)로 제출하면 준단원부터 활동합니다. 그 외 학년은 훈련단원부터 시작합니다.</li>
+            <li><span class="hno">⑦</span>만 15세 이상 청소년 단원은 교범을 희망하실 수 있습니다.</li>
+          </ol>
 
           <p><b>10. 명예 정단원</b></p>
-          <p>활동 만 3년차 이상 단원을 명예 정단원으로 임명하며, 외부 초청 시범 및 행사에 참여하실 수 있습니다. 연 1회 정기 모임을 운영하고, 만 15세 이상 단원은 교범을 희망하실 수 있습니다.</p>
+          <p>시범단 활동을 마친 단원 중 <b>활동 만 3년 이상</b>(초등·청소년 활동 기간 합산)인 단원을 명예 정단원(졸업단원)으로 임명하며, 외부 초청 시범 및 행사에 참여하실 수 있습니다. 연 1회 정기 모임을 운영합니다.</p>
 
           <p><b>11. 단칙</b></p>
           <p>시범단은 태권도 기술에 앞서 모든 면에서 모범이 되어야 합니다.</p>
           <ol class="hang">
             <li><span class="hno">①</span>태권도 정신을 배우고 실천하며 모범을 보입니다.</li>
             <li><span class="hno">②</span>단원의 소중함을 생각하고 서로 협동하며 어려움을 이겨냅니다.</li>
-            <li><span class="hno">③</span>스스로 학업 목표를 세우고 학업에도 정진합니다.</li>
-            <li><span class="hno">④</span>자기 생각과 의견을 상호 존중하며 소통합니다.</li>
-            <li><span class="hno">⑤</span>개인 기술 향상을 위해 체력 훈련을 견디며 기본과 기술을 수련합니다.</li>
+            <li><span class="hno">③</span>스스로 학업 목표를 세워 실천하며 학업에도 정진합니다.</li>
+            <li><span class="hno">④</span>자기 생각과 의견을 대화와 눈짓, 몸짓으로 나누며 서로 존중하고 소통합니다.</li>
+            <li><span class="hno">⑤</span>개인 기술의 습득과 향상을 위해 강도 높은 체력 훈련을 견디며 기본과 기술을 수련합니다.</li>
             <li><span class="hno">⑥</span>다양한 환경에서 시범을 보임으로써 태권도를 전파합니다.</li>
             <li><span class="hno">⑦</span>효도를 실천하고 예의를 갖추며, 인사와 존댓말을 실천합니다.</li>
           </ol>
@@ -1997,7 +2036,8 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
               </ol></li>
             <li><span class="hno">②</span>용품비는 물품 대금이므로, 사용 흔적이 있는 도복·단체복은 환불되지 않습니다.</li>
             <li><span class="hno">③</span>합숙비·대회 참가비·해외 파견비 등은 도장이 이미 지출한 금액을 제외한 잔액을 환불해 드립니다. 지출 내역은 요청하시면 안내드립니다.</li>
-            <li><span class="hno">④</span>일시납 할인을 받으신 경우, 환불액은 실제 납부하신 금액을 기준으로 산정합니다.</li>
+            <li><span class="hno">④</span>일시납 할인이나 오디션 참가비 감면을 받으신 경우, 환불액은 실제 납부하신 금액을 기준으로 산정합니다.</li>
+            <li><span class="hno">⑤</span>오디션 참가비는 선발 수련 시작 전에 취소하시면 전액 환불해 드리며, 선발 수련 시작 후 또는 불합격 시에는 환불되지 않습니다.</li>
           </ol>
         </div>
       </article>
@@ -2380,7 +2420,7 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
     ['티셔츠', [['teeShortS','반팔 110~130'],['teeShortL','반팔 140 이상'],['teeLongS','긴팔 110~130'],['teeLongL','긴팔 140 이상']]],
     ['겨루기 용품', [['gearArm','팔·다리 보호대'],['gearHand','손등·발등 보호대'],['gearGroin','낭심 보호대'],
                    ['gearBody','몸통 보호대'],['gearHead','헤드기어'],['gearBag','장비 가방']]],
-    ['나라차시범단', [['demoYear','연회비 일시납'],['demoSplit','분할납 1회분'],['demoDobok','시범단 도복'],['demoUniform','단체복']]]
+    ['나라차시범단', [['demoYear','연회비 일시납'],['demoSplit','분할납 1회분'],['demoAudition','오디션 참가비'],['demoDobok','시범단 도복'],['demoUniform','단체복']]]
   ];
 
   function cfgPwOk(){
