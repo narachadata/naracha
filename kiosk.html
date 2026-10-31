@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#FFF6E8">
+<title>나라차태권도 출석</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+  :root{
+    /* ══ 나라차 디자인 B안 "친근 성장형" — 학부모앱과 같은 토큰 ══
+       변수 이름은 그대로 두고 값만 바꿨습니다. 기존 규칙이 전부 그대로 동작합니다.
+       (--blue 계열은 B안 포인트 색인 주황으로 통일) */
+    --brand:#FF9F43; --brandRed:#FF9F43; --blue:#FF9F43; --blueDark:#F08A24; --blueSoft:#FFF1C9;
+    --red:#C8342A; --redSoft:#FFE7E4; --amber:#B45309; --amberSoft:#FFF0E2; --green:#2E9E4F; --greenSoft:#E4F6EA;
+    --bg:#FFF6E8; --card:#FFFFFF; --line:#F0E6DA; --sub:#7A6E86; --ink:#3C3350;
+    --belt1:#F3C614; --belt2:#1E8E3E; --belt3:#2B5FB8; --belt4:#C8342A; --belt5:#111111;
+    --shadow:0 1px 3px rgba(150,110,70,.06), 0 5px 16px rgba(150,110,70,.10);
+    --shadowUp:0 6px 20px rgba(150,110,70,.13);
+    --photoBg:#FFF1C9; --photoInk:#C79A4A;
+  }
+  body{ font-family:'Nanum Gothic','나눔고딕','Malgun Gothic','맑은 고딕',-apple-system,sans-serif;
+    background:linear-gradient(180deg,#FFF6E8 0%,#FDF3F6 42%,#F1F7FF 100%); background-attachment:fixed;
+    color:var(--ink); height:100vh; height:100dvh; overflow:hidden; display:flex; flex-direction:column;
+    padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); font-variant-numeric:tabular-nums; }
+  /* 제목 글꼴 — 나눔고딕 굵게 */
+  h1,h2,h3,.topbar .brand,.facecard .info .nm,.stu .nm,.done .badge,.setup h1{
+    font-family:'Nanum Gothic','나눔고딕',sans-serif; font-weight:800; letter-spacing:-.02em; }
+
+  /* 벨트 스트라이프 */
+  .belt{ height:6px; display:flex; flex-shrink:0; }
+  .belt span{ flex:1; }
+  .belt span:nth-child(1){ background:var(--belt1); } .belt span:nth-child(2){ background:var(--belt2); }
+  .belt span:nth-child(3){ background:var(--belt3); } .belt span:nth-child(4){ background:var(--belt4); }
+  .belt span:nth-child(5){ background:var(--belt5); }
+
+  /* 헤더 (B안 — 밝은 크림 바탕 + 둥근 주황 로고) */
+  .topbar{ background:rgba(255,255,255,.72); backdrop-filter:saturate(1.3) blur(8px); color:var(--ink);
+    padding:12px clamp(16px,3vw,28px); display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+    border-bottom:1px solid var(--line); }
+  .topbar .brand{ display:flex; align-items:center; gap:12px; font-size:clamp(18px,2.4vw,23px); }
+  .topbar .brand .logo{ width:44px; height:44px; border-radius:50%; background:linear-gradient(150deg,#FFE9A8,#FFD166);
+    color:#5A4209; display:flex; align-items:center; justify-content:center; font-size:23px; flex-shrink:0;
+    font-family:'Nanum Gothic',sans-serif; font-weight:800; box-shadow:0 3px 10px rgba(255,180,60,.3); }
+  .topbar .now .time{ font-size:clamp(19px,2.6vw,24px); font-weight:700; text-align:right; letter-spacing:-.5px; }
+  .topbar .now .date{ font-size:12px; color:var(--sub); text-align:right; font-weight:500; }
+
+  .classbar{ background:var(--blueSoft); color:#8A6416; padding:12px 24px; font-size:clamp(13px,1.8vw,15.5px); font-weight:700; flex-shrink:0; text-align:center; }
+  .classbar.off{ background:var(--amberSoft); color:var(--amber); }
+  /* [k2.9] 네트워크 상태 띠 — 끊겼거나 아직 못 보낸 기록이 있을 때만 보임 (누르는 것 아님) */
+  .nettag{ background:#FFF0E2; color:#B45309; padding:7px 20px; font-size:clamp(12px,1.6vw,14px); font-weight:700; text-align:center; flex-shrink:0; border-bottom:1px solid #F5D9BE; }
+  .nettag.off{ background:#FFE7E4; color:#C8342A; border-bottom-color:#F3C4BE; }
+  .nettag[hidden]{ display:none; }
+
+  .stage{ flex:1; display:flex; align-items:center; justify-content:center; padding:clamp(16px,3vw,28px); overflow:hidden; }
+  .panel{ width:100%; max-width:460px; }
+
+  .lead{ text-align:center; margin-bottom:24px; }
+  .lead h1{ font-size:clamp(24px,3.4vw,30px); font-weight:800; letter-spacing:-.5px; }
+  .lead p{ font-size:clamp(14px,1.8vw,16px); color:var(--sub); margin-top:9px; font-weight:600; }
+  .lead p b{ color:var(--blue); }
+
+  .pin{ display:flex; gap:12px; justify-content:center; margin-bottom:26px; }
+  .pin .dot{ width:clamp(48px,8vw,58px); height:clamp(58px,10vw,70px); border-radius:14px; background:var(--card); border:2px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-size:30px; color:var(--blue); transition:all .12s; box-shadow:var(--shadow); }
+  .pin .dot.filled{ border-color:var(--blue); background:var(--blueSoft); }
+
+  .pad{ display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(9px,1.4vw,13px); }
+  .key{ height:clamp(56px,9vw,72px); border-radius:18px; border:1px solid var(--line); background:var(--card); font-family:inherit;
+    font-size:clamp(24px,3.4vw,30px); font-weight:800; color:var(--ink); cursor:pointer; box-shadow:var(--shadow); transition:transform .08s, background .08s; }
+  .key:active{ transform:scale(.96); background:var(--blueSoft); }
+  .key.del{ color:var(--sub); font-size:24px; } .key.clr{ color:var(--sub); font-size:17px; font-weight:700; }
+  .errmsg{ text-align:center; color:var(--red); font-size:15px; font-weight:800; margin-top:14px; min-height:20px; }
+
+  .confirm-lead{ text-align:center; margin-bottom:20px; }
+  .confirm-lead h1{ font-size:clamp(20px,2.8vw,24px); font-weight:800; }
+  .confirm-lead p{ font-size:14px; color:var(--sub); margin-top:6px; font-weight:600; }
+  .facegrid{ display:flex; flex-direction:column; gap:12px; max-height:60vh; overflow:auto; }
+  .facecard{ display:flex; align-items:center; gap:16px; background:var(--card); border:1px solid var(--line);
+    border-radius:22px; padding:14px 17px; cursor:pointer; box-shadow:var(--shadow); transition:transform .08s, border-color .12s, background .12s; }
+  .facecard:active{ transform:scale(.98); border-color:var(--blue); background:var(--blueSoft); }
+  .facecard .photo{ width:80px; height:80px; border-radius:18px; object-fit:cover; flex-shrink:0; background:var(--photoBg);
+    display:flex; align-items:center; justify-content:center; font-size:34px; color:var(--photoInk); }
+  .facecard .info{ flex:1; text-align:left; }
+  .facecard .info .nm{ font-size:clamp(20px,2.6vw,24px); font-weight:800; }
+  .facecard .info .cls{ font-size:13.5px; color:var(--sub); margin-top:3px; font-weight:600; }
+  .facecard .tap{ font-size:15px; color:#fff; font-weight:700; background:var(--blue); padding:11px 18px; border-radius:14px;
+    box-shadow:0 4px 12px rgba(255,159,67,.34); }
+
+  /* 그리드 모드: 넓게 + 세로 스크롤 */
+  body.gridmode .stage{ align-items:flex-start; overflow:auto; }
+  body.gridmode .panel{ max-width:1100px; }
+  /* ══ [사진 출석] 반 명단 그리드 ══ */
+  .gstage{ flex:1; overflow:auto; padding:clamp(10px,2vw,18px); width:100%; }
+  .gwrap{ max-width:1100px; margin:0 auto; }
+  .glead{ text-align:center; margin-bottom:13px; }
+  .glead h1{ font-size:clamp(19px,2.8vw,26px); font-weight:800; letter-spacing:-.5px; }
+  .glead p{ font-size:clamp(12.5px,1.7vw,14.5px); color:var(--sub); margin-top:6px; font-weight:600; }
+  .glead p b{ color:var(--blue); }
+  .grid{ display:grid; gap:clamp(8px,1.3vw,13px);
+    grid-template-columns:repeat(auto-fill, minmax(clamp(100px,12.5vw,148px), 1fr)); }
+  .stu{ background:var(--card); border:1.5px solid var(--line); border-radius:20px; padding:10px 8px 11px;
+    text-align:center; cursor:pointer; box-shadow:var(--shadow); position:relative;
+    transition:transform .09s, border-color .12s, background .12s; }
+  .stu:active{ transform:scale(.96); border-color:var(--blue); background:var(--blueSoft); }
+  .stu img,.stu .noimg{ width:100%; aspect-ratio:1/1; border-radius:16px; object-fit:cover; background:var(--photoBg); display:block; }
+  .stu .noimg{ display:flex; align-items:center; justify-content:center; font-size:clamp(26px,4vw,38px);
+    font-weight:800; color:var(--photoInk); }
+  .stu .nm{ font-size:clamp(15px,1.9vw,18px); font-weight:800; margin-top:8px; letter-spacing:-.3px; }
+  .stu .gr{ font-size:11.5px; color:var(--sub); font-weight:700; margin-top:2px; }
+  /* [k2.5] 띠 색은 이름 아래 급수 왼쪽에 작은 띠로 표시 (좌측 상단 원형 점 삭제) */
+  .stu .gr{ display:flex; align-items:center; justify-content:center; gap:6px; }
+  .stu .bbar{ width:clamp(18px,2.4vw,26px); height:7px; border-radius:3px; flex:0 0 auto;
+    border:1px solid rgba(0,0,0,.18); box-shadow:0 1px 2px rgba(0,0,0,.12); }
+  /* [k2.3] 이번달 심사 대상 배지 */
+  .stu .exb{ position:absolute; top:7px; right:7px; background:linear-gradient(150deg,#FFE9A8,#FFCB4D);
+    color:#5A4209; font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px;
+    box-shadow:0 2px 6px rgba(200,150,30,.35); border:1.5px solid #fff; letter-spacing:-.2px; }
+  .stu.exam{ border-color:#FFCB4D; box-shadow:0 0 0 2px rgba(255,203,77,.35), var(--shadow); }
+  .exline{ display:inline-flex; align-items:center; gap:6px; background:linear-gradient(150deg,#FFE9A8,#FFCB4D);
+    color:#5A4209; font-size:13px; font-weight:700; padding:7px 15px; border-radius:999px; margin-top:12px;
+    box-shadow:0 4px 12px rgba(200,150,30,.3); }
+  .glead .exsum{ display:inline-block; margin-top:7px; background:var(--point-soft,#FFF1C9); color:#8A6416;
+    font-size:12px; font-weight:700; padding:4px 12px; border-radius:999px; }
+  /* [k2.4] 상태별 표시 — 출석 전 / 본인 출석 / 사범 체크 / 결석 */
+  .stu.att, .stu.bycoach, .stu.absent{ }
+  .stu.att::after, .stu.bycoach::after, .stu.absent::after, .stu.rest::after, .stu.gone::after{
+    position:absolute; inset:auto 0 0 0; color:#fff;
+    font-size:11.5px; font-weight:700; padding:5px 0; border-radius:0 0 18px 18px; }
+  /* ① 본인이 눌러 출석 — 초록 */
+  .stu.att, .stu.bycoach, .stu.absent{ padding-bottom:28px; }
+  .stu.att{ opacity:.45; }
+  .stu.att::after{ content:"✓ 출석완료"; background:var(--green); }
+  /* ② 늦게 누름 — 주황 (표시 전용, 기록에는 남지 않음) */
+  .stu.att.late{ opacity:.55; }
+  .stu.att.late::after{ content:"⏰ 늦게 도착"; background:var(--amber); }
+  /* ③ 사범님이 대신 체크 — 남색. 아이가 또 누를 필요 없음 */
+  .stu.bycoach{ opacity:.6; }
+  .stu.bycoach::after{ content:"사범님 체크"; background:#5B6B8C; }
+  /* ④ 결석 — 사진을 흑백으로 */
+  .stu.absent{ opacity:.52; }
+  .stu.absent img, .stu.absent .noimg{ filter:grayscale(1); }
+  .stu.absent::after{ content:"결석"; background:var(--red); }
+  /* [k2.6] 오늘 수업 탭 */
+  .ctabs{ display:flex; gap:8px; overflow-x:auto; padding:2px 2px 11px; -webkit-overflow-scrolling:touch; }
+  .ctabs::-webkit-scrollbar{ height:0 }
+  .ctabs button{ flex:0 0 auto; background:var(--card); border:2px solid var(--line); border-radius:999px;
+    padding:10px 17px; font-family:inherit; font-size:clamp(13px,1.8vw,16px); font-weight:700; color:var(--sub);
+    box-shadow:var(--shadow); cursor:pointer; white-space:nowrap; }
+  .ctabs button[aria-pressed="true"]{ background:var(--blue); border-color:var(--blue); color:#fff;
+    box-shadow:0 5px 14px rgba(255,159,67,.34); }
+  .ctabs .nowdot{ display:inline-block; width:8px; height:8px; border-radius:50%;
+    background:var(--green); margin-right:7px; vertical-align:1px; }
+  .ctabs button[aria-pressed="true"] .nowdot{ background:#fff; }
+
+  /* [k2.6] 구역 나누기 */
+  .sec{ margin-bottom:17px; }
+  .sechd{ display:flex; align-items:center; gap:9px; margin:0 3px 9px; }
+  .sechd h2{ margin:0; font-size:clamp(15px,2.1vw,19px); font-weight:800; }
+  .sechd .cnt{ background:var(--blueSoft); color:#8A6416; font-size:12px; font-weight:700;
+    padding:2px 11px; border-radius:999px; }
+  .sechd .hint{ margin-left:auto; font-size:11.5px; color:var(--sub); font-weight:700; }
+  .secMini .grid{ grid-template-columns:repeat(auto-fill, minmax(clamp(82px,9vw,112px),1fr)); gap:8px; }
+  .secMini .stu{ padding:7px 5px 8px; border-radius:15px; border-width:1px; opacity:1; }
+  .secMini .stu img,.secMini .stu .noimg{ border-radius:11px; }
+  .secMini .stu .nm{ font-size:clamp(13px,1.5vw,15px); margin-top:5px; }
+  .secMini .stu .gr{ font-size:10.5px; gap:4px; }
+  .secMini .stu .bbar{ width:16px; height:5px; }
+  .secMini .stu .exb{ font-size:9.5px; padding:2px 6px; top:5px; right:5px; }
+  .secMini .stu.att,.secMini .stu.bycoach,.secMini .stu.absent,
+  .secMini .stu.rest,.secMini .stu.gone{ padding-bottom:23px; }
+  .secMini .stu.att::after,.secMini .stu.bycoach::after,.secMini .stu.absent::after,
+  .secMini .stu.rest::after,.secMini .stu.gone::after{ font-size:10px; padding:3px 0; border-radius:0 0 13px 13px; }
+
+  /* [k2.7] 하원 완료 */
+  .stu.gone{ opacity:.5; }
+  .stu.gone img, .stu.gone .noimg{ filter:grayscale(.6); }
+  .stu.gone::after{ content:"🏠 하원"; background:#7A6E86; }
+
+  /* 미리 연락한 결석 */
+  .stu.rest{ opacity:.62; }
+  .stu.rest img, .stu.rest .noimg{ filter:grayscale(.85); }
+  .stu.rest::after{ content:"오늘 쉬어요"; background:#5B7FB0; }
+
+  /* 범례 */
+  .lgd{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:16px;
+    font-size:11.5px; color:var(--sub); font-weight:600; }
+  .lgd i{ display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+  .gempty{ text-align:center; color:var(--sub); font-size:14.5px; font-weight:600; padding:40px 12px; line-height:1.7; }
+  .altbtn{ display:block; margin:22px auto 4px; background:var(--card); border:1px solid var(--line);
+    border-radius:12px; color:var(--sub); font-family:inherit; font-size:14px; font-weight:800;
+    cursor:pointer; padding:12px 22px; box-shadow:var(--shadow); }
+  /* 되돌리기 */
+  .undoBtn{ margin-top:20px; background:var(--card); border:2px solid var(--red); color:var(--red);
+    border-radius:14px; font-family:inherit; font-size:clamp(15px,2.1vw,18px); font-weight:800;
+    padding:14px 28px; cursor:pointer; box-shadow:var(--shadow); }
+  .undoBtn:active{ transform:scale(.96); background:var(--redSoft); }
+  .cdWrap{ width:min(280px,72vw); height:7px; background:var(--line); border-radius:99px; margin-top:14px; overflow:hidden; }
+  .cdBar{ height:100%; background:var(--green); border-radius:99px; width:100%; transition:width .1s linear; }
+  .cdTxt{ font-size:12.5px; color:var(--sub); font-weight:700; margin-top:8px; }
+
+  /* [k2.2] 너무 이른 하원 확인 화면 버튼 */
+  .warnBtns{ display:flex; gap:12px; margin-top:22px; flex-wrap:wrap; justify-content:center; }
+  .warnBtns button{ font-family:inherit; cursor:pointer; border-radius:16px; padding:15px 26px;
+    font-size:clamp(15px,2.1vw,18px); font-weight:700; transition:transform .08s; }
+  .wStay{ background:var(--blue); color:#fff; border:none; box-shadow:0 6px 16px rgba(255,159,67,.36); }
+  .wGo{ background:var(--card); color:var(--sub); border:2px solid var(--line); box-shadow:var(--shadow); }
+  .wStay:active,.wGo:active{ transform:scale(.96); }
+
+  .done{ text-align:center; display:flex; flex-direction:column; align-items:center; }
+  .done .photo-big{ width:clamp(104px,18vw,132px); height:clamp(104px,18vw,132px); border-radius:26px; object-fit:cover; margin:0 0 18px;
+    border:5px solid var(--greenSoft); background:var(--photoBg); display:flex; align-items:center; justify-content:center; font-size:56px; color:var(--photoInk);
+    box-shadow:0 10px 26px rgba(46,158,79,.22); animation:pop .45s cubic-bezier(.2,1.4,.5,1); }
+  @keyframes pop{ 0%{transform:scale(.4);opacity:0;} 100%{transform:scale(1);opacity:1;} }
+  .done .badge{ display:inline-flex; align-items:center; gap:6px; background:var(--greenSoft); color:var(--green);
+    font-size:16px; font-weight:800; padding:8px 17px; border-radius:999px; margin-bottom:12px; }
+  .done h1{ font-size:clamp(26px,4vw,34px); font-weight:800; letter-spacing:-.5px; }
+  .done p{ font-size:15px; color:var(--sub); margin-top:10px; font-weight:600; }
+  .done .cls2{ display:inline-block; margin-top:16px; background:var(--blueSoft); color:var(--blue);
+    padding:10px 18px; border-radius:12px; font-size:14.5px; font-weight:800; }
+  .backbtn{ display:block; margin:20px auto 0; background:var(--card); border:1px solid var(--line);
+    border-radius:12px; color:var(--sub); font-family:inherit; font-size:15px; font-weight:800; cursor:pointer; padding:12px 24px; box-shadow:var(--shadow); }
+  .shake{ animation:shake .4s; } @keyframes shake{ 0%,100%{transform:translateX(0);} 20%,60%{transform:translateX(-8px);} 40%,80%{transform:translateX(8px);} }
+
+  /* 설정/로딩 */
+  .setup{ max-width:420px; margin:auto; padding:30px; background:var(--card); border-radius:24px; text-align:center; box-shadow:var(--shadow); }
+  .setup img{ width:96px; margin-bottom:14px; }
+  .setup h1{ font-size:23px; font-weight:800; margin-bottom:6px; }
+  .setup p{ font-size:14px; color:var(--sub); margin-bottom:18px; line-height:1.6; }
+  .setup input{ width:100%; padding:14px; border:1px solid var(--line); border-radius:12px; font-size:16px; font-family:inherit; text-align:center; margin-bottom:12px; }
+  .setup input:focus{ outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blueSoft); }
+  .setup button{ width:100%; padding:15px; background:var(--blue); color:#fff; border:none; border-radius:12px; font-size:17px; font-weight:800; font-family:inherit; cursor:pointer; }
+  .setup button:active{ background:var(--blueDark); }
+  .spin{ width:44px; height:44px; border:4px solid var(--line); border-top-color:var(--blue); border-radius:50%; margin:20px auto; animation:rot 1s linear infinite; }
+  @keyframes rot{ to{transform:rotate(360deg);} }
+  #fsBtn{ position:fixed; right:14px; bottom:14px; z-index:100; background:var(--brand); color:#fff; border:none; border-radius:16px;
+    padding:11px 17px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 5px 16px rgba(255,159,67,.38); }
+
+  /* ════ 가로·세로 자동 대응 ════ */
+  /* 가로 모드(충분히 넓고 높이 있는 화면): 키패드 화면을 2단(안내·PIN | 키패드)으로 배치 */
+  @media (orientation:landscape) and (min-width:840px) and (min-height:520px){
+    .panel:has(.pad){ max-width:880px; display:grid; grid-template-columns:1.05fr 1fr; grid-template-areas:"lead pad" "pin pad" "err pad"; align-items:center; column-gap:48px; }
+    .panel:has(.pad) .lead{ grid-area:lead; text-align:left; margin-bottom:16px; }
+    .panel:has(.pad) .lead h1{ font-size:clamp(26px,3vw,34px); }
+    .panel:has(.pad) .pin{ grid-area:pin; justify-content:flex-start; margin-bottom:0; }
+    .panel:has(.pad) .pad{ grid-area:pad; }
+    .panel:has(.pad) .errmsg{ grid-area:err; text-align:left; }
+    /* 가로에서 확인(사진 선택) 화면은 2칸 */
+    .panel:has(.facegrid){ max-width:820px; }
+    .facegrid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  }
+  /* 화면 높이가 낮을 때(주로 폰 가로): 요소를 줄여 키패드가 안 잘리게 */
+  @media (max-height:560px){
+    .topbar{ padding:7px 18px; } .topbar .brand{ font-size:15px; gap:9px; } .topbar .brand .logo{ width:32px; height:32px; font-size:19px; border-radius:9px; }
+    .topbar .now .time{ font-size:16px; } .topbar .now .date{ font-size:10px; }
+    .classbar{ padding:7px 18px; font-size:12.5px; }
+    .stage{ padding:10px 16px; }
+    .lead{ margin-bottom:12px; } .lead h1{ font-size:21px; } .lead p{ font-size:13px; margin-top:5px; }
+    .pin{ gap:9px; margin-bottom:13px; } .pin .dot{ width:42px; height:48px; border-radius:11px; font-size:22px; }
+    .pad{ gap:8px; } .key{ height:48px; border-radius:13px; font-size:22px; } .key.del{ font-size:19px; } .key.clr{ font-size:15px; }
+    .errmsg{ font-size:13px; margin-top:9px; min-height:16px; }
+    .done .photo-big{ width:84px; height:84px; border-radius:18px; margin-bottom:11px; font-size:38px; }
+    .done .badge{ font-size:14px; padding:5px 13px; margin-bottom:8px; }
+    .done h1{ font-size:24px; } .done p{ font-size:13px; margin-top:6px; }
+    .done .cls2{ margin-top:10px; padding:7px 14px; font-size:13px; }
+    .facecard .photo{ width:58px; height:58px; } .facecard .info .nm{ font-size:19px; }
+    .facegrid{ max-height:54vh; } .backbtn{ margin-top:12px; padding:9px 20px; font-size:13px; }
+  }
+  @media (max-height:420px){
+    .classbar{ padding:5px 16px; font-size:11.5px; } .stage{ padding:6px 14px; }
+    .lead{ margin-bottom:8px; } .lead h1{ font-size:18px; } .lead p{ font-size:11.5px; margin-top:3px; }
+    .pin{ gap:7px; margin-bottom:9px; } .pin .dot{ width:36px; height:40px; font-size:18px; }
+    .pad{ gap:6px; } .key{ height:40px; font-size:19px; border-radius:11px; }
+    .done .photo-big{ width:66px; height:66px; margin-bottom:8px; font-size:30px; } .done h1{ font-size:20px; }
+  }
+  /* 가로 모드 + 낮은 화면(작은 폰 가로): 확인 화면 2칸 */
+  @media (orientation:landscape) and (max-height:560px){
+    .facegrid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; max-height:58vh; }
+    .facecard{ padding:9px 12px; }
+  }
+</style>
+
+<script>
+/* 전체화면 시 방향을 잠그지 않음 — 기기를 돌리면 가로·세로 자유롭게 전환.
+   일부 브라우저가 전체화면에서 자동으로 방향을 잠그면, 명시적으로 해제 시도 */
+function unlockOrientation(){
+  try{
+    if(screen.orientation && screen.orientation.unlock){ screen.orientation.unlock(); }
+  }catch(e){}
+}
+</script>
+</head>
+<body>
+<button id="fsBtn" onclick="goFullscreen()">⛶ 전체화면</button>
+<div class="belt"><span></span><span></span><span></span><span></span><span></span></div>
+<div class="topbar">
+  <div class="brand"><div class="logo">나</div>나라차태권도 출석</div>
+  <div class="now"><div class="time" id="clock">--:--</div><div class="date" id="dateLbl"></div></div>
+</div>
+<div class="classbar" id="classbar">수업 확인 중…</div>
+<div class="nettag" id="netTag" hidden></div>
+<div class="stage"><div class="panel" id="panel"></div></div>
+
+<script>
+var GSHEET_URL="https://script.google.com/macros/s/AKfycbysx2hkGfv3onXQHutPA6boYIZ74R4MNY_Jrc5cwgVebI9L1FRmj0YLT9YpYrS0tKVg7A/exec";
+var KIOSK_VER="k2.11";  /* k2.11 (2026-10-26, 전면 점검): 띠 색을 실제 체계로 교정(9급 흰띠가 노랑으로 보이던 것)·병합 lv 방어 · k2.10 (2026-10-16): 학부모 푸시 보류(관리앱 R4.455)에 맞춰 알림 전송 끔(NOTIFY_ON=false) · "부모님께 알림" 문구를 "저장됩니다"로 · 하원 기능은 유지
+                           k2.9 (2026-10-16): 네트워크 끊김 대비 — 출석·되돌리기·알림을 기기 보관함(naracha-kiosk-queue)에 두고, 서버 저장이 OK일 때만 지움 · 새로고침 뒤 다시 적용 · 서버 자료를 못 받으면 덮어쓰지 않음(fail-closed) · 상단 상태 띠
+                           k2.8 (2026-10-16): 길게 누르면(1.2초) 출석 되돌리기 — 본인 출석만 · 누적 횟수도 -1
+                           k2.7 (2026-10-16): 같은 사진을 다시 누르면 하원 · '집에 갔어요' 구역
+                           k2.6 (2026-10-16): 상단 오늘 수업 탭 · 구역 나누기(C안) · 미리 연락한 결석 구분 · 나눔고딕
+                           k2.5 (2026-10-16): 띠 색을 이름 아래 급수 옆으로 이동(좌측 상단 원형 점 삭제) · 안내 문구 정리
+                           k2.4 (2026-10-16): 상태별 표시 구분 — 출석 전·본인 출석·늦게 도착·사범 체크·결석 + 범례
+                           k2.3 (2026-10-16): 이번달 심사 대상자 표시 — 출석 창고 examConfirm 사용(추가 통신 없음)
+                           k2.2 (2026-10-16): 출석 후 10분 안에 하원을 누르면 확인 화면 1회 (막지 않음) · LEAVE_WARN_MIN
+                           k2.1 (2026-10-16): 디자인만 B안(친근 성장형)으로 교체 — 동작 코드는 k2.0 그대로.
+                           k2.0 (2026-10-15, R4.453): 출석 확정 시 학부모 휴대폰 등원 알림 + 🏠 하원 화면(오늘 출석한 아이 → 누르면 하원 알림). 서버 v9 notify */
+var DAY_CODE=["sun","mon","tue","wed","thu","fri","sat"];
+var DAY_IDX={mon:0,tue:1,wed:2,thu:3,fri:4,sat:5};
+var DAY_KO={mon:"월",tue:"화",wed:"수",thu:"목",fri:"금",sat:"토",sun:"일"};
+
+var S={
+  key:"", loaded:false, screen:"setup", pin:"",
+  students:[], schedule:null, weeks:{}, photoMap:{},
+  tailIndex:{}, guardTailIndex:{},
+  matches:null, chosen:null, curSlot:null, curClassLabel:"", err:"",
+  attState:null, pushTimer:null,
+  mode:"grid",           /* [사진출석] grid=사진 모드(기본) · pad=번호 모드 */
+  pending:null, undoTimer:null,
+  outMap:{}, pendingOut:null   /* [k2.0] 하원 처리한 아이(오늘) · 하원 되돌리기 대기 */
+};
+/* ── [k2.0] 학부모 휴대폰 알림(서버 v9) — 실패해도 출석 처리에는 영향 없음 ── */
+var NOTIFY_ON=false;   /* [k2.10] 학부모 휴대폰 푸시 보류(관리앱 R4.455) — 다시 쓰려면 true 로. 끈 동안은 보관도 하지 않는다 */
+function kioskNotify(items, isRetry){ try{ if(!NOTIFY_ON||!S.key||!items||!items.length) return;
+  var send=items.map(function(it){ var c={}; for(var k in it){ if(k.charAt(0)!=="_") c[k]=it[k]; } return c; });   /* 보관용 꼬리표(_q,_t)는 빼고 보냄 */
+  fetch(GSHEET_URL,{method:"POST",body:JSON.stringify({key:S.key,action:"notify",items:send})})
+    .then(function(r){ return r.text(); })
+    .then(function(){ if(isRetry) notifyQueueDone(items); })
+    .catch(function(){ if(!isRetry) notifyQueueAdd(items); });     /* [k2.9] 못 보냈으면 보관 → 연결되면 다시 보냄 */
+}catch(e){ if(!isRetry){ try{ notifyQueueAdd(items); }catch(e2){} } } }
+function nowKo(){ var d=new Date(); return d.getHours()+"시 "+p2(d.getMinutes())+"분"; }
+
+/* ── [k2.9] 네트워크 끊김 대비 — 못 보낸 기록을 기기에 보관했다가 연결되면 자동으로 다시 보낸다 ──
+   · 보관함: localStorage "naracha-kiosk-queue" = { v:1, items:[출석·되돌리기], notify:[등·하원 알림] }
+   · 출석은 3초 되돌리기가 끝나 확정될 때 보관된다(그 전에는 아무것도 저장·전송하지 않음 — 기존 설계 그대로)
+   · 서버 저장이 "OK"로 끝나야 보관함에서 지운다. 끊김·오류·이상 응답이면 그대로 남겨 두고 30초마다 다시 시도
+   · 화면을 새로고침해도 보관함은 남는다 → 명단을 다시 받은 뒤 보관함을 다시 적용하고 전송
+   · 7일 지난 항목은 버린다 */
+var QUEUE_KEY="naracha-kiosk-queue", QUEUE_KEEP_MS=7*24*3600000, RETRY_MS=30000;
+var Q={v:1, items:[], notify:[]};
+try{ var _q=JSON.parse(localStorage.getItem(QUEUE_KEY)||"null"); if(_q&&_q.v===1){ Q.items=_q.items||[]; Q.notify=_q.notify||[]; } }catch(e){}
+function saveQueue(){
+  var lim=Date.now()-QUEUE_KEEP_MS;
+  Q.items=Q.items.filter(function(it){ return (it.t||0)>lim; });
+  Q.notify=Q.notify.filter(function(it){ return (it._t||0)>lim; });
+  try{ localStorage.setItem(QUEUE_KEY, JSON.stringify(Q)); }catch(e){}
+  updateNetTag();
+}
+function queueAdd(it){ it.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7); Q.items.push(it); saveQueue(); return it.id; }
+function queueRemove(ids){ if(!ids||!ids.length) return; Q.items=Q.items.filter(function(it){ return ids.indexOf(it.id)<0; }); saveQueue(); }
+function queueCount(){ return Q.items.length + (NOTIFY_ON?Q.notify.length:0); }
+function notifyQueueAdd(items){ var t=Date.now(); items.forEach(function(it,i){ var c={}; for(var k in it){ if(k.charAt(0)!=="_") c[k]=it[k]; } c._q=t.toString(36)+"n"+i+Math.random().toString(36).slice(2,5); c._t=t; Q.notify.push(c); }); saveQueue(); }
+function notifyQueueDone(items){ var ids=items.map(function(it){ return it._q; }); Q.notify=Q.notify.filter(function(it){ return ids.indexOf(it._q)<0; }); saveQueue(); }
+function flushNotify(){ if(!NOTIFY_ON){ if(Q.notify.length){ Q.notify=[]; saveQueue(); } return; } if(!Q.notify.length||!S.key) return; kioskNotify(Q.notify.slice(0,20), true); }
+/* 새로고침 뒤 명단을 다시 받으면 보관함의 출석을 다시 적용한다 (서버에 더 새 기록이 있으면 서버 우선) */
+function replayQueue(){
+  if(!Q.items.length) return 0;
+  var n=0;
+  Q.items.forEach(function(it){
+    try{
+      if(!S.weeks[it.wk]) S.weeks[it.wk]={t:0, cells:{}};
+      var w=S.weeks[it.wk]; if(!w.cells) w.cells={};
+      (it.slots||[]).forEach(function(slot){
+        if(!w.cells[slot]) w.cells[slot]={lv:[[],[],[]], marks:{}};
+        var cell=w.cells[slot]; if(!cell.marks) cell.marks={};
+        var prev=cell.marks[it.name]||{};
+        if((prev.t||0)>=it.t) return;                                  /* 서버 쪽이 같거나 더 새 기록 → 그대로 둠 */
+        if(it.kind==="mark"){
+          var was=prev.s==="출석";
+          cell.marks[it.name]={ s:"출석", k:prev.k, m:prev.m||"", t:it.t, by:"self" };
+          if(!was){ if(!S.accMap) S.accMap={}; S.accMap[it.name]=(S.accMap[it.name]||0)+1; }
+          n++;
+        } else if(it.kind==="unmark"){
+          if(prev.s!=="출석" || prev.by!=="self") return;              /* 본인 출석만 되돌린다 */
+          cell.marks[it.name]={ s:"", k:prev.k, m:prev.m||"", t:it.t, by:"" };
+          if(S.accMap && S.accMap[it.name]) S.accMap[it.name]=Math.max(0, S.accMap[it.name]-1);
+          n++;
+        }
+      });
+      w.t=Math.max(w.t||0, it.t);
+    }catch(e){}
+  });
+  return n;
+}
+/* 상단 상태 띠 — 끊겼거나 못 보낸 기록이 있을 때만 보인다 */
+function updateNetTag(){
+  var el=document.getElementById("netTag"); if(!el) return;
+  var n=queueCount(), off=(navigator.onLine===false);
+  if(!n && !off){ el.hidden=true; return; }
+  el.hidden=false; el.className="nettag"+(off?" off":"");
+  if(off) el.textContent="📴 인터넷이 끊겼어요 — 출석은 이 기기에 잘 보관돼요"+(n?(" · 보관 "+n+"건 · 연결되면 자동으로 보내요"):"");
+  else el.textContent="⏳ 서버로 보내는 중 · 아직 못 보낸 기록 "+n+"건 — 자동으로 다시 시도해요";
+}
+function retryQueue(){
+  if(!S.key) return;
+  if(!S.loaded){ if(S.screen==="setup" && navigator.onLine!==false) loadAll(); return; }   /* 끊긴 채 켜졌다면 명단부터 다시 */
+  if(S.pushing) return;
+  if(Q.items.length) schedulePush(); else if(Q.notify.length) flushNotify();
+}
+window.addEventListener("online", function(){ updateNetTag(); retryQueue(); });
+window.addEventListener("offline", updateNetTag);
+setInterval(retryQueue, RETRY_MS);
+try{ var _om=JSON.parse(localStorage.getItem("naracha-kiosk-out")||"{}"); if(_om.d===todayStr()) S.outMap=_om.m||{}; }catch(e){}
+function saveOutMap(){ try{ localStorage.setItem("naracha-kiosk-out", JSON.stringify({d:todayStr(), m:S.outMap})); }catch(e){} }
+/* 오늘 출석(어느 수업이든)했고 아직 하원 처리 안 한 아이 */
+function todayAttended(){
+  var wk=curWeek(), w=S.weeks[wk]; if(!w||!w.cells) return [];
+  var dc=DAY_CODE[new Date().getDay()], seen={}, out=[];
+  Object.keys(w.cells).forEach(function(key){ if(key.split("-")[0]!==dc) return; var mk=w.cells[key].marks||{};
+    Object.keys(mk).forEach(function(nm){ if(mk[nm]&&mk[nm].s==="출석"&&!seen[nm]&&!S.outMap[nm]){ seen[nm]=1; out.push(nm); } }); });
+  return out.sort(function(a,b){ return a.localeCompare(b,"ko"); });
+}
+window.openLeave=function(){ clearUndoTimer(); S.pendingOut=null; S.screen="leave"; render(); };
+
+/* [k2.6] 수련생 카드 한 장 */
+function stuCard(nm, wcell, EXT){
+  var ph=getPhoto(nm), gr=gradeOf(nm), bc=beltColorOf(gr);
+  var mk=(wcell&&wcell.marks&&wcell.marks[nm])||null;
+  var st=mk?(mk.s||""):"";
+  var att=!!(mk && st==="출석" && mk.by==="self");
+  var byCoach=!!(mk && st==="출석" && mk.by!=="self");
+  var planned=(st==="결석" && /결석예정/.test(mk.m||""));
+  var absent=(st==="결석" && !planned);
+  var late=att && isLateTap(mk.t);
+  var gone=!!(S.outMap && S.outMap[nm]);
+  var ex=!!EXT[nm];
+  var cls=(att?' att':'')+(late?' late':'')+(byCoach?' bycoach':'')+
+          (planned?' rest':'')+(absent?' absent':'')+(gone?' gone':'')+(ex?' exam':'');
+  var q=nm.replace(/'/g,"\\'");
+  var hold=(att? ' onmousedown="holdStart(event,\''+q+'\')" onmouseup="holdEnd()" onmouseleave="holdEnd()"'+
+                 ' ontouchstart="holdStart(event,\''+q+'\')" ontouchend="holdEnd()" ontouchcancel="holdEnd()"' : '');
+  return '<div class="stu'+cls+'" onclick="tapStu(\''+q+'\')"'+hold+'>'+
+    (ex?'<span class="exb">🎖 심사</span>':'')+
+    (ph?'<img src="'+ph+'" alt="">':'<div class="noimg">'+firstChar(nm)+'</div>')+
+    '<div class="nm">'+nm+'</div>'+
+    '<div class="gr"><i class="bbar" style="background:'+bc+'"></i>'+(gr||'&nbsp;')+'</div>'+
+  '</div>';
+}
+/* [k2.6] 구역 하나 */
+function secHtml(title, list, mini, wcell, EXT, note){
+  if(!list || !list.length) return '';
+  var ex=list.filter(function(n){ return EXT[n]; }).length;
+  var hint=[ note||'', ex?('🎖 심사 '+ex+'명'):'' ].filter(Boolean).join(' · ');
+  return '<div class="sec'+(mini?' secMini':'')+'">'+
+    '<div class="sechd"><h2>'+title+'</h2><span class="cnt">'+list.length+'명</span>'+
+    (hint?'<span class="hint">'+hint+'</span>':'')+'</div>'+
+    '<div class="grid">'+list.map(function(n){ return stuCard(n, wcell, EXT); }).join('')+'</div></div>';
+}
+
+/* [k2.6] 오늘 수업 목록 (시간순) */
+function todayClasses(){
+  var dc=DAY_CODE[new Date().getDay()];
+  var cells=(S.schedule&&S.schedule.cells)||{};
+  var out=[];
+  for(var k in cells){
+    var pr=k.split("-");
+    if(pr[0]!==dc) continue;
+    if(!cells[k] || !cells[k].l) continue;
+    out.push({ key:k, h:parseInt(pr[1],10), label:String(cells[k].l) });
+  }
+  out.sort(function(a,b){ return a.h-b.h; });
+  return out;
+}
+/* 지금 화면에 보여 주는 수업 — 탭으로 고른 것이 우선 */
+function viewSlot(){ return S.pickSlot || S.curSlot || null; }
+window.pickClass = function(key){
+  S.pickSlot = key; S.screen="grid"; render();
+};
+function esc2(t){ return String(t==null?"":t).replace(/[&<>"']/g, function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+/* [k2.4] 늦게 도착 판정 — 수업 시작 시각보다 LATE_MIN 분 넘겨 누른 경우.
+   ※ 기록에 '지각'이라는 값은 없습니다. 화면에만 보여 주는 표시입니다. */
+function isLateTap(ms){
+  try{
+    var vs=viewSlot();
+    if(!ms || !vs) return false;
+    var hh=parseInt(vs.split("-")[1],10);
+    if(isNaN(hh)) return false;
+    var d=new Date(ms), start=new Date(d.getFullYear(),d.getMonth(),d.getDate(),hh,0,0,0);
+    return (ms - start.getTime()) > LATE_MIN*60000;
+  }catch(e){ return false; }
+}
+
+/* [k2.3] 이번달 심사 대상(관리앱에서 '심사확정' 체크한 수련생)
+   출석 창고(att)의 examConfirm.map 을 그대로 읽는다 — 추가 통신 없음.
+   심사를 마치면 관리앱이 확정을 자동 해제하므로 따로 지울 필요 없다. */
+function examTargets(){
+  try{
+    var m=(S.attRaw && S.attRaw.examConfirm && S.attRaw.examConfirm.map) || {};
+    var out={};
+    for(var n in m){ if(m[n] && m[n].conf) out[n]=1; }
+    return out;
+  }catch(e){ return {}; }
+}
+function isExamTarget(name){ return !!examTargets()[name]; }
+
+/* [k2.2] 오늘 출석 도장을 찍은 시각(ms). 없으면 0 */
+function attendedAtMs(name){
+  var wk=curWeek(), w=S.weeks[wk]; if(!w||!w.cells) return 0;
+  var dc=DAY_CODE[new Date().getDay()], best=0;
+  Object.keys(w.cells).forEach(function(key){
+    if(key.split("-")[0]!==dc) return;
+    var mk=(w.cells[key].marks||{})[name];
+    if(mk && mk.s==="출석" && mk.t && mk.t>best) best=mk.t;
+  });
+  return best;
+}
+/* 아직 이르면 '남은 분', 괜찮으면 0 */
+function leaveTooSoon(name){
+  var t=attendedAtMs(name); if(!t) return 0;
+  var mins=(Date.now()-t)/60000;
+  return (mins < LEAVE_WARN_MIN) ? Math.max(1, Math.round(LEAVE_WARN_MIN-mins)) : 0;
+}
+
+window.tapLeave=function(name){
+  /* [k2.2] 출석한 지 얼마 안 됐으면 막지 않고 한 번만 확인 */
+  var soon=leaveTooSoon(name);
+  if(soon){ S.pendingOut=name; S.chosen=name; S.leaveLeftMin=soon; S.screen="leaveWarn"; render(); return; }
+  S.pendingOut=name; S.chosen=name; S.screen="leavePending"; render(); playDone(); startLeaveCountdown();
+};
+/* 확인 화면에서 '그래도 집에 가요' */
+window.leaveAnyway=function(){
+  if(!S.pendingOut){ goHome(); return; }
+  S.screen="leavePending"; render(); playDone(); startLeaveCountdown();
+};
+/* 확인 화면에서 '아니에요 · 더 수련할래요' */
+window.cancelLeaveWarn=function(){ S.pendingOut=null; S.chosen=null; S.screen="leave"; render(); };
+function startLeaveCountdown(){
+  clearUndoTimer(); var left=UNDO_SEC*10;
+  S.undoTimer=setInterval(function(){ left--; var bar=document.getElementById("cdBar"), txt=document.getElementById("cdTxt");
+    if(bar) bar.style.width=Math.max(0,left/(UNDO_SEC*10)*100)+"%"; if(txt) txt.textContent=Math.max(0,Math.ceil(left/10))+"초 뒤 저장됩니다";
+    if(left<=0){ clearUndoTimer(); commitLeave(); } }, 100);
+}
+function commitLeave(){
+  clearUndoTimer(); var nm=S.pendingOut; S.pendingOut=null; if(!nm){ goHome(); return; }
+  S.outMap[nm]=nowKo(); saveOutMap();
+  kioskNotify([{kind:"leave", names:[nm], title:"🏠 하원 알림", body:nm+" 수련생이 "+nowKo()+"에 나라차태권도장에서 수련 후 하원했습니다."}]);
+  S.chosen=nm; S.screen="leaveDone"; render();
+  clearTimeout(window.__t); window.__t=setTimeout(function(){ S.screen="leave"; render(); }, 2500);
+}
+window.confirmLeaveNow=function(){ commitLeave(); };
+window.undoLeave=function(){ clearUndoTimer(); S.pendingOut=null; S.chosen=null; S.screen="leave"; render(); };
+
+/* ── 날짜 유틸 ── */
+function p2(n){ return String(n).padStart(2,"0"); }
+function todayStr(){ var d=new Date(); return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate()); }
+function fmtYmd(d){ return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate()); }
+function mondayOf(dstr){ var d=new Date(dstr+"T00:00:00"); var w=d.getDay(); var diff=(w===0?-6:1-w); d.setDate(d.getDate()+diff); return fmtYmd(d); }
+function curWeek(){ return mondayOf(todayStr()); }
+
+/* ── 접속키 저장/로드 ── */
+try{ S.key=localStorage.getItem("naracha-kiosk-key")||""; }catch(e){}
+
+/* ── 데이터 로드 (att + photo 창고) ── */
+function loadAll(){
+  S.screen="loading"; render();
+  var okAtt=false, okPhoto=false, done=0;
+  function finish(){ done++; if(done>=2){ if(okAtt){ var rq=replayQueue(); buildIndex(); S.loaded=true; S.screen=(S.mode==="pad"?"pad":"grid"); updateClass(); render(); updateNetTag();
+        if(rq||Q.items.length) schedulePush(); else if(Q.notify.length) flushNotify();   /* [k2.9] 보관함이 있으면 바로 전송 */
+      } else { S.screen="setup"; S.err=(navigator.onLine===false)?"인터넷이 끊겨 있어요 — 연결되면 자동으로 다시 불러와요":"접속키가 맞지 않거나 데이터를 불러올 수 없어요"; render(); updateNetTag(); } } }
+  // att 창고 (명단·시간표·출석)
+  fetch(GSHEET_URL+"?key="+encodeURIComponent(S.key)+"&store=att")
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      if(rows && rows.error){ finish(); return; }
+      var m=parseRows(rows);
+      if(m && m.attV){
+        S.students=(m.roster&&m.roster.list)||[];
+        S.schedule=m.schedule||null;
+        S.weeks=m.weeks||{};
+        S.closedMap=(m.closedMapAtt&&m.closedMapAtt.map)||{};
+        S.quitMap=(m.quitMapAtt&&m.quitMapAtt.map)||{};
+        S.accMap=m.acc&&m.acc.map||{};
+        S.accBase=JSON.parse(JSON.stringify(S.accMap));   /* [k2.9] 마지막 동기화 시점의 누적 — 이후 이 기기에서 바뀐 양(±)을 계산하는 기준 */
+        S.attRaw=m;
+        okAtt=true;
+      }
+      finish();
+    })
+    .catch(function(){ finish(); });
+  // photo 창고
+  fetch(GSHEET_URL+"?key="+encodeURIComponent(S.key)+"&store=photo")
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      if(rows && !rows.error){
+        var m=parseRows(rows);
+        if(m && m.photoV){ S.photoMap=m.map||{}; okPhoto=true; }
+      }
+      finish();
+    })
+    .catch(function(){ finish(); });
+}
+function parseRows(rows){
+  if(!rows || rows.length<2) return null;
+  var joined="";
+  for(var i=0;i<rows.length;i++){
+    if(rows[i][0]==="JSON" && i+1<rows.length){
+      for(var j=i+1;j<rows.length;j++) joined+=(rows[j][0]!=null?String(rows[j][0]):"");
+      break;
+    }
+  }
+  try{ return JSON.parse(joined); }catch(e){ return null; }
+}
+
+/* ── 뒷4자리 색인 (빠른 검색) ── */
+function isActive(name){ return !(S.closedMap&&S.closedMap[name]) && !(S.quitMap&&S.quitMap[name]&&!S.quitMap[name].del); }
+function buildIndex(){
+  S.tailIndex={};
+  S.students.forEach(function(s){
+    if(!isActive(s.n)) return;
+    var tails={};
+    (s.gd||[]).forEach(function(g){
+      var digits=(g.p||"").replace(/[^0-9]/g,"");
+      if(digits.length>=4){ tails[digits.slice(-4)]=1; }
+    });
+    // 본인 폰도 색인에 (있으면)
+    var sp=(s.sp||"").replace(/[^0-9]/g,"");
+    if(sp.length>=4) tails[sp.slice(-4)]=1;
+    Object.keys(tails).forEach(function(t){
+      if(!S.tailIndex[t]) S.tailIndex[t]=[];
+      S.tailIndex[t].push(s.n);
+    });
+  });
+}
+
+/* ── 지금 시간 수업 슬롯 자동 감지 ── */
+function updateClass(){
+  var now=new Date();
+  var dayCode=DAY_CODE[now.getDay()];
+  var nowMin=now.getHours()*60+now.getMinutes();   // 지금을 '분'으로
+  var cells=(S.schedule&&S.schedule.cells)||{};
+  /* 수업 시작 40분 전 ~ 30분 후 안에 들어오는 수업 중, 시작시각이 가장 가까운 것 */
+  var best=null, bestDiff=1e9, bestH=-1;
+  for(var k in cells){
+    var parts=k.split("-");
+    if(parts[0]!==dayCode) continue;
+    if(!cells[k] || !cells[k].l) continue;
+    var kh=parseInt(parts[1],10);
+    var startMin=kh*60;
+    var diff=nowMin-startMin;             // 양수=수업 시작 지남, 음수=아직 전
+    if(diff>=-40 && diff<=30){            // 40분 전 ~ 30분 후
+      var absd=Math.abs(diff);
+      if(absd<bestDiff){ bestDiff=absd; best=k; bestH=kh; }
+    }
+  }
+  if(best){
+    S.curSlot=best; S.curClassLabel=cells[best].l;
+  } else {
+    S.curSlot=null; S.curClassLabel="";
+  }
+  var bar=document.getElementById("classbar");
+  if(bar){
+    if(best){
+      bar.className="classbar";
+      bar.textContent="📍 지금 수업 — "+bestH+":00 "+cells[best].l;
+    } else {
+      bar.className="classbar off";
+      bar.textContent="⚠️ 지금은 수업 시간이 아니에요";
+    }
+  }
+}
+/* 그 아이가 지금 배치된 '연속' 수업 슬롯들 찾기 (지도진이 배치한 인접 칸) */
+function findAttendSlots(name){
+  var vs=viewSlot();
+  if(!vs) return [];
+  var wk=curWeek();
+  var w=S.weeks[wk]; if(!w) w={cells:{}};
+  var parts=vs.split("-");
+  var day=parts[0], baseH=parseInt(parts[1],10);
+  var cells=(S.schedule&&S.schedule.cells)||{};
+  /* 이 아이가 배치된 칸인지 확인: 시간표 명단(schedule)이 아니라
+     주간 배치(weeks.cells.lv)에 이름이 있는지로 판단 (지도진이 배치한 것) */
+  function placedIn(h){
+    var key=day+"-"+h;
+    var c=w.cells&&w.cells[key];
+    if(!c || !c.lv) return false;
+    for(var i=0;i<3;i++){ if(c.lv[i] && c.lv[i].indexOf(name)>-1) return true; }
+    return false;
+  }
+  var slots=[];
+  /* 지금 수업 칸에 지도진이 배치했을 때만 출석 가능.
+     배치 안 됐으면 빈 배열 → 출석 거절 (신규 배치는 만들지 않음) */
+  var anyPlaced=placedIn(baseH);
+  if(anyPlaced){
+    /* 위·아래로 연속으로 배치된 칸 모두 모음 */
+    slots.push(day+"-"+baseH);
+    for(var h=baseH+1; h<=23; h++){ if(placedIn(h)) slots.push(day+"-"+h); else break; }
+    for(var h2=baseH-1; h2>=0; h2--){ if(placedIn(h2)) slots.unshift(day+"-"+h2); else break; }
+  }
+  /* 배치 안 된 아이 → 빈 배열 (choose에서 거절 처리) */
+  return slots;
+}
+
+/* 이미 출석했는지 확인 (같은 수업 기준) — 배치된 슬롯 중 하나라도 이미 출석이면 true */
+/* 본인이 이미 단말기로 눌렀는지 확인 (지도진 출석은 차단 대상 아님)
+   → 아이가 눌렀을 때 by:"self"로 저장. 그게 이미 있으면 진짜 중복. */
+function alreadyAttended(name){
+  var slots=findAttendSlots(name);
+  if(!slots.length) return false;
+  var wk=curWeek(); var w=S.weeks[wk]; if(!w) return false;
+  for(var i=0;i<slots.length;i++){
+    var c=w.cells&&w.cells[slots[i]];
+    var mk=c&&c.marks&&c.marks[name];
+    // '본인이 직접 누른(self)' 출석이 이미 있을 때만 중복으로 봄
+    if(mk && mk.s==="출석" && mk.by==="self") return true;
+  }
+  return false;
+}
+/* ── 출석 처리: 배치된 연속 수업 모두 한 번에 출석 ── */
+function markAttendance(name){
+  var wk=curWeek();
+  if(!S.weeks[wk]) S.weeks[wk]={t:0, cells:{}};
+  var w=S.weeks[wk];
+  /* 지도진이 배치한 슬롯만 반환됨. 배치 없으면 choose에서 이미 거절되어
+     여기까지 오지 않지만, 방어적으로 한 번 더 확인 */
+  var slots=findAttendSlots(name);
+  if(!slots.length){ return 0; }
+  var markedCount=0, tnow=Date.now();   /* [k2.9] 모든 칸에 같은 시각 — 보관함과 맞추기 위해 */
+  slots.forEach(function(slot){
+    /* 배치된 칸은 이미 존재함. 방어적으로 없으면 생성하되 lv는 지도진 배치를 존중 */
+    if(!w.cells[slot]) w.cells[slot]={lv:[[],[],[]], marks:{}};
+    var cell=w.cells[slot];
+    if(!cell.marks) cell.marks={};
+    var prev=cell.marks[name]||{};
+    var wasAttended=prev.s==="출석";   // 이미 출석 상태였나 (지도진이든 본인이든)
+    /* 본인이 눌렀음을 표시(by:self). 지도진이 미리 찍었어도 self로 승격.
+       lv(배치)는 건드리지 않음 — 지도진이 이미 배치한 상태이므로 그대로 둠 */
+    cell.marks[name]={ s:"출석", k:prev.k, m:prev.m||"", t:tnow, by:"self" };
+    /* 누적 횟수 +1 (심사용) — 이 수업에 '출석' 상태가 아예 없었을 때만.
+       지도진이 이미 출석 찍어둔 칸이면 누적은 그대로 (이중 카운트 방지) */
+    if(!wasAttended){
+      if(!S.accMap) S.accMap={};
+      S.accMap[name]=(S.accMap[name]||0)+1;
+      markedCount++;
+    }
+  });
+  queueAdd({kind:"mark", name:name, wk:wk, slots:slots.slice(), t:tnow});   /* [k2.9] 기기 보관함에 먼저 남김 */
+  w.t=Date.now();
+  S.lastMarkedSlots=slots;   // 완료화면 표시용
+  schedulePush();
+  return markedCount;
+}
+
+/* [k2.8] 출석 되돌리기 — 길게 눌러 '아직 안 온 친구'로 되돌림
+   · 본인이 누른 출석(by:self)만 되돌린다. 사범님이 찍은 출석·결석은 건드리지 않는다.
+   · 누적 횟수(심사용)도 같이 1 내린다.
+   · 하원 기록이 있으면 함께 지운다. */
+function unmarkAttendance(name){
+  var wk=curWeek(); var w=S.weeks[wk];
+  if(!w || !w.cells) return 0;
+  var slots=findAttendSlots(name);
+  if(!slots.length) return 0;
+  var n=0, tnow=Date.now();
+  slots.forEach(function(slot){
+    var cell=w.cells[slot]; if(!cell || !cell.marks) return;
+    var prev=cell.marks[name]; if(!prev) return;
+    if(prev.s!=="출석" || prev.by!=="self") return;      /* 본인 출석만 */
+    cell.marks[name]={ s:"", k:prev.k, m:prev.m||"", t:tnow, by:"" };
+    if(S.accMap && S.accMap[name]) S.accMap[name]=Math.max(0, S.accMap[name]-1);
+    n++;
+  });
+  if(n){
+    if(S.outMap && S.outMap[name]){ delete S.outMap[name]; saveOutMap(); }
+    queueAdd({kind:"unmark", name:name, wk:wk, slots:slots.slice(), t:tnow});   /* [k2.9] 되돌리기도 보관 */
+    w.t=Date.now();
+    schedulePush();
+  }
+  return n;
+}
+
+/* 여러 명이 몰릴 때: 마지막 출석 후 살짝 모아서 한 번에 push */
+function schedulePush(){
+  clearTimeout(S.pushTimer);
+  S.pushTimer=setTimeout(pushAtt, 1200);
+}
+function pushAtt(){
+  if(!S.key || !S.attRaw) return;
+  if(S.pushing){ S.pushAgain=true; return; }               /* [k2.9] 한 번에 하나씩 — 끝나면 다시 */
+  S.pushing=true; S.pushAgain=false;
+  var sentIds=Q.items.map(function(it){ return it.id; });  /* 이번 전송에 실린 보관 항목 */
+  function endPush(ok){
+    S.pushing=false;
+    if(ok){ queueRemove(sentIds); flushNotify(); }           /* OK일 때만 보관함에서 지운다. 실패면 30초 뒤 자동 재시도 */
+    updateNetTag();
+    if(ok && S.pushAgain){ S.pushAgain=false; schedulePush(); }
+  }
+  // att 원본에 갱신된 weeks·acc 반영
+  S.attRaw.weeks=S.weeks;
+  if(S.accMap){ if(!S.attRaw.acc) S.attRaw.acc={map:{},t:0}; S.attRaw.acc.map=S.accMap; S.attRaw.acc.t=Date.now(); }
+  S.attRaw.savedAt=Date.now();
+  // 서버 것 먼저 합치기(다른 기기 출석 유실 방지)는 관리 프로그램이 처리.
+  // 키오스크는 안전하게: 서버 pull → 병합 → push
+  fetch(GSHEET_URL+"?key="+encodeURIComponent(S.key)+"&store=att")
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      var remote=parseRows(rows);
+      /* [k2.9] fail-closed — 서버 자료를 제대로 못 받으면 절대 덮어쓰지 않는다 (보관함이 남아 있으니 다음에 다시) */
+      if(!remote || !remote.attV || !remote.weeks){ throw new Error("bad-remote"); }
+      if(remote && remote.weeks){
+        // 주간 marks 병합: 서버 것 + 내 것 (t 큰 쪽 우선)
+        mergeWeeksInto(remote.weeks, S.weeks);
+        S.weeks=remote.weeks;
+        S.attRaw=remote;
+        S.attRaw.weeks=S.weeks;
+        if(S.accMap){ if(!S.attRaw.acc)S.attRaw.acc={map:{},t:0};
+          // 누적은 서버와 이름별 최대
+          var sm=(remote.acc&&remote.acc.map)||{}, base=S.accBase||{};
+          /* [k2.9] 되돌리기로 내린 누적이 '최대값 합치기'에 밀려 되살아나던 문제 —
+             마지막 동기화 이후 이 기기에서 바뀐 만큼(±)을 서버 값에 더한다. 바뀐 게 없는 이름은 예전처럼 최대값 */
+          for(var nm in S.accMap){ var d=(S.accMap[nm]||0)-(base[nm]||0);
+            sm[nm]= d ? Math.max(0,(sm[nm]||0)+d) : Math.max(sm[nm]||0, S.accMap[nm]||0); }
+          S.attRaw.acc.map=sm; S.accMap=sm; S.accBase=JSON.parse(JSON.stringify(sm));
+        }
+      }
+      var s=JSON.stringify(S.attRaw);
+      var rows2=[["JSON"]];
+      for(var i=0;i<s.length;i+=45000) rows2.push([s.slice(i,i+45000)]);
+      return fetch(GSHEET_URL,{method:"POST",body:JSON.stringify({key:S.key,store:"att",rows:rows2})});
+    })
+    .then(function(r){ return r.text(); })
+    .then(function(txt){ endPush(/^OK/.test(String(txt||""))); })
+    .catch(function(){ endPush(false); /* 오프라인·오류 — 보관함에 남아 있고 30초마다 재시도 */ });
+}
+/* 주간 marks 병합: src의 각 셀 marks를 dst에 t 우선으로 */
+function mergeWeeksInto(dst, src){
+  for(var wk in src){
+    if(!dst[wk]){ dst[wk]=src[wk]; continue; }
+    var sc=src[wk].cells||{}, dc=dst[wk].cells||{};
+    if(!dst[wk].cells) dst[wk].cells={};
+    for(var ck in sc){
+      if(!dc[ck]){ dst[wk].cells[ck]=sc[ck]; continue; }
+      var sm=sc[ck].marks||{}, dm=dc[ck].marks||{};
+      for(var nm in sm){ if(!dm[nm] || (sm[nm].t||0)>(dm[nm].t||0)) dm[nm]=sm[nm]; }
+      // lv 합치기 — [k2.11] 서버 셀에 lv가 없으면 만들어 병합 중단(TypeError→재시도 반복) 방지
+      if(!dc[ck].lv) dc[ck].lv=[[],[],[]];
+      for(var i=0;i<3;i++){ if(!dc[ck].lv[i]) dc[ck].lv[i]=[]; (sc[ck].lv&&sc[ck].lv[i]||[]).forEach(function(n){ if(dc[ck].lv[i].indexOf(n)<0) dc[ck].lv[i].push(n); }); }
+    }
+    dst[wk].t=Math.max(dst[wk].t||0, src[wk].t||0);
+  }
+}
+
+/* ── 소리 ── */
+function playChime(){
+  try{ var AC=window.AudioContext||window.webkitAudioContext; var ctx=window.__ac||(window.__ac=new AC()); if(ctx.state==="suspended")ctx.resume();
+    [{f:880,t:0},{f:1318,t:0.13}].forEach(function(n){ var o=ctx.createOscillator(),g=ctx.createGain(); o.type="sine"; o.frequency.value=n.f; o.connect(g); g.connect(ctx.destination);
+      var st=ctx.currentTime+n.t; g.gain.setValueAtTime(0,st); g.gain.linearRampToValueAtTime(0.35,st+0.02); g.gain.exponentialRampToValueAtTime(0.001,st+0.45); o.start(st); o.stop(st+0.5); });
+  }catch(e){}
+}
+/* 오류음: 낮은 '두-' 두 번 (이미 출석/오류) */
+function playError(){
+  try{ var AC=window.AudioContext||window.webkitAudioContext; var ctx=window.__ac||(window.__ac=new AC()); if(ctx.state==="suspended")ctx.resume();
+    [{f:330,t:0},{f:262,t:0.18}].forEach(function(n){ var o=ctx.createOscillator(),g=ctx.createGain(); o.type="sine"; o.frequency.value=n.f; o.connect(g); g.connect(ctx.destination);
+      var st=ctx.currentTime+n.t; g.gain.setValueAtTime(0,st); g.gain.linearRampToValueAtTime(0.3,st+0.02); g.gain.exponentialRampToValueAtTime(0.001,st+0.35); o.start(st); o.stop(st+0.4); });
+  }catch(e){}
+}
+function playVoice(){ try{ if(!window.speechSynthesis)return; var u=new SpeechSynthesisUtterance("출석했습니다"); u.lang="ko-KR"; u.rate=1.05; u.pitch=1.1; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){} }
+function playAlready(){ try{ if(!window.speechSynthesis)return; var u=new SpeechSynthesisUtterance("이미 출석했습니다"); u.lang="ko-KR"; u.rate=1.05; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){} }
+function playDone(){ playChime(); setTimeout(playVoice,550); }
+function playAlreadyDone(){ playError(); setTimeout(playAlready,400); }
+
+/* ── 렌더 ── */
+function getPhoto(name){ var p=S.photoMap&&S.photoMap[name]; return p?p.d:""; }
+
+/* ══════ [사진 출석] ══════ */
+var UNDO_SEC = 3;               /* 되돌릴 수 있는 시간(초) */
+var LEAVE_WARN_MIN = 10;        /* [k2.2] 출석 후 이 시간(분) 안에 하원을 누르면 한 번 확인 — 막지는 않음 */
+var LATE_MIN = 10;              /* [k2.4] 수업 시작 후 이 시간(분)을 넘겨 누르면 '늦게 도착' 표시 (표시 전용) */
+var GRID_MAX = 40;              /* 한 화면 최대 인원 */
+
+/* 지금 수업에 '지도진이 배치한' 학생 명단 (가나다순) */
+function classRoster(){
+  var vs=viewSlot();
+  if(!vs) return [];
+  var w=S.weeks[curWeek()]; if(!w||!w.cells) return [];
+  var c=w.cells[vs]; if(!c||!c.lv) return [];
+  var out=[], seen={};
+  for(var i=0;i<3;i++){
+    var arr=c.lv[i]||[];
+    for(var j=0;j<arr.length;j++){
+      var n=(arr[j]||"").trim();
+      if(!n || seen[n]) continue;
+      if(!isActive(n)) continue;
+      seen[n]=1; out.push(n);
+    }
+  }
+  /* [k2.5] 정렬 — ① 높은 급수 ② 이번달 심사 대상 ③ 가나다 */
+  var EXT=examTargets();
+  out.sort(function(a,b){
+    var ra=gradeRank(gradeOf(a)), rb=gradeRank(gradeOf(b));
+    if(ra!==rb) return ra-rb;
+    var ea=EXT[a]?0:1, eb=EXT[b]?0:1;
+    if(ea!==eb) return ea-eb;
+    return a.localeCompare(b,'ko');
+  });
+  return out.slice(0, GRID_MAX);
+}
+/* 급수 순위 — 숫자가 작을수록 높은 급. 품·단은 급보다 위 (4품 → -4 로 맨 앞) */
+function gradeRank(g){
+  g=String(g||"");
+  var pm=g.match(/(\d+)\s*[품단]/);
+  if(pm) return -Number(pm[1]);
+  if(/[품단]/.test(g)) return -1;
+  var m=g.match(/(\d+)\s*급/);
+  if(m) return Number(m[1]);
+  return 99;
+}
+function gradeOf(name){
+  var s=S.students.find(function(x){ return x.n===name; });
+  return (s && s.grade) ? s.grade : "";
+}
+/* 급수 → 띠 색 — [k2.11] 실제 띠 체계(9흰·8노·7주황·6초록·5파랑·4보라·3밤·2빨강·1보띠)로 교정.
+   종전 4단계 구간이라 9급 흰띠가 노란색, 7급 주황이 초록으로 보였다(전면 점검 팀E 발견). */
+function beltColorOf(g){
+  g=String(g||"");
+  if(/[품단]/.test(g)) return "#111111";
+  var m=g.match(/(\d+)\s*급/);
+  if(!m) return "#E8EAED";                       /* 무급·미지정 = 흰띠 */
+  var C={9:"#E8EAED",8:"#F3C614",7:"#F08A24",6:"#1E8E3E",5:"#2B5FB8",4:"#7A4CA8",3:"#6B4A2B",2:"#C8342A",1:"#C8342A"};
+  return C[parseInt(m[1],10)]||"#E8EAED";
+}
+function firstChar(name){ return String(name||"?").charAt(0); }
+
+/* [k2.8] 길게 누르기(1.2초) → 출석 되돌리기 확인 */
+var LONGPRESS_MS = 1200;
+window.holdStart = function(ev, name){
+  try{ if(ev && ev.type==="mousedown" && ev.button!==0) return; }catch(e){}
+  clearTimeout(S.holdTimer);
+  S.holdName=name; S.holdFired=false;
+  S.holdTimer=setTimeout(function(){
+    S.holdFired=true;
+    var mk=null;
+    try{
+      var c=S.weeks[curWeek()].cells[viewSlot()];
+      mk=c && c.marks && c.marks[name];
+    }catch(e){}
+    if(!(mk && mk.s==="출석" && mk.by==="self")) return;   /* 되돌릴 게 없음 */
+    S.chosen=name; S.screen="undoAsk"; render(); playError();
+  }, LONGPRESS_MS);
+};
+window.holdEnd = function(){ clearTimeout(S.holdTimer); };
+window.undoAskNo = function(){ S.chosen=null; S.screen="grid"; render(); };
+window.undoAskYes = function(){
+  var nm=S.chosen;
+  if(nm) unmarkAttendance(nm);
+  S.chosen=null; S.screen="grid"; render();
+};
+
+/* 그리드에서 얼굴을 눌렀을 때 — 아직 출석 처리하지 않고 되돌리기 창을 연다 */
+window.tapStu = function(name){
+  if(S.holdFired){ S.holdFired=false; return; }   /* [k2.8] 길게 누른 것은 탭으로 치지 않음 */
+  if(!S.curSlot){
+    S.chosen=name;
+    S.rejectMsg="지금은 수업 시간이 아니에요";
+    S.rejectSub="수업 시작 40분 전부터 출석할 수 있어요";
+    S.screen="reject"; render(); playError(); return;
+  }
+  var slots=findAttendSlots(name);
+  if(!slots.length){
+    S.chosen=name;
+    S.rejectMsg="오늘 이 수업에 배치되어 있지 않아요";
+    S.rejectSub="사범님께 말씀해 주세요";
+    S.screen="reject"; render(); playError(); return;
+  }
+  /* [k2.7] 이미 출석한 아이가 같은 사진을 다시 누르면 → 하원 처리
+     (하원까지 끝난 아이는 안내만. 하원 흐름 안에 10분 확인이 그대로 들어 있다) */
+  if(alreadyAttended(name)){
+    if(S.outMap && S.outMap[name]){
+      S.chosen=name; S.screen="already"; render(); playAlreadyDone(); return;
+    }
+    return tapLeave(name);
+  }
+  /* 되돌리기 대기 — 이 시점엔 아직 저장하지 않는다 */
+  S.chosen=name;
+  S.pending=name;
+  S.screen="pending";
+  render();
+  playDone();
+  startUndoCountdown();
+};
+
+function clearUndoTimer(){ if(S.undoTimer){ clearInterval(S.undoTimer); S.undoTimer=null; } }
+
+function startUndoCountdown(){
+  clearUndoTimer();
+  var left = UNDO_SEC*10;
+  S.undoTimer = setInterval(function(){
+    left--;
+    var bar=document.getElementById("cdBar"), txt=document.getElementById("cdTxt");
+    if(bar) bar.style.width = Math.max(0, left/(UNDO_SEC*10)*100)+"%";
+    if(txt) txt.textContent = Math.max(0,Math.ceil(left/10))+"초 뒤 저장됩니다";
+    if(left<=0){ clearUndoTimer(); commitPending(); }
+  }, 100);
+}
+
+/* 확정 — 이때 비로소 출석 처리 + 서버 전송 */
+function commitPending(){
+  clearUndoTimer();
+  var nm=S.pending; S.pending=null;
+  if(!nm){ goHome(); return; }
+  var cnt=markAttendance(nm);        /* 내부에서 schedulePush() 호출 */
+  if(cnt>0) kioskNotify([{kind:"attend", names:[nm], title:"✅ 등원 알림", body:nm+" 수련생이 "+nowKo()+"에 나라차태권도장에 도착했습니다."}]);   /* [k2.0] 학부모 휴대폰 등원 알림 */
+  goHome();
+}
+window.confirmNow = function(){ commitPending(); };
+
+/* 취소 — 아무것도 저장하지 않았으므로 되돌릴 것이 없다 */
+window.undoPending = function(){
+  clearUndoTimer();
+  S.pending=null; S.chosen=null;
+  goHome();
+};
+
+function goHome(){
+  clearUndoTimer();
+  S.pin=""; S.matches=null; S.chosen=null; S.pending=null;
+  S.err=""; S.rejectMsg=""; S.rejectSub="";
+  S.screen = S.mode==="pad" ? "pad" : "grid";
+  updateClass(); render();
+}
+/* 사진 ↔ 번호 전환 */
+window.setMode = function(m){ S.mode=m; goHome(); };
+function render(){
+  var p=document.getElementById("panel");
+  try{ document.body.classList.toggle("gridmode", S.screen==="grid"); }catch(e){}
+  if(S.screen==="setup"){
+    p.innerHTML='<div class="setup"><img src="data:image/png;base64,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" alt=""><h1>출석 단말기 설정</h1>'+
+      '<p>도장 접속키를 입력하면<br>이 태블릿이 출석 단말기가 됩니다</p>'+
+      '<input id="keyIn" placeholder="예: NARACHA-XXXXXXXX" value="'+(S.key||"")+'">'+
+      '<button onclick="submitKey()">시작하기</button>'+
+      (S.err?'<p style="color:var(--red);margin-top:12px">'+S.err+'</p>':'')+'</div>';
+  }
+  else if(S.screen==="loading"){
+    p.innerHTML='<div class="setup"><div class="spin"></div><p>명단과 사진을 불러오는 중…</p></div>';
+  }
+  else if(S.screen==="grid"){
+    var vslot=viewSlot();
+    var roster=classRoster();
+    var wkk=curWeek(), wcell=(S.weeks[wkk]&&S.weeks[wkk].cells&&S.weeks[wkk].cells[vslot])||null;
+    var EXT=examTargets();
+    var h='';
+
+    /* [k2.6] 오늘 수업 탭 — 수업이 둘 이상일 때만 */
+    var TCS=todayClasses();
+    if(TCS.length>1){
+      h+='<div class="ctabs">'+TCS.map(function(c){
+        var on=(c.key===vslot), now=(c.key===S.curSlot);
+        return '<button aria-pressed="'+(on?'true':'false')+'" onclick="pickClass(\''+c.key+'\')">'+
+          (now?'<i class="nowdot"></i>':'')+c.h+':00 '+esc2(c.label)+'</button>';
+      }).join('')+'</div>';
+    }
+
+    h+='<div class="glead"><h1>본인 사진을 눌러주세요</h1></div>';
+
+    if(!vslot){
+      h+='<div class="gempty">⚠️ 지금은 수업 시간이 아니에요<br>수업 시작 40분 전부터 출석할 수 있어요</div>';
+    } else if(!roster.length){
+      h+='<div class="gempty">이 수업에 배치된 수련생이 아직 없어요<br>사범님께 말씀해 주세요</div>';
+    } else {
+      /* [k2.6] 구역 나누기 — 아직 안 온 친구 / 출석 완료 / 오늘 쉬어요 / 결석 */
+      var G={yet:[],done:[],gone:[],rest:[],abs:[]};
+      roster.forEach(function(nm){
+        var mk=(wcell&&wcell.marks&&wcell.marks[nm])||null;
+        var st=mk?(mk.s||""):"";
+        if(st==="출석"){ (S.outMap && S.outMap[nm]) ? G.gone.push(nm) : G.done.push(nm); }
+        else if(st==="결석"){ (/결석예정/.test(mk.m||"") ? G.rest : G.abs).push(nm); }
+        else G.yet.push(nm);
+      });
+      h+=secHtml("아직 안 온 친구", G.yet,  false, wcell, EXT);
+      h+=secHtml("수련 중",         G.done, true,  wcell, EXT, "다시 누르면 하원 · 길게 누르면 되돌리기");
+      h+=secHtml("집에 갔어요",      G.gone, true,  wcell, EXT);
+      h+=secHtml("오늘 쉬어요 · 미리 연락", G.rest, true, wcell, EXT);
+      h+=secHtml("결석",            G.abs,  true,  wcell, EXT);
+    }
+    if(vslot && roster.length){
+      h+='<div class="lgd">'+
+        '<span><i style="background:#fff;border:1.5px solid var(--line)"></i>출석 전</span>'+
+        '<span><i style="background:#2E9E4F"></i>출석</span>'+
+        '<span><i style="background:#B45309"></i>늦게 도착</span>'+
+        '<span><i style="background:#5B6B8C"></i>사범님 체크</span>'+
+        '<span><i style="background:#7A6E86"></i>하원</span>'+
+        '<span><i style="background:#5B7FB0"></i>오늘 쉬어요</span>'+
+        '<span><i style="background:#C8342A"></i>결석</span>'+
+        '<span><i style="background:linear-gradient(150deg,#FFE9A8,#FFCB4D)"></i>이번달 심사</span>'+
+      '</div>';
+    }
+    h+='<button class="altbtn" onclick="setMode(\'pad\')">내 사진이 없어요 · 번호로 출석하기</button>';
+    h+='<button class="altbtn" style="background:var(--point,#FF9F43);color:#fff;border-color:transparent;margin-top:8px;box-shadow:0 5px 16px rgba(255,159,67,.34)" onclick="openLeave()">🏠 수련 끝 · 하원하기</button>';
+    p.innerHTML=h;
+  }
+  else if(S.screen==="leave"){   /* [k2.0] 하원 — 오늘 출석한 아이 얼굴을 누르면 부모님께 하원 알림 */
+    var lst=todayAttended();
+    var hl='<div class="glead"><h1>🏠 집에 가요 · 본인 사진을 눌러주세요</h1><p>누르면 <b>집에 갔어요</b>로 기록돼요</p></div>';
+    if(!lst.length) hl+='<div class="gempty">오늘 출석한 뒤 아직 하원하지 않은 친구가 없어요</div>';
+    else hl+='<div class="grid">'+lst.map(function(nm){ var ph=getPhoto(nm), gr=gradeOf(nm), bc=beltColorOf(gr);
+      return '<div class="stu" onclick="tapLeave(\''+nm.replace(/'/g,"\\'")+'\')">'+(ph?'<img src="'+ph+'" alt="">':'<div class="noimg">'+firstChar(nm)+'</div>')+'<div class="nm">'+nm+'</div><div class="gr"><i class="bbar" style="background:'+bc+'"></i>'+(gr||'&nbsp;')+'</div></div>'; }).join('')+'</div>';
+    hl+='<button class="altbtn" onclick="goHome()">← 출석 화면으로</button>';
+    p.innerHTML=hl;
+  }
+  else if(S.screen==="undoAsk"){   /* [k2.8] 출석 되돌리기 확인 */
+    var nmU=S.chosen||"", phU=getPhoto(nmU);
+    p.innerHTML='<div class="done">'+
+      (phU?'<img class="photo-big" src="'+phU+'" style="border-color:#FFE2B8">':'<div class="photo-big">'+firstChar(nmU)+'</div>')+
+      '<div class="badge" style="background:#FFF0E2;color:#8A4F12">↩ 출석 되돌리기</div>'+
+      '<h1>'+nmU+'</h1>'+
+      '<p>출석을 지우고 <b>아직 안 온 친구</b>로 되돌릴까요?</p>'+
+      '<div class="warnBtns">'+
+        '<button class="wStay" onclick="undoAskNo()">아니요 · 그대로 둘래요</button>'+
+        '<button class="wGo" onclick="undoAskYes()">네, 되돌릴게요</button>'+
+      '</div></div>';
+  }
+  else if(S.screen==="leaveWarn"){   /* [k2.2] 출석 직후 하원 — 막지 않고 한 번 확인 */
+    var nmW=S.pendingOut||"", phW=getPhoto(nmW);
+    p.innerHTML='<div class="done">'+
+      (phW?'<img class="photo-big" src="'+phW+'" style="border-color:#FFE2B8">':'<div class="photo-big">'+firstChar(nmW)+'</div>')+
+      '<div class="badge" style="background:#FFF0E2;color:#8A4F12">⏳ 아직 수련 중이에요</div>'+
+      '<h1>'+nmW+'</h1>'+
+      '<p>출석한 지 얼마 되지 않았어요.<br>정말 집에 가나요?</p>'+
+      '<div class="warnBtns">'+
+        '<button class="wStay" onclick="cancelLeaveWarn()">아니에요 · 더 수련할래요</button>'+
+        '<button class="wGo" onclick="leaveAnyway()">그래도 집에 가요</button>'+
+      '</div></div>';
+  }
+  else if(S.screen==="leavePending"){
+    var nmL=S.pendingOut||S.chosen||"", phL=getPhoto(nmL);
+    p.innerHTML='<div class="done">'+(phL?'<img class="photo-big" src="'+phL+'">':'<div class="photo-big">'+firstChar(nmL)+'</div>')+
+      '<div class="badge" style="background:#FFF1C9;color:#8A6416">🏠 하원</div><h1>'+nmL+'</h1><p>오늘도 수고했어요! 조심히 가요 👋</p>'+
+      '<button class="undoBtn" onclick="undoLeave()">↩ 내가 아니에요 · 취소</button>'+
+      '<div class="cdWrap"><div class="cdBar" id="cdBar"></div></div><div class="cdTxt" id="cdTxt">'+UNDO_SEC+'초 뒤 저장됩니다</div>'+
+      '<button class="backbtn" onclick="confirmLeaveNow()">다음 사람 →</button></div>';
+  }
+  else if(S.screen==="leaveDone"){
+    var nmD=S.chosen||"", phD=getPhoto(nmD);
+    p.innerHTML='<div class="done">'+(phD?'<img class="photo-big" src="'+phD+'">':'<div class="photo-big">👤</div>')+
+      '<div class="badge" style="background:#FFF1C9;color:#8A6416">✓ 하원 완료 · '+(S.outMap[nmD]||nowKo())+'</div><h1>'+nmD+'</h1><p>오늘도 수고했어요! 조심히 가요 👋</p></div>';
+  }
+  else if(S.screen==="pending"){
+    var nmP=S.pending||S.chosen||"";
+    var phP=getPhoto(nmP);
+    var slotLabelP=(S.curSlot?S.curSlot.split("-")[1]+":00 ":"")+(S.curClassLabel||"");
+    p.innerHTML='<div class="done">'+
+      (phP?'<img class="photo-big" src="'+phP+'">':'<div class="photo-big">'+firstChar(nmP)+'</div>')+
+      '<div class="badge">✓ 출석 완료</div>'+
+      '<h1>'+nmP+'</h1>'+
+      '<p>오늘도 반가워요! 열심히 수련해요 🥋</p>'+
+      (isExamTarget(nmP)?'<div class="exline">🎖 이번달 심사 대상이에요!</div>':'')+
+      (slotLabelP.trim()?'<div class="cls2">'+slotLabelP+'</div>':'')+
+      '<button class="undoBtn" onclick="undoPending()">↩ 내가 아니에요 · 취소</button>'+
+      '<div class="cdWrap"><div class="cdBar" id="cdBar"></div></div>'+
+      '<div class="cdTxt" id="cdTxt">'+UNDO_SEC+'초 뒤 저장됩니다</div>'+
+      '<button class="backbtn" onclick="confirmNow()">다음 사람 →</button>'+
+    '</div>';
+  }
+  else if(S.screen==="pad"){
+    var dots=""; for(var i=0;i<4;i++){ var v=S.pin[i]||""; dots+='<div class="dot'+(v?" filled":"")+'">'+(v?"•":"")+'</div>'; }
+    p.innerHTML='<div class="lead"><h1>출석 체크</h1><p>부모님 휴대폰 <b>뒤 4자리</b>를 눌러주세요</p></div>'+
+      '<div class="pin'+(S.err?" shake":"")+'">'+dots+'</div>'+
+      '<div class="pad">'+
+        [1,2,3,4,5,6,7,8,9].map(function(n){return '<button class="key" onclick="press('+n+')">'+n+'</button>';}).join('')+
+        '<button class="key del" onclick="del()">⌫</button>'+
+        '<button class="key" onclick="press(0)">0</button>'+
+        '<button class="key clr" onclick="clearAll()">정정</button>'+
+      '</div><div class="errmsg">'+(S.err||"")+'</div>';
+    S.err="";
+  }
+  else if(S.screen==="confirm"){
+    p.innerHTML='<div class="confirm-lead"><h1>본인이 맞으면 눌러주세요</h1><p>사진과 이름을 확인하고 누르면 출석돼요</p></div>'+
+      '<div class="facegrid">'+
+        S.matches.map(function(nm,i){
+          var ph=getPhoto(nm);
+          return '<div class="facecard" onclick="choose('+i+')">'+
+            (ph?'<img class="photo" src="'+ph+'">':'<div class="photo">👤</div>')+
+            '<div class="info"><div class="nm">'+nm+'</div><div class="cls">'+(S.curClassLabel||"")+'</div></div>'+
+            '<div class="tap">출석</div></div>';
+        }).join('')+
+      '</div><button class="backbtn" onclick="reset()">← 다시 입력</button>';
+  }
+  else if(S.screen==="done"){
+    var nm=S.chosen; var ph=getPhoto(nm);
+    // 연속 수업이면 여러 시간 표시 (예: "15:00·16:00")
+    var slotLabel="";
+    if(S.lastMarkedSlots && S.lastMarkedSlots.length){
+      var hrs=S.lastMarkedSlots.map(function(sl){ return sl.split("-")[1]+":00"; });
+      slotLabel=hrs.join(" · ")+" "+(S.curClassLabel||"");
+    } else if(S.curClassLabel){
+      slotLabel=(S.curSlot?S.curSlot.split("-")[1]+":00 ":"")+S.curClassLabel;
+    }
+    var multi=(S.lastMarkedSlots && S.lastMarkedSlots.length>1);
+    p.innerHTML='<div class="done">'+
+      (ph?'<img class="photo-big" src="'+ph+'">':'<div class="photo-big">👤</div>')+
+      '<div class="badge">✓ 출석 완료'+(multi?' ('+S.lastMarkedSlots.length+'교시)':'')+'</div><h1>'+nm+'</h1>'+
+      '<p>'+(multi?'연속 수련 모두 출석했어요 🥋':'오늘도 힘차게 수련해요 🥋')+'</p>'+
+      (slotLabel?'<div class="cls2">'+slotLabel+'</div>':'')+
+      '</div>';
+    clearTimeout(window.__t); window.__t=setTimeout(reset,3500);
+  }
+  else if(S.screen==="already"){
+    var nm2=S.chosen; var ph2=getPhoto(nm2);
+    p.innerHTML='<div class="done">'+
+      (ph2?'<img class="photo-big" src="'+ph2+'" style="border-color:#FFE0B2">':'<div class="photo-big">👤</div>')+
+      '<div class="badge" style="background:#FFF3E0;color:#B45309">⚠️ 이미 출석했어요</div><h1>'+nm2+'</h1>'+
+      '<p>이미 출석 처리되었습니다</p>'+
+      (S.curClassLabel?'<div class="cls2" style="background:#FFF3E0;color:#B45309">'+(S.curSlot?S.curSlot.split("-")[1]+":00 ":"")+S.curClassLabel+'</div>':'')+
+      '</div>';
+    clearTimeout(window.__t); window.__t=setTimeout(reset,3000);
+  }
+  else if(S.screen==="reject"){
+    var nm3=S.chosen; var ph3=getPhoto(nm3);
+    p.innerHTML='<div class="done">'+
+      (ph3?'<img class="photo-big" src="'+ph3+'" style="border-color:#FFCDD2">':'<div class="photo-big">👤</div>')+
+      '<div class="badge" style="background:#FFEBEE;color:#C62828">🚫 출석할 수 없어요</div><h1>'+nm3+'</h1>'+
+      '<p>'+(S.rejectMsg||"출석할 수 없어요")+'</p>'+
+      (S.rejectSub?'<div class="cls2" style="background:#FFEBEE;color:#C62828">'+S.rejectSub+'</div>':'')+
+      '</div>';
+    clearTimeout(window.__t); window.__t=setTimeout(reset,3200);
+  }
+}
+
+/* ── 동작 ── */
+window.submitKey=function(){
+  var v=document.getElementById("keyIn").value.trim();
+  if(!v){ S.err="접속키를 입력해주세요"; render(); return; }
+  S.key=v; try{ localStorage.setItem("naracha-kiosk-key", v); }catch(e){}
+  S.err=""; loadAll();
+};
+window.press=function(n){ if(S.pin.length>=4)return; S.pin+=n; render(); if(S.pin.length===4){ submitPin(); } };
+window.del=function(){ S.pin=S.pin.slice(0,-1); render(); };
+window.clearAll=function(){ S.pin=""; S.err=""; render(); };
+window.reset=function(){ clearUndoTimer(); S.pending=null; S.pin=""; S.screen=(S.mode==="pad"?"pad":"grid"); S.matches=null; S.chosen=null; S.err=""; S.rejectMsg=""; S.rejectSub=""; updateClass(); render(); };
+window.submitPin=function(){
+  var names=S.tailIndex[S.pin]||[];
+  if(names.length===0){ S.err="일치하는 수련생이 없어요. 다시 확인해주세요"; S.pin=""; render(); return; }
+  S.matches=names; S.screen="confirm"; render();
+};
+window.choose=function(i){
+  var nm=S.matches[i];
+  S.chosen=nm;
+  // 1) 지금이 수업 시간(40분전~30분후)이 아니면 거절
+  if(!S.curSlot){
+    S.rejectMsg="지금은 수업 시간이 아니에요";
+    S.rejectSub="수업 시작 40분 전부터 출석할 수 있어요";
+    S.screen="reject";
+    render(); playError();
+    return;
+  }
+  // 2) 지도진이 이 수업에 배치하지 않은 아이면 거절
+  var slots=findAttendSlots(nm);
+  if(!slots.length){
+    S.rejectMsg="오늘 이 수업에 배치되어 있지 않아요";
+    S.rejectSub="사범님께 말씀해 주세요";
+    S.screen="reject";
+    render(); playError();
+    return;
+  }
+  // 3) 이미 출석했으면 중복 차단 (같은 수업 기준)
+  if(alreadyAttended(nm)){
+    S.screen="already";
+    render();
+    playAlreadyDone();
+    return;
+  }
+  markAttendance(nm);   // 즉시 로컬 반영 (연속 수업 모두)
+  S.screen="done";
+  render();
+  playDone();
+};
+
+/* ── 전체화면·시계 ── */
+function goFullscreen(){ var el=document.documentElement; var r=el.requestFullscreen||el.webkitRequestFullscreen; if(r){ r.call(el).then(function(){ unlockOrientation(); }).catch(function(){ unlockOrientation(); }); } else { unlockOrientation(); } }
+document.addEventListener("click",function o(){ goFullscreen(); document.removeEventListener("click",o); },{once:true});
+function tick(){
+  var d=new Date();
+  var c=document.getElementById("clock"); if(c) c.textContent=p2(d.getHours())+":"+p2(d.getMinutes());
+  var dl=document.getElementById("dateLbl"); if(dl) dl.textContent=(d.getMonth()+1)+"월 "+d.getDate()+"일 ("+DAY_KO[DAY_CODE[d.getDay()]]+")";
+}
+setInterval(tick,1000); tick();
+setInterval(function(){ if(S.loaded && (S.screen==="pad"||S.screen==="grid")){ updateClass(); if(S.screen==="grid") render(); } }, 60000);  // 1분마다 수업 갱신
+
+/* 화면을 가로↔세로로 돌리면 레이아웃 다시 계산 */
+window.addEventListener("orientationchange", function(){ setTimeout(function(){ if(typeof render==="function") render(); }, 200); });
+window.addEventListener("resize", function(){ if(typeof render==="function") render(); });
+
+/* ── 시작 ── */
+if(S.key){ loadAll(); } else { render(); }
+updateNetTag();
+</script>
+</body>
+</html>
