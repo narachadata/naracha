@@ -340,7 +340,7 @@ details[open] summary::before{content:"－ "}
 
 <script>
 /* ══ 서버 주소 (관리 프로그램과 같은 주소) ══ */
-var APP_VER = "v20260729.9"   /* .9: 쿠폰 조항 ※ 표기 + 본인·직계(형제,자매)만 사용 조항 추가, 환불 안내 간결하게 */;
+var APP_VER = "v20261031.10"   /* .10: [보안] 로그인 코드 칸 20자까지(새 12자리 코드) · .9: 쿠폰 조항 ※ 표기 + 본인·직계(형제,자매)만 사용 조항 추가, 환불 안내 간결하게 */;
 var GSHEET_URL = "https://script.google.com/macros/s/AKfycbwauy3dqK7YSM892fZ7aVhBaVFQunbvFq8oREPLEwsJN9FbdZHvAkQYovz_QUTSb_KH/exec";
 
 var ST = { data:null, kid:null, idx:0, date:"", loading:false, imgs:null, imgLoading:false, linkCode:"" };
@@ -616,7 +616,7 @@ function vLogin(){
     '형제·자매는 한 코드로 함께 보이고, 다음 캠프에도 같은 코드를 쓰십니다.</p>'+
     '<span class="lab">로그인 코드</span>'+
     /* 안내 문자의 링크로 들어오셨다면 코드를 미리 채워 둡니다 — 누르기만 하시면 됩니다 */
-    '<input class="code-in" id="pCode" maxlength="10" value="'+esc(ST.linkCode||"")+'" placeholder="7KMD3P" autocomplete="off" '+
+    '<input class="code-in" id="pCode" maxlength="20" value="'+esc(ST.linkCode||"")+'" placeholder="7KMD3PAX4TNE" autocomplete="off" '+
       'inputmode="latin" oninput="this.value=this.value.toUpperCase()">'+
     (ST.linkCode
       ? '<div class="hint" style="color:var(--navy);font-weight:700">안내 문자의 코드를 미리 넣어 두었습니다. 아래 <b>확인하기</b>만 눌러 주세요.</div>'
