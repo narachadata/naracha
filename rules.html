@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="doc-ver" content="v20261110.0001">
+<meta name="doc-ver" content="v20261110.0002">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차태권도 운영규정</title>
 <meta name="description" content="나라차태권도 분당도장 운영규정 — 제1장 총칙부터 부칙·부록까지 전문 수록 (반응형 웹 문서)">
@@ -23,6 +23,11 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20261110.0002 — 부록 1 수련 시간표 디자인 개선(관장님 지시: 메인 프로그램 '시간표보기' 이미지 참고)
+     · 흰 표 → 어두운 요일 머리줄(월 MON…) · 진한 시간 칸 · 반별 색 칸(메인 _ttStyle 과 같은 색 규칙)
+     · 한 칸에 두 반(큰 글씨 줄바꿈)은 위아래로 나누고 점선 구분 · '이름(설명)'은 괄호를 작은 글씨 줄로
+     · 휴대폰: 시간 칸을 왼쪽에 고정(sticky)하고 옆으로 밀어 보기 · 표 아래 반 색상 범례 · 인쇄 시 색 유지
+     · 자료(TT_DEFAULT)·설정 화면 [시간표 수정]은 그대로 — 그리는 방식만 바뀜 · 규정 내용 변경 없음
    v20261110.0001 — 관장님 지시 2건
      · 제7조 ①② 신설: 특별회원(도장 판단) 입회 시 입회비·도복비 전부 또는 일부 감면,
        2개월 이상 수련하지 않으면(2개월 전 중단) 감면액 청구
@@ -357,33 +362,89 @@ function ttLoad(){
     if(o && o.week && o.sat) TT = o;
   }catch(e){}
 }
+/* v20261110.0002 — 메인 프로그램 '시간표보기' 이미지와 같은 모양으로 그린다.
+   · 어두운 요일 머리줄 · 진한 시간 칸(휴대폰에서 옆으로 밀어도 왼쪽 고정)
+   · 반 이름으로 칸 색을 정한다(메인 프로그램 _ttStyle 과 같은 규칙·같은 색)
+   · 큰 글씨 안의 줄바꿈 = 한 칸에 두 반 → 위아래로 나누고 점선으로 구분
+   · '이름(설명)' 은 이름을 크게, 괄호 부분을 작은 글씨 줄로 */
+var TT_EN = {'월':'MON','화':'TUE','수':'WED','목':'THU','금':'FRI','토':'SAT','일':'SUN'};
+function ttStyle(t){
+  t = String(t||'');
+  if(/익스트림|extreme/i.test(t))   return ['#A62CF5','#FFFFFF'];
+  if(/시범단|demo/i.test(t))        return ['#221C54','#FFFFFF'];
+  if(/겨루기|sparring/i.test(t))    return ['#5B2D8F','#FFFFFF'];
+  if(/유단자/.test(t))              return ['#101216','#F5D9A8'];
+  if(/청소년|성인|adult/i.test(t))  return ['#15171C','#FFFFFF'];
+  if(/킨더/.test(t))                return ['#FFF176','#4A3B00'];
+  if(/상급|중급/.test(t))           return ['#9FC3F5','#102A54'];
+  if(/시니어/.test(t))              return ['#BBD9FB','#163A66'];
+  if(/주니어/.test(t))              return ['#FFDFB0','#5A3A00'];
+  if(/개인\s*레슨|1\s*:\s*1|개인/.test(t)) return ['#CDEFC4','#1C4A1E'];
+  if(/초등부/.test(t))              return ['#FFEFD2','#5A3A00'];
+  return ['#F3F4F7','#23262E'];
+}
+var TT_LEGEND = [['1:1 개인레슨','1:1 개인레슨'],['킨더','킨더'],['초등주니어','초등주니어'],['초등시니어','초등시니어'],
+  ['초등부','초등부 전체'],['중급·상급반','중급·상급반'],['청소년·성인','청소년·성인'],['시범단','나라차시범단'],
+  ['Sparring','겨루기(Sparring)'],['익스트림','익스트림 태권도']];
+function ttSplitParen(x){
+  var m = /^(.*?\S)\s*(\([^()]*\))$/.exec(String(x||'').trim());
+  return m ? [m[1], m[2]] : [String(x||'').trim(), ''];
+}
+function ttPart(label, small){
+  var st = ttStyle(label), sp = ttSplitParen(label);
+  var sub = [sp[1], String(small||'').trim()].filter(Boolean).join('\n');
+  return '<div class="ttp" style="background:' + st[0] + ';color:' + st[1] + '"><b>' + ttEsc(sp[0]) + '</b>' +
+         (sub ? '<small>' + ttEsc(sub).replace(/\n/g,'<br>') + '</small>' : '') + '</div>';
+}
+function ttBlock(main, small, extra){
+  var parts = String(main||'').split('\n').map(function(v){ return v.trim(); }).filter(Boolean);
+  if(!parts.length){
+    return '<div class="ttx ttempty"' + (extra||'') + '>' + (String(small||'').trim() ? '<div class="ttp"><small>' + ttEsc(small).replace(/\n/g,'<br>') + '</small></div>' : '') + '</div>';
+  }
+  return '<div class="ttx"' + (extra||'') + '>' + parts.map(function(p, i){ return ttPart(p, i === parts.length-1 ? small : ''); }).join('') + '</div>';
+}
+function ttHead(d){ return '<div class="tth">' + ttEsc(d) + (TT_EN[d] ? '<small>' + TT_EN[d] + '</small>' : '') + '</div>'; }
 function ttRender(){
   var days = (TT.days && TT.days.length) ? TT.days : TT_DEFAULT.days;
-  var h = '<table class="t"><tr><th>시간</th>' + days.map(function(d){ return '<th>' + ttEsc(d) + '</th>'; }).join('') + '</tr>';
+  var n = days.length, used = {};
+  function mark(t){ String(t||'').split('\n').forEach(function(v){ if(v.trim()) used[ttStyle(v)[0]] = 1; }); }
+
+  var h = '<div class="ttg" style="grid-template-columns:var(--ttT) repeat(' + n + ',minmax(var(--ttC),1fr));min-width:calc(var(--ttT) + ' + n + ' * var(--ttC))">';
+  h += '<div class="tth ttt0">시간</div>' + days.map(ttHead).join('');
   (TT.week||[]).forEach(function(r){
-    h += '<tr><td class="hd">' + ttEsc(r.t) + '</td>';
+    h += '<div class="ttt">' + ttEsc(r.t) + '</div>';
     if(r.all != null && String(r.all).trim()){
-      h += '<td colspan="' + days.length + '">' + ttCell(r.all,'') + '</td>';
+      mark(r.all);
+      h += ttBlock(r.all, '', ' style="grid-column:span ' + n + '"');
     } else {
-      for(var i=0;i<days.length;i++){
+      for(var i=0;i<n;i++){
         var c = (r.c && r.c[i]) || ['',''];
-        h += '<td>' + ttCell(c[0], c[1]) + '</td>';
+        mark(c[0]);
+        h += ttBlock(c[0], c[1]);
       }
     }
-    h += '</tr>';
   });
-  h += '</table>';
+  h += '</div>';
   var el = document.getElementById('ttWeek'); if(el) el.innerHTML = h;
 
-  var h2 = '<table class="t"><tr><th>시간</th><th>수업</th></tr>';
+  var h2 = '<div class="ttg ttsat" style="grid-template-columns:var(--ttT) minmax(0,1fr)">';
+  h2 += '<div class="tth ttt0">시간</div>' + ttHead('토');
   (TT.sat||[]).forEach(function(r){
-    h2 += '<tr><td class="hd">' + ttEsc(r.t) + '</td><td>' + ttCell(r.l, r.s) + '</td></tr>';
+    mark(r.l);
+    h2 += '<div class="ttt">' + ttEsc(r.t) + '</div>' + ttBlock(r.l, r.s);
   });
-  h2 += '</table>';
+  h2 += '</div>';
   var el2 = document.getElementById('ttSat'); if(el2) el2.innerHTML = h2;
 
+  var lg = document.getElementById('ttLegend');
+  if(lg){
+    lg.innerHTML = TT_LEGEND.filter(function(x){ return used[ttStyle(x[0])[0]]; }).map(function(x){
+      return '<span><i style="background:' + ttStyle(x[0])[0] + '"></i>' + ttEsc(x[1]) + '</span>';
+    }).join('');
+  }
+
   var nt = document.getElementById('ttNote');
-  if(nt) nt.textContent = (TT.note || TT_DEFAULT.note) + ' · 표를 옆으로 밀어서 보실 수 있습니다.';
+  if(nt) nt.textContent = (TT.note || TT_DEFAULT.note) + ' · 휴대폰에서는 표를 옆으로 밀어서 보실 수 있습니다.';
 }
 ttLoad();
 
@@ -576,6 +637,31 @@ p.ttsubh{margin:18px 0 7px;font-size:14.5px}
 table.t th small{display:block;font-weight:500;font-size:11px;opacity:.85;margin-top:2px}
 .callout.green{background:#eef7f5;border-left-color:#1f7d70}
 table.t td.lft{white-space:normal;text-align:left}
+
+/* 부록 1 수련 시간표 — 메인 프로그램 '시간표보기' 이미지와 같은 모양 (v20261110.0002) */
+.ttwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:10px 0 14px;border-radius:12px;border:2px solid #0E1014;background:#fff}
+.ttg{display:grid;--ttT:96px;--ttC:100px;font-size:.88em;line-height:1.35;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ttg.ttsat{min-width:0}
+.tth{background:#0E1014;color:#fff;font-weight:800;text-align:center;padding:8px 4px 7px;border-right:1px solid #3A3E46;font-size:1.04em;line-height:1.25}
+.tth:last-child{border-right:none}
+.tth small{display:block;font-size:.66em;letter-spacing:.14em;opacity:.62;font-weight:700;margin-top:1px}
+.ttt{background:#2A2D33;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;padding:6px 4px;
+  border-bottom:1.5px solid #15171C;border-right:1px solid #44484F;white-space:nowrap;font-size:.95em}
+.tth.ttt0,.ttt{position:sticky;left:0;z-index:2}
+.tth.ttt0{z-index:3}
+.ttx{display:flex;flex-direction:column;min-height:64px;border-bottom:1.5px solid #15171C;border-right:1px solid #C9CED8;background:#fff;min-width:0}
+.ttp{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px 5px;font-weight:800;overflow-wrap:anywhere;word-break:keep-all}
+.ttp+.ttp{border-top:1.5px dashed rgba(40,44,52,.45)}
+.jo-body .ttp b{font-weight:800;color:inherit}  /* 본문 b 색(--ink)이 어두운 칸 흰 글씨를 덮지 않게 */
+.ttp small{display:block;font-weight:600;font-size:.78em;opacity:.86;margin-top:1px;line-height:1.3}
+.ttempty .ttp small{color:#78746a}
+.ttlegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:2px 2px 12px;font-size:.82em;color:var(--ink2);font-weight:700}
+.ttlegend span{display:inline-flex;align-items:center;gap:6px}
+.ttlegend i{width:15px;height:15px;border-radius:4px;border:1px solid rgba(0,0,0,.2);flex:0 0 auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@media (max-width:560px){
+  .ttg{--ttT:76px;--ttC:88px;font-size:.8em}
+  .ttx{min-height:58px}
+}
 
 /* 부록 시각 요소 */
 .belts{display:flex;gap:8px;overflow-x:auto;padding:8px 2px 12px}
@@ -1844,9 +1930,10 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
       <article class="jo" id="joB1">
         <div class="jo-body">
           <p class="note" id="ttNote">2026년 1월 19일부터 적용 · 표를 옆으로 밀어서 보실 수 있습니다.</p>
-          <div class="tblwrap" id="ttWeek"></div>
+          <div class="ttwrap" id="ttWeek"></div>
           <p><b>토요일</b></p>
-          <div class="tblwrap" id="ttSat"></div>
+          <div class="ttwrap ttwrap-sat" id="ttSat"></div>
+          <div class="ttlegend" id="ttLegend"></div>
           <div class="callout blue">
             <b>연령 구분</b> — 킨더: 미취학 아동 5세~7세 · 초등주니어: 초등학교 1,2,3학년 · 초등시니어: 초등학교 4,5,6학년 · 청소년: 중·고등학교 1,2,3학년 · 성인: 만 19세 이상
           </div>
