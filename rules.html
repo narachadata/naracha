@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="doc-ver" content="v20261110.0002">
+<meta name="doc-ver" content="v20261112.0001">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차태권도 운영규정</title>
 <meta name="description" content="나라차태권도 분당도장 운영규정 — 제1장 총칙부터 부칙·부록까지 전문 수록 (반응형 웹 문서)">
@@ -23,6 +23,13 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20261112.0001 — 주1회 등록 대상 확대 + 승급심사 추천 기준 16회
+     · 제11조 ① 약식수련(월4회) 대상을 1호 킨더 · 2호 3품 이상 중학생(중학 재학 또는 만 13세 이상)으로
+     · 제12조 각주도 함께 수정
+     · 제24조 ③ 재구성 — 「2가지 이상」 → ①16회 이상=추천 대상(등록 횟수 무관) ②지도사범 최종 추천=심사 확정.
+       종전 1호의 「승급 후 두 달 이상」 조건은 지도사범 판단으로 흡수, TAPE는 추천 판단 자료로 이동
+     · 제24조 도표 1단계 · 제25조 심사비 표(16회) · 제13조 ② 성인 소수레슨 기준 횟수 16회
+     · 부칙 9호. 지난 작업에서 안 올라간 JS 폴백(v20261031.0002)도 함께 맞춤
    v20261110.0002 — 부록 1 수련 시간표 디자인 개선(관장님 지시: 메인 프로그램 '시간표보기' 이미지 참고)
      · 흰 표 → 어두운 요일 머리줄(월 MON…) · 진한 시간 칸 · 반별 색 칸(메인 _ttStyle 과 같은 색 규칙)
      · 한 칸에 두 반(큰 글씨 줄바꿈)은 위아래로 나누고 점선 구분 · '이름(설명)'은 괄호를 작은 글씨 줄로
@@ -250,7 +257,7 @@
    맨 위에 둔 이유: 새 버전이 나왔는지 확인할 때 파일 앞부분만 조금 받아 보기 위함. */
 var RULES_VER = (function(){
   try{ return document.querySelector('meta[name="doc-ver"]').content; }
-  catch(e){ return "v20261031.0002"; }
+  catch(e){ return "v20261112.0001"; }
 })();
 /* 문서 날짜는 RULES_VER 의 날짜 부분에서 자동으로 뽑는다.
    → 규정을 고치고 RULES_VER 만 올리면 표지의 개정일과 부칙의 시행일이 함께 바뀐다.
@@ -260,7 +267,7 @@ function docDate(){
   return m ? (m[1] + '.' + m[2] + '.' + m[3]) : '';
 }
 var REVISED_DATE = docDate();     // 최종 수정일 = 시행일
-var PREV_REVISED = "2026.10.31";  // 종전 규정 개정일(이력 보존용)
+var PREV_REVISED = "2026.11.10";  // 종전 규정 개정일(이력 보존용)
 
 /* ══════════════════════════════════════════════════════════════
    금액·횟수 설정 (설정 화면에서 바꿀 수 있는 값)
@@ -1231,7 +1238,11 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
             <p class="dg-n">표에서 <b style="color:#1f7d70">초록으로 묶인 두 칸</b>이 가족 할인입니다. 성인 수련생의 가족 할인도 같은 기준입니다(제13조 ④).</p>
           </div>
           <ol class="hang">
-            <li><span class="hno">①</span><b>약식수련(월 4회)</b>은 도장 적응 기간이 필요한 <b>킨더(유치부) 수련생에 한하여 한시적으로</b> 등록하실 수 있는 수련 종류입니다. 초등학생 이상 수련생은 약식수련으로 등록하실 수 없으며, 킨더 수련생도 일정 기간 적응하신 후에는 <b>정식수련(월 8회 이상)으로 등록하시는 것을 원칙</b>으로 합니다.</li>
+            <li><span class="hno">①</span><b>약식수련(월 4회)</b>은 다음 수련생이 등록하실 수 있습니다. 그 밖의 수련생은 약식수련으로 등록하실 수 없습니다.
+              <ol class="ho">
+                <li><span class="hono">1.</span><b>킨더(유치부) 수련생</b> — 도장 적응 기간이 필요한 경우 <b>한시적으로</b> 등록하시며, 일정 기간 적응하신 후에는 <b>정식수련(월 8회 이상)으로 등록하시는 것을 원칙</b>으로 합니다.</li>
+                <li><span class="hono">2.</span><b>3품 이상 중학생</b> — <b>중학교에 재학 중이거나 만 13세 이상</b>인 3품 이상 수련생은 학업 일정에 맞추어 <b>주 1회(월 4회)</b>로 등록하실 수 있습니다. 승급심사 응시 자격은 등록 횟수와 관계없이 제24조 ③에 따릅니다.</li>
+              </ol></li>
             <li><span class="hno">②</span><b>심화수련 등록</b>은 보강이 가능하며, 기간 연장은 되지 않습니다. <b>환불은 제17조에 따릅니다.</b></li>
             <li><span class="hno">③</span><b>프리패스 등록</b>은 <b>월 횟수 제한 없이</b> 수련하시는 등록입니다. 채워야 할 기준 횟수가 없으므로 <b>보강·기간 연장·이월이 발생하지 않으며</b>, 공휴일이나 휴관일이 겹치는 경우에도 같습니다(제10조 ⑦ 3호). 그 대신 <b>많이 나오실수록 1회당 수련비가 낮아지도록</b> 금액이 정해져 있습니다. <b>환불은 제17조에 따릅니다.</b></li>
             <li><span class="hno">④</span>연회원으로 등록하시면 할인 혜택을 받으실 수 있습니다(제12조).</li>
@@ -1245,7 +1256,7 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
         <h4><span class="no">제12조</span>(연간회원 등록)</h4>
         <div class="jo-body">
           <p class="note">2025년 9월 기준 / 단위: 원</p>
-          <p class="note">※ 표의 <b>주1회(월4회)</b> 등록은 <b>킨더(유치부) 수련생에 한합니다</b>(제11조 ①). 초등학생 이상 수련생은 주2회(월8회) 이상으로 등록하십니다.</p>
+          <p class="note">※ 표의 <b>주1회(월4회)</b> 등록은 <b>킨더(유치부) 수련생과 3품 이상 중학생</b>에 한합니다(제11조 ①). 그 밖의 수련생은 주2회(월8회) 이상으로 등록하십니다.</p>
           <p><b>① 12개월 등록 — 10% 할인</b></p>
           <div class="tblwrap"><table class="t">
             <tr><th>구분</th><th>주1회<br><small>월4회</small></th><th class="colhi">주2회<br><small>월8회</small></th><th>주3회<br><small>월12회</small></th><th>프리패스</th></tr>
@@ -1295,7 +1306,7 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
           <div class="callout green">표에서 <b>초록으로 묶인 두 칸</b>이 가족 할인입니다. <b>기본 수련(월 8회) 이상</b>으로 등록하시는 경우에만 적용되며, 직계가족이 함께 등록하실 때 <b>1인</b>에게 적용됩니다.</div>
           <ol class="hang">
             <li><span class="hno">①</span>등록하시면 예약 어플 <b>&lt;하이파이브&gt;</b>에 수련권 8회를 충전해 드립니다. 어플에서 수련권으로 예약하신 후 수련하시면 됩니다.</li>
-            <li><span class="hno">②</span><b>소수레슨(50분)</b> — 1:1 <span data-cfg="c.p11" data-suffix="원">60,000원</span> / 1:2 <span data-cfg="c.p12" data-suffix="원">50,000원</span> / 1:3 <span data-cfg="c.p13" data-suffix="원">40,000원</span> / 1:5 <span data-cfg="c.p15" data-suffix="원">30,000원</span>입니다. <small>(10회권을 일괄결제하시면 11회를 지급해 드립니다.)</small> 1:1 레슨은 3회 수련으로, 1:2 레슨은 2회 수련으로 적용됩니다(승급을 위한 기준 수련 횟수는 24회입니다).</li>
+            <li><span class="hno">②</span><b>소수레슨(50분)</b> — 1:1 <span data-cfg="c.p11" data-suffix="원">60,000원</span> / 1:2 <span data-cfg="c.p12" data-suffix="원">50,000원</span> / 1:3 <span data-cfg="c.p13" data-suffix="원">40,000원</span> / 1:5 <span data-cfg="c.p15" data-suffix="원">30,000원</span>입니다. <small>(10회권을 일괄결제하시면 11회를 지급해 드립니다.)</small> 1:1 레슨은 3회 수련으로, 1:2 레슨은 2회 수련으로 적용됩니다(승급을 위한 기준 수련 횟수는 16회입니다).</li>
             <li><span class="hno">③</span>8회 횟수 기본 등록의 유효기간은 등록하신 후 <b>한 달 2주</b>까지입니다. 개인 사정으로 나오지 못하시는 경우 1회에 한하여 일주일까지 연장하실 수 있습니다.</li>
             <li><span class="hno">④</span><b>직계가족 할인은 기본 수련(월 8회) 이상</b>으로 등록하시는 경우에만 적용됩니다. 월 8회 미만 등록에는 적용되지 않습니다(제10조 ⑤, 제11조 ⑤).</li>
           </ol>
@@ -1562,18 +1573,17 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
           <ol class="hang">
             <li><span class="hno">①</span><b>정기승급심사</b>는 도장 내에서 승급심사에 응시하실 수 있는 제도이며, 수련하신 과정을 국기원 심사평가 자격을 갖춘 지도자가 평가하게 됩니다.</li>
             <li><span class="hno">②</span><b>일정</b> — 모든 수련생은 <b>매월 마지막 주</b>에 심사를 보시게 됩니다. (일정은 매월 초에 소식지를 통해 공지해 드립니다.) 정규 심사 시간에 심사가 어려우신 수련생은 <b>개별심사</b>를 신청하실 수 있습니다(제25조).</li>
-            <li><span class="hno">③</span><b>응시 자격</b> — 다음 중 <span class="pill">2가지 이상</span>에 해당하시면 승급심사 추천을 받으실 수 있습니다. 다만 성인 수련생은 직접 심사를 신청하실 수 있습니다.
+            <li><span class="hno">③</span><b>응시 자격</b> — 다음 두 단계를 거쳐 심사 대상이 정해집니다. 다만 성인 수련생은 직접 심사를 신청하실 수 있습니다.
               <ol class="ho">
-                <li><span class="hono">1.</span>승급하신 후 <b>두 달 이상</b> 지났으며, <b>24회 이상</b> 수련하신 수련생</li>
-                <li><span class="hono">2.</span>수련과정 <b>TAPE를 띠에 모두 모으신</b> 수련생</li>
-                <li><span class="hono">3.</span><b>지도사범의 추천</b>을 받으신 수련생</li>
+                <li><span class="hono">1.</span><b>심사 추천 대상</b> — 마지막 승급 이후 <span class="pill">16회 이상</span> 수련하시면 심사 추천 대상이 되십니다. <b>등록 횟수(주1회·주2회·주3회·프리패스)와 관계없이</b> 같은 기준을 적용합니다.</li>
+                <li><span class="hono">2.</span><b>지도사범의 최종 추천</b> — 추천 대상 가운데 <b>지도사범이 최종 추천</b>하신 수련생이 심사 대상으로 확정됩니다. 수련태도, 수련과정 <b>TAPE</b> 성취, 급수별 기술의 숙련도를 함께 살펴 판단합니다.</li>
               </ol></li>
             <li><span class="hno">④</span>한 달 이상 휴관하신 후 복관하시는 경우에는 심사시수(수련시간)가 충족되더라도 <b>복관하신 당월에는 심사에 응시하실 수 없습니다.</b></li>
           </ol>
           <div class="dg">
             <div class="dg-t">심사를 보기까지의 순서</div>
             <div class="flow">
-              <div class="step"><span class="k">1</span><div class="h">추천</div><div class="d">자격 조건 중 2가지 이상 해당되면 추천을 받습니다.<br>(성인은 직접 신청)</div></div>
+              <div class="step"><span class="k">1</span><div class="h">추천</div><div class="d">16회 이상이면 추천 대상,<br>지도사범 최종 추천으로 확정<br>(성인은 직접 신청)</div></div>
               <div class="ar">›</div>
               <div class="step"><span class="k">2</span><div class="h">서류·심사비 제출</div><div class="d">심사신청서와 심사비를 <b>심사 2일 전까지</b> 내주십니다.<br>(제25조)</div></div>
               <div class="ar">›</div>
@@ -1603,7 +1613,7 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
           </ol>
           <div class="tblwrap"><table class="t">
             <tr><th>구분</th><th>금액</th><th>비고</th></tr>
-            <tr><td class="hd">정기승급심사 (24회)</td><td class="em"><span data-cfg="c.examReg" data-suffix="원">20,000원</span></td><td>매월 마지막 주 정규 심사</td></tr>
+            <tr><td class="hd">정기승급심사 (16회)</td><td class="em"><span data-cfg="c.examReg" data-suffix="원">20,000원</span></td><td>매월 마지막 주 정규 심사</td></tr>
             <tr><td class="hd">개별심사</td><td class="em"><span data-cfg="c.examSolo" data-suffix="원">30,000원</span></td><td class="lft">정규 심사 시간에 심사가 어려우신 경우<br>희망하시는 시간에 개별 응시(심사 가능 여부 확인 후 확정)</td></tr>
             <tr><td class="hd">Make up Test (재응시)</td><td><span data-cfg="c.examMakeup" data-suffix="원">40,000원</span></td><td></td></tr>
           </table></div>
@@ -1918,6 +1928,7 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
             <li><span class="hono">6.</span>환불 규정(제17조, 제11조 ②③) 및 부록 2 환불 계산기는 <b class="amendTxt"></b>부터 시행하며, 시행일 이전에 납부하신 수련비에 대해서도 <b>수련생에게 유리한 기준</b>을 적용합니다.</li>
             <li><span class="hono">7.</span>제9조(수련비 미납), 제12조 ③④항, 제17조 ③항, 제18조 ①②항, 제37조 5호의 개정 사항은 <b class="amendTxt"></b>부터 시행하며, 시행일 이전에 납부하신 수련비에 대해서도 <b>수련생에게 유리한 기준</b>을 적용합니다.</li>
             <li><span class="hono">8.</span>제10조 ④항·⑦항 2호, 제16조, 제12조 각주, 제36조 ⑤·⑧항, 제37조 절차 조항의 개정 사항은 <b class="amendTxt"></b>부터 시행하며, 결석 보강은 시행일 이전 결석분에 대해서도 <b>수련생에게 유리한 기준</b>을 적용합니다.</li>
+            <li><span class="hono">9.</span>제11조 ①항(3품 이상 중학생의 주 1회 등록), 제24조 ③항(승급심사 추천 기준 16회·지도사범 최종 추천), 제25조·제13조의 기준 횟수 표기 개정은 <b class="amendTxt"></b>부터 시행하며, 시행일 현재 이미 16회 이상 수련하신 수련생도 추천 대상에 포함합니다.</li>
           </ol>
           <div class="callout blue">이 규정의 <b>시행일은 문서를 마지막으로 고친 날</b>과 같습니다. 내용이 바뀌면 표지의 개정일과 위 시행일이 함께 갱신되므로, 지금 보고 계신 문서가 항상 최신본입니다. <small>(종전 규정 개정일 <span class="prevTxt"></span>)</small></div>
         </div>
