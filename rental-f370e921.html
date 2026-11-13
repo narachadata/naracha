@@ -93,6 +93,9 @@ footer img{height:16px;opacity:.85;margin-bottom:8px}
 .ptitle{margin:16px 0 0;font-weight:800;color:var(--navy);font-size:15.5px}
 .ptitle small{display:block;font-weight:500;color:var(--sub);font-size:15px}
 .pnote{margin-top:10px;font-size:15px;color:var(--sub)}
+.price.refund th,.price.refund td{padding:9px 12px}
+.price.refund tbody th{text-align:left;width:46%}
+.price.refund tr.no td{color:var(--red);font-weight:700}
 </style>
 </head>
 <body>
@@ -120,7 +123,7 @@ footer img{height:16px;opacity:.85;margin-bottom:8px}
   </div>
 
   <nav class="toc">
-    <a href="#s1">출입문</a><a href="#s2">신발·짐</a><a href="#s3">조명</a><a href="#s4">탈의실</a><a href="#s5">냉난방기</a><a href="#s6">주차</a><a href="#care">부탁드려요</a><a href="#out">퇴실 체크</a><a href="#book">예약·요금</a>
+    <a href="#s1">출입문</a><a href="#s2">신발·짐</a><a href="#s3">조명</a><a href="#s4">탈의실</a><a href="#s5">냉난방기</a><a href="#s6">주차</a><a href="#care">부탁드려요</a><a href="#out">퇴실 체크</a><a href="#book">예약·요금</a><a href="#refund">환불</a>
   </nav>
 
   <section class="step" id="s1">
@@ -244,7 +247,12 @@ footer img{height:16px;opacity:.85;margin-bottom:8px}
     <table class="price "><thead><tr><th></th><th>1인</th><th>2인</th><th>3인</th><th>4인</th></tr></thead><tbody><tr><th>1시간</th><td>9,900</td><td>14,900</td><td>19,900</td><td>24,900</td></tr><tr><th>2시간</th><td>19,900</td><td>29,800</td><td>39,800</td><td>49,800</td></tr><tr><th>3시간</th><td>29,700</td><td>44,400</td><td>59,700</td><td>74,700</td></tr><tr><th>4시간</th><td>39,600</td><td>59,600</td><td>79,600</td><td>99,600</td></tr></tbody></table>
     <div class="ptitle">주말·공휴일<small>일요일·공휴일 08:00–새벽 01:00 · 토요일 15:00–새벽 01:00</small></div>
     <table class="price wk"><thead><tr><th></th><th>1인</th><th>2인</th><th>3인</th><th>4인</th></tr></thead><tbody><tr><th>1시간</th><td>11,900</td><td>16,900</td><td>21,900</td><td>26,900</td></tr><tr><th>2시간</th><td>23,800</td><td>33,800</td><td>43,800</td><td>53,800</td></tr><tr><th>3시간</th><td>35,700</td><td>50,700</td><td>65,700</td><td>80,700</td></tr><tr><th>4시간</th><td>47,600</td><td>67,600</td><td>87,600</td><td>107,600</td></tr></tbody></table>
-    <p class="pnote">⚠️ <b style="color:var(--red)">당일 예약 취소는 환불이 안 돼요.</b> 신중하게 예약해 주세요.<br>⏱ 이용 시간 2분 전에는 퇴실 준비를 부탁드려요.</p>
+    <p class="pnote">⏱ 이용 시간 2분 전에는 퇴실 준비를 부탁드려요.</p>
+    <h2 style="margin-top:22px" id="refund">환불 규정 💸</h2>
+    <p class="lead">스페이스클라우드 환불 규정과 같아요. 예약을 취소하는 날이 이용일에서 며칠 전인지에 따라 달라요.</p>
+    <table class="price refund"><thead><tr><th>취소하는 날</th><th>환불</th></tr></thead><tbody><tr><th>이용 8일 전</th><td>총 금액의 100%</td></tr><tr><th>이용 7일 전</th><td>총 금액의 100%</td></tr><tr><th>이용 6일 전</th><td>총 금액의 80%</td></tr><tr><th>이용 5일 전</th><td>총 금액의 50%</td></tr><tr><th>이용 4일 전</th><td>총 금액의 30%</td></tr><tr><th>이용 3일 전</th><td>총 금액의 30%</td></tr><tr class="no"><th>이용 2일 전</th><td>환불 안 돼요</td></tr><tr class="no"><th>이용 전날</th><td>환불 안 돼요</td></tr><tr class="no"><th>이용 당일</th><td>환불 안 돼요</td></tr></tbody></table>
+    <div class="note">✅ 결제하고 <b>2시간 안</b>에 취소하시면 100% 환불돼요. (단, 이용 시간 전까지만)</div>
+    <div class="note warn">⚠️ <b style="color:var(--red)">이용 2일 전부터는 환불이 안 돼요.</b> 이용일(첫날)이 지난 뒤의 환불은 담당자에게 직접 문의해 주세요.</div>
     <a class="call" href="https://www.spacecloud.kr/space/38990" target="_blank" rel="noopener" style="background:#704de4">🔗 스페이스클라우드에서 예약하기</a>
   </section>
 
