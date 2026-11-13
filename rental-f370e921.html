@@ -83,6 +83,16 @@ section.out{background:linear-gradient(160deg,#fff 0%,#f6f8fd 100%);border:2px s
 footer{margin-top:22px;text-align:center;color:var(--sub);font-size:13.5px}
 footer img{height:16px;opacity:.85;margin-bottom:8px}
 .call{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 0 0;background:var(--navy);color:#fff;text-decoration:none;font-weight:700;border-radius:14px;padding:14px;font-size:16px}
+.price{width:100%;border-collapse:separate;border-spacing:0;margin-top:10px;font-size:14px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.price th,.price td{padding:9px 4px;text-align:center}
+.price thead th{background:var(--navy);color:#fff;font-weight:700}
+.price tbody th{background:#eef1f8;color:var(--navy);font-weight:700;white-space:nowrap}
+.price tbody td{background:#fff;font-variant-numeric:tabular-nums;border-top:1px solid var(--line)}
+.price tbody th{border-top:1px solid var(--line)}
+.price.wk thead th{background:var(--red)}
+.ptitle{margin:16px 0 0;font-weight:800;color:var(--navy);font-size:15.5px}
+.ptitle small{display:block;font-weight:500;color:var(--sub);font-size:13.5px}
+.pnote{margin-top:10px;font-size:13.5px;color:var(--sub)}
 </style>
 </head>
 <body>
@@ -110,7 +120,7 @@ footer img{height:16px;opacity:.85;margin-bottom:8px}
   </div>
 
   <nav class="toc">
-    <a href="#s1">출입문</a><a href="#s2">신발·짐</a><a href="#s3">조명</a><a href="#s4">탈의실</a><a href="#s5">냉난방기</a><a href="#s6">주차</a><a href="#care">부탁드려요</a><a href="#out">퇴실 체크</a>
+    <a href="#s1">출입문</a><a href="#s2">신발·짐</a><a href="#s3">조명</a><a href="#s4">탈의실</a><a href="#s5">냉난방기</a><a href="#s6">주차</a><a href="#care">부탁드려요</a><a href="#out">퇴실 체크</a><a href="#book">예약·요금</a>
   </nav>
 
   <section class="step" id="s1">
@@ -214,6 +224,24 @@ footer img{height:16px;opacity:.85;margin-bottom:8px}
     <label><input type="checkbox"><span>신발·짐 챙기기</span></label>
     <label><input type="checkbox"><span>나가면서 2336# → <b style="color:var(--red)">빨간불</b> 확인</span></label>
     <div class="done" id="done">수고하셨어요! 오늘도 좋은 하루 보내세요 🙂</div>
+  </section>
+
+  <section class="care" id="book">
+    <h2>대관 예약 · 요금 📅</h2>
+    <p class="lead">대관 예약은 <b>스페이스클라우드</b>에서 하실 수 있어요.</p>
+    <ol class="mini">
+      <li>스페이스클라우드 앱이나 사이트를 열어요</li>
+      <li><b>나라차태권도 분당도장</b>을 검색해요</li>
+      <li>원하는 날짜와 시간을 골라 예약해요</li>
+    </ol>
+    <h2 style="margin-top:22px">대관 요금표 💳</h2>
+    <p class="lead">단위: 원 · 5인 이상은 개별 문의해 주세요.</p>
+    <div class="ptitle">평일<small>오전 08:00–12:00 · 야간 22:00–새벽 01:00</small></div>
+    <table class="price "><thead><tr><th></th><th>1인</th><th>2인</th><th>3인</th><th>4인</th></tr></thead><tbody><tr><th>1시간</th><td>9,900</td><td>14,900</td><td>19,900</td><td>24,900</td></tr><tr><th>2시간</th><td>19,900</td><td>29,800</td><td>39,800</td><td>49,800</td></tr><tr><th>3시간</th><td>29,700</td><td>44,400</td><td>59,700</td><td>74,700</td></tr><tr><th>4시간</th><td>39,600</td><td>59,600</td><td>79,600</td><td>99,600</td></tr></tbody></table>
+    <div class="ptitle">주말·공휴일<small>일요일·공휴일 08:00–새벽 01:00 · 토요일 15:00–새벽 01:00</small></div>
+    <table class="price wk"><thead><tr><th></th><th>1인</th><th>2인</th><th>3인</th><th>4인</th></tr></thead><tbody><tr><th>1시간</th><td>11,900</td><td>16,900</td><td>21,900</td><td>26,900</td></tr><tr><th>2시간</th><td>23,800</td><td>33,800</td><td>43,800</td><td>53,800</td></tr><tr><th>3시간</th><td>35,700</td><td>50,700</td><td>65,700</td><td>80,700</td></tr><tr><th>4시간</th><td>47,600</td><td>67,600</td><td>87,600</td><td>107,600</td></tr></tbody></table>
+    <p class="pnote">⚠️ <b style="color:var(--red)">당일 예약 취소는 환불이 안 돼요.</b> 신중하게 예약해 주세요.<br>⏱ 이용 시간 2분 전에는 퇴실 준비를 부탁드려요.</p>
+    <a class="call" href="https://www.spacecloud.kr/space/38990" target="_blank" rel="noopener" style="background:#704de4">🔗 스페이스클라우드에서 예약하기</a>
   </section>
 
   <div style="margin-top:16px;text-align:center;font-size:14px;color:var(--sub)">궁금한 점이나 불편한 점은 언제든 편하게 연락 주세요</div>
