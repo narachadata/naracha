@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="doc-ver" content="v20261112.0002">
+<meta name="doc-ver" content="v20261117.0001">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차태권도 운영규정</title>
 <meta name="description" content="나라차태권도 분당도장 운영규정 — 제1장 총칙부터 부칙·부록까지 전문 수록 (반응형 웹 문서)">
@@ -23,6 +23,12 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20261117.0001 — 겨루기 보호장비 필수 품목 변경(관장님 지시)
+     · 제22조 ④ 1호 필수 품목에 낭심 보호대 추가(선택 → 필수), 2호 선택 품목에 마우스피스 추가
+     · 부록 4 표: 낭심 보호대 「필수」, 마우스피스 10,000원(선택) 행 신설
+     · 필수 합계 = 팔·다리 + 손등·발등 + 낭심 = 90,000원 / 전체 구입 합계에 마우스피스 포함
+     · CFG_DEFAULT·설정 화면에 mouthpiece 추가 — 관리 프로그램 금액 관리(RC_DEFAULT.mouthpiece)와 같은 키라
+       금액 창고(구글 시트) 값을 그대로 함께 쓴다 · 부칙 10호 신설 · 종전 개정일 2026.11.12
    v20261112.0002 — 16회 기준을 「3품 이상 중학생 전용」으로 한정(관장님 지시)
      · 제24조 ③ 종전 「2가지 이상(두 달·24회 / TAPE / 지도사범 추천)」으로 원상 복구
      · 제24조 ⑤ 신설 — 3품 이상 중학생만 16회 이상=추천 대상 + 지도사범 최종 추천=확정
@@ -272,7 +278,7 @@ function docDate(){
   return m ? (m[1] + '.' + m[2] + '.' + m[3]) : '';
 }
 var REVISED_DATE = docDate();     // 최종 수정일 = 시행일
-var PREV_REVISED = "2026.11.10";  // 종전 규정 개정일(이력 보존용)
+var PREV_REVISED = "2026.11.12";  // 종전 규정 개정일(이력 보존용)
 
 /* ══════════════════════════════════════════════════════════════
    금액·횟수 설정 (설정 화면에서 바꿀 수 있는 값)
@@ -306,7 +312,7 @@ var CFG_DEFAULT = {
   poom1:170000, poom2:190000, poom3:210000, poom4:260000,
   dan1:190000, dan2:210000, dan3:230000, dan4:280000,
   /* 겨루기 용품 */
-  gearArm:30000, gearHand:40000, gearGroin:20000, gearBody:30000, gearHead:30000, gearBag:30000,
+  gearArm:30000, gearHand:40000, gearGroin:20000, gearBody:30000, gearHead:30000, gearBag:30000, mouthpiece:10000,
   /* 도복 (상하의 한 벌 / 낱개) */
   dobokPum:50000, dobokDan:50000, dobokTop:30000, dobokPants:20000,
   /* 띠 */
@@ -1521,8 +1527,8 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
           <ol class="hang">
             <li><span class="hno">④</span><b>겨루기 용품</b> — 겨루기 수련 시에는 보호장비를 착용합니다. 개인 위생과 수련의 질적 향상을 위해 개인 장비 구입을 권장드립니다.
               <ol class="ho">
-                <li><span class="hono">1.</span><b>필수 품목</b> — 팔·다리 보호대, 손등·발등 보호대</li>
-                <li><span class="hono">2.</span><b>선택 품목</b> — 낭심 보호대, 몸통 보호대, 헤드기어, 장비 가방</li>
+                <li><span class="hono">1.</span><b>필수 품목</b> — 팔·다리 보호대, 손등·발등 보호대, 낭심 보호대</li>
+                <li><span class="hono">2.</span><b>선택 품목</b> — 몸통 보호대, 헤드기어, 마우스피스, 장비 가방</li>
               </ol></li>
             <li><span class="hno">⑤</span>개인 장비를 구입하지 않으신 경우에도 도장 보유 장비를 대여하실 수 있으며, 수련 진행상 착용이 어려운 경우에는 약속겨루기로 참여하실 수 있습니다. <b>장비 미구입을 이유로 수련에서 제외되지 않습니다.</b></li>
             <li><span class="hno">⑥</span>국기원 승(품)단심사 응시 시에는 필수 품목을 지참합니다.</li>
@@ -1941,6 +1947,7 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
             <li><span class="hono">7.</span>제9조(수련비 미납), 제12조 ③④항, 제17조 ③항, 제18조 ①②항, 제37조 5호의 개정 사항은 <b class="amendTxt"></b>부터 시행하며, 시행일 이전에 납부하신 수련비에 대해서도 <b>수련생에게 유리한 기준</b>을 적용합니다.</li>
             <li><span class="hono">8.</span>제10조 ④항·⑦항 2호, 제16조, 제12조 각주, 제36조 ⑤·⑧항, 제37조 절차 조항의 개정 사항은 <b class="amendTxt"></b>부터 시행하며, 결석 보강은 시행일 이전 결석분에 대해서도 <b>수련생에게 유리한 기준</b>을 적용합니다.</li>
             <li><span class="hono">9.</span>제11조 ①항(3품 이상 중학생의 주 1회 등록)과 제24조 ⑤항(3품 이상 중학생의 승급심사 추천 기준 <b>16회</b> 및 지도사범 최종 추천)의 개정 사항은 <b class="amendTxt"></b>부터 시행합니다. <b>그 밖의 수련생의 승급심사 응시 자격(제24조 ③항)은 종전과 같습니다(두 달 이상·24회 이상 등 2가지 이상).</b> 시행일 현재 이미 16회 이상 수련하신 3품 이상 중학생도 추천 대상에 포함합니다.</li>
+            <li><span class="hono">10.</span>제22조 ④항(겨루기 용품 필수 품목에 낭심 보호대 추가, 선택 품목에 마우스피스 추가)과 부록 4 겨루기 보호장비 표의 개정 사항은 <b class="amendTxt"></b>부터 시행합니다.</li>
           </ol>
           <div class="callout blue">이 규정의 <b>시행일은 문서를 마지막으로 고친 날</b>과 같습니다. 내용이 바뀌면 표지의 개정일과 위 시행일이 함께 갱신되므로, 지금 보고 계신 문서가 항상 최신본입니다. <small>(종전 규정 개정일 <span class="prevTxt"></span>)</small></div>
         </div>
@@ -2065,12 +2072,13 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
             <tr><th>구분</th><th>품목</th><th>금액</th></tr>
             <tr><td class="hd">필수</td><td class="lft">팔 보호대, 다리 보호대</td><td class="em"><span data-cfg="c.gearArm" data-suffix="원">30,000원</span></td></tr>
             <tr><td class="hd">필수</td><td class="lft">손등 보호대, 발등 보호대</td><td class="em"><span data-cfg="c.gearHand" data-suffix="원">40,000원</span></td></tr>
-            <tr><td class="hd">선택</td><td class="lft">낭심 보호대 (남자용 / 여자용)</td><td><span data-cfg="c.gearGroin" data-suffix="원">20,000원</span></td></tr>
+            <tr><td class="hd">필수</td><td class="lft">낭심 보호대 (남자용 / 여자용)</td><td class="em"><span data-cfg="c.gearGroin" data-suffix="원">20,000원</span></td></tr>
             <tr><td class="hd">선택</td><td class="lft">몸통 보호대 (청홍 양면형)</td><td><span data-cfg="c.gearBody" data-suffix="원">30,000원</span></td></tr>
             <tr><td class="hd">선택</td><td class="lft">헤드기어 (머리 보호)</td><td><span data-cfg="c.gearHead" data-suffix="원">30,000원</span></td></tr>
+            <tr><td class="hd">선택</td><td class="lft">마우스피스 (치아 보호)</td><td><span data-cfg="c.mouthpiece" data-suffix="원">10,000원</span></td></tr>
             <tr><td class="hd">선택</td><td class="lft">태권도 장비 가방</td><td><span data-cfg="c.gearBag" data-suffix="원">30,000원</span></td></tr>
-            <tr><td class="hd">합계</td><td class="lft">필수 품목 합계</td><td class="em"><span data-cfg="c.gearArm+c.gearHand" data-suffix="원">70,000원</span></td></tr>
-            <tr><td class="hd">합계</td><td class="lft">전체 구입</td><td class="em"><span data-cfg="c.gearArm+c.gearHand+c.gearGroin+c.gearBody+c.gearHead+c.gearBag" data-suffix="원">180,000원</span></td></tr>
+            <tr><td class="hd">합계</td><td class="lft">필수 품목 합계</td><td class="em"><span data-cfg="c.gearArm+c.gearHand+c.gearGroin" data-suffix="원">90,000원</span></td></tr>
+            <tr><td class="hd">합계</td><td class="lft">전체 구입</td><td class="em"><span data-cfg="c.gearArm+c.gearHand+c.gearGroin+c.gearBody+c.gearHead+c.mouthpiece+c.gearBag" data-suffix="원">190,000원</span></td></tr>
           </table></div>
           <ol class="ho">
             <li><span class="hono">1.</span>개인 장비를 구입하지 않으셔도 <b>도장 보유 장비를 대여</b>하실 수 있습니다(제22조 ⑤).</li>
@@ -2635,7 +2643,7 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
     ['띠', [['beltGrade','유급자띠(흰~빨강)'],['beltPoom4','유품자 띠 4cm'],['beltPoom5','유품자 띠 5cm']]],
     ['티셔츠', [['teeShortS','반팔 110~130'],['teeShortL','반팔 140 이상'],['teeLongS','긴팔 110~130'],['teeLongL','긴팔 140 이상']]],
     ['겨루기 용품', [['gearArm','팔·다리 보호대'],['gearHand','손등·발등 보호대'],['gearGroin','낭심 보호대'],
-                   ['gearBody','몸통 보호대'],['gearHead','헤드기어'],['gearBag','장비 가방']]],
+                   ['gearBody','몸통 보호대'],['gearHead','헤드기어'],['mouthpiece','마우스피스'],['gearBag','장비 가방']]],
     ['나라차시범단', [['demoYear','연회비 일시납'],['demoSplit','분할납 1회분'],['demoAudition','오디션 참가비'],['demoDobok','시범단 도복'],['demoUniform','단체복']]]
   ];
 
