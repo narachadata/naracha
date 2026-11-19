@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="doc-ver" content="v20261118.0002">
+<meta name="doc-ver" content="v20261119.0001">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차태권도 운영규정</title>
 <meta name="description" content="나라차태권도 분당도장 운영규정 — 제1장 총칙부터 부칙·부록까지 전문 수록 (반응형 웹 문서)">
@@ -23,6 +23,9 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20261119.0001 — 제23조의2(유품(단)자 승급과정) 신설(id jo23-2, 차례 자동) — 품별 급수(1품 12급~4품 이상 48급)·
+     급 표식 7단계(이름 쪽)·검정줄 구분·TAPE 공통 적용(도장 이름 쪽)·승급 상장+급 표식 지급·1급=국기원 응시(제30조) /
+     제23조 ② 끝에 TAPE 위치 한 줄, ③ 신설(합격자 색띠 지급) / 부칙 12 — 조문 번호 이동 없음 (작업지시서 2026-11-19, 안 A)
    v20261118.0002 — 부록 5 2. 수련 시간: 6시반/7시반 → 오후 7시~8시 한 반(학년 전체), 초등 평일 주 3회 이상,
      중학생 이상 평일 시범기술연습 포함 주 2시간 이상(요일 추후), 평일 6시 기본기 훈련 개설 예정 /
      9. 단원 직제: 직제 기준 대회·시범 → 대회·시범·행사(시범단 행사), 기준 횟수 1회씩 상향(준단원 4회,
@@ -287,7 +290,7 @@ function docDate(){
   return m ? (m[1] + '.' + m[2] + '.' + m[3]) : '';
 }
 var REVISED_DATE = docDate();     // 최종 수정일 = 시행일
-var PREV_REVISED = "2026.11.17";  // 종전 규정 개정일(이력 보존용)
+var PREV_REVISED = "2026.11.18";  // 종전 규정 개정일(이력 보존용)
 
 /* ══════════════════════════════════════════════════════════════
    금액·횟수 설정 (설정 화면에서 바꿀 수 있는 값)
@@ -1575,7 +1578,7 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
             <div class="belt-arrow">›</div>
             <div class="belt"><div class="bar" style="background:linear-gradient(90deg,#d61e2e 50%,#111 50%)"></div><div class="nm">국기원</div><div class="gp">1급 · 준비반</div></div>
           </div>
-          <p><b>② 교과과정 TAPE System</b> — 띠에 TAPE를 모으며 과목별 성취를 확인하실 수 있습니다.</p>
+          <p><b>② 교과과정 TAPE System</b> — 띠에 TAPE를 모으며 과목별 성취를 확인하실 수 있습니다. TAPE는 띠의 <b>도장 이름 쪽</b>에 붙인다.</p>
           <div class="tapes">
             <div class="tape" style="background:#fafafa">흰색 Tape<small>기본동작</small></div>
             <div class="tape" style="background:#fff3a8">노란색 Tape<small>차기</small></div>
@@ -1584,6 +1587,42 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
             <div class="tape" style="background:#f2c9c9">빨간색 Tape<small>품새</small></div>
             <div class="tape" style="background:#222;color:#fff">검정색 Tape<small style="opacity:.85">태도/인성</small></div>
           </div>
+          <p><b>③</b> 승급심사 합격자에게는 <b>해당 급의 색띠를 지급한다.</b></p>
+        </div>
+      </article>
+
+      <article class="jo" id="jo23-2">
+        <h4><span class="no">제23조의2</span>(유품(단)자 승급과정)</h4>
+        <div class="jo-body">
+          <p><b>①</b> 유품(단)자는 품별로 급수 단계를 둔다. 1품은 12급, 2품은 24급, 3품은 36급, 4품 이상은 48급에서 시작하여 각각 1급까지 진행한다.</p>
+          <div class="tblwrap"><table class="t">
+            <tr><th>품</th><th>시작 급수</th><th>색상당 급수</th><th>급 표식 방식</th><th>총 단계</th></tr>
+            <tr><td class="hd">1품</td><td>12급 → 1급</td><td>1급씩</td><td>표식만</td><td>7단계</td></tr>
+            <tr><td class="hd">2품</td><td>24급 → 1급</td><td>2급씩</td><td>표식 + 검정줄 1개까지</td><td>13단계</td></tr>
+            <tr><td class="hd">3품</td><td>36급 → 1급</td><td>3급씩</td><td>표식 + 검정줄 2개까지</td><td>19단계</td></tr>
+            <tr><td class="hd">4품 이상</td><td>48급 → 1급</td><td>4급씩</td><td>표식만 (검정줄 없음)</td><td>25단계</td></tr>
+          </table></div>
+          <p><b>②</b> 급수 단계는 <b>띠의 이름 쪽에 붙이는 급 표식</b>으로 나타내며, 모든 품에 공통으로 다음 7단계로 진행한다. <small>(옆으로 밀어서 보실 수 있습니다.)</small></p>
+          <div class="belts">
+            <div class="belt"><div class="bar" style="background:#fff"></div><div class="nm">흰색</div><div class="gp">1단계 · 자기존중</div></div>
+            <div class="belt-arrow">›</div>
+            <div class="belt"><div class="bar" style="background:#ffd400"></div><div class="nm">노란색</div><div class="gp">2단계 · 리더십·협동심</div></div>
+            <div class="belt-arrow">›</div>
+            <div class="belt"><div class="bar" style="background:#1c8a2e"></div><div class="nm">초록색</div><div class="gp">3단계 · 존경</div></div>
+            <div class="belt-arrow">›</div>
+            <div class="belt"><div class="bar" style="background:#1e5bd6"></div><div class="nm">파란색</div><div class="gp">4단계 · 신중</div></div>
+            <div class="belt-arrow">›</div>
+            <div class="belt"><div class="bar" style="background:#7a4a1e"></div><div class="nm">밤색</div><div class="gp">5단계 · 주도성·열정</div></div>
+            <div class="belt-arrow">›</div>
+            <div class="belt"><div class="bar" style="background:#d61e2e"></div><div class="nm">빨간색</div><div class="gp">6단계 · 용기·용서</div></div>
+            <div class="belt-arrow">›</div>
+            <div class="belt"><div class="bar" style="background:#111"></div><div class="nm">검정색</div><div class="gp">7단계 · 덕목 종합 (국기원 승품·단심사 대기)</div></div>
+          </div>
+          <p><b>③</b> 한 색상에 머무는 급수는 품 번호와 같다. 2품은 급 표식에 검정 1줄까지, 3품은 검정 2줄까지를 더하여 같은 색상 안의 순서를 구분하며, 4품 이상은 검정줄을 사용하지 않는다.</p>
+          <div class="callout blue"><b>2품 진행 예시</b><br>24급 흰색표식 → 22급 흰색표식+검정1줄 → 20급 노란색표식 → 18급 노란색표식+검정1줄 → ⋯ → 1급 검정표식</div>
+          <p><b>④</b> 제23조②의 <b>교과과정 TAPE System은 유품(단)자에게도 같이 적용</b>하며, <b>띠의 도장 이름 쪽에 붙인다.</b> 제2항의 급 표식과는 별개의 제도이다.</p>
+          <p><b>⑤</b> 승급심사 합격자에게는 <b>승급 상장</b>과 해당 급의 급 표식을 지급하며, 띠의 급 표식을 교체한다. 승급 상장은 <b>상장 형식의 실물 증서</b>로, 제28조의 전자승급증과는 별개로 발급한다.</p>
+          <p><b>⑥</b> 각 품의 1급(검정 표식)은 국기원 승품·단심사 응시 대상이 되며, 제30조에 따른다.</p>
         </div>
       </article>
 
@@ -1958,6 +1997,7 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
             <li><span class="hono">9.</span>제11조 ①항(3품 이상 중학생의 주 1회 등록)과 제24조 ⑤항(3품 이상 중학생의 승급심사 추천 기준 <b>16회</b> 및 지도사범 최종 추천)의 개정 사항은 <b class="amendTxt"></b>부터 시행합니다. <b>그 밖의 수련생의 승급심사 응시 자격(제24조 ③항)은 종전과 같습니다(두 달 이상·24회 이상 등 2가지 이상).</b> 시행일 현재 이미 16회 이상 수련하신 3품 이상 중학생도 추천 대상에 포함합니다.</li>
             <li><span class="hono">10.</span>제22조 ④항(겨루기 용품 필수 품목에 낭심 보호대와 마우스피스 추가)과 부록 4 겨루기 보호장비 표의 개정 사항은 <b class="amendTxt"></b>부터 시행합니다.</li>
             <li><span class="hono">11.</span>부록 5 「2. 수련 시간」과 「9. 단원 직제」(직제 기준을 대회·시범·행사 참석 횟수로 하고 기준 횟수를 준단원 4회, 정단원·선임 정단원·청소년 정단원 6회로 함)의 개정 사항은 <b class="amendTxt"></b>부터 시행합니다.</li>
+            <li><span class="hono">12.</span>제23조 ②③항(TAPE 붙이는 위치, 유급자 합격 시 색띠 지급)과 제23조의2(유품(단)자 승급과정) 신설은 <b class="amendTxt"></b>부터 시행합니다.</li>
           </ol>
           <div class="callout blue">이 규정의 <b>시행일은 문서를 마지막으로 고친 날</b>과 같습니다. 내용이 바뀌면 표지의 개정일과 위 시행일이 함께 갱신되므로, 지금 보고 계신 문서가 항상 최신본입니다. <small>(종전 규정 개정일 <span class="prevTxt"></span>)</small></div>
         </div>
