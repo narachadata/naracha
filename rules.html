@@ -280,7 +280,14 @@
    맨 위에 둔 이유: 새 버전이 나왔는지 확인할 때 파일 앞부분만 조금 받아 보기 위함. */
 var RULES_VER = (function(){
   try{ return document.querySelector('meta[name="doc-ver"]').content; }
-  catch(e){ return "v20261112.0002"; }
+  catch(e){
+    /* 예비값 — 위 meta 를 읽지 못할 때만 쓰인다(평소에는 타지 않는 길).
+       예전에는 여기에 버전 숫자를 손으로 적어 두었다. 그런데 위 안내대로 meta 하나만 고치면
+       이 숫자만 옛 버전에 남아, 2026년 10~11월에 여러 번 어긋났다(마지막엔 다섯 판 전 숫자).
+       이제 손으로 적지 않는다 — 이 스크립트 맨 위 「변경 이력」의 첫 버전을 읽는다.
+       ⚠ 그래서 변경 이력은 항상 최신 버전이 맨 위에 오게 적는다(지금까지 해 온 방식 그대로). */
+    try{ return (document.currentScript.textContent.match(/v\d{8}\.\d{4}/)||[""])[0]; }catch(e2){ return ""; }
+  }
 })();
 /* 문서 날짜는 RULES_VER 의 날짜 부분에서 자동으로 뽑는다.
    → 규정을 고치고 RULES_VER 만 올리면 표지의 개정일과 부칙의 시행일이 함께 바뀐다.
