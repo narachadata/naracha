@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="doc-ver" content="v20261120.0002">
+<meta name="doc-ver" content="v20261120.0003">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>나라차태권도 운영규정</title>
 <meta name="description" content="나라차태권도 분당도장 운영규정 — 제1장 총칙부터 부칙·부록까지 전문 수록 (반응형 웹 문서)">
@@ -23,6 +23,7 @@
 <script>
 /* 나라차태권도 운영규정 문서
    RULES_VER 은 날짜식 버전(camp.html 방식). index.html 의 v13.NN 과 무관.
+   v20261120.0003 — 부록 1 토요일 시간표: 표 폭을 줄이고(가운데 정렬 대신 왼쪽) 반 색상 안내를 표 오른쪽 빈칸으로 옮김 · 글자 키움 · 휴대폰은 위아래로
    v20261120.0002 — 수정 작업지시서(2026-11-20): 제23조 ②③·제23조의2 합니다체 / 제24조 ③ 1호 기산점(지난 승급심사 이후,
      이력 없으면 등록일 이후)·24회(24시간) / ⑤ 3품 이상 중·고등학생으로 확대·16회(16시간)·초등 제외 명시(판단 기준 문장 유지) /
      ⑥ 신설 「수련 1회 = 1시간」 / 제11조 ① 2호·표 아래 안내·제24조 ③ 괄호·도표 「중·고등학생」 / 제31조 ② 「알려 주시면 됩니다」 /
@@ -700,8 +701,25 @@ table.t td.lft{white-space:normal;text-align:left}
 .ttlegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:2px 2px 12px;font-size:.82em;color:var(--ink2);font-weight:700}
 .ttlegend span{display:inline-flex;align-items:center;gap:6px}
 .ttlegend i{width:15px;height:15px;border-radius:4px;border:1px solid rgba(0,0,0,.2);flex:0 0 auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+/* v20261120.0003 관장님: 토요일 표는 폭을 줄이고 반 색상 안내를 표 오른쪽 빈칸에 — 읽기 쉽게 글자 키움 */
+.ttsatrow{display:flex;gap:16px;align-items:stretch;margin:10px 0 14px}
+.ttsatrow .ttwrap-sat{flex:0 0 auto;width:min(460px,56%);margin:0}
+.ttg.ttsat{--ttT:118px;font-size:1em}
+.ttg.ttsat .ttx{min-height:60px}
+.ttg.ttsat .ttt{font-size:1em}
+.ttlegbox{flex:1 1 auto;min-width:0;background:#F7F8FA;border:1px solid #DDE1E8;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;justify-content:center}
+.ttlegh{font-weight:900;font-size:.98em;color:var(--ink,#1b1b1b);margin-bottom:10px}
+.ttlegbox .ttlegend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px 14px;margin:0;font-size:.95em;color:var(--ink,#1b1b1b)}
+.ttlegbox .ttlegend span{gap:8px;line-height:1.3}
+.ttlegbox .ttlegend i{width:18px;height:18px}
+@media print{ .ttsatrow{break-inside:avoid} }
+@media (max-width:640px){
+  .ttsatrow{flex-direction:column;gap:12px}
+  .ttsatrow .ttwrap-sat{width:100%}
+}
 @media (max-width:560px){
   .ttg{--ttT:76px;--ttC:88px;font-size:.8em}
+  .ttg.ttsat{--ttT:96px;font-size:.92em}
   .ttx{min-height:58px}
 }
 
@@ -2035,8 +2053,10 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
           <p class="note" id="ttNote">2026년 1월 19일부터 적용 · 표를 옆으로 밀어서 보실 수 있습니다.</p>
           <div class="ttwrap" id="ttWeek"></div>
           <p><b>토요일</b></p>
-          <div class="ttwrap ttwrap-sat" id="ttSat"></div>
-          <div class="ttlegend" id="ttLegend"></div>
+          <div class="ttsatrow">
+            <div class="ttwrap ttwrap-sat" id="ttSat"></div>
+            <div class="ttlegbox"><div class="ttlegh">반 색상 안내</div><div class="ttlegend" id="ttLegend"></div></div>
+          </div>
           <div class="callout blue">
             <b>연령 구분</b> — 킨더: 미취학 아동 5세~7세 · 초등주니어: 초등학교 1,2,3학년 · 초등시니어: 초등학교 4,5,6학년 · 청소년: 중·고등학교 1,2,3학년 · 성인: 만 19세 이상
           </div>
@@ -3088,6 +3108,9 @@ html.forcepc .viewpill{display:block;position:fixed;left:14px;bottom:18px;z-inde
    이 기기에서 마지막으로 본 버전(localStorage naracha_rules_notes_seen)과 다르면 한 번 띄운다.
    L 의 각 줄 = [쉬운 말 설명, 조문 앵커 id(없으면 '')] */
 var RULES_NOTES = [
+  {v:'v20261120.0003', d:'2026.11.20', t:'부록 1 토요일 시간표 보기 좋게', L:[
+    ['토요일 시간표의 폭을 줄이고, 반 색상 안내를 표 오른쪽 빈칸으로 옮겼습니다. 글자도 크게 해 읽기 쉽게 했습니다. (휴대폰에서는 표 아래에 보입니다)', 'gb1']
+  ]},
   {v:'v20261120.0002', d:'2026.11.20', t:'승급심사 기준 · 유품(단)자 승급과정 정리', L:[
     ['<b>3품 이상 중·고등학생</b>도 주 1회(월 4회) 등록과 승급심사 <b>16회(16시간)</b> 기준을 적용받습니다. 초등학생은 일반 기준(24회)을 따릅니다.', 'jo24'],
     ['승급심사 응시 기준을 <b>지난 승급심사 이후(심사 이력이 없으면 등록일 이후) 두 달 이상 · 24회(24시간) 이상</b>으로 분명히 했습니다.', 'jo24'],
