@@ -1005,7 +1005,7 @@
 <script>
 /* ================= 기본 설정 ================= */
 /* ── 앱 버전: 새 파일을 만들 때마다 자동 갱신됨. 기기들이 이 값을 비교해 새 버전을 감지 ── */
-var APP_VER = "v20261126.4479";   /* 4479: 동선 도우미 차수 머리에 [⤵ 앞에 새 차수] — 그 자리에 빈 차수를 넣고 뒤 차수 정류장을 한 칸씩 미룸(1차→2차→3차→4차, 이름·시간은 자리에 그대로, 옮긴 정류장 시간은 새 자리로 다시 계산) · 되돌리기가 차수 추가·삭제·끼워 넣기까지 복원 · 저장 확인이 1·2차만 보던 것을 모든 차수로 · 지도 아래 차수 색 안내도 바로 갱신 · 4478: 환불 창에 [🚪 그만둠 환불] — 도장 환불 원칙(납부 방법 그대로 전액 환불 + 이용한 날 캠프비·위약금(체육·레크 수업료 10%, 개시 7일 전까지·캠프팀 사정이면 없음, 영어 없음)·취소 안 되는 식사비는 재청구), 한꺼번에 기록·한꺼번에 되돌리기, 학부모 안내 문구 · 규정 제17조를 같은 원칙으로 · 신청 내용 수정 창에 «설문 답변(참고)» — 참여 원하는 날짜·식사 주의 메모 원문 · 4477: 주석 속 보호자 실명 예시를 ○○○로 가림(공개 저장소 개인정보 정리, 동작 변경 없음) · 4476: 동선 도우미 — [닫기]·창 바깥 클릭·Esc가 저장 안 된 배정을 묻지 않고 버려 «미배정»으로 돌아가던 문제: 저장 안 된 수정이 있으면 저장/버리기 확인, Esc는 옮기기·위치 지정만 취소, 저장 단추에 «저장 안 된 수정 N»(저장하면 사라짐) · 4475: 등록생 표 학교·생일·보호자·연락처 열을 처음에 접힌 채로(열 접기 단추로 펼침) · 4474: 분리 결제 안내 — 수업료 합계 위에 분리선 · 4473: 학적부 창 «💳 분리 결제 안내 복사» — 요청 가정만, 수업료(성남사랑·결제선생)와 식사비·차량비(계좌 입금)를 나눈 안내, 형제 함께·합계=캠프 총액 · 4472: 규정 — 차량은 신고된 어린이통학버스·안전교육 이수 명시, 식사는 개시 전 일괄 주문(확정 뒤엔 취소 안 되는 식사비만 공제), 영어=등록 학원 · 신청 [등록] 창의 참석일 달력이 «전 일정» 신청에서 모두 풀려 있던 문제 — 판정대로 전체 운영일 선택(저장하면 출석부 배치) · 4471: ①동선 요약 배지(1호차 N분·km)를 경로 위에서 지도 오른쪽 위 구석으로 — 길을 가리지 않게(클릭 통과), 구간 N분 라벨은 유지 ②표 끌어서 순서 바꾸기 개선 — 놓을 위치를 행 위/아래 절반으로 구분(파란 줄 표시)·놓으면 양쪽 차수 시간 자동 재계산 ③≡ 칸에 ▲▼ 한 칸 이동 단추(끌기 어려울 때) */   /* 4470: 규정 환불 조항을 항목별로(영어=학원법 반환 기준·달 단위, 체육·레크=소비자분쟁해결기준 10%, 식사=남은 날 실비, 차량=1/2 기준)·5일 이내 반환 · 차량 안전 조항을 실제 확인 절차(안전띠·승하차·잔류 확인)로 · 4469: 계절별 기준(2027 겨울부터) — 할인 기준 일수 여름 10일·겨울 20일, 차량비 여름 3만·겨울 4만(설정 > 요금에 계절별 칸) · 규정: 대상(여름 초1부터·겨울 그 해 초2 올라가는 학생부터), 결제는 계좌이체만, 우선 접수 일수=할인 기준 · 지난 캠프는 예전 값 그대로 · 4468: 규정 탭(설정 오른쪽, 관리자·선생님 공통) — 캠프 운영규정(장·조·항, 설정값 자동 반영, 검색·차례·인쇄) · 4467: 임시 날짜(planTmp) — 달력 확정/임시 선택·출석부 «?» 표시·확정 필요 목록·안내 문자 · 출석부 날짜 우클릭 메뉴(일일 출석부·인쇄·모두 출석·임시 확정·차량·식사·휴일·접기) · 4466: 차량 동선표 이미지 — 학생 이름은 한 줄(줄바꿈 없음), 긴 정류장 이름만 줄바꿈, 폭은 내용만큼 · 4465: 동선 도우미 차수(차량) 체계 — 보기 전환(전체/차수별 지도·표)·차수 추가 최대 4개(＋차수)·차량 이름(1호차·사범·관장 등)과 출발~복귀 시간 직접 수정(저장 시 보존)·📢 카톡 공지(날짜 고르면 그날 배치·결석 반영 명단, 문구 복사=한 줄 원칙+동선표 이미지 저장) */   /* 4464: 동선 표 시간 칸에 출발부터의 경과 시간(출발·＋N분) 표시 — 구간 분(↓앞에서)과 함께 누적도 한눈에 */   /* 4463: 동선 도우미 — ↩ 되돌리기(모든 편집 30단계·Ctrl+Z) · 네이버식 부드러움(핀 제자리 갱신·선은 바뀐 차수만 교체·새 경로 계산 중 직전 도로선 반투명 유지+«경로 계산 중» 표시·요청 350ms 디바운스) · 구간(핀→핀)마다 «N분» 라벨(지도·표 모두, 도로 구간시간×혼잡 계수) */   /* +도로 주행: 핀 사이를 실제 도로 경로로 계산·표시(OSRM), 요일·시간대 혼잡 계수로 시간 산정, 복귀 예상·경고도 도로 기준 · 추천 동선 ①굵게/②연하게 — 연한 선·버튼 누르면 채택, 직접 끌면 «내 동선» · 검색 결과는 도장 반경 6km 안만(지방 동명 방지) */   /* 4462: 동선 도우미 지도 조작 — 핀 모양 마커(끝점=정확 위치+이름 꼬리표)·핀 우클릭(이름 변경/핀 삭제/정류장 삭제)·빈 지도 우클릭 «여기에 정류장 추가»·표 ≡ 끌어서 순서 변경(시간 자동 재계산)·핀 클릭=행 강조, 행 번호 클릭=지도 이동·차수별 주행거리·검색 후보 임시 핀 · 검색 개편: 카카오 장소(키 연결 시)+네이버 주소 동시 병합, 입력 멈추면 자동 검색 */   /* 4461: 동선 도우미 전면 개편 — 전체화면·지도 주소/건물 검색(네이버 주소→보조→실패 표기)·표에서 시간/정류장명 직접 수정(시간 바꾸면 자동 재정렬)·탑승자 이동·정류장 추가/삭제·위치 전체 자동 찾기(설문 장소→핀→자동 추천)·신청 명단 전원 확인 배지·운행 모델(20km/h+정차 0.6분, 시간창 초과·300m 미만 경고)·저장=도우미 노선 교체(스냅샷), 다시 열면 이어서 수정 */   /* 4460: 동선 도우미 본지도를 네이버 지도로(ncpKeyId 공개키, 도메인 잠금) — 핀·동선·클릭 지정·끌기 동일, [🔎]는 네이버 주소 검색 우선 · 인증 실패/오프라인이면 보조 지도(OSM)로 자동 전환 */   /* 4459: ①등록생 표 할인 오른쪽 «할인 이유» 열 — 원생·지인·이전·특별 칩, 클릭하면 종류·자세한 내용 입력(이전 캠프 참가·형제 자동 감지로 미리 채움, 고르면 할인율 함께 저장) ②차량 «동선 도우미» — 지도(OSM)에 정류장 핀(수동 클릭·주소 자동 찾기·끌어서 보정, DB.stopGeo 재사용)·1차 09:15~35 먼 곳/2차 09:40~55 도장 근처 자동 분배·먼 곳부터 순서/시간 배치·정류장별 캠프생 묶음·지난 캠프 패턴(사용 횟수·보통 시간) 참고·장소 미입력자는 이전 캠프 정류장 추천·[노선 만들기]=추가만(스냅샷) */   /* 4458: 학적부 창에 참석일 달력(저장하면 출석부 배치 반영, 출결 기록 있는 날은 못 뺌)·일정 변경 안내 문자(변경 전후 일수·결석일·캠프비·추가 입금/환불) · 4457: 출석부 가로 이동 — 좌우 화살표 버튼·← → 키(한 주씩, Shift=한 화면), 끝에서는 화살표 숨김 · 4456: 지난 캠프 레벨에 «(지난 캠프 레벨)» 표시·[수정]은 레벨을 바꿨을 때만 저장(빈 값이 이어받은 레벨을 지우지 않음) · 신청 수정 창에 참석일 달력(기간 선택·개별 날짜) · [등록]을 누르면 학적부 창으로 등록(미납), 입금은 명단에서 완납 처리 · 4455: 지인 소개는 자동 할인하지 않음 — 친구와 함께 등록(동반)일 때만 관장님이 [수정]에서 판단, 소개 정보는 확인 표시 · 4454: 등록 안내 문자에 신청서의 일정 문구(결석일 등)와 참석일 · 연락처에 번호를 여러 개 적어도 하나라도 같으면 한 가정(형제) · 신청 문구에 날짜만 있으면 결석 날짜로 판정(설문이 결석일을 묻기 때문) — 요일만 있으면 확인 · 4453: 퇴관생도 원생 할인 대상 아님(설문 답변과 무관) · 4452: 휴관생은 원생 할인 대상 아님(설문 답변과 무관) · 4451: 신청 할인 대상 판정 — 도장 명단과 대조(재원 자동 20%·휴관/퇴관/명단 없음 확인 표시), 연속 할인은 직전 캠프 참석만 · 4450: 쿠폰 차감을 학생이 속한 캠프 기준으로 — 비교표에서 지난 캠프 수입이 줄어 보이던 문제 · 4449: 2027 겨울 이전 캠프 잠금 — 저장 직전 원본과 비교해 되돌림·삭제 금지·요금 고정 · 4448: 할인 기준 일수를 캠프별로(CAMP.set.minDays, 설정>캠프) — 비면 공통값·다른 캠프 학생은 그 캠프 기준으로 계산 · 4447: 판정 근거 문구 정리·휴대폰 세로 화면의 신청 알림 안내 · 4446: 신청 문구에서 참석일수 판정(결석·참석·요일·기간, 날짜만 있으면 판정 보류)·판정 날짜를 출석 배치에 반영·영어 레벨 추출·신청 문구 그대로 표시·식사 주의/학부모 메모/소개 학생/설문 등록 기준 표시 · 4445: 구글폼 신청을 캠프등록생 «신청 접수»에 자동 표시 — 등록비 계산·안내 문자·입금 확인 후 정식 등록, 응답 시트를 캠프마다 보관 · 4444: [보안] 캠프 학부모 코드 새로 만들 때 12자리 안전한 난수(기존 코드 유지) · 4443: [보안] 외부 라이브러리 SRI(html2canvas·leaflet) · 4442: 키가 서버에서 거절되면 저장본 대신 접속키 입력 화면(새로고침해도 유지, 자료는 그대로) · 4441: [보안] 주석 실명 익명화·noindex · 4440: [보안] 실제 캠프 명단·노선(SEED_*)을 공개 파일에서 삭제 — 자료는 캠프 서버에만, 검사용 사본은 비공개 저장소 · 4439: 등록·공지 설문 링크를 «캠프마다» 따로 보관(CAMP.set.surveyUrl) — 새 캠프 시작 창에 링크 입력칸 추가 · 지난 캠프 링크가 따라오지 않음 · 옛 링크 하드코딩 제거(비면 안내) · 운영 탭에 현재 캠프명과 복사 단추 · 예전 캠프는 DB.surveyUrl 그대로 사용 */   /* 4438: 인성 교육 경고는 다음 캠프일이 3일 이내일 때만 — 캠프 시작 전 준비 기간에는 조용히 (금→월 주말 안내는 유지) */   /* 4437: 달력 단추를 출석부 도구줄(리본) 오른쪽 끝으로(가로형) · 휴일 전면 적용 — 식사(행·합계·자동채움)/차량(stopRunsOn 관문·셀·합계·모바일)/기준일(campToday)/배치(추가 금지·회색 칸)/기본 등록일수·통계·레벨테스트 = 운영일(campOpDays) 기준 · 자동 새로고침에 입력 중 보호 */   /* 4436: 방학 표 겨울방학을 앞으로(1월=겨울, 겨울 칸에도 캠프 겹침 배지) · 설정>캠프에 휴일 입력칸(기간 중 운영 안 하는 날 지정, 출석부 우클릭과 같은 자료) · 출석부 상단 오른쪽 달력 단추(남은 일수 크게 + 전체 일수, 휴일 제외) */   /* 4435: 쿠폰 1일 수업료를 «실제 등록 금액» 기준으로 — 수업료·총액 직접 지정 학생도 정확히 (할인율·패키지는 기존대로) */   /* 4429: 쿠폰 자동 차감 — 다음 캠프 등록이 기준 일수를 채우면 청구에서 자동 차감·등록 안내에 표기·발행 목록에 사용됨 (+문구 ※·직계 조항·합계·콤마·원, 학부모앱 v.9) */
+var APP_VER = "v20261126.4480";   /* 4480: 동선 도우미 노란버스식 운영 — ① 정류장 관리(DB.busStops: 관장님이 이름·위치를 확정해 고정 보관, 모든 캠프 공통, 지우기는 묘비) → ② 노선(호차)에 확정 정류장 넣기(같은 정류장을 여러 호차에) → ③ 탑승자를 정류장에 배치 · 학부모가 적은 픽업 장소는 참고만(정류장 자동 생성 안 함, 신청서 장소 보고 등록은 이름을 직접 정함) · 옛 노선의 신청서 이름 정류장은 미확정 — 확정 단추 또는 저장 때 확인 · 맨 위 미배정 이름 배지 끌어 놓기·이름으로 찾기 · 위치는 정류장 이름 하나에 하나 · 노선 출발·복귀 시간 바꾸면 정류장 시간 다시 계산 · 노선 잠금 중 저장이 짧은 알림만 뜨고 안 되던 문제 — 분명히 묻고 관리자는 잠금 풀고 저장 · 빈 노선 정류장 보관(CAMP.busPlanPool) · 4479: 동선 도우미 차수 머리에 [⤵ 앞에 새 차수] — 그 자리에 빈 차수를 넣고 뒤 차수 정류장을 한 칸씩 미룸(1차→2차→3차→4차, 이름·시간은 자리에 그대로, 옮긴 정류장 시간은 새 자리로 다시 계산) · 되돌리기가 차수 추가·삭제·끼워 넣기까지 복원 · 저장 확인이 1·2차만 보던 것을 모든 차수로 · 지도 아래 차수 색 안내도 바로 갱신 · 4478: 환불 창에 [🚪 그만둠 환불] — 도장 환불 원칙(납부 방법 그대로 전액 환불 + 이용한 날 캠프비·위약금(체육·레크 수업료 10%, 개시 7일 전까지·캠프팀 사정이면 없음, 영어 없음)·취소 안 되는 식사비는 재청구), 한꺼번에 기록·한꺼번에 되돌리기, 학부모 안내 문구 · 규정 제17조를 같은 원칙으로 · 신청 내용 수정 창에 «설문 답변(참고)» — 참여 원하는 날짜·식사 주의 메모 원문 · 4477: 주석 속 보호자 실명 예시를 ○○○로 가림(공개 저장소 개인정보 정리, 동작 변경 없음) · 4476: 동선 도우미 — [닫기]·창 바깥 클릭·Esc가 저장 안 된 배정을 묻지 않고 버려 «미배정»으로 돌아가던 문제: 저장 안 된 수정이 있으면 저장/버리기 확인, Esc는 옮기기·위치 지정만 취소, 저장 단추에 «저장 안 된 수정 N»(저장하면 사라짐) · 4475: 등록생 표 학교·생일·보호자·연락처 열을 처음에 접힌 채로(열 접기 단추로 펼침) · 4474: 분리 결제 안내 — 수업료 합계 위에 분리선 · 4473: 학적부 창 «💳 분리 결제 안내 복사» — 요청 가정만, 수업료(성남사랑·결제선생)와 식사비·차량비(계좌 입금)를 나눈 안내, 형제 함께·합계=캠프 총액 · 4472: 규정 — 차량은 신고된 어린이통학버스·안전교육 이수 명시, 식사는 개시 전 일괄 주문(확정 뒤엔 취소 안 되는 식사비만 공제), 영어=등록 학원 · 신청 [등록] 창의 참석일 달력이 «전 일정» 신청에서 모두 풀려 있던 문제 — 판정대로 전체 운영일 선택(저장하면 출석부 배치) · 4471: ①동선 요약 배지(1호차 N분·km)를 경로 위에서 지도 오른쪽 위 구석으로 — 길을 가리지 않게(클릭 통과), 구간 N분 라벨은 유지 ②표 끌어서 순서 바꾸기 개선 — 놓을 위치를 행 위/아래 절반으로 구분(파란 줄 표시)·놓으면 양쪽 차수 시간 자동 재계산 ③≡ 칸에 ▲▼ 한 칸 이동 단추(끌기 어려울 때) */   /* 4470: 규정 환불 조항을 항목별로(영어=학원법 반환 기준·달 단위, 체육·레크=소비자분쟁해결기준 10%, 식사=남은 날 실비, 차량=1/2 기준)·5일 이내 반환 · 차량 안전 조항을 실제 확인 절차(안전띠·승하차·잔류 확인)로 · 4469: 계절별 기준(2027 겨울부터) — 할인 기준 일수 여름 10일·겨울 20일, 차량비 여름 3만·겨울 4만(설정 > 요금에 계절별 칸) · 규정: 대상(여름 초1부터·겨울 그 해 초2 올라가는 학생부터), 결제는 계좌이체만, 우선 접수 일수=할인 기준 · 지난 캠프는 예전 값 그대로 · 4468: 규정 탭(설정 오른쪽, 관리자·선생님 공통) — 캠프 운영규정(장·조·항, 설정값 자동 반영, 검색·차례·인쇄) · 4467: 임시 날짜(planTmp) — 달력 확정/임시 선택·출석부 «?» 표시·확정 필요 목록·안내 문자 · 출석부 날짜 우클릭 메뉴(일일 출석부·인쇄·모두 출석·임시 확정·차량·식사·휴일·접기) · 4466: 차량 동선표 이미지 — 학생 이름은 한 줄(줄바꿈 없음), 긴 정류장 이름만 줄바꿈, 폭은 내용만큼 · 4465: 동선 도우미 차수(차량) 체계 — 보기 전환(전체/차수별 지도·표)·차수 추가 최대 4개(＋차수)·차량 이름(1호차·사범·관장 등)과 출발~복귀 시간 직접 수정(저장 시 보존)·📢 카톡 공지(날짜 고르면 그날 배치·결석 반영 명단, 문구 복사=한 줄 원칙+동선표 이미지 저장) */   /* 4464: 동선 표 시간 칸에 출발부터의 경과 시간(출발·＋N분) 표시 — 구간 분(↓앞에서)과 함께 누적도 한눈에 */   /* 4463: 동선 도우미 — ↩ 되돌리기(모든 편집 30단계·Ctrl+Z) · 네이버식 부드러움(핀 제자리 갱신·선은 바뀐 차수만 교체·새 경로 계산 중 직전 도로선 반투명 유지+«경로 계산 중» 표시·요청 350ms 디바운스) · 구간(핀→핀)마다 «N분» 라벨(지도·표 모두, 도로 구간시간×혼잡 계수) */   /* +도로 주행: 핀 사이를 실제 도로 경로로 계산·표시(OSRM), 요일·시간대 혼잡 계수로 시간 산정, 복귀 예상·경고도 도로 기준 · 추천 동선 ①굵게/②연하게 — 연한 선·버튼 누르면 채택, 직접 끌면 «내 동선» · 검색 결과는 도장 반경 6km 안만(지방 동명 방지) */   /* 4462: 동선 도우미 지도 조작 — 핀 모양 마커(끝점=정확 위치+이름 꼬리표)·핀 우클릭(이름 변경/핀 삭제/정류장 삭제)·빈 지도 우클릭 «여기에 정류장 추가»·표 ≡ 끌어서 순서 변경(시간 자동 재계산)·핀 클릭=행 강조, 행 번호 클릭=지도 이동·차수별 주행거리·검색 후보 임시 핀 · 검색 개편: 카카오 장소(키 연결 시)+네이버 주소 동시 병합, 입력 멈추면 자동 검색 */   /* 4461: 동선 도우미 전면 개편 — 전체화면·지도 주소/건물 검색(네이버 주소→보조→실패 표기)·표에서 시간/정류장명 직접 수정(시간 바꾸면 자동 재정렬)·탑승자 이동·정류장 추가/삭제·위치 전체 자동 찾기(설문 장소→핀→자동 추천)·신청 명단 전원 확인 배지·운행 모델(20km/h+정차 0.6분, 시간창 초과·300m 미만 경고)·저장=도우미 노선 교체(스냅샷), 다시 열면 이어서 수정 */   /* 4460: 동선 도우미 본지도를 네이버 지도로(ncpKeyId 공개키, 도메인 잠금) — 핀·동선·클릭 지정·끌기 동일, [🔎]는 네이버 주소 검색 우선 · 인증 실패/오프라인이면 보조 지도(OSM)로 자동 전환 */   /* 4459: ①등록생 표 할인 오른쪽 «할인 이유» 열 — 원생·지인·이전·특별 칩, 클릭하면 종류·자세한 내용 입력(이전 캠프 참가·형제 자동 감지로 미리 채움, 고르면 할인율 함께 저장) ②차량 «동선 도우미» — 지도(OSM)에 정류장 핀(수동 클릭·주소 자동 찾기·끌어서 보정, DB.stopGeo 재사용)·1차 09:15~35 먼 곳/2차 09:40~55 도장 근처 자동 분배·먼 곳부터 순서/시간 배치·정류장별 캠프생 묶음·지난 캠프 패턴(사용 횟수·보통 시간) 참고·장소 미입력자는 이전 캠프 정류장 추천·[노선 만들기]=추가만(스냅샷) */   /* 4458: 학적부 창에 참석일 달력(저장하면 출석부 배치 반영, 출결 기록 있는 날은 못 뺌)·일정 변경 안내 문자(변경 전후 일수·결석일·캠프비·추가 입금/환불) · 4457: 출석부 가로 이동 — 좌우 화살표 버튼·← → 키(한 주씩, Shift=한 화면), 끝에서는 화살표 숨김 · 4456: 지난 캠프 레벨에 «(지난 캠프 레벨)» 표시·[수정]은 레벨을 바꿨을 때만 저장(빈 값이 이어받은 레벨을 지우지 않음) · 신청 수정 창에 참석일 달력(기간 선택·개별 날짜) · [등록]을 누르면 학적부 창으로 등록(미납), 입금은 명단에서 완납 처리 · 4455: 지인 소개는 자동 할인하지 않음 — 친구와 함께 등록(동반)일 때만 관장님이 [수정]에서 판단, 소개 정보는 확인 표시 · 4454: 등록 안내 문자에 신청서의 일정 문구(결석일 등)와 참석일 · 연락처에 번호를 여러 개 적어도 하나라도 같으면 한 가정(형제) · 신청 문구에 날짜만 있으면 결석 날짜로 판정(설문이 결석일을 묻기 때문) — 요일만 있으면 확인 · 4453: 퇴관생도 원생 할인 대상 아님(설문 답변과 무관) · 4452: 휴관생은 원생 할인 대상 아님(설문 답변과 무관) · 4451: 신청 할인 대상 판정 — 도장 명단과 대조(재원 자동 20%·휴관/퇴관/명단 없음 확인 표시), 연속 할인은 직전 캠프 참석만 · 4450: 쿠폰 차감을 학생이 속한 캠프 기준으로 — 비교표에서 지난 캠프 수입이 줄어 보이던 문제 · 4449: 2027 겨울 이전 캠프 잠금 — 저장 직전 원본과 비교해 되돌림·삭제 금지·요금 고정 · 4448: 할인 기준 일수를 캠프별로(CAMP.set.minDays, 설정>캠프) — 비면 공통값·다른 캠프 학생은 그 캠프 기준으로 계산 · 4447: 판정 근거 문구 정리·휴대폰 세로 화면의 신청 알림 안내 · 4446: 신청 문구에서 참석일수 판정(결석·참석·요일·기간, 날짜만 있으면 판정 보류)·판정 날짜를 출석 배치에 반영·영어 레벨 추출·신청 문구 그대로 표시·식사 주의/학부모 메모/소개 학생/설문 등록 기준 표시 · 4445: 구글폼 신청을 캠프등록생 «신청 접수»에 자동 표시 — 등록비 계산·안내 문자·입금 확인 후 정식 등록, 응답 시트를 캠프마다 보관 · 4444: [보안] 캠프 학부모 코드 새로 만들 때 12자리 안전한 난수(기존 코드 유지) · 4443: [보안] 외부 라이브러리 SRI(html2canvas·leaflet) · 4442: 키가 서버에서 거절되면 저장본 대신 접속키 입력 화면(새로고침해도 유지, 자료는 그대로) · 4441: [보안] 주석 실명 익명화·noindex · 4440: [보안] 실제 캠프 명단·노선(SEED_*)을 공개 파일에서 삭제 — 자료는 캠프 서버에만, 검사용 사본은 비공개 저장소 · 4439: 등록·공지 설문 링크를 «캠프마다» 따로 보관(CAMP.set.surveyUrl) — 새 캠프 시작 창에 링크 입력칸 추가 · 지난 캠프 링크가 따라오지 않음 · 옛 링크 하드코딩 제거(비면 안내) · 운영 탭에 현재 캠프명과 복사 단추 · 예전 캠프는 DB.surveyUrl 그대로 사용 */   /* 4438: 인성 교육 경고는 다음 캠프일이 3일 이내일 때만 — 캠프 시작 전 준비 기간에는 조용히 (금→월 주말 안내는 유지) */   /* 4437: 달력 단추를 출석부 도구줄(리본) 오른쪽 끝으로(가로형) · 휴일 전면 적용 — 식사(행·합계·자동채움)/차량(stopRunsOn 관문·셀·합계·모바일)/기준일(campToday)/배치(추가 금지·회색 칸)/기본 등록일수·통계·레벨테스트 = 운영일(campOpDays) 기준 · 자동 새로고침에 입력 중 보호 */   /* 4436: 방학 표 겨울방학을 앞으로(1월=겨울, 겨울 칸에도 캠프 겹침 배지) · 설정>캠프에 휴일 입력칸(기간 중 운영 안 하는 날 지정, 출석부 우클릭과 같은 자료) · 출석부 상단 오른쪽 달력 단추(남은 일수 크게 + 전체 일수, 휴일 제외) */   /* 4435: 쿠폰 1일 수업료를 «실제 등록 금액» 기준으로 — 수업료·총액 직접 지정 학생도 정확히 (할인율·패키지는 기존대로) */   /* 4429: 쿠폰 자동 차감 — 다음 캠프 등록이 기준 일수를 채우면 청구에서 자동 차감·등록 안내에 표기·발행 목록에 사용됨 (+문구 ※·직계 조항·합계·콤마·원, 학부모앱 v.9) */
 
 var NARACHA_LOGO = "data:image/png;base64,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";
 var CLASSIC_LOGO = "data:image/png;base64,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";
@@ -8088,6 +8088,7 @@ function vBus(){
    저장·재수정·명단 검산·운행 모델(20km/h+정차 0.6분, 시간창·300m 경고)은 v4461과 동일. */
 var BP_W1=["09:15","09:35"], BP_W2=["09:40","09:55"], BP_W3=["10:00","10:20"], BP_W4=["10:25","10:45"];
 var BP_COLORS={1:"#2B5CAB",2:"#1E7B3C",3:"#7A4FBF",4:"#C2410C"};
+var BP_POOL_COLOR="#8A8F98";   /* 4480: 정류장 목록(어느 차수에도 안 넣은 정류장) 핀 색 */
 function bpDefWaves(){
   return [ {w:1,label:"1호차",s:BP_W1[0],e:BP_W1[1]}, {w:2,label:"2호차",s:BP_W2[0],e:BP_W2[1]} ];
 }
@@ -8313,11 +8314,147 @@ function bpWaveStops(w){
   return UI.bp.d.stops.filter(function(o){ return o.wave===w; })
     .sort(function(a,b){ return a.seq-b.seq; });
 }
+/* 4480: 정류장 관리(고정 보관) — 노란버스식 «① 정류장(이름·위치) → ② 노선(호차)에 정류장 배치 → ③ 탑승자를 정류장에 배치».
+   DB.busStops = [{id, name, _t, del}] 모든 캠프 공통 정류장 명부(위치는 DB.stopGeo[이름] 그대로 사용).
+   지우기는 묘비(del:true + _t) — 목록에서 그냥 빼지 않는다. 노선(차수)의 정류장은 명부의 정류장을 «넣은» 것(같은 정류장을 여러 호차에 넣을 수 있음). */
+function BSTOPS(){ if(!DB.busStops) DB.busStops=[]; return DB.busStops; }
+function bsLive(){ return BSTOPS().filter(function(x){ return !x.del; }).sort(function(a,b){ return String(a.name).localeCompare(String(b.name),"ko"); }); }
+function bsByName(nm){ nm=bpNorm(nm); var h=null; BSTOPS().forEach(function(x){ if(!h && !x.del && bpNorm(x.name)===nm) h=x; }); return h; }
+function bsById(id){ var h=null; BSTOPS().forEach(function(x){ if(!h && x.id===id) h=x; }); return h; }
+function bsAdd(nm){
+  nm=bpNorm(nm); if(!nm) return null;
+  var e=bsByName(nm); if(e) return e;
+  var dead=null; BSTOPS().forEach(function(x){ if(!dead && x.del && bpNorm(x.name)===nm) dead=x; });
+  if(dead){ delete dead.del; dead._t=Date.now(); return dead; }
+  e={ id:"bs"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), name:nm, _t:Date.now() };
+  BSTOPS().push(e); return e;
+}
+function bsUses(nm){ nm=bpNorm(nm); return ((UI.bp && UI.bp.d && UI.bp.d.stops)||[]).filter(function(o){ return o.wave && bpNorm(o.name)===nm; }); }
+/* 지도·목록에 쓰는 명부 정류장(가짜 정류장 객체 — k="rs_"+id, 탑승자 없음) */
+function bpPoolStops(){
+  return bsLive().map(function(e){
+    var g=STOPGEO()[bpNorm(e.name)];
+    return { k:"rs_"+e.id, id:e.id, name:e.name, lat:g?g.lat:null, lng:g?g.lng:null, riders:[], wave:0, rs:true,
+             d:g? bpDist({lat:g.lat,lng:g.lng},bpDojang()) : null };
+  });
+}
+function bsRenameCore(e,v){
+  var old=e.name;
+  e.name=v; e._t=Date.now();
+  var g=STOPGEO()[bpNorm(old)]; if(g && !STOPGEO()[bpNorm(v)]) STOPGEO()[bpNorm(v)]={lat:g.lat,lng:g.lng};
+  ((UI.bp && UI.bp.d && UI.bp.d.stops)||[]).forEach(function(o){ if(bpNorm(o.name)===bpNorm(old)) o.name=v; });
+}
+function bsRenameUI(id,v){
+  var e=bsById(id); v=bpNorm(v); if(!e || !v || v===e.name){ bpRe(); return; }
+  if(bsByName(v)){ showToast("«"+v+"»은 이미 등록된 정류장입니다"); bpRe(); return; }
+  bpSnap(); bsRenameCore(e,v); saveLocal();
+  showToast("✏️ 정류장 이름을 «"+v+"»으로 바꿨습니다 (노선에 넣은 곳도 함께)");
+  bpRe();
+}
+function bsDelUI(id){
+  var e=bsById(id); if(!e) return;
+  var uses=bsUses(e.name), rN=uses.reduce(function(n,o){ return n+o.riders.length; },0);
+  if(!confirm("«"+e.name+"» 정류장을 정류장 관리에서 지울까요?"+
+      (uses.length?"\n\n· 노선 "+uses.map(function(o){ return bpWaveLabel(o.wave); }).join("·")+"에서도 빠집니다."+(rN?"\n· 탑승자 "+rN+"명은 «미배정»으로 내려갑니다.":""):""))) return;
+  bpSnap();
+  uses.forEach(function(o){ o.riders.forEach(function(sid){ UI.bp.d.un.push({sid:sid, rec:o.name}); }); });
+  var ws={}; uses.forEach(function(o){ ws[o.wave]=1; });
+  UI.bp.d.stops=UI.bp.d.stops.filter(function(o){ return uses.indexOf(o)<0; });
+  Object.keys(ws).forEach(function(w){ bpRetime(Number(w)); });
+  e.del=true; e._t=Date.now();                     /* 묘비 — 다른 기기 사본과 합쳐져도 되살아나지 않게 */
+  saveLocal(); bpRe();
+}
+/* 명부 정류장 → 호차에 넣기 */
+function bsToWave(id,w){
+  var e=bsById(id); if(!e) return;
+  if(bpWaveStops(w).some(function(o){ return bpNorm(o.name)===bpNorm(e.name); })){ showToast("«"+e.name+"»은 이미 "+bpWaveLabel(w)+" 노선에 있습니다"); return; }
+  bpSnap();
+  var o=bpNewStop(e.name); o.wave=w; o.seq=(++_bpOrd); UI.bp.d.stops.push(o);
+  bpRetime(w);
+  showToast("🚌 «"+e.name+"» → "+bpWaveLabel(w)+" 노선"+(o.lat===null?" — 📍 위치를 먼저 정해 주세요":""));
+  bpRe();
+}
+/* 명부 정류장 줄에 이름 배지를 놓으면: 그 정류장을 넣은 호차가 하나면 거기, 여럿이면 묻고, 없으면 안내 */
+function bsDropSid(ev,id){
+  ev.preventDefault(); ev.stopPropagation(); ev.currentTarget.style.boxShadow="";
+  var bx=ev.currentTarget.closest && ev.currentTarget.closest("[data-bpdrop]"); if(bx) bx.style.outline="";
+  var sid=UI.bp.dragSid; UI.bp.dragSid=null; UI.bp.dragK=null;
+  var e=bsById(id); if(!sid || !e){ bpRe(); return; }
+  var uses=bsUses(e.name).sort(function(a,b){ return a.wave-b.wave; });
+  if(!uses.length){ showToast("«"+e.name+"»은 아직 어느 노선에도 없습니다 — 먼저 [＋호차] 단추로 노선에 넣어 주세요"); bpRe(); return; }
+  var o=uses[0];
+  if(uses.length>1){
+    var ans=prompt("«"+e.name+"»은 여러 노선에 있습니다. 몇 번째에 태울까요?\n"+uses.map(function(x,i){ return (i+1)+") "+bpWaveLabel(x.wave)+(x.t?" "+x.t:""); }).join("\n"), "1");
+    var i=Number(ans)-1; if(!(i>=0 && i<uses.length)){ bpRe(); return; } o=uses[i];
+  }
+  bpAssignTo(sid,o); bpRe();
+}
+/* 참고 장소와 이름이 같은 «확정된» 노선 정류장(정류장 관리에 등록 + 노선에 들어 있음) */
+function bpRecStop(rec){
+  rec=bpNorm(rec); if(!rec || !bsByName(rec)) return null;
+  var u=bsUses(rec); return u.length===1? u[0] : null;
+}
+/* 노선 정류장 확정 — 옛 노선(신청서 이름 그대로 만든 정류장)을 정류장 관리에 올림. 이름을 고칠 수 있음 */
+function bpConfirmStop(ki){
+  var o=bpStopByK((UI.bp.keys||[])[ki]); if(!o) return;
+  var nm=prompt("정류장 이름을 확정합니다 (고쳐도 됩니다)\n지금 이름: "+o.name, o.name); if(!nm || !bpNorm(nm)) return;
+  nm=bpNorm(nm);
+  bpSnap();
+  var old=o.name;
+  if(nm!==old){
+    var g=STOPGEO()[bpNorm(old)]; if(g && !STOPGEO()[nm]) STOPGEO()[nm]={lat:g.lat,lng:g.lng};
+    UI.bp.d.stops.forEach(function(x){ if(bpNorm(x.name)===bpNorm(old)){ x.name=nm; var g2=STOPGEO()[nm]; if(g2){ x.lat=g2.lat; x.lng=g2.lng; } } });
+  }
+  bsAdd(nm); saveLocal();
+  showToast("✔ «"+nm+"» 정류장을 확정했습니다");
+  bpRe();
+}
+/* 신청서 장소(참고)를 보고 정류장 등록 — 이름은 관장님이 정함 */
+function bsAddFromRef(v){
+  if(!v){ return; }
+  var nm=prompt("정류장 이름을 정해 주세요 (신청서에 적힌 장소: "+v+")", v); if(!nm || !bpNorm(nm)){ bpRe(); return; }
+  if(bsByName(nm)){ showToast("«"+bpNorm(nm)+"»은 이미 등록된 정류장입니다"); bpRe(); return; }
+  bpSnap(); var e=bsAdd(nm); saveLocal();
+  if(!STOPGEO()[bpNorm(nm)]){ UI.bp.pick="rs_"+e.id; showToast("📍 «"+e.name+"» 등록 — 지도를 클릭해 위치를 찍거나 위 검색창에서 찾아 주세요"); }
+  else showToast("📍 «"+e.name+"» 등록 — [＋호차]로 노선에 넣으세요");
+  bpRe();
+}
+function bpRemoveInst(o){
+  if(!o) return false;
+  if(o.riders.length && !confirm("«"+o.name+"»을 "+bpWaveLabel(o.wave)+" 노선에서 뺄까요?\n탑승자 "+o.riders.length+"명은 «미배정»으로 내려갑니다. (정류장은 정류장 관리에 그대로 남습니다)")) return false;
+  bpSnap();
+  o.riders.forEach(function(sid){ UI.bp.d.un.push({sid:sid, rec:o.name}); });
+  var w=o.wave;
+  UI.bp.d.stops=UI.bp.d.stops.filter(function(x){ return x!==o; });
+  bpRetime(w);
+  return true;
+}
+function bpRetime(w){ if(!w) return; var ord=bpWaveStops(w); if(ord.length){ bpTimesFor(ord,bpWin(w)); bpTimesRouted(w); } }
+function bpStopOfSid(sid){ var hit=null; UI.bp.d.stops.forEach(function(o){ if(!hit && o.riders.indexOf(sid)>=0) hit=o; }); return hit; }
+/* 저장한 정류장 목록(노선에 안 들어간 정류장·빈 정류장)을 다시 열 때 되살림 */
+function bpPoolRestore(){
+  var d=UI.bp && UI.bp.d; if(!d) return;
+  (CAMP.busPlanPool||[]).forEach(function(it){
+    var nm=bpNorm(it && it.name); if(!nm) return;
+    var w=Number(it.wave)||0;
+    if(!w || !d.waves.some(function(x){ return x.w===w; })){ bsAdd(nm); return; }   /* 노선 없는 정류장은 명부에만 */
+    var dup=d.stops.some(function(o){ return bpNorm(o.name)===nm && o.wave===w; });
+    if(dup) return;
+    var o=bpNewStop(nm); o.wave=w; o.t=w?(it.t||""):"";
+    (it.riders||[]).forEach(function(sid){
+      var st=bpStuOf(sid);
+      if(!st || !st.bus || bpStopOfSid(sid)) return;
+      d.un=d.un.filter(function(x){ return x.sid!==sid; });
+      o.riders.push(sid);
+    });
+    d.stops.push(o);
+  });
+}
 /* ── 되돌리기: 편집 직전 상태를 쌓아 두고 ↩/Ctrl+Z 로 복원 (최근 30단계) ── */
 function bpSnap(){
   var d=UI.bp && UI.bp.d; if(!d) return;
   var geo={};
-  d.stops.forEach(function(o){
+  d.stops.concat(BSTOPS()).forEach(function(o){
     var g=STOPGEO()[bpNorm(o.name)];
     geo[bpNorm(o.name)]=g? {lat:g.lat,lng:g.lng} : null;
   });
@@ -8325,6 +8462,7 @@ function bpSnap(){
     stops:d.stops.map(function(o){ return {k:o.k,name:o.name,lat:o.lat,lng:o.lng,fail:!!o.fail,wave:o.wave,t:o.t,seq:o.seq,riders:o.riders.slice()}; }),
     un:d.un.map(function(x){ return {sid:x.sid,rec:x.rec}; }),
     waves:JSON.parse(JSON.stringify(d.waves||[])),          /* 4479: 차수 추가·삭제·끼워 넣기도 되돌리기 */
+    reg:JSON.parse(JSON.stringify(BSTOPS())),                /* 4480: 정류장 관리(등록·이름·지우기)도 되돌리기 */
     geo:geo }));
   if(UI.bp.undo.length>30) UI.bp.undo.shift();
   UI.bp.dirty=(UI.bp.dirty||0)+1;          /* 저장 안 된 편집 수 — 닫을 때 확인 */
@@ -8346,6 +8484,7 @@ function bpUndo(){
   if(!u || !u.length){ showToast("되돌릴 편집이 없습니다"); return; }
   var st=JSON.parse(u.pop());
   UI.bp.d.stops=st.stops; UI.bp.d.un=st.un;
+  if(st.reg){ DB.busStops=st.reg; saveLocal(); }
   if(st.waves && st.waves.length){
     UI.bp.d.waves=st.waves;
     if(UI.bp.view && !st.waves.some(function(x){ return x.w===UI.bp.view; })) UI.bp.view=0;
@@ -8433,6 +8572,8 @@ function bpWaveSetMeta(w,f,v){
     var mm=String(v||"").match(/(\d{1,2})\s*[:;.]?\s*(\d{2})/);
     if(!mm){ showToast("시간은 9:15 처럼 적어 주세요"); bpRe(); return; }
     bpSnap(); m[f]=bpT(Number(mm[1])*60+Number(mm[2]));
+    /* 4480: 출발·복귀 시간을 바꾸면 그 차수 정류장 시간도 새 시간에 맞춰 다시 계산 (순서는 그대로) */
+    if(bpWaveStops(w).length){ bpRetime(w); showToast("🕘 "+m.label+" 정류장 시간을 "+m.s+" 출발 기준으로 다시 계산했습니다"); }
   }
   bpRe();
 }
@@ -8440,27 +8581,19 @@ function bpView(w){ UI.bp.view=w; UI.bp._fitDone=false; bpRe(); }
 function bpAutoBtn(){ bpSnap(); bpWaves().forEach(function(wm){ bpAutoArrange(wm.w); }); bpRe(); }
 /* ── 초안 만들기 ── */
 function bpDraftAuto(){
-  var pat=bpPrevPat(), map={}, un=[];
-  bpRiders().forEach(function(s){
-    var nm=bpNorm(s.stop);
-    if(!nm){
-      var rec="", h=historyOf(s);
-      for(var i=h.length-1;i>=0;i--){ if(h[i].s && h[i].s.stop){ rec=bpNorm(h[i].s.stop); break; } }
-      un.push({sid:s.id, rec:rec});
-      return;
-    }
-    if(!map[nm]) map[nm]=bpNewStop(nm);
-    map[nm].riders.push(s.id);
-  });
-  var stops=Object.keys(map).sort().map(function(k){ return map[k]; });
-  stops.forEach(function(o){
-    var p=pat[bpNorm(o.name)];
-    o.wave = (o.lat!==null) ? (bpDist(o,bpDojang())<=1.0?2:1)
-           : (p && p.tMed ? (p.tMed>=bpMin("09:38")?2:1) : 1);
-  });
-  UI.bp.d={ stops:stops, un:un, from:"auto",
+  /* 4480: 학부모가 적은 픽업 장소(s.stop)는 «참고»만 — 정류장을 자동으로 만들지 않는다.
+     모두 미배정으로 두고, 관장님이 정류장 관리에서 이름·위치를 확정 → 노선에 넣기 → 탑승자 배치. */
+  var un=[];
+  bpRiders().forEach(function(s){ un.push({sid:s.id, rec:bpRefOf(s)}); });
+  UI.bp.d={ stops:[], un:un, from:"auto",
     waves:(CAMP.busPlanWaves && CAMP.busPlanWaves.length ? JSON.parse(JSON.stringify(CAMP.busPlanWaves)) : bpDefWaves()) };
-  UI.bp.d.waves.forEach(function(wm){ bpAutoArrange(wm.w); });
+}
+/* 참고 장소: 신청서(학부모)에 적은 장소, 없으면 지난 캠프 정류장 */
+function bpRefOf(s){
+  var nm=bpNorm(s && s.stop); if(nm) return nm;
+  var h=historyOf(s);
+  for(var i=h.length-1;i>=0;i--){ if(h[i].s && h[i].s.stop) return bpNorm(h[i].s.stop); }
+  return "";
 }
 function bpHelperRoutes(){
   return ROUTES().filter(function(r){ return r.dir==="등원" && String(r.name).indexOf("동선 도우미")>=0; });
@@ -8537,16 +8670,12 @@ function bpMoveBefore(dragK,targetK,after){
   var ord=bpWaveStops(tg.wave).filter(function(o){ return o!==d; });
   ord.splice(ord.indexOf(tg)+(after?1:0),0,d);
   ord.forEach(function(o){ o.seq=(++_bpOrd); });
-  bpTimesFor(ord,bpWin(tg.wave));
-  bpTimesRouted(tg.wave);
-  if(srcWave!==tg.wave){
-    var rest=bpWaveStops(srcWave);
-    if(rest.length){ bpTimesFor(rest,bpWin(srcWave)); bpTimesRouted(srcWave); }
-  }
+  if(tg.wave){ bpTimesFor(ord,bpWin(tg.wave)); bpTimesRouted(tg.wave); } else d.t="";
+  if(srcWave!==tg.wave) bpRetime(srcWave);
 }
 /* ▲▼ 한 칸 이동 — 끌기가 불편할 때 확실한 방법 */
 function bpNudge(ki,dir){
-  var o=bpStopByK((UI.bp.keys||[])[ki]); if(!o) return;
+  var o=bpStopByK((UI.bp.keys||[])[ki]); if(!o || !o.wave) return;
   var ord=bpWaveStops(o.wave), i=ord.indexOf(o), j=i+dir;
   if(j<0 || j>=ord.length) return;
   bpSnap();
@@ -8556,7 +8685,7 @@ function bpNudge(ki,dir){
   bpRe();
 }
 function bpDragStart(ev,ki){
-  UI.bp.dragK=(UI.bp.keys||[])[ki];
+  UI.bp.dragK=(UI.bp.keys||[])[ki]; UI.bp.dragSid=null;
   try{
     ev.dataTransfer.setData("text/plain","bp");
     ev.dataTransfer.effectAllowed="move";
@@ -8573,14 +8702,131 @@ function bpDragOver(ev){
 }
 function bpDragLeave(ev){ ev.currentTarget.style.boxShadow=""; }
 function bpDrop(ev,ki){
-  ev.preventDefault();
+  ev.preventDefault(); ev.stopPropagation();      /* 차수 칸(바깥) 놓기 처리기까지 가지 않게 */
   var tr=ev.currentTarget, r=tr.getBoundingClientRect();
   var after=(ev.clientY-r.top)>r.height/2;
   tr.style.boxShadow="";
+  var bx=tr.closest && tr.closest("[data-bpdrop]"); if(bx) bx.style.outline="";
   var tk=(UI.bp.keys||[])[ki];
-  if(UI.bp.dragK && tk){ bpMoveBefore(UI.bp.dragK,tk,after); }
-  UI.bp.dragK=null;
+  if(UI.bp.dragSid && tk){ bpAssignTo(UI.bp.dragSid, bpStopByK(tk)); }
+  else if(UI.bp.dragK && tk){ bpMoveBefore(UI.bp.dragK,tk,after); }
+  UI.bp.dragK=null; UI.bp.dragSid=null;
   bpRe();
+}
+/* 4480: 이름 배지 끌기 — 정류장 줄에 놓으면 그 정류장, 차수 칸에 놓으면 그 차수의 정류장(이름 확인) */
+function bpSidDrag(ev,sid){
+  ev.stopPropagation();
+  UI.bp.dragSid=sid; UI.bp.dragK=null;
+  try{ ev.dataTransfer.setData("text/plain","sid"); ev.dataTransfer.effectAllowed="move"; }catch(e){}
+}
+function bpAssignTo(sid,o){
+  if(!o || !sid) return;
+  if(o.riders.indexOf(sid)>=0){ UI.bp.moveSid=null; return; }
+  bpSnap();
+  bpDetach(sid); o.riders.push(sid); UI.bp.moveSid=null;
+  var s=bpStuOf(sid);
+  showToast("✓ "+(s?s.name:"")+" → «"+o.name+"»"+(o.wave?" ("+bpWaveLabel(o.wave)+")":" — 정류장 목록(아직 차수 없음)"));
+}
+function bpBoxOver(ev){
+  if(!(UI.bp.dragSid||UI.bp.dragK)) return;
+  ev.preventDefault();
+  try{ ev.dataTransfer.dropEffect="move"; }catch(e){}
+  ev.currentTarget.style.outline="2px dashed var(--blue)";
+}
+function bpBoxLeave(ev){
+  if(ev.relatedTarget && ev.currentTarget.contains(ev.relatedTarget)) return;
+  ev.currentTarget.style.outline="";
+}
+/* 차수 칸에 놓기 */
+function bpDropOnWave(ev,w){
+  ev.preventDefault(); ev.currentTarget.style.outline="";
+  var sid=UI.bp.dragSid, k=UI.bp.dragK; UI.bp.dragSid=null; UI.bp.dragK=null;
+  if(k){
+    var o=bpStopByK(k);
+    if(o && o.wave!==w){ bpSnap(); var src=o.wave; o.wave=w; o.seq=(++_bpOrd); bpRetime(w); bpRetime(src);
+      showToast("🚌 «"+o.name+"» → "+bpWaveLabel(w)); }
+  } else if(sid) bpSidToWave(sid,w);
+  bpRe();
+}
+function bpSidToWave(sid,w){
+  var s=bpStuOf(sid); if(!s) return;
+  var ord=bpWaveStops(w);
+  if(!ord.length){ showToast(bpWaveLabel(w)+" 노선에 정류장이 없습니다 — 먼저 정류장 관리에서 정류장을 넣어 주세요"); return; }
+  var o=ord[0];
+  if(ord.length>1){
+    var ref=bpRefOf(s), di=-1;
+    ord.forEach(function(x,i){ if(di<0 && bpNorm(x.name)===ref) di=i; });
+    var ans=prompt("«"+s.name+"» 학생을 "+bpWaveLabel(w)+"의 어느 정류장에 태울까요? (번호)\n"+(ref?"(신청서 참고: "+ref+")\n":"")+
+      ord.map(function(x,i){ return (i+1)+") "+x.name+(x.t?" "+x.t:""); }).join("\n"), String(di>=0?di+1:1));
+    var i=Number(ans)-1; if(!(i>=0 && i<ord.length)) return; o=ord[i];
+  }
+  bpAssignTo(sid,o);
+}
+/* 정류장 관리 칸에 놓기: 노선 정류장 = 그 노선에서 빼기(명부엔 남음), 학생 = 정류장 줄 위에 놓도록 안내 */
+function bpDropOnPool(ev){
+  ev.preventDefault(); ev.currentTarget.style.outline="";
+  var sid=UI.bp.dragSid, k=UI.bp.dragK; UI.bp.dragSid=null; UI.bp.dragK=null;
+  if(k){ var o=bpStopByK(k); if(o && o.wave && bpRemoveInst(o)) showToast("«"+o.name+"»을 노선에서 뺐습니다 — 정류장 관리에는 남아 있습니다"); }
+  else if(sid) showToast("정류장 줄 위에 놓아 주세요");
+  bpRe();
+}
+/* 미배정 칸에 놓기 = 배정 풀기 */
+function bpDropOnUn(ev){
+  ev.preventDefault(); ev.currentTarget.style.outline="";
+  var sid=UI.bp.dragSid; UI.bp.dragSid=null; UI.bp.dragK=null;
+  if(sid && !(UI.bp.d.un||[]).some(function(x){ return x.sid===sid; })){
+    var cur=bpStopOfSid(sid);
+    bpSnap(); bpDetach(sid); UI.bp.d.un.push({sid:sid, rec:cur?cur.name:""});
+  }
+  bpRe();
+}
+/* 차수 머리 [＋ 정류장 넣기] — 정류장 목록·지난 캠프 정류장·새 정류장 */
+function bpPutStop(w,v){
+  if(!v){ return; }
+  var o=null;
+  if(v==="new"){
+    var nm=prompt("새 정류장 이름 — "+bpWaveLabel(w)+"에 바로 넣습니다"); if(!nm || !bpNorm(nm)){ bpRe(); return; }
+    bpSnap(); bsAdd(nm); o=bpNewStop(nm); UI.bp.d.stops.push(o);
+  } else if(v.indexOf("r:")===0){
+    var e=bsById(v.slice(2)); if(!e){ bpRe(); return; }
+    bsToWave(e.id,w); return;
+  } else if(v.indexOf("k:")===0){
+    o=bpStopByK(v.slice(2)); if(!o){ bpRe(); return; }
+    bpSnap();
+  } else if(v.indexOf("n:")===0){
+    bpSnap(); bsAdd(v.slice(2)); o=bpNewStop(v.slice(2)); UI.bp.d.stops.push(o);
+  } else { bpRe(); return; }
+  var src=o.wave; o.wave=w; o.seq=(++_bpOrd);
+  bpRetime(w); if(src!==w) bpRetime(src);
+  if(o.lat===null){ UI.bp.pick=o.k; showToast("🚌 «"+o.name+"» → "+bpWaveLabel(w)+" — 📍 지도를 클릭해 위치를 찍어 주세요"); }
+  else showToast("🚌 «"+o.name+"» → "+bpWaveLabel(w));
+  bpRe();
+}
+/* 4480: 이름으로 찾기 — 입력 중에는 결과 칸만 바꿈(한글 입력 중 전체 다시 그리기 금지) */
+function bpNameKey(v){
+  UI.bp.nameQ=v;
+  var b=document.getElementById("bpNameRes"); if(b) b.innerHTML=bpNameResHtml();
+}
+function bpWhereTxt(sid){
+  var o=bpStopOfSid(sid);
+  if(o) return o.wave? (bpWaveLabel(o.wave)+" · "+o.name) : ("정류장 목록 · "+o.name+" (차수 없음)");
+  return "미배정";
+}
+function bpChip(sid,extra){
+  var s=bpStuOf(sid); if(!s) return "";
+  var on=UI.bp.moveSid===sid;
+  return '<span class="tag bpSidChip" draggable="true" ondragstart="bpSidDrag(event,\''+sid+'\')" onclick="bpMoveAsk(\''+sid+'\')" '+
+    'title="끌어서 정류장 줄이나 차수 칸에 놓으세요 · 누르면 [⤵ 여기로]로 옮기기" '+
+    'style="cursor:grab;margin:1px;'+(extra||'')+'background:'+(on?'var(--blue)':'#F1EFE9')+';color:'+(on?'#fff':'var(--ink)')+'">'+esc(s.name)+'</span>';
+}
+function bpNameResHtml(){
+  var q=bpNorm(UI.bp && UI.bp.nameQ); if(!q) return "";
+  var hit=CAMP.students.filter(function(s){ return String(s.name||"").indexOf(q)>=0; }).slice(0,12);
+  if(!hit.length) return '<div class="small" style="color:var(--sub);margin-top:4px">«'+esc(q)+'» — 등록생 중에 없습니다</div>';
+  return '<div style="display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:5px">'+hit.map(function(s){
+    if(!s.bus) return '<span class="small" style="color:var(--sub)">'+esc(s.name)+' — 차량 신청 안 함 (학적부에서 차량 신청 후 배치)</span>';
+    return '<span class="small" style="white-space:nowrap">'+bpChip(s.id)+' <span style="color:var(--sub)">'+esc(bpWhereTxt(s.id))+'</span></span>';
+  }).join("")+'</div>';
 }
 /* 시간창 초과·촘촘한 정류장 경고 */
 function bpWarns(P){
@@ -8626,13 +8872,14 @@ function bpPlan(){
   });
   var all=[]; waves.forEach(function(x){ all=all.concat(x.ord); });
   var get=function(w){ var hit=[]; waves.forEach(function(x){ if(x.w===w) hit=x.ord; }); return hit; };
-  return { waves:waves, w1:get(1), w2:get(2), w3:get(3), un:d.un, all:all };
+  return { waves:waves, w1:get(1), w2:get(2), w3:get(3), un:d.un, all:all, pool:bpPoolStops() };
 }
 /* ── 열기 ── */
 function openBusPlan(){
   if(!isAdmin() && busLocked(2)){ showToast("🔐 차량표가 전체 잠금입니다"); return; }
   UI.bp={ d:null, keys:[], pick:null, moveSid:null, search:null, dragK:null, hiK:null, menu:null };
   if(bpHelperRoutes().length) bpDraftFromRoutes(); else bpDraftAuto();
+  bpPoolRestore();                                   /* 4480: 빈 노선 정류장 되살리기 */
   renderBusPlan();
   if(/^https?:/.test(location.protocol) && UI.bp.d.from==="auto" &&
      UI.bp.d.stops.some(function(o){ return o.lat===null; })){
@@ -8645,9 +8892,9 @@ function bpWaveSet(ki,w){
   bpSnap();
   var src=o.wave;
   o.wave=w; o.seq=(++_bpOrd);                    /* 옮긴 차수의 맨 뒤로 */
-  bpTimesFor(bpWaveStops(w), bpWin(w));           /* 위치에 맞춰 시간 자동 재계산 */
-  var rest=bpWaveStops(src);
-  if(rest.length) bpTimesFor(rest, bpWin(src));
+  if(!w) o.t="";                                  /* 4480: 정류장 목록으로 빼기 */
+  bpRetime(w);                                    /* 위치에 맞춰 시간 자동 재계산 */
+  bpRetime(src);
   bpRe();
 }
 function bpSetT(ki,v){
@@ -8665,7 +8912,9 @@ function bpRename(ki,v){
   var o=bpStopByK((UI.bp.keys||[])[ki]); if(!o) return;
   v=bpNorm(v); if(!v){ bpRe(); return; }
   bpSnap();
-  var g=STOPGEO()[bpNorm(o.name)];
+  var e=bsByName(o.name);
+  if(e && !bsByName(v)){ bsRenameCore(e,v); saveLocal(); bpRe(); return; }   /* 4480: 명부 이름도 함께(이 정류장을 넣은 모든 노선) */
+  bsAdd(v);
   o.name=v;
   if(o.lat!==null){ STOPGEO()[bpNorm(v)]={lat:o.lat,lng:o.lng}; saveLocal(); }
   else { var g2=STOPGEO()[bpNorm(v)]; if(g2){ o.lat=g2.lat; o.lng=g2.lng; } }
@@ -8673,20 +8922,15 @@ function bpRename(ki,v){
 }
 function bpDelStop(ki){
   var o=bpStopByK((UI.bp.keys||[])[ki]); if(!o) return;
-  if(o.riders.length && !confirm("«"+o.name+"» 정류장을 빼면 탑승자 "+o.riders.length+"명은 «미배정»으로 내려갑니다. 뺄까요?")) return;
-  bpSnap();
-  o.riders.forEach(function(sid){ UI.bp.d.un.push({sid:sid, rec:o.name}); });
-  UI.bp.d.stops=UI.bp.d.stops.filter(function(x){ return x!==o; });
-  bpRe();
+  if(bpRemoveInst(o)) bpRe();                      /* 4480: 노선에서만 빼기 — 정류장 관리에는 남음 */
 }
 function bpAddStop(){
-  var nm=prompt("새 정류장 이름 (예: 양지마을 입구)"); if(!nm||!bpNorm(nm)) return;
+  var nm=prompt("새 정류장 이름 (예: 대원아파트 정문)"); if(!nm||!bpNorm(nm)) return;
   bpSnap();
-  var o=bpNewStop(nm);
-  o.wave=2; o.t=bpWin(2)[0];
-  if(o.lat!==null) o.wave=bpDist(o,bpDojang())<=1.0?2:1;
-  UI.bp.d.stops.push(o);
-  if(o.lat===null){ UI.bp.pick=o.k; showToast("📍 지도를 클릭해 «"+o.name+"» 위치를 찍거나, 위 검색창에서 찾아 주세요"); }
+  if(bsByName(nm)){ showToast("«"+bpNorm(nm)+"»은 이미 등록된 정류장입니다"); return; }
+  var e=bsAdd(nm); saveLocal();                    /* 4480: 노선(차수)이 아니라 «정류장 관리»에 등록 */
+  if(!STOPGEO()[bpNorm(nm)]){ UI.bp.pick="rs_"+e.id; showToast("📍 «"+e.name+"»을 등록했습니다 — 지도를 클릭해 위치를 찍거나, 위 검색창에서 찾아 주세요"); }
+  else showToast("📍 «"+e.name+"»을 등록했습니다 — [＋호차] 또는 노선의 [＋ 정류장 넣기]로 노선에 넣으세요");
   bpRe();
 }
 /* ── 탑승자 이동 ── */
@@ -8716,8 +8960,8 @@ function bpUseRec(sid){
   var it=null; (UI.bp.d.un||[]).forEach(function(x){ if(x.sid===sid) it=x; });
   if(!it || !it.rec) return;
   bpSnap();
-  var o=null; UI.bp.d.stops.forEach(function(x){ if(bpNorm(x.name)===bpNorm(it.rec)) o=x; });
-  if(!o){ o=bpNewStop(it.rec); o.wave=(o.lat!==null && bpDist(o,bpDojang())<=1.0)?2:1; o.t=bpWin(o.wave)[0]; UI.bp.d.stops.push(o); }
+  var o=bpRecStop(it.rec);
+  if(!o){ showToast("«"+it.rec+"»은 확정된 노선 정류장이 아닙니다 — 정류장 관리에서 정류장을 확정·노선에 넣은 뒤 배치해 주세요"); bpRe(); return; }
   bpDetach(sid); o.riders.push(sid);
   bpRe();
 }
@@ -8730,17 +8974,33 @@ function bpPickStart(ki){
 }
 function bpSetGeo(o,lat,lng){
   o.lat=lat; o.lng=lng; o.fail=false;
-  STOPGEO()[bpNorm(o.name)]={lat:lat,lng:lng};
+  bpGeoByName(o.name,lat,lng);
+}
+/* 4480: 위치는 정류장 이름 하나에 하나 — 같은 정류장을 넣은 모든 노선이 함께 움직임 */
+function bpGeoByName(nm,lat,lng){
+  STOPGEO()[bpNorm(nm)]={lat:lat,lng:lng};
+  ((UI.bp && UI.bp.d && UI.bp.d.stops)||[]).forEach(function(o){ if(bpNorm(o.name)===bpNorm(nm)){ o.lat=lat; o.lng=lng; o.fail=false; } });
   saveLocal();
+}
+/* 위치 지정 대상: 노선 정류장(k) 또는 명부 정류장("rs_"+id) */
+function bpPickName(k){
+  if(!k) return "";
+  if(String(k).indexOf("rs_")===0){ var e=bsById(String(k).slice(3)); return e? e.name : ""; }
+  var o=bpStopByK(k); return o? o.name : "";
+}
+function bsPickStart(id){
+  var k="rs_"+id; UI.bp.pick=(UI.bp.pick===k)? null : k;
+  var e=bsById(id); if(UI.bp.pick && e) showToast("📍 지도를 클릭하면 «"+e.name+"» 위치로 저장됩니다");
+  bpRe();
 }
 function bpMapClick(lat,lng){
   bpMenuHide();
   if(!UI.bp.pick) return;
-  var o=bpStopByK(UI.bp.pick); UI.bp.pick=null;
-  if(!o) return;
+  var nm=bpPickName(UI.bp.pick); UI.bp.pick=null;
+  if(!nm) return;
   bpSnap();
-  bpSetGeo(o,lat,lng);
-  showToast("📍 «"+o.name+"» 위치를 저장했습니다");
+  bpGeoByName(nm,lat,lng);
+  showToast("📍 «"+nm+"» 위치를 저장했습니다");
   bpRe();
 }
 function bpGeoClear(ki){
@@ -8777,11 +9037,19 @@ function bpMenuShow(x,y,items){
 }
 function bpPinMenu(ev,k){
   if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+  if(String(k).indexOf("rs_")===0){                /* 4480: 정류장 관리(노선 없는) 핀 */
+    var e=bsById(String(k).slice(3)); if(!e) return false;
+    var items=[{ label:"✏️ 정류장 이름 변경", fn:function(){ var nm=prompt("정류장 이름", e.name); if(nm) bsRenameUI(e.id,nm); } }];
+    bpWaves().forEach(function(wm){ items.push({ label:"🚌 "+wm.label+" 노선에 넣기", fn:function(){ bsToWave(e.id,wm.w); } }); });
+    items.push({ label:"🗑 정류장 관리에서 지우기", red:true, fn:function(){ bsDelUI(e.id); } });
+    bpMenuShow(ev?ev.clientX:300, ev?ev.clientY:300, items);
+    return false;
+  }
   var o=bpStopByK(k); if(!o) return false;
   bpMenuShow(ev?ev.clientX:300, ev?ev.clientY:300, [
     { label:"✏️ 정류장 이름 변경", fn:function(){ bpMenuRename(k); } },
     { label:"📍 핀만 삭제 (위치 다시 지정)", fn:function(){ bpMenuClearPin(k); } },
-    { label:"🗑 정류장 삭제", red:true, fn:function(){ bpMenuDel(k); } }
+    { label:"↩ 이 노선에서 빼기 (정류장 관리엔 남음)", red:true, fn:function(){ bpMenuDel(k); } }
   ]);
   return false;
 }
@@ -8802,22 +9070,16 @@ function bpMenuClearPin(k){
 }
 function bpMenuDel(k){
   var o=bpStopByK(k); if(!o) return;
-  if(o.riders.length && !confirm("«"+o.name+"» 정류장을 빼면 탑승자 "+o.riders.length+"명은 «미배정»으로 내려갑니다. 뺄까요?")) return;
-  bpSnap();
-  o.riders.forEach(function(sid){ UI.bp.d.un.push({sid:sid, rec:o.name}); });
-  UI.bp.d.stops=UI.bp.d.stops.filter(function(x){ return x!==o; });
-  bpRe();
+  if(bpRemoveInst(o)) bpRe();
 }
 function bpMapMenu(x,y,lat,lng){
   var items=[
     { label:"＋ 여기에 정류장 추가", fn:function(){
         var nm=prompt("새 정류장 이름 (예: 양지마을 입구)"); if(!nm||!bpNorm(nm)) return;
         bpSnap();
-        var o=bpNewStop(nm);
-        o.lat=lat; o.lng=lng;
-        o.wave=bpDist(o,bpDojang())<=1.0?2:1; o.t=bpWin(o.wave)[0]; o.seq=(++_bpOrd);
-        STOPGEO()[bpNorm(nm)]={lat:lat,lng:lng}; saveLocal();
-        UI.bp.d.stops.push(o);
+        var e=bsAdd(nm);                               /* 4480: 정류장 관리에 등록(노선엔 따로 넣음) */
+        bpGeoByName(e.name,lat,lng);
+        showToast("📍 «"+e.name+"»을 등록했습니다 — [＋호차]로 노선에 넣으세요");
         bpRe();
       } }
   ];
@@ -8936,8 +9198,8 @@ function bpSearchClose(){ UI.bp.search=null; bpSearchBox(); bpMapRefresh(); }
 function bpSearchPick(i){
   var r=UI.bp.search && UI.bp.search.res && UI.bp.search.res[i]; if(!r) return;
   if(UI.bp.pick){
-    var o=bpStopByK(UI.bp.pick); UI.bp.pick=null;
-    if(o){ bpSnap(); bpSetGeo(o,r.lat,r.lng); showToast("📍 «"+o.name+"» ← "+r.n); }
+    var nm=bpPickName(UI.bp.pick); UI.bp.pick=null;
+    if(nm){ bpSnap(); bpGeoByName(nm,r.lat,r.lng); showToast("📍 «"+nm+"» ← "+r.n); }
     bpSearchClose(); bpRe(); return;
   }
   bpPan(r.lat,r.lng);
@@ -8946,10 +9208,9 @@ function bpSearchAdd(i){
   var r=UI.bp.search && UI.bp.search.res && UI.bp.search.res[i]; if(!r) return;
   var nm=prompt("정류장 이름", UI.bp.search.q); if(!nm||!bpNorm(nm)) return;
   bpSnap();
-  var o=bpNewStop(nm); o.lat=r.lat; o.lng=r.lng;
-  o.wave=bpDist(o,bpDojang())<=1.0?2:1; o.t=bpWin(o.wave)[0]; o.seq=(++_bpOrd);
-  STOPGEO()[bpNorm(nm)]={lat:r.lat,lng:r.lng}; saveLocal();
-  UI.bp.d.stops.push(o);
+  var e=bsAdd(nm);                                 /* 4480: 정류장 관리에 등록 */
+  bpGeoByName(e.name,r.lat,r.lng);
+  showToast("📍 «"+e.name+"»을 등록했습니다 — [＋호차]로 노선에 넣으세요");
   bpSearchClose();
   bpRe();
 }
@@ -8975,7 +9236,8 @@ function bpSearchBox(){
 }
 /* ── 위치 없는 정류장 전부 자동 검색 ── */
 function bpGeoAll(auto){
-  var list=(UI.bp.d.stops||[]).filter(function(o){ return o.lat===null && !o.fail; });
+  var seenN={}, list=(UI.bp.d.stops||[]).concat(bpPoolStops()).filter(function(o){   /* 4480: 정류장 관리의 위치 없는 정류장도 */
+    var k=bpNorm(o.name); if(o.lat!==null || o.fail || seenN[k]) return false; seenN[k]=1; return true; });
   if(!list.length){ if(!auto) showToast("위치가 비어 있는 정류장이 없습니다"); return; }
   if(UI.bp.geoBusy) return;
   UI.bp.geoBusy=true;
@@ -9101,9 +9363,9 @@ function bpNoticeHtml(){
     '<textarea class="input" readonly style="margin:0;width:100%;height:120px;font-size:12px;line-height:1.6" onclick="this.select()">'+esc(bpNoticeTxt())+'</textarea></div>';
 }
 function bpCoverage(){
-  var total=bpRiders().length, un=(UI.bp.d.un||[]).length, placed=0;
-  (UI.bp.d.stops||[]).forEach(function(o){ placed+=o.riders.length; });
-  return { total:total, placed:placed, un:un, ok:(placed+un===total && un===0) };
+  var total=bpRiders().length, un=(UI.bp.d.un||[]).length, placed=0, pool=0;
+  (UI.bp.d.stops||[]).forEach(function(o){ if(o.wave) placed+=o.riders.length; else pool+=o.riders.length; });
+  return { total:total, placed:placed, pool:pool, un:un, ok:(placed===total && un===0 && pool===0) };
 }
 function renderBusPlan(){
   var h='<div class="modalBg" onclick="if(event.target===this)bpClose()">'+
@@ -9142,7 +9404,7 @@ function bpHeadHtml(){
     (UI.bp.d && UI.bp.d.from==="routes"?' · <b style="color:var(--blue)">저장된 노선 수정 중</b>':'')+'</span>'+
     '<span class="tag" style="background:'+(cov.ok?'var(--greenSoft)':'var(--amberSoft)')+';color:'+(cov.ok?'var(--green)':'#8A5A00')+';font-weight:800" '+
       'title="차량 신청자 전원이 표에 있는지 확인합니다">'+
-      (cov.ok?'✓ ':'⚠ ')+'차량 신청 '+cov.total+'명 · 배치 '+cov.placed+' · 미배정 '+cov.un+'</span>'+
+      (cov.ok?'✓ ':'⚠ ')+'차량 신청 '+cov.total+'명 · 배치 '+cov.placed+(cov.pool?' · 차수 없는 정류장 '+cov.pool:'')+' · 미배정 '+cov.un+'</span>'+
     '<span style="display:flex;gap:4px;align-items:center;margin-left:4px">'+
       '<button class="btn '+((UI.bp.view||0)===0?'':'line')+'" style="padding:6px 11px;font-size:12px" onclick="bpView(0)">전체</button>'+
       bpWaves().map(function(wm){
@@ -9165,6 +9427,7 @@ function bpRight(){
   var P=bpPlan();
   UI.bp.keys=P.all.map(function(o){ return o.k; });
   var ki=function(o){ return UI.bp.keys.indexOf(o.k); };
+  var pat=bpPrevPat();
   var warns=bpWarns(P);
   var h=bpNoticeHtml();
   if(UI.bp.moveSid){
@@ -9174,13 +9437,27 @@ function bpRight(){
        '<button class="btn gray" style="padding:2px 9px;font-size:11px" onclick="bpMoveAsk(\''+UI.bp.moveSid+'\')">취소</button></div>';
   }
   if(warns.length) h+='<div class="small" style="background:var(--amberSoft);border-radius:9px;padding:7px 11px;margin-bottom:8px;line-height:1.7">'+warns.map(esc).join("<br>")+'</div>';
+  /* 4480: 맨 위 — 미배정 이름 배지(끌어서 정류장 줄·차수 칸에 놓기) + 이름으로 찾기 */
+  h+='<div id="bpUnBar" data-bpdrop="1" ondragover="bpBoxOver(event)" ondragleave="bpBoxLeave(event)" ondrop="bpDropOnUn(event)" '+
+     'style="background:'+(P.un.length?'var(--amberSoft)':'#F7F6F2')+';border:1.5px solid '+(P.un.length?'var(--amber)':'var(--line)')+';border-radius:10px;padding:8px 11px;margin-bottom:10px">'+
+     '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+       '<b style="color:'+(P.un.length?'#8A5A00':'var(--green)')+';font-size:13px">'+(P.un.length?'🚸 미배정 '+P.un.length+'명':'✓ 미배정 없음')+'</b>'+
+       '<span class="small" style="color:var(--sub)">이름을 끌어서 노선의 정류장 줄에 놓으세요 · 여기로 끌어 놓으면 배정 풀기 · <b>신청:</b> 학부모가 적은 장소(참고용)</span>'+
+       (UI.bp.moveSid?' <button class="btn" style="padding:2px 9px;font-size:11px" onclick="bpMoveUn()">⤵ 여기로(배정 풀기)</button>':'')+
+       '<input class="input" id="bpNameQ" style="margin:0 0 0 auto;width:190px;padding:5px 9px;font-size:12.5px" placeholder="👤 이름으로 찾기" '+
+         'value="'+esc(UI.bp.nameQ||"")+'" oninput="bpNameKey(this.value)" title="학생 이름으로 찾아서 정류장에 넣습니다">'+
+     '</div>'+
+     (P.un.length?'<div style="display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:6px">'+P.un.map(function(x){
+        var st=bpStuOf(x.sid); if(!st) return "";
+        var rs=x.rec? bpRecStop(x.rec) : null;
+        return '<span style="white-space:nowrap">'+bpChip(x.sid,'background:#fff;')+
+          (rs?'<button class="btn line" style="padding:1px 7px;font-size:10.5px;margin-left:2px" title="확정된 정류장 «'+esc(rs.name)+'»('+esc(bpWaveLabel(rs.wave))+')에 배정" onclick="bpUseRec(\''+x.sid+'\')">↳ '+esc(rs.name)+'</button>'
+              :(x.rec?'<span class="small" style="color:var(--sub);margin-left:2px" title="학부모가 적은 장소 — 참고용(정류장 아님)">신청: '+esc(x.rec)+'</span>':''))+'</span>';
+      }).join("")+'</div>':'')+
+     '<div id="bpNameRes">'+bpNameResHtml()+'</div>'+
+     '</div>';
   var riderChips=function(o){
-    return o.riders.map(function(sid){
-      var s=bpStuOf(sid); if(!s) return "";
-      var on=UI.bp.moveSid===sid;
-      return '<span class="tag" onclick="bpMoveAsk(\''+sid+'\')" title="누르면 다른 정류장으로 옮길 수 있습니다" '+
-        'style="cursor:pointer;margin:1px;background:'+(on?'var(--blue)':'#F1EFE9')+';color:'+(on?'#fff':'var(--ink)')+'">'+esc(s.name)+'</span>';
-    }).join("");
+    return o.riders.map(function(sid){ return bpChip(sid); }).join("");
   };
   var waveTbl=function(ord,title,win,color,w){
     var withG=ord.filter(function(o){ return o.lat!==null; });
@@ -9197,7 +9474,8 @@ function bpRight(){
     }).join("");
     if(cands.length && !anySel) candBtns+='<span class="tag" style="background:var(--blueSoft);color:var(--blue);font-weight:800">내 동선</span>';
     var wm=bpWaveMetaOf(w)||{label:title,s:win[0],e:win[1]};
-    var hh='<div style="margin-bottom:12px"><div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;flex-wrap:wrap">'+
+    var hh='<div data-bpdrop="1" ondragover="bpBoxOver(event)" ondragleave="bpBoxLeave(event)" ondrop="bpDropOnWave(event,'+w+')" '+
+      'style="margin-bottom:12px;border-radius:9px"><div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;flex-wrap:wrap">'+
       '<span style="font-size:15px">🚌</span>'+
       '<input class="input bpCellIn" style="margin:0;width:84px;padding:3px 6px;font-size:13.5px;font-weight:800;color:'+color+'" '+
         'value="'+esc(wm.label)+'" title="차량·기사 이름 (예: 1호차, 사범, 관장)" onchange="bpWaveSetMeta('+w+',\'label\',this.value)">'+
@@ -9208,11 +9486,23 @@ function bpRight(){
         'title="복귀 목표 시간" onchange="bpWaveSetMeta('+w+',\'e\',this.value)">'+
       (!ord.length?'<button class="btn line" style="padding:2px 8px;font-size:11px" onclick="bpDelWave('+w+')">차수 삭제</button>':'')+
       (bpWaves().length<4?'<button class="btn line" style="padding:2px 8px;font-size:11px" title="이 자리에 빈 차수를 새로 넣고, 이 차수부터 뒤 차수 정류장을 한 칸씩 뒤로 미룹니다" onclick="bpInsertWave('+w+')">⤵ 앞에 새 차수</button>':'')+
+      (function(){                                     /* 4480: 정류장 목록에서 골라 이 차수에 넣기 */
+        var inW={}; ord.forEach(function(o){ inW[bpNorm(o.name)]=1; });
+        var reg=bsLive().filter(function(e){ return !inW[bpNorm(e.name)]; });
+        return '<select class="input bpCellIn" style="margin:0;width:auto;padding:3px 6px;font-size:12px;font-weight:700;color:'+color+'" '+
+          'title="정류장 관리에 확정한 정류장을 골라 이 노선에 넣습니다" onchange="bpPutStop('+w+',this.value)">'+
+          '<option value="">＋ 정류장 넣기</option>'+
+          (reg.length?'<optgroup label="정류장 관리 ('+reg.length+')">'+reg.map(function(e){
+              var u=bsUses(e.name);
+              return '<option value="r:'+e.id+'">'+esc(e.name)+(u.length?' · '+u.map(function(x){ return bpWaveLabel(x.wave); }).join("·")+'에도 있음':'')+'</option>'; }).join("")+'</optgroup>'
+            :'<option value="" disabled>정류장 관리에 먼저 정류장을 등록하세요</option>')+
+          '</select>';
+      })()+
       '<span class="small">'+ord.length+'곳 · '+ord.reduce(function(n,o){return n+o.riders.length;},0)+'명'+
       (km?' · 주행 '+km.toFixed(1)+'km'+(rc&&rc.dist?' (도로)':''):'')+
       (eta!==null?' · 복귀 ~'+bpT(eta):'')+
       ((_bpRC[curSig]&&_bpRC[curSig].busy)?' · <span style="color:var(--blue);font-weight:700">경로 계산 중…</span>':'')+'</span>'+candBtns+'</div>';
-    if(!ord.length) return hh+'<div class="small" style="color:var(--sub);margin-bottom:6px">정류장이 없습니다.</div></div>';
+    if(!ord.length) return hh+'<div class="small" style="color:var(--sub);margin-bottom:6px;border:1.5px dashed var(--line);border-radius:9px;padding:10px 12px">정류장이 없습니다 — [＋ 정류장 넣기]로 정류장 관리의 정류장을 고르세요.</div></div>';
     hh+='<table class="sheet bpTbl" style="width:100%"><thead><tr><th style="width:34px" title="≡ 를 끌어서 순서를 바꿉니다">≡</th><th style="width:62px">시간</th>'+
         '<th class="lft">정류장 <span style="font-weight:500;font-size:10px">(이름·시간 수정 가능 · ≡ 끌면 시간 자동 계산)</span></th>'+
         '<th class="lft" style="width:30%">탑승자</th><th style="width:120px">조정</th></tr></thead><tbody>';
@@ -9233,6 +9523,8 @@ function bpRight(){
             return '<div class="small" style="text-align:center;margin-top:1px;'+(i===0?'color:var(--sub)':'color:'+color+';font-weight:800')+'">'+
                    (i===0?'출발':(el>0?'＋'+el+'분':''))+'</div>'; })()+'</td>'+
         '<td class="lft"><input class="input bpCellIn" style="margin:0;padding:4px 7px;font-size:12.5px;font-weight:700" value="'+esc(o.name)+'" onchange="bpRename('+n+',this.value)">'+
+          (bsByName(o.name)?'':'<div style="margin-top:2px"><span class="tag" style="background:#FFF4D6;color:#8A5A00;font-weight:800" title="정류장 관리에 없는 이름(예전 신청서 이름 그대로) — 확정해야 진짜 정류장">미확정</span> '+
+            '<button class="btn line" style="padding:1px 8px;font-size:10.5px" onclick="bpConfirmStop('+n+')">✔ 확정</button></div>')+
           '<div class="small" style="margin-top:2px">'+
           (o.d!==null?o.d.toFixed(1)+'km':(o.fail?'<b style="color:var(--red)">검색 어려움 — 지도 우클릭으로 직접 지정</b>':'<b style="color:var(--amber)">위치 미지정</b>'))+
           (o.pat?' · 지난 캠프 '+o.pat.n+'회'+(o.pat.tMed?' (보통 '+bpT(o.pat.tMed)+')':''):'')+
@@ -9251,29 +9543,57 @@ function bpRight(){
           '<button class="btn '+(UI.bp.pick===o.k?'red':'line')+'" style="padding:3px 7px;font-size:11px" title="누른 뒤 지도 클릭 = 위치 지정" onclick="bpPickStart('+n+')">📍</button>'+
           '<a class="btn line" style="padding:3px 7px;font-size:11px;text-decoration:none" target="_blank" rel="noopener" title="네이버 지도에서 열기" '+
             'href="https://map.naver.com/p/search/'+encodeURIComponent(o.name+" 분당")+'">N</a>'+
-          '<button class="btn line" style="padding:3px 7px;font-size:11px" title="정류장 빼기" onclick="bpDelStop('+n+')">삭제</button>'+
+          '<button class="btn line" style="padding:3px 7px;font-size:11px" title="이 노선에서 빼기 (정류장 관리에는 남음)" onclick="bpDelStop('+n+')">빼기</button>'+
         '</div></td></tr>';
     });
     return hh+'</tbody></table></div>';
   };
+  /* 4480: ① 정류장 관리 — 관장님이 이름·위치를 확정해 고정 보관(모든 캠프 공통). 노선과 분리 */
+  var RG=P.pool, refMap={};
+  bpRiders().forEach(function(st){ var r=bpNorm(st.stop); if(r && !bsByName(r)) refMap[r]=(refMap[r]||0)+1; });
+  var refL=Object.keys(refMap).sort(function(a,b){ return refMap[b]-refMap[a] || a.localeCompare(b,"ko"); });
+  var regOpen=(UI.bp.regOpen!==undefined)? UI.bp.regOpen : true;
+  h+='<div data-bpdrop="1" ondragover="bpBoxOver(event)" ondragleave="bpBoxLeave(event)" ondrop="bpDropOnPool(event)" '+
+     'style="border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:12px;background:#FBFAF7">'+
+     '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+       '<b style="font-size:13.5px;color:#5B6068;cursor:pointer" onclick="UI.bp.regOpen='+(regOpen?'false':'true')+';bpRe()">'+(regOpen?'▾':'▸')+' 📍 ① 정류장 관리</b>'+
+       '<span class="small" style="color:var(--sub)">'+RG.length+'곳 확정 · 이름·위치를 정해 두면 모든 캠프에서 씁니다 → ② 노선(호차)에 넣기 → ③ 탑승자 배치</span>'+
+       '<span style="margin-left:auto;display:flex;gap:5px;flex-wrap:wrap">'+
+       (refL.length?'<select class="input" style="margin:0;width:auto;padding:3px 6px;font-size:12px" title="학부모가 신청서에 적은 장소(참고)를 보고 정류장을 등록합니다 — 이름은 직접 정함" onchange="bsAddFromRef(this.value)">'+
+          '<option value="">신청서 장소 보고 등록… ('+refL.length+')</option>'+
+          refL.map(function(r){ return '<option value="'+esc(r)+'">'+esc(r)+' ('+refMap[r]+'명)</option>'; }).join("")+'</select>':'')+
+       '<button class="btn line" style="padding:3px 10px;font-size:12px" title="정류장 이름을 정해 등록합니다 (노선에는 따로 넣습니다)" onclick="bpAddStop()">＋ 정류장 등록</button></span>'+
+     '</div>'+
+     (regOpen && RG.length?'<div style="max-height:300px;overflow:auto;margin-top:6px"><table class="sheet bpTbl" style="width:100%"><thead><tr>'+
+       '<th class="lft">정류장 (이름·위치 확정)</th><th class="lft" style="width:34%">넣은 노선</th><th style="width:150px">노선에 넣기</th></tr></thead><tbody>'+
+       RG.map(function(o){
+         var hi=UI.bp.hiK===o.k, uses=bsUses(o.name).sort(function(a,b){ return a.wave-b.wave; }), inW={};
+         uses.forEach(function(x){ inW[x.wave]=1; });
+         return '<tr id="bpRow_'+o.k+'" ondragover="bpDragOver(event)" ondragleave="bpDragLeave(event)" ondrop="bsDropSid(event,\''+o.id+'\')"'+
+           (UI.bp.pick===o.k?' style="background:var(--amberSoft)"':(hi?' style="background:var(--blueSoft)"':''))+'>'+
+           '<td class="lft"><input class="input bpCellIn" style="margin:0;padding:4px 7px;font-size:12.5px;font-weight:700" value="'+esc(o.name)+'" onchange="bsRenameUI(\''+o.id+'\',this.value)">'+
+             '<div class="small" style="margin-top:2px">'+
+             (o.lat!==null?'<span style="cursor:pointer" onclick="bpPan('+o.lat+','+o.lng+')" title="지도에서 보기">📍 '+o.d.toFixed(1)+'km</span>':'<b style="color:var(--amber)">위치 미지정 — 📍 누르고 지도 클릭</b>')+
+             (pat[bpNorm(o.name)]?' · 지난 캠프 '+pat[bpNorm(o.name)].n+'회':'')+'</div></td>'+
+           '<td class="lft">'+(uses.length? uses.map(function(x){
+               return '<span class="tag" style="margin:1px;background:'+BP_COLORS[x.wave]+';color:#fff">'+esc(bpWaveLabel(x.wave))+(x.t?' '+x.t:'')+' · '+x.riders.length+'명</span>'; }).join("")
+             :'<span class="small" style="color:#B5B0A6">아직 노선 없음</span>')+'</td>'+
+           '<td><div style="display:flex;gap:3px;flex-wrap:wrap">'+
+             bpWaves().map(function(wm2){
+               return inW[wm2.w]?'':'<button class="btn line" style="padding:3px 6px;font-size:11px;color:'+BP_COLORS[wm2.w]+'" title="'+esc(wm2.label)+' 노선에 넣기" '+
+                 'onclick="bsToWave(\''+o.id+'\','+wm2.w+')">＋'+esc(wm2.label.slice(0,3))+'</button>';
+             }).join("")+
+             '<button class="btn '+(UI.bp.pick===o.k?'red':'line')+'" style="padding:3px 7px;font-size:11px" title="누른 뒤 지도 클릭 = 위치 지정" onclick="bsPickStart(\''+o.id+'\')">📍</button>'+
+             '<button class="btn line" style="padding:3px 7px;font-size:11px" title="정류장 관리에서 지우기" onclick="bsDelUI(\''+o.id+'\')">삭제</button>'+
+           '</div></td></tr>';
+       }).join("")+'</tbody></table></div>'
+     :(regOpen?'<div class="small" style="color:var(--sub);margin-top:5px">아직 확정한 정류장이 없습니다 — [＋ 정류장 등록], 지도 빈 곳 우클릭, 위 주소 검색의 [추가], 또는 신청서 장소를 보고 등록하세요.</div>':''))+
+     '</div>';
+  h+='<div style="font-size:13.5px;font-weight:800;color:#5B6068;margin:2px 0 6px">② 노선 (호차별 정류장 순서) <span class="small" style="font-weight:500;color:var(--sub)">· ③ 탑승자는 이름 배지를 정류장 줄에 끌어 놓기</span></div>';
   P.waves.forEach(function(wx){
     if(UI.bp.view && UI.bp.view!==wx.w) return;
     h+=waveTbl(wx.ord,"🚌 "+wx.label,wx.win,BP_COLORS[wx.w],wx.w);
   });
-  h+='<div style="display:flex;gap:6px;margin-bottom:10px">'+
-     '<button class="btn line" style="padding:6px 11px;font-size:12px" onclick="bpAddStop()">＋ 정류장 직접 추가</button></div>';
-  if(P.un.length){
-    h+='<div style="background:var(--amberSoft);border:1.5px solid var(--amber);border-radius:10px;padding:9px 12px">'+
-      '<b style="color:#8A5A00;font-size:13px">미배정 (탑승 장소 미정) '+P.un.length+'명</b>'+
-      (UI.bp.moveSid?' <button class="btn" style="padding:2px 9px;font-size:11px" onclick="bpMoveUn()">⤵ 여기로</button>':'')+
-      P.un.map(function(x){
-        var s=bpStuOf(x.sid); if(!s) return "";
-        return '<div class="small" style="margin-top:4px"><span class="tag" style="cursor:pointer;background:'+(UI.bp.moveSid===x.sid?'var(--blue)':'#fff')+
-          ';color:'+(UI.bp.moveSid===x.sid?'#fff':'var(--ink)')+'" onclick="bpMoveAsk(\''+x.sid+'\')">'+esc(s.name)+'</span>'+
-          (x.rec?' 이전/신청: <b>'+esc(x.rec)+'</b> <button class="btn line" style="padding:2px 8px;font-size:11px" onclick="bpUseRec(\''+x.sid+'\')">이대로 배정</button>'
-                :' <span style="color:var(--sub)">이전 기록 없음 — 이름을 눌러 정류장으로 옮기세요</span>')+'</div>';
-      }).join("")+'</div>';
-  }
   box.innerHTML=h;
   var head=document.getElementById("bpHead");
   if(head) head.innerHTML=bpHeadHtml();
@@ -9282,7 +9602,8 @@ function bpRight(){
 function bpLegHtml(){
   return bpWaves().map(function(wm){
     return '<span><i style="display:inline-block;width:10px;height:10px;border-radius:99px;background:'+BP_COLORS[wm.w]+'"></i> '+esc(wm.label)+'</span>';
-  }).join("");
+  }).join("")+
+  ((UI.bp && UI.bp.d && bsLive().length)?'<span><i style="display:inline-block;width:10px;height:10px;border-radius:99px;background:'+BP_POOL_COLOR+'"></i> 등록 정류장(노선 없음)</span>':'');
 }
 function bpSumUpdate(){
   var lg=document.getElementById("bpLegW"); if(lg) lg.innerHTML=bpLegHtml();
@@ -9333,7 +9654,7 @@ function bpPinHtml(o,i,color){
     '<svg width="30" height="40" viewBox="0 0 30 40" style="display:block">'+
       '<path d="M15 39C15 39 2.5 22 2.5 13a12.5 12.5 0 1 1 25 0c0 9-12.5 26-12.5 26z" fill="'+color+'" stroke="#fff" stroke-width="2"/>'+
       '<circle cx="15" cy="13" r="8.6" fill="#fff"/>'+
-      '<text x="15" y="17" text-anchor="middle" font-size="11" font-weight="800" fill="'+color+'">'+(i+1)+'</text></svg>'+
+      '<text x="15" y="17" text-anchor="middle" font-size="11" font-weight="800" fill="'+color+'">'+(i<0?'–':(i+1))+'</text></svg>'+
     '<span class="bpPinLbl">'+esc(o.name)+' <b>'+o.riders.length+'</b></span></div>';
 }
 function bpDrawNaver(box){
@@ -9383,19 +9704,19 @@ function bpNvSync(P){
   var seen={};
   var toPath=function(geom){ return geom.map(function(c2){ return new naver.maps.LatLng(c2[0],c2[1]); }); };
   var WX=P.waves.filter(function(wx){ return !UI.bp.view || UI.bp.view===wx.w; });
-  WX.forEach(function(wx){
-    var w=wx.w, ord=wx.ord, color=BP_COLORS[w];
+  WX.concat([{w:0, ord:(P.pool||[]).filter(function(o){ return !bsUses(o.name).length; })}]).forEach(function(wx){   /* 4480: 노선에 없는 등록 정류장 = 회색 핀(선 없음) */
+    var w=wx.w, ord=wx.ord, color=w? BP_COLORS[w] : BP_POOL_COLOR;
     ord.forEach(function(o,i){
       if(o.lat===null) return;
       seen[o.k]=1;
-      var html=bpPinHtml(o,i,color), e=_bpMkC[o.k];
+      var html=bpPinHtml(o,w?i:-1,color), e=_bpMkC[o.k];
       if(!e){
         var mk=new naver.maps.Marker({ map:_bpNMap, position:new naver.maps.LatLng(o.lat,o.lng), draggable:true,
           icon:{ content:html, size:new naver.maps.Size(30,40), anchor:new naver.maps.Point(15,39) }});
         (function(kk,mm){
           naver.maps.Event.addListener(mm,"dragend",function(){
-            var oo=bpStopByK(kk); if(!oo) return;
-            var pp=mm.getPosition(); bpSnap(); bpSetGeo(oo,pp.y,pp.x); bpRe();
+            var pp=mm.getPosition(), nm0=bpPickName(kk); if(!nm0) return;
+            bpSnap(); bpGeoByName(nm0,pp.y,pp.x); bpRe();
           });
         })(o.k,mk);
         _bpMkC[o.k]={mk:mk, html:html, lat:o.lat, lng:o.lng};
@@ -9567,6 +9888,13 @@ function bpDrawMap(box){
       if(UI.bp.view && UI.bp.view!==wx.w) return;
       draw(wx.w, wx.ord, BP_COLORS[wx.w]);
     });
+    (P.pool||[]).forEach(function(o){                   /* 4480: 노선에 없는 등록 정류장 — 회색 핀만 */
+      if(o.lat===null || bsUses(o.name).length) return;
+      pts.push([o.lat,o.lng]);
+      var mk=L.marker([o.lat,o.lng],{draggable:true, icon:L.divIcon({className:"",iconSize:[30,40],iconAnchor:[15,39],
+        html:bpPinHtml(o,-1,BP_POOL_COLOR)})}).addTo(map);
+      mk.on("dragend",function(ev){ var p2=ev.target.getLatLng(); bpSnap(); bpGeoByName(o.name,p2.lat,p2.lng); bpRe(); });
+    });
     if(UI.bp.search && UI.bp.search.res){
       UI.bp.search.res.forEach(function(r,i){
         L.marker([r.lat,r.lng],{icon:L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
@@ -9588,16 +9916,31 @@ function bpDrawMap(box){
 }
 /* ── 저장: 기존 도우미 노선을 이 초안으로 교체 (다른 노선은 그대로) ── */
 function bpApply(){
-  if(campLocked(CAMP)){ showToast("🔒 지난 캠프는 수정할 수 없습니다"); return; }
-  if(busGuard(1)) return;
+  if(campLocked(CAMP)){ alert("🔒 지난 캠프는 수정할 수 없습니다 — 저장하지 않았습니다."); return; }
+  /* 4480: 노선 잠금 상태에서 저장이 «짧은 알림»만 뜨고 조용히 안 되던 문제 — 분명히 묻고, 관리자는 잠금을 풀고 저장 */
+  if(busLocked(1)){
+    var lvTxt=busLock()>=2?"차량표 전체 잠금":"노선 구성 잠금";
+    if(!isAdmin()){ alert("🔒 "+lvTxt+" 상태라 저장하지 못했습니다.\n관리자에게 잠금을 풀어 달라고 해 주세요. (바꾼 내용은 이 창에 그대로 있습니다)"); return; }
+    if(!confirm("🔒 지금 «"+lvTxt+"» 상태라 노선을 저장할 수 없습니다.\n\n[확인] 잠금을 풀고 저장하기\n[취소] 저장하지 않기 (바꾼 내용은 이 창에 그대로 있습니다)")) return;
+    CAMP.busLock=0;
+  }
   var P=bpPlan();
-  if(!P.all.length){ alert("저장할 정류장이 없습니다.\n정류장을 추가하거나 미배정 학생을 배정해 주세요."); return; }
+  if(!P.all.length){ alert("노선에 넣은 정류장이 없습니다.\n정류장을 추가하거나 미배정 학생을 배정해 주세요."); return; }
+  /* 4480: 확정 안 된 정류장(정류장 관리에 없는 이름 — 예전 신청서 이름 그대로)은 저장 전에 확정 */
+  var unc={}; P.all.forEach(function(o){ if(!bsByName(o.name)) unc[o.name]=1; });
+  var uncL=Object.keys(unc);
+  if(uncL.length){
+    if(!confirm("확정 안 된 정류장 "+uncL.length+"곳이 있습니다 (정류장 관리에 없는 이름):\n· "+uncL.slice(0,12).join("\n· ")+(uncL.length>12?"\n…":"")+
+        "\n\n[확인] 이 이름 그대로 확정하고 계속\n[취소] 돌아가서 이름을 고치거나 정리하기")) return;
+    uncL.forEach(function(nm){ bsAdd(nm); });
+  }
   var old=bpHelperRoutes().length;
   var empt=P.all.filter(function(o){ return !o.riders.length; }).length;
+
   if(!confirm("지금 초안대로 «등원 노선»을 저장합니다.\n\n"+
       P.waves.map(function(wx){ return "· "+wx.label+" "+wx.win[0]+"~"+wx.win[1]+" — 정류장 "+wx.ord.length+"곳"; }).join("\n")+"\n"+
       (old?"· 이전에 저장한 도우미 노선 "+old+"개는 이걸로 교체됩니다.\n":"")+
-      (empt?"· 탑승자 없는 정류장 "+empt+"곳은 저장에서 빠집니다.\n":"")+
+      (empt?"· 탑승자 없는 정류장 "+empt+"곳은 노선표에는 안 나오고, 다시 열면 노선에 그대로 있습니다.\n":"")+
       "· 다른 노선(하원 등)은 건드리지 않습니다.\n\n계속할까요?")) return;
   snapSave("동선 도우미 저장 전");
   CAMP.routes=ROUTES().filter(function(r){ return !(r.dir==="등원" && String(r.name).indexOf("동선 도우미")>=0); });
@@ -9619,6 +9962,9 @@ function bpApply(){
       ROUTES().push(mk(wx.ord,"등원 "+wx.label+" (동선 도우미)",wx.win[1]));
   });
   CAMP.busPlanWaves=JSON.parse(JSON.stringify(UI.bp.d.waves));   /* 차수 이름·시간 보존(재수정용) */
+  /* 4480: 정류장 목록 보관 — 노선에 안 들어간 정류장(차수 없음·탑승자 없는 빈 정류장). 다시 열면 bpPoolRestore 로 되살림 */
+  CAMP.busPlanPool=UI.bp.d.stops.filter(function(o){ return o.wave && !o.riders.length; })
+    .map(function(o){ return { name:o.name, wave:o.wave||0, t:o.wave?(o.t||""):"", riders:o.riders.slice() }; });
   saveLocal();
   UI.bp.d.from="routes"; UI.bp.dirty=0;
   showToast("✅ 등원 노선을 저장했습니다 — 이 창을 다시 열면 이어서 수정할 수 있습니다");
